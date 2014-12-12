@@ -20,6 +20,14 @@ type ElectionOption struct {
     Created time.Time `bson:"created_at" json:"created_at"`
 }
 
+// ByElectionsCreatedAt implements sort.Interface for []Person based on
+// the Age field.
+type ByElectionsCreatedAt []ElectionOption
+
+func (a ByElectionsCreatedAt) Len() int           { return len(a) }
+func (a ByElectionsCreatedAt) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByElectionsCreatedAt) Less(i, j int) bool { return !a[i].Created.Before(a[j].Created) }
+
 func ElectionAddOption (r render.Render, database *mgo.Database, req *http.Request, params martini.Params) {
     
     if bson.IsObjectIdHex(params["id"]) == false {
@@ -161,7 +169,7 @@ func ElectionAddOption (r render.Render, database *mgo.Database, req *http.Reque
             
             over := push.String()
             
-            change := bson.M{"$push": bson.M{over: election}}
+            change := bson.M{"$push": bson.M{over: election}, "$set": bson.M{"updated_at": time.Now()}}
             err = collection.Update(bson.M{"_id": post.Id}, change)
             
             if err != nil {
