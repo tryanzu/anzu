@@ -7,15 +7,26 @@ import (
     "github.com/go-martini/martini"
     "github.com/martini-contrib/render"
     "time"
+    "sort"
     "reflect"
+    "strings"
     "encoding/json"
     "io/ioutil"
 )
 
+/**
+ * Avaliable components
+ *
+ * List of valid components along a recommendation post
+ */
+var avaliable_components = []string{
+    "cpu", "motherboard", "ram", "cabinet", "screen", "storage", "cooler", "power", "videocard",
+}
+
 type Votes struct {
-    Up string `bson:"up" json:"up"`
-    Down string `bson:"down" json:"down"`
-    Rating string `bson:"rating,omitempty" json:"rating,omitempty"`
+    Up int `bson:"up" json:"up"`
+    Down int `bson:"down" json:"down"`
+    Rating int `bson:"rating,omitempty" json:"rating,omitempty"`
 }
 
 type Author struct {
@@ -62,14 +73,7 @@ type Component struct {
     Options   []ElectionOption `bson:"options,omitempty" json:"options,omitempty"` 
     Votes     Votes  `bson:"votes" json:"votes"`
     Status    string `bson:"status" json:"status"` 
-}
-
-type ElectionOption struct {
-    UserId  bson.ObjectId `bson:"user_id" json:"user_id"`
-    Content string `bson:"content" json:"content"`
-    User    interface{} `bson:"author,omitempty" json:"author,omitempty"`
-    Votes   Votes `bson:"votes" json:"votes"`
-    Created time.Time `bson:"created_at" json:"created_at"`
+    Voted     string `bson:"voted,omitempty" json:"voted,omitempty"` 
 }
 
 type Post struct {
@@ -88,6 +92,13 @@ type Post struct {
     Created time.Time `bson:"created_at" json:"created_at"`
     Updated time.Time `bson:"updated_at" json:"updated_at"`
 }
+
+// ByCommentCreatedAt implements sort.Interface for []ElectionOption based on Created field
+type ByCommentCreatedAt []Comment
+
+func (a ByCommentCreatedAt) Len() int           { return len(a) }
+func (a ByCommentCreatedAt) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByCommentCreatedAt) Less(i, j int) bool { return !a[i].Created.Before(a[j].Created) }
 
 func PostsGet (r render.Render, database *mgo.Database, req *http.Request) {
     
@@ -241,6 +252,7 @@ func PostsGetOneSlug (r render.Render, database *mgo.Database, req *http.Request
         return
     }
     
+    
     // Get the users and stuff
     if post.Users != nil && len(post.Users) > 0 {
         
@@ -283,15 +295,58 @@ func PostsGetOneSlug (r render.Render, database *mgo.Database, req *http.Request
             } 
         }
         
+        // Sort by created at
+        sort.Sort(ByCommentCreatedAt(post.Comments.Set))
+        
+        // Get the query parameters
+        qs := req.URL.Query()
+        
+        // Name of the set to get
+        token := qs.Get("token")
+        
+        // Look for votes that has been already given
+        var votes []Vote
+        	    
+        if token != "" {
+            
+            // Get user by token
+            user_token  := UserToken{}
+            
+            // Try to fetch the user using token header though
+        	err = database.C("tokens").Find(bson.M{"token": token}).One(&user_token)
+        	
+        	if err == nil {
+        	 
+        	    err = database.C("votes").Find(bson.M{"type": "component", "related_id": post.Id, "user_id": user_token.UserId}).All(&votes)
+        	}
+        }
+        
         components := reflect.ValueOf(&post.Components).Elem()
+        components_type := reflect.TypeOf(&post.Components).Elem()
         
         for i := 0; i < components.NumField(); i++ {
             
             f := components.Field(i)
+            t := components_type.Field(i)
             
             if f.Type().String() == "main.Component" {
                 
                 component := f.Interface().(Component)
+                
+                for _, vote := range votes {
+                    
+                    if vote.NestedType == strings.ToLower(t.Name) {
+                        
+                        if vote.Value == 1 {
+                            
+                            component.Voted = "up"
+                            
+                        } else if vote.Value == -1 {
+                            
+                            component.Voted = "down"   
+                        }
+                    }
+                }
                 
                 if component.Elections == true {
                     
@@ -303,8 +358,11 @@ func PostsGetOneSlug (r render.Render, database *mgo.Database, req *http.Request
                         }    
                     }
                     
-                    f.Set(reflect.ValueOf(component))
+                    // Sort by created at
+                    sort.Sort(ByElectionsCreatedAt(component.Options))
                 }
+                
+                f.Set(reflect.ValueOf(component))
             }
         }
     }
