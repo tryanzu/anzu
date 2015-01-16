@@ -1,13 +1,9 @@
 package main
 
 import (
-    "net/http"
-    "gopkg.in/mgo.v2"
     "gopkg.in/mgo.v2/bson"
-    "github.com/go-martini/martini"
-    "github.com/martini-contrib/render"
-    "io/ioutil"
-    "encoding/json"
+    "github.com/gin-gonic/gin"
+    "github.com/gin-gonic/gin/binding"
     "time"
     "bytes"
 )
@@ -20,43 +16,39 @@ type ElectionOption struct {
     Created time.Time `bson:"created_at" json:"created_at"`
 }
 
-// ByElectionsCreatedAt implements sort.Interface for []Person based on
-// the Age field.
+type ElectionForm struct {
+    Component  string `json:"component" binding:"required"`     
+    Content  string `json:"content" binding:"required"`  
+}
+
+// ByElectionsCreatedAt implements sort.Interface for []ElectionOption based on Created field
 type ByElectionsCreatedAt []ElectionOption
 
 func (a ByElectionsCreatedAt) Len() int           { return len(a) }
 func (a ByElectionsCreatedAt) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a ByElectionsCreatedAt) Less(i, j int) bool { return !a[i].Created.Before(a[j].Created) }
 
-func ElectionAddOption (r render.Render, database *mgo.Database, req *http.Request, params martini.Params) {
+func ElectionAddOption (c *gin.Context) {
     
-    if bson.IsObjectIdHex(params["id"]) == false {
+    id := c.Params.ByName("id")
+    
+    if bson.IsObjectIdHex(id) == false {
         
-        response := map[string]string{
-		    "error":  "Invalid params.",
-		    "status": "507",
-	    }
+        // Invalid request
+        c.JSON(400, gin.H{"error": "Invalid request...", "status": 507})
         
-        r.JSON(400, response)
-        
-        return   
+        return    
     }
     
     // Get the query parameters
-    qs := req.URL.Query()
+    qs := c.Request.URL.Query()
     
     // Name of the set to get
     token := qs.Get("token")
     
     if token == "" {
         
-        response := map[string]string{
-		    "error":  "Not authorized",
-		    "status": "502",
-	    }
-        
-        r.JSON(401, response)
-        
+        c.JSON(401, gin.H{"error": "Not authorized...", "status": 502})
         return
     }
     
@@ -68,67 +60,30 @@ func ElectionAddOption (r render.Render, database *mgo.Database, req *http.Reque
 	
 	if err != nil {
 	 
-	    response := map[string]string{
-		    "error":  "Not authorized",
-		    "status": "503",
-	    }
-        
-        r.JSON(401, response)
+	    c.JSON(401, gin.H{"error": "Not authorized...", "status": 503})
         
         return 
 	}
 	
-    // Get the option content
-    body, err := ioutil.ReadAll(req.Body)    
+    var option ElectionForm
     
-    if err != nil {
+    if c.BindWith(&option, binding.JSON) {
         
-        panic(err)   
-    }
-    
-    var option map[string] interface{}
-    
-    err = json.Unmarshal(body, &option)
-    
-    if err != nil {
+        // Check if component is valid
+        component := option.Component   
+        content := option.Content
+        valid := false
         
-        panic(err)   
-    }
-    
-    content, okay := option["content"]
-    
-    if okay && content != "" {
-        
-        component, okay := option["component"]
-        
-        if okay && component != "" {
-            
-            valid := false
-            
-            // Validate the component name to be avoid injections
-            for _, possible := range avaliable_components {
-             
-                if component == possible {
-                    
-                    valid = true   
-                }
+        for _, possible := range avaliable_components {
+         
+            if component == possible {
+                
+                valid = true   
             }
-            
-            if valid == false {
-                
-                response := map[string]string{
-        		    "error":  "Invalid request, dont attempt hacking.",
-        		    "status": "505",
-        	    }
-                
-                r.JSON(400, response)
-                
-                return
-            }
-            
-            // Get the post using the slug
-            id := bson.ObjectIdHex(params["id"])
+        }
         
+        if valid == true {
+                
             // Posts collection
             collection := database.C("posts")
             
@@ -138,24 +93,20 @@ func ElectionAddOption (r render.Render, database *mgo.Database, req *http.Reque
             
             if err != nil {
                 
-                response := map[string]string{
-        		    "error":  "Couldnt found post with that id.",
-        		    "status": "501",
-        	    }
-                
-                r.JSON(404, response)
+                // No guest can vote
+                c.JSON(404, gin.H{"error": "Couldnt found post with that id.", "status": 501})
                 
                 return
             }
             
             votes := Votes {
-                Up: "0",
-                Down: "0",
+                Up: 0,
+                Down: 0,
             }
             
             election := ElectionOption {
                 UserId: user_token.UserId,
-                Content: content.(string),
+                Content: content,
                 Votes: votes,
                 Created: time.Now(),
             }
@@ -164,7 +115,7 @@ func ElectionAddOption (r render.Render, database *mgo.Database, req *http.Reque
             
             // Make the push string
             push.WriteString("components.")
-            push.WriteString(component.(string))
+            push.WriteString(component)
             push.WriteString(".options")
             
             over := push.String()
@@ -199,21 +150,10 @@ func ElectionAddOption (r render.Render, database *mgo.Database, req *http.Reque
         	    }
 	        }
 	        
-	        response := map[string]string{
-        	    "status": "506",
-        	    "message": "okay",
-            }
-            
-            r.JSON(200, response)
-    
+	        c.JSON(200, gin.H{"message": "okay", "status": 506})
             return
-        }
+        }    
     }
     
-    response := map[string]string{
-	    "error":  "Not authorized",
-	    "status": "504",
-    }
-    
-    r.JSON(401, response)
+    c.JSON(401, gin.H{"error": "Not authorized", "status": 504})
 }
