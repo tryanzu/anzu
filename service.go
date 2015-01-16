@@ -1,50 +1,159 @@
 package main
 
 import (
-    "github.com/go-martini/martini"
-    "github.com/martini-contrib/render"
-    "gopkg.in/mgo.v2"
+	"encoding/json"
+	"fmt"
+	"github.com/fernandez14/deferclient/deferstats"
+	"github.com/gin-gonic/gin"
+	"github.com/xuyu/goredis"
+	"gopkg.in/mgo.v2"
+	"io/ioutil"
+	"os"
+	"runtime"
+	"time"
+)
+
+var (
+	database *mgo.Database
+	mongo    *mgo.Session
+	config   gin.H
+	redis    *goredis.Redis
 )
 
 func main() {
-    
-    // Start martini classic
-    m := martini.Classic()
-    
-    // Use the render from the martini-contrib
-    m.Use(render.Renderer())
-    
-    // Start a session with out replica set
-    session, err := mgo.Dial("mongodb://alpha:3De8ctNNQK0y@@capital.3.mongolayer.com:10069,capital.2.mongolayer.com:10066/nagios")
-    database := session.DB("nagios")
-    
-    if err != nil {
-        panic(err)
-    }
-    
-    defer session.Close()
-        
-    // Optional. Switch the session to a monotonic behavior.
-    session.SetMode(mgo.Monotonic, true)
-    
-    m.Get("/", func () string {
-        
-        return "Welcome to the blacker API"
-    })
-    
-    m.Group("/v1", func(r martini.Router) {
-        
-        // API routes
-        r.Get("/post", PostsGet)
-        r.Get("/post/s/(?P<slug>[a-zA-Z0-9-_.]+)", PostsGetOneSlug)
-        r.Get("/post/:id", PostsGetOne)
-        r.Get("/user/my", UserGetByToken)
-        r.Get("/user/get-token", UserGetToken)
-        r.Get("/user/:id", UserGetOne)
-        r.Get("/playlist/l/:sections", PlaylistGetList)
-    })
-    
-    // Map database service to whole API
-    m.Map(database)
-    m.Run()
+
+	// Deferpanic client
+	deferstats.Token = "aUyzvsMRKLdrB0AK0XSZXV7qQbxyOhYT"
+	deferstats.Verbose = true
+
+	// Start by using the power of the machine cores
+	runtime.GOMAXPROCS(runtime.NumCPU())
+
+	// Read config from env file
+	configFile, err := ioutil.ReadFile("./env.json")
+	if err != nil {
+		fmt.Printf("File error: %v\n", err)
+		os.Exit(1)
+	}
+	err = json.Unmarshal(configFile, &config)
+
+	if err != nil {
+		fmt.Printf("File error: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Start gin classic middlewares
+	g := gin.Default()
+
+	// Use deferpanic recovery
+	//g.Use(recovery.Recovery())
+
+	// Use cors middleware
+	g.Use(CORS())
+
+	g.Use(func(c *gin.Context) {
+
+		startTime := time.Now()
+
+		c.Next()
+
+		// Add the request to the list of played urls
+		deferstats.AddRequest(startTime, c.Request.URL.Path)
+	})
+
+	// Start a session with redis-service
+	config_redis := config["cache"].(map[string]interface{})
+	redis, err = goredis.Dial(&goredis.DialConfig{Address: config_redis["redis"].(string)})
+
+	if err != nil {
+		panic(err)
+	}
+
+	// Start a session with replica set
+	config_database := config["database"].(map[string]interface{})
+	database, mongo = databaseInit(config_database["uri"].(string), config_database["name"].(string))
+
+	// Close the database connection when needed
+	defer mongo.Close()
+
+	v1 := g.Group("/v1")
+	{
+		// Comment routes
+		v1.POST("/post/comment/:id", CommentAdd)
+
+		// Post routes
+		v1.GET("/feed", FeedGet)
+		v1.GET("/post", PostsGet)
+		//v1.GET("/post/:id", PostsGetOne)
+		v1.GET("/post/s/:slug", PostsGetOneSlug)
+		v1.POST("/post", PostCreate)
+
+		// // Election routes
+		v1.POST("/election/:id", ElectionAddOption)
+
+		// // Votes routes
+		v1.POST("/vote/comment/:id", VoteComment)
+		v1.POST("/vote/component/:id", VoteComponent)
+
+		// User routes
+		v1.POST("/user", UserRegisterAction)
+		v1.GET("/user/my", UserGetByToken)
+		v1.PUT("/user/my", UserUpdateProfile)
+		v1.POST("/user/get-token/facebook", UserGetTokenFacebook)
+		v1.GET("/user/get-token", UserGetToken)
+		// v1.GET("/user/:id", UserGetOne)
+
+		// Playlist routes
+		v1.GET("/playlist/l/:sections", PlaylistGetList)
+
+		// Categories routes
+		v1.GET("/category", CategoriesGet)
+	}
+
+	// Run over the 3000 port
+	port := os.Getenv("RUN_OVER")
+
+	if port == "" {
+
+		port = "3000"
+	}
+
+	// Collect stats
+	go deferstats.CaptureStats()
+
+	g.Run(":" + port)
+}
+
+func databaseInit(connection string, name string) (*mgo.Database, *mgo.Session) {
+
+	// Start a session with out replica set
+	session, err := mgo.Dial(connection)
+
+	if err != nil {
+
+		// There has been an error connection to the database
+		panic(err)
+	}
+
+	database := session.DB(name)
+
+	// Set monotonic session behavior
+	session.SetMode(mgo.Monotonic, true)
+
+	return database, session
+}
+
+func CORS() gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		c.Writer.Header().Set("Content-Type", "application/json")
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+		if c.Request.Method == "OPTIONS" {
+			fmt.Println("options")
+			c.Abort(200)
+			return
+		}
+		c.Next()
+	}
 }
