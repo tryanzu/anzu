@@ -1,11 +1,8 @@
 package main
 
 import (
-    "net/http"
-    "gopkg.in/mgo.v2"
     "gopkg.in/mgo.v2/bson"
-    "github.com/go-martini/martini"
-    "github.com/martini-contrib/render"
+    "github.com/gin-gonic/gin"
     "time"
     "strings"
 )
@@ -21,9 +18,9 @@ type Playlist struct {
     Updated time.Time `bson:"updated_at" json:"updated_at"`
 }
 
-func PlaylistGetList (r render.Render, database *mgo.Database, req *http.Request, params martini.Params) {
+func PlaylistGetList (c *gin.Context) {
     
-    sections := params["sections"]
+    sections := c.Params.ByName("sections")
     
     // List of sections to get
     list := strings.Split(sections, ",")
@@ -43,10 +40,10 @@ func PlaylistGetList (r render.Render, database *mgo.Database, req *http.Request
     if len(result) == 0 {
         
         // No results
-        r.JSON(200, []string{})
+        c.JSON(200, []string{})
         
         return    
     }
     
-    r.JSON(200, result)
+    c.JSON(200, result)
 }
