@@ -1,102 +1,67 @@
-package main 
+package main
 
 import (
-    "net/http"
-    "gopkg.in/mgo.v2"
     "gopkg.in/mgo.v2/bson"
-    "github.com/go-martini/martini"
-    "github.com/martini-contrib/render"
-    "io/ioutil"
-    "encoding/json"
+    "github.com/gin-gonic/gin"
+    "github.com/gin-gonic/gin/binding"
     "time"
+    "regexp"
 )
 
-func CommentAdd (r render.Render, database *mgo.Database, req *http.Request, params martini.Params) { 
-    
-    if bson.IsObjectIdHex(params["id"]) == false {
-        
-        response := map[string]string{
-		    "error":  "Invalid params.",
-		    "status": "701",
-	    }
-        
-        r.JSON(400, response)
-        return   
-    }   
-    
-    // Get the query parameters
-    qs := req.URL.Query()
-    
-    // Name of the set to get
-    token := qs.Get("token")
-    
-    if token == "" {
-        
-        response := map[string]string{
-		    "error":  "Not authorized",
-		    "status": "702",
-	    }
-        
-        r.JSON(401, response)
-        
+type CommentForm struct {
+    Content   string `json:"content" binding:"required"`
+}
+
+func CommentAdd (c *gin.Context) {
+
+    id := c.Params.ByName("id")
+
+    if bson.IsObjectIdHex(id) == false {
+
+        c.JSON(400, gin.H{"error": "Invalid request, no valid params.", "status": 701})
         return
     }
-    
+
+    // Get the query parameters
+    qs := c.Request.URL.Query()
+
+    // Name of the set to get
+    token := qs.Get("token")
+
+    if token == "" {
+
+        c.JSON(401, gin.H{"error": "Not authorized.", "status": 702})
+        return
+    }
+
     // Get user by token
     user_token  := UserToken{}
-    
+
     // Try to fetch the user using token header though
 	err := database.C("tokens").Find(bson.M{"token": token}).One(&user_token)
-	
+
 	if err != nil {
-	    response := map[string]string{
-		    "error":  "Not authorized",
-		    "status": "703",
-	    }
-        r.JSON(401, response)
-        return 
+	    c.JSON(401, gin.H{"error": "Not authorized.", "status": 703})
+        return
 	}
-	
-	// Get the option content
-    body, err := ioutil.ReadAll(req.Body)    
-    
-    if err != nil {
-        
-        panic(err)   
-    }
-    
-    var comment map[string] interface{}
-    
-    err = json.Unmarshal(body, &comment)
-    
-    if err != nil {
-        
-        panic(err)   
-    }
-    
-    content, okay := comment["content"]
-    
-    if okay && content != "" {
-        
+
+    var comment CommentForm
+
+    if c.BindWith(&comment, binding.JSON) {
+
         // Get the post using the slug
-        id := bson.ObjectIdHex(params["id"])
+        id := bson.ObjectIdHex(id)
     
         // Posts collection
         collection := database.C("posts")
         
         var post Post
         
-        err := collection.FindId(id).One(&post)    
+        err := collection.FindId(id).One(&post)
         
         if err != nil {
             
-            response := map[string]string{
-    		    "error":  "Couldnt found post with that id.",
-    		    "status": "705",
-    	    }
-            
-            r.JSON(404, response)
-            
+            c.JSON(404, gin.H{"error": "Couldnt find the post", "status": 705})
             return
         }
         
@@ -108,8 +73,20 @@ func CommentAdd (r render.Render, database *mgo.Database, req *http.Request, par
         comment := Comment{
             UserId: user_token.UserId,
             Votes: votes,
-            Content: content.(string),
+            Content: comment.Content,
             Created: time.Now(),
+        }
+        
+        urls, _ := regexp.Compile(`http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+`)
+        
+        var assets []string
+        
+        assets = urls.FindAllString(comment.Content, -1)
+        
+        for _, asset := range assets {
+
+            // Download the asset on other routine in order to non block the API request
+            go downloadFromUrl(asset)
         }
         
         // Update the post and push the comments
@@ -125,38 +102,27 @@ func CommentAdd (r render.Render, database *mgo.Database, req *http.Request, par
         need_add := true
         
         for _, already_within := range users {
-            
+
             if already_within == user_token.UserId {
-                
-                need_add = false   
+
+                need_add = false
             }
         }
-        
+
         if need_add == true {
-	            
+
             // Add the user to the user list
             change := bson.M{"$push": bson.M{"users": user_token.UserId}}
-            err = collection.Update(bson.M{"_id": post.Id}, change)   
+            err = collection.Update(bson.M{"_id": post.Id}, change)
             
             if err != nil {
     		    panic(err)
     	    }
         }
-        
-        response := map[string]string{
-    	    "status": "706",
-    	    "message": "okay",
-        }
-        
-        r.JSON(200, response)
 
+        c.JSON(200, gin.H{"message": "okay", "status": 706})
         return
     }
     
-    response := map[string]string{
-	    "error":  "Not authorized",
-	    "status": "704",
-    }
-    
-    r.JSON(401, response)
+    c.JSON(401, gin.H{"error": "Not authorized.", "status": 704})
 }
