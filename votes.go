@@ -4,6 +4,8 @@ import (
     "gopkg.in/mgo.v2/bson"
     "github.com/gin-gonic/gin"
     "github.com/gin-gonic/gin/binding"
+    "github.com/ftrvxmtrx/gravatar"
+    "fmt"
     "bytes"
     "time"
     "strconv"
@@ -352,6 +354,35 @@ func VoteComment (c *gin.Context) {
                     Created: time.Now(),
                 }
                 err = database.C("votes").Insert(vote)
+                
+                comment_index, _ := strconv.Atoi(index)
+                comment_ := post.Comments.Set[comment_index]
+                
+                // Notify the author of the comment
+                go func(comment Comment, token UserToken, post Post) {
+                    
+                    user_id := comment.UserId
+                    
+                    // Get the comment like author
+                    var user User
+                
+                    err := database.C("users").Find(bson.M{"_id": token.UserId}).One(&user)
+                    
+                    if err == nil {
+                        
+                        // Gravatar url
+                        emailHash := gravatar.EmailHash(user.Email)
+                        image := gravatar.GetAvatarURL("http", emailHash, "http://spartangeek.com/images/default-avatar.png", 80)
+                        
+                        // Construct the notification message
+                        title := fmt.Sprintf("A **%s** le gusta tu comentario.", user.UserName)
+                        message := post.Title
+                        
+                        // We are inside an isolated routine, so we dont need to worry about the processing cost
+                        notify(user_id, "like", post.Id, "/post/" + post.Slug, title, message, image.String())   
+                    }
+                    
+                }(comment_, user_token, post)
                 
                 c.JSON(200, gin.H{"message": "okay", "status": 606})
                 return
