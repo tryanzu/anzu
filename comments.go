@@ -4,8 +4,10 @@ import (
     "gopkg.in/mgo.v2/bson"
     "github.com/gin-gonic/gin"
     "github.com/gin-gonic/gin/binding"
+    "github.com/ftrvxmtrx/gravatar"
     "time"
     "regexp"
+    "fmt"
 )
 
 type CommentForm struct {
@@ -119,6 +121,33 @@ func CommentAdd (c *gin.Context) {
     		    panic(err)
     	    }
         }
+        
+        // Notifications for the author 
+        //if post.UserId != user_token.UserId {
+            
+            go func(post Post, token UserToken) {
+                
+                // Get the comment author
+                var user User
+                
+                err := database.C("users").Find(bson.M{"_id": token.UserId}).One(&user)
+                
+                if err == nil {
+                    
+                    // Gravatar url
+                    emailHash := gravatar.EmailHash(user.Email)
+                    image := gravatar.GetAvatarURL("http", emailHash, "http://spartangeek.com/images/default-avatar.png", 80)
+                    
+                    // Construct the notification message
+                    title := fmt.Sprintf("Nuevo comentario de **%s**", user.UserName)
+                    message := post.Title
+                    
+                    // We are inside an isolated routine, so we dont need to worry about the processing cost
+                    notify(post.UserId, "comment", post.Id, "/post/" + post.Slug, title, message, image.String())
+                }
+                            
+            }(post, user_token)
+        //}
 
         c.JSON(200, gin.H{"message": "okay", "status": 706})
         return

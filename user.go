@@ -17,11 +17,13 @@ type User struct {
 	LastName    string                 `bson:"last_name" json:"last_name"`
 	UserName    string                 `bson:"username" json:"username"`
 	Password    string                 `bson:"password" json:"-"`
+	Step        int                    `bson:"step,omitempty" json:"step"`
 	Email       string                 `bson:"email" json:"email,omitempty"`
 	Roles       []string               `bson:"roles" json:"roles,omitempty"`
 	Permissions []string               `bson:"permissions" json:"permissions,omitempty"`
 	Description string                 `bson:"description" json:"description,omitempty"`
 	Facebook    interface{}            `bson:"facebook,omitempty" json:"facebook,omitempty"`
+	Notifications interface{}          `bson:"notifications,omitempty" json:"notifications,omitempty"`
 	Profile     map[string]interface{} `bson:"profile,omitempty" json:"profile,omitempty"`
 	Stats       UserStats              `bson:"stats,omitempty" json:"stats,omitempty"`
 	Created     time.Time              `bson:"created_at" json:"created_at"`
@@ -29,7 +31,7 @@ type User struct {
 }
 
 type UserStats struct {
-	Saw int `bson:"saw" json:"saw"`
+	Saw int `bson:"saw,omitempty" json:"saw,omitempty"`
 }
 
 type UserToken struct {
@@ -81,7 +83,16 @@ func UserGetByToken(c *gin.Context) {
 		err = collection.Find(bson.M{"_id": user_token.UserId}).One(&user)
 
 		if err == nil {
-
+			
+			// Get the user notifications
+			notifications, err := database.C("notifications").Find(bson.M{"user_id": user.Id, "seen": false}).Count()
+			
+			if err !=  nil {
+				panic(err)
+			}
+			
+			user.Notifications = notifications
+			
 			// Alright, go back and send the user info
 			c.JSON(200, user)
 
@@ -191,6 +202,16 @@ func UserGetTokenFacebook(c *gin.Context) {
 			c.JSON(500, gin.H{"error": "Could create user using facebook oAuth...", "status": 106})
 			return
 		}
+		
+		err = database.C("counters").Insert(Counter{
+			UserId: id,
+			Counters: map[string]PostCounter{
+				"news": PostCounter{
+					Counter: 0,
+					Updated: time.Now(),
+				},
+			},
+		})
 
 		// Generate user token
 		uuid := uuid.New()
@@ -295,7 +316,7 @@ func UserRegisterAction(c *gin.Context) {
         if user_exists > 0 {
 
             // Username busy
-            c.JSON(400, gin.H{"status": "error", "message": "User already registered", "code": 470})
+            c.JSON(400, gin.H{"status": "error", "message": "User already registered", "code": 471})
             return
         }
 
@@ -318,8 +339,11 @@ func UserRegisterAction(c *gin.Context) {
 	        "microsoft": "-",
 	        "bio": "Just another spartan geek",
 	    }
-
+		
+		id := bson.NewObjectId()
+		
         user := &User{
+        	Id: id,
             FirstName: "",
             LastName: "",
             UserName: registerAction.UserName,
@@ -342,8 +366,17 @@ func UserRegisterAction(c *gin.Context) {
             panic(err)
         }
         
-        // Send a confirmation email
+        err = database.C("counters").Insert(Counter{
+			UserId: id,
+			Counters: map[string]PostCounter{
+				"news": PostCounter{
+					Counter: 0,
+					Updated: time.Now(),
+				},
+			},
+		})
         
+        // Send a confirmation email
 
         // Finished creating the post
 		c.JSON(200, gin.H{"status": "okay", "code": 200})
