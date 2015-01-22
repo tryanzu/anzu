@@ -6,6 +6,7 @@ import (
 	"github.com/go-martini/martini"
 	"github.com/martini-contrib/render"
 	"github.com/mrvdot/golang-utils"
+	"github.com/kennygrant/sanitize"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"math/rand"
@@ -128,6 +129,7 @@ func FeedGet(c *gin.Context) {
 
 	o := qs.Get("offset")
 	l := qs.Get("limit")
+	f := qs.Get("category")
 
 	// Check if offset has been specified
 	if o != "" {
@@ -152,10 +154,34 @@ func FeedGet(c *gin.Context) {
 
 		limit = lim
 	}
+	
+	search := make(bson.M)
+	
+	if f != "" && f != "recent" {
+		
+		search["categories"] = f
+		
+		 // Check whether auth or not
+		user_token := UserToken{}
+		token := c.Request.Header.Get("Auth-Token")
+	
+		if token != "" {
+	
+	    	// Try to fetch the user using token header though
+	    	err := database.C("tokens").Find(bson.M{"token": token}).One(&user_token)
+	    
+	    	if err == nil {
+	    
+	    		// Reset the counters for that category
+				counterReset(f, user_token.UserId)
+	    	}
+		}
+		
+	}
 
 	// Prepare the database to fetch the feed
 	posts_collection := database.C("posts")
-	get_feed := posts_collection.Find(bson.M{}).Sort("-created_at").Limit(limit).Skip(offset)
+	get_feed := posts_collection.Find(search).Sort("-created_at").Limit(limit).Skip(offset)
 
 	// Get the results from the feed algo
 	err := get_feed.All(&feed)
@@ -195,12 +221,23 @@ func FeedGet(c *gin.Context) {
 			if _, okay := usersMap[post.UserId]; okay {
 
 				postUser := usersMap[post.UserId]
+                
+                var authorLevel int
+                
+                if _, stepOkay := postUser.Profile["step"]; stepOkay {
+
+                    authorLevel = postUser.Profile["step"].(int)
+                } else {
+                    
+                    authorLevel = 0
+                }
 
 				post.Author = User{
 					Id:        postUser.Id,
 					UserName:  postUser.UserName,
 					FirstName: postUser.FirstName,
 					LastName:  postUser.LastName,
+					Step:      authorLevel,
 					Email:     postUser.Email,
 				}
 			}
@@ -612,16 +649,18 @@ func PostCreate(c *gin.Context) {
 					c.JSON(400, gin.H{"status": "error", "message": "Couldnt create post, missing information...", "code": 4001})
 					return
 				}
+				
+				post_name := "PC " + post.Name + " - presupuesto de $" + budget.(string) + " " + budget_currency.(string) 
 
 				publish := &Post{
-					Title:      post.Name,
+					Title:      post_name,
 					Content:    post.Content,
-					Type:       "category-post",
-					Slug:       utils.GenerateSlug(post.Name),
+					Type:       "recommendations",
+					Slug:       sanitize.Path(post.Name),
 					Comments:   comments,
 					UserId:     user_token.UserId,
 					Users:      users,
-					Categories: []string{"el-bar"},
+					Categories: []string{"recommendations"},
 					Votes:      votes,
 					Created:    time.Now(),
 					Updated:    time.Now(),
@@ -674,6 +713,9 @@ func PostCreate(c *gin.Context) {
 				if err != nil {
 					panic(err)
 				}
+				
+				// Add a counter for the category
+				counterAdd("recommendations")
 
 				// Finished creating the post
 				c.JSON(200, gin.H{"status": "okay", "code": 200})
@@ -696,7 +738,7 @@ func PostCreate(c *gin.Context) {
 				suffix := string(b)
 
 				// Duplicated so suffix it
-				slug = utils.GenerateSlug(post.Name) + "-" + suffix
+				slug = sanitize.Path(post.Name) + "-" + suffix
 
 			} else {
 
@@ -712,7 +754,7 @@ func PostCreate(c *gin.Context) {
 				Comments:   comments,
 				UserId:     user_token.UserId,
 				Users:      users,
-				Categories: []string{"el-bar"},
+				Categories: []string{post.Tag},
 				Votes:      votes,
 				Created:    time.Now(),
 				Updated:    time.Now(),
@@ -723,6 +765,9 @@ func PostCreate(c *gin.Context) {
 			if err != nil {
 				panic(err)
 			}
+			
+			// Add a counter for the category
+			counterAdd(post.Tag)
 
 			// Finished creating the post
 			c.JSON(200, gin.H{"status": "okay", "code": 200})

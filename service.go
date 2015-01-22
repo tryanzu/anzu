@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	zmq "github.com/pebbe/zmq4"
 	"github.com/fernandez14/deferclient/deferstats"
 	"github.com/gin-gonic/gin"
 	"github.com/xuyu/goredis"
@@ -18,19 +19,25 @@ var (
 	mongo    *mgo.Session
 	config   gin.H
 	redis    *goredis.Redis
+	socket   *zmq.Socket
+	zmq_messages chan string
 )
 
 func main() {
 
-	// Deferpanic client
-	deferstats.Token = "aUyzvsMRKLdrB0AK0XSZXV7qQbxyOhYT"
-	deferstats.Verbose = true
-
 	// Start by using the power of the machine cores
 	runtime.GOMAXPROCS(runtime.NumCPU())
+	
+	// Run with the specified env file
+	envfile := os.Getenv("ENV_FILE")
 
+	if envfile == "" {
+
+		envfile = "./env.json"
+	}
+	
 	// Read config from env file
-	configFile, err := ioutil.ReadFile("./env.json")
+	configFile, err := ioutil.ReadFile(envfile)
 	if err != nil {
 		fmt.Printf("File error: %v\n", err)
 		os.Exit(1)
@@ -41,6 +48,21 @@ func main() {
 		fmt.Printf("File error: %v\n", err)
 		os.Exit(1)
 	}
+	
+    config_services := config["plugins"].(map[string]interface{})
+	
+	// Start the zmq socket
+	socket, err  := zmq.NewSocket(zmq.REQ)
+    if err != nil { panic(err) }
+    
+    socket.Connect(config_services["socket"].(string))
+    
+    // Channel to send the socket messages
+    zmq_messages = make(chan string)
+    
+    // Deferpanic client
+	deferstats.Token = config_services["deferpanic"].(string)
+	deferstats.Verbose = false
 
 	// Start gin classic middlewares
 	g := gin.Default()
@@ -97,6 +119,7 @@ func main() {
 
 		// User routes
 		v1.POST("/user", UserRegisterAction)
+		v1.GET("/user/my/notifications", UserNotificationsGet)
 		v1.GET("/user/my", UserGetByToken)
 		v1.PUT("/user/my", UserUpdateProfile)
 		v1.POST("/user/get-token/facebook", UserGetTokenFacebook)
@@ -120,7 +143,21 @@ func main() {
 
 	// Collect stats
 	go deferstats.CaptureStats()
-
+	
+	// Wait for zmq messages to send to the socket server
+	go func(zmq_messages chan string) {
+    	
+    	for {
+    		select {
+    		case message := <- zmq_messages:	
+	    		
+	    		// Send to the socket
+	    		socket.Send(message, 0)
+	    		socket.Recv(0)
+    		}
+    	}
+    }(zmq_messages)
+    
 	g.Run(":" + port)
 }
 
@@ -148,7 +185,7 @@ func CORS() gin.HandlerFunc {
 
 		c.Writer.Header().Set("Content-Type", "application/json")
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Auth-Token,Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 		if c.Request.Method == "OPTIONS" {
 			fmt.Println("options")
 			c.Abort(200)
