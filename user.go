@@ -9,6 +9,7 @@ import (
 	"github.com/mrvdot/golang-utils"
 	"gopkg.in/mgo.v2/bson"
 	"time"
+	"sort"
 )
 
 type User struct {
@@ -43,12 +44,24 @@ type UserToken struct {
 	Updated time.Time     `bson:"updated_at" json:"updated_at"`
 }
 
+type UserPc struct{
+	Type string `bson:"type" json:"type"`
+}
+
 type UserFollowing struct {
 	Id            bson.ObjectId `bson:"_id,omitempty" json:"id"`
 	Follower      bson.ObjectId `bson:"follower,omitempty" json:"follower"`
 	Following     bson.ObjectId `bson:"following,omitempty" json:"following"`
 	Notifications bool          `bson:"notifications,omitempty" json:"notifications"`
 	Created       time.Time     `bson:"created_at" json:"created_at"`
+}
+
+type UserActivity struct {
+	Title 		string 		`json:"title"`
+	Directive 	string 		`json:"directive"`
+	Content 	string 		`json:"content"`
+	Author		map[string]string        `json:"user"`
+	Created 	time.Time 	`json:"created_at"`
 }
 
 type UserProfileForm struct {
@@ -64,6 +77,11 @@ type UserRegisterForm struct {
 	Password  string  `json:"password" binding:"required"`
 	Email     string  `json:"email" binding:"required"`
 }
+
+type ByCreatedAt []UserActivity
+func (a ByCreatedAt) Len() int  		 { return len(a) }
+func (a ByCreatedAt) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByCreatedAt) Less(i, j int) bool { return !a[i].Created.Before(a[j].Created) }
 
 func UserGetByToken(c *gin.Context) {
 
@@ -385,4 +403,88 @@ func UserRegisterAction(c *gin.Context) {
     
     // Couldn't process the request though
     c.JSON(400, gin.H{"status": "error", "message": "Missing information to process the request", "code": 400})
+}
+
+func UserInvolvedFeedGet(c *gin.Context) {
+	
+	var user_posts []Post
+	var commented_posts []Post
+	var activity = make([]UserActivity, 0)
+	
+	 // Check whether auth or not
+	user_token := UserToken{}
+	token := c.Request.Header.Get("Auth-Token")
+
+	if token != "" {
+
+    	// Try to fetch the user using token header though
+    	err := database.C("tokens").Find(bson.M{"token": token}).One(&user_token)
+    
+    	if err == nil {
+    		
+    		var user User
+    		
+    		// Get the current user
+    		err := database.C("users").Find(bson.M{"_id": user_token.UserId}).One(&user)
+    		
+    		if err != nil {
+    			panic(err)
+    		}
+    		
+    		// Get the user owned posts
+			err = database.C("posts").Find(bson.M{"user_id": user_token.UserId}).All(&user_posts)
+			
+			if err != nil {
+				panic(err)
+			}
+			
+			// Get the posts where the user commented
+			err = database.C("posts").Find(bson.M{"users": user_token.UserId, "user_id": bson.M{"$ne":  user_token.UserId}}).All(&commented_posts)
+			
+			if err != nil {
+				panic(err)
+			}
+			
+			for _, post := range user_posts {
+				
+				activity = append(activity, UserActivity{
+					Title: post.Title,
+					Content: post.Content,
+					Created: post.Created,
+					Directive: "owner",
+					Author: map[string]string{
+						"id":    user.Id.Hex(),
+						"name":  user.UserName,
+						"email": user.Email,
+					},
+				})
+			}
+			
+			for _, post := range commented_posts {
+				
+				for _, comment := range post.Comments.Set {
+					
+					if comment.UserId == user.Id {
+						
+						activity = append(activity, UserActivity{
+							Title: post.Title,
+							Content: comment.Content,
+							Created: comment.Created,
+							Directive: "commented",
+							Author: map[string]string{
+								"id":    user.Id.Hex(),
+								"name":  user.UserName,
+								"email": user.Email,
+							},
+						})
+					}
+				}
+			}
+			
+			// Sort the full set of posts by the time they happened
+			sort.Sort(ByCreatedAt(activity))
+			
+			c.JSON(200, gin.H{"activity": activity})
+    	}
+	}
 }
