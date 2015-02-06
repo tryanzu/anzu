@@ -121,10 +121,17 @@ func main() {
 		v1.POST("/user", UserRegisterAction)
 		v1.GET("/user/my/notifications", UserNotificationsGet)
 		v1.GET("/user/my", UserGetByToken)
+		v1.GET("/user/activity", UserInvolvedFeedGet)
+		v1.GET("/user/search", UserAutocompleteGet)
 		v1.PUT("/user/my", UserUpdateProfile)
 		v1.POST("/user/get-token/facebook", UserGetTokenFacebook)
 		v1.GET("/user/get-token", UserGetToken)
 		// v1.GET("/user/:id", UserGetOne)
+		
+		// Messaging routes
+		v1.GET("/messages", MessagesGet)
+		v1.POST("/messages", MessagePublish)
+		v1.GET("/hashtags", HashtagsGet)
 
 		// Playlist routes
 		v1.GET("/playlist/l/:sections", PlaylistGetList)

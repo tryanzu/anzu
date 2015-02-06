@@ -488,3 +488,22 @@ func UserInvolvedFeedGet(c *gin.Context) {
     	}
 	}
 }
+
+func UserAutocompleteGet(c *gin.Context) {
+	
+	var users []gin.H
+	
+	qs := c.Request.URL.Query()
+	name := qs.Get("search")
+	
+	if name != "" {
+		
+		err := database.C("users").Find(bson.M{"username": bson.RegEx{"^" + name, "i"}}).Select(bson.M{"_id": 1, "username": 1, "email": 1}).All(&users)
+		
+		if err != nil {
+			panic(err)
+		}
+		
+		c.JSON(200, gin.H{"users": users})
+	}
+}

@@ -7,6 +7,7 @@ import (
     "github.com/ftrvxmtrx/gravatar"
     "time"
     "regexp"
+    "strings"
     "fmt"
 )
 
@@ -79,16 +80,30 @@ func CommentAdd (c *gin.Context) {
             Created: time.Now(),
         }
         
-        urls, _ := regexp.Compile(`http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+`)
+        //urls, _  := regexp.Compile(`http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+`)
+        mentions, _ := regexp.Compile(`(?i)\@[a-z0-9]+`)
+            
+        //var assets []string
         
-        var assets []string
+        //assets = urls.FindAllString(comment.Content, -1)
         
-        assets = urls.FindAllString(comment.Content, -1)
-        
-        for _, asset := range assets {
+        //for _, asset := range assets {
 
             // Download the asset on other routine in order to non block the API request
-            go downloadFromUrl(asset)
+            //go downloadFromUrl(asset)
+        //}
+        
+        var mentions_users []string
+        
+        mentions_users = mentions.FindAllString(comment.Content, -1)
+        
+        for _, mention_user := range mentions_users {
+            
+            go mentionUserComment(mention_user, post, user_token)    
+            
+            // Replace the mentioned user
+            markdown := "[" + mention_user + "](/user/profile/" + mention_user[1:] + " \""+ mention_user[1:] +"\")"  
+            comment.Content =  strings.Replace(comment.Content, mention_user, markdown, -1)
         }
         
         // Update the post and push the comments
@@ -123,7 +138,7 @@ func CommentAdd (c *gin.Context) {
         }
         
         // Notifications for the author 
-        //if post.UserId != user_token.UserId {
+        if post.UserId != user_token.UserId {
             
             go func(post Post, token UserToken) {
                 
@@ -147,11 +162,40 @@ func CommentAdd (c *gin.Context) {
                 }
                             
             }(post, user_token)
-        //}
+        }
 
         c.JSON(200, gin.H{"message": "okay", "status": 706})
         return
     }
     
     c.JSON(401, gin.H{"error": "Not authorized.", "status": 704})
+}
+
+func mentionUserComment(mentioned string, post Post, token UserToken) {
+    
+    var user User
+    var author User
+    
+    username := mentioned[1:]
+    
+    err := database.C("users").Find(bson.M{"username": username}).One(&user)
+    
+    if err == nil {
+        
+        err := database.C("users").Find(bson.M{"_id": token.UserId}).One(&author)
+        
+        if err == nil {
+            
+            // Gravatar url
+            emailHash := gravatar.EmailHash(author.Email)
+            image := gravatar.GetAvatarURL("http", emailHash, "http://spartangeek.com/images/default-avatar.png", 80)
+            
+            // Construct the notification message
+            title := fmt.Sprintf("**%s** te menciono en un comentario", author.UserName)
+            message := post.Title
+            
+            // We are inside an isolated routine, so we dont need to worry about the processing cost
+            notify(user.Id, "mention", post.Id, "/post/" + post.Slug, title, message, image.String())
+        }
+    }
 }

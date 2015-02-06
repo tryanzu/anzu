@@ -177,3 +177,22 @@ func counterReset(category string, user_id bson.ObjectId) {
     
     return
 }
+
+func spread(channel string, message map[string]string) {
+    
+    // Send the socket message
+    realtime := map[string]string{
+        "to": channel,
+    }
+    
+    for key, value := range message {
+        
+        if key != "to" {
+            
+            realtime[key] = value
+        }
+    }
+    
+    realtime_message, _ := json.Marshal(realtime)
+    zmq_messages <- string(realtime_message)
+}
