@@ -4,6 +4,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
 	"strings"
+	"sort"
+	"encoding/json"
 )
 
 type Category struct {
@@ -12,7 +14,32 @@ type Category struct {
 	Description string        `bson:"description" json:"description"`
 	Slug        string        `bson:"slug" json:"slug"`
 	Permissions interface{}   `bson:"permissions" json:"permissions"`
+	Count       int 		  `bson:"count,omitempty" json:"count,omitempty"`
 	Recent      int           `bson:"recent,omitempty" json:"recent,omitempty"`
+}
+
+type CategoryCounters struct {
+	List 		[]CategoryCounter `json:"list"`
+}
+
+type CategoryCounter struct {
+	Slug 		string `json:"slug"`
+	Count 		int    `json:"count"`
+}
+
+
+type Categories []Category
+
+func (slice Categories) Len() int {
+    return len(slice)
+}
+
+func (slice Categories) Less(i, j int) bool {
+    return slice[i].Count > slice[j].Count;
+}
+
+func (slice Categories) Swap(i, j int) {
+    slice[i], slice[j] = slice[j], slice[i]
 }
 
 func CategoriesGet(c *gin.Context) {
@@ -55,6 +82,65 @@ func CategoriesGet(c *gin.Context) {
 			}
 		}
 	}
+
+	counters, _ := redis.Get("frontend.counters.category")
+
+	if counters == nil {
+
+		list := []CategoryCounter{}
+
+		for category_index, category := range categories {
+
+			count, err := database.C("posts").Find(bson.M{"categories": category.Slug}).Count()
+
+			if err == nil {
+
+				// Append to the list of counters
+				list = append(list, CategoryCounter{
+					Slug: category.Slug,
+					Count: count,
+				})
+
+				// Add the count to the current set of categories
+				categories[category_index].Count = count
+			}
+		}
+
+		cache := CategoryCounters{
+			List: list,
+		}
+
+		encoded, err := json.Marshal(cache)
+
+		err = redis.Set("frontend.counters.category", string(encoded), 43200, 0, false, false)
+
+		if err != nil {
+			panic(err)
+		}
+
+	} else {
+
+		var cache CategoryCounters
+
+		// Unmarshal already warmed up user achievements
+        if err := json.Unmarshal(counters, &cache); err != nil {
+            panic(err)
+        }
+
+        for _, category := range cache.List {
+
+        	for current_index, current := range categories {
+
+        		if current.Slug == category.Slug {
+
+        			// Set the current count of the category
+        			categories[current_index].Count = category.Count
+        		}
+        	}
+        }
+	}
+
+	sort.Sort(Categories(categories))
 
 	c.JSON(200, categories)
 }
