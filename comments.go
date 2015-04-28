@@ -25,11 +25,8 @@ func CommentAdd (c *gin.Context) {
         return
     }
 
-    // Get the query parameters
-    qs := c.Request.URL.Query()
-
     // Name of the set to get
-    token := qs.Get("token")
+    token := c.Request.Header.Get("Auth-Token")
 
     if token == "" {
 
@@ -81,7 +78,7 @@ func CommentAdd (c *gin.Context) {
         }
         
         //urls, _  := regexp.Compile(`http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+`)
-        mentions, _ := regexp.Compile(`(?i)\@[a-z0-9]+`)
+        mentions, _ := regexp.Compile(`(?i)\@[a-z0-9\-\_]+`)
             
         //var assets []string
         
