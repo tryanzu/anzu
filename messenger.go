@@ -9,7 +9,6 @@ import (
     "strconv"
 )
 
-
 type Message struct {
     Id         bson.ObjectId   `bson:"_id,omitempty" json:"id,omitempty"`
     UserId     bson.ObjectId   `bson:"user_id" json:"user_id"`
@@ -263,4 +262,8 @@ func HashtagsGet(c *gin.Context) {
 		// Print out an empty list of hashtags
 		c.JSON(200, gin.H{"hashtags": []string{}})
 	}
+}
+
+func MessagesOnlineUsersGet(c *gin.Context) {
+		
 }
