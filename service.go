@@ -106,7 +106,7 @@ func main() {
 		// Post routes
 		v1.GET("/feed", FeedGet)
 		v1.GET("/post", PostsGet)
-		//v1.GET("/post/:id", PostsGetOne)
+		v1.GET("/posts/:id", PostsGetOne)
 		v1.GET("/post/s/:slug", PostsGetOneSlug)
 		v1.POST("/post", PostCreate)
 
@@ -192,6 +192,7 @@ func CORS() gin.HandlerFunc {
 
 		c.Writer.Header().Set("Content-Type", "application/json")
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET,POST,OPTIONS,PUT")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Auth-Token,Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 		if c.Request.Method == "OPTIONS" {
 			fmt.Println("options")
