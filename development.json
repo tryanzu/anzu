@@ -1,0 +1,24 @@
+{
+    "environment": "development",
+    "ports": {
+        "zmq": "5439",
+        "http": "4000",
+        "socket": "8096"
+    },
+    "paths": {
+        "assets": "/var/www/river.spartangeek.com/static/assets/"
+    },
+    "database": {
+        "uri": "mongodb://superuser:A22oyhq9@10.128.84.226:27017/admin",
+        "name": "spartangeek_staging"
+    },
+    "cache": {
+        "redis": "127.0.0.1:6379"
+    },
+    "plugins": {
+        "newrelic": "0770a867c3e597503398842e7934b1bc608a13f7",
+        "mandrill": "SVHkL_ZiRHI4x9i2Sm-tuA",
+        "socket": "tcp://127.0.0.1:5439",
+        "deferpanic": "aUyzvsMRKLdrB0AK0XSZXV7qQbxyOhYT"
+    }
+}
