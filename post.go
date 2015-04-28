@@ -3,14 +3,10 @@ package main
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
-	"github.com/go-martini/martini"
-	"github.com/martini-contrib/render"
 	"github.com/mrvdot/golang-utils"
 	"github.com/kennygrant/sanitize"
-	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"math/rand"
-	"net/http"
 	"reflect"
 	"sort"
 	"strconv"
@@ -226,7 +222,7 @@ func FeedGet(c *gin.Context) {
                 
                 if _, stepOkay := postUser.Profile["step"]; stepOkay {
 
-                    authorLevel = postUser.Profile["step"].(int)
+                    authorLevel = 1
                 } else {
                     
                     authorLevel = 0
@@ -343,22 +339,17 @@ func PostsGet(c *gin.Context) {
 	c.JSON(200, gin.H{"recommendations": recommendations, "last": published})
 }
 
-func PostsGetOne(r render.Render, database *mgo.Database, req *http.Request, params martini.Params) {
+func PostsGetOne(c *gin.Context) {
 
-	if bson.IsObjectIdHex(params["id"]) == false {
+	// Get the post using the slug
+	id := c.Params.ByName("id")
 
-		response := map[string]string{
-			"error":  "Invalid params to get a post.",
-			"status": "202",
-		}
+	if bson.IsObjectIdHex(id) == false {
 
-		r.JSON(400, response)
+		c.JSON(400, gin.H{"error": "Invalid request, id not valid.", "status": 400})
 
 		return
 	}
-
-	// Get the id of the needed post
-	id := bson.ObjectIdHex(params["id"])
 
 	// Get the collection
 	collection := database.C("posts")
@@ -366,21 +357,203 @@ func PostsGetOne(r render.Render, database *mgo.Database, req *http.Request, par
 	post := Post{}
 
 	// Try to fetch the needed post by id
-	err := collection.FindId(id).One(&post)
+	err := collection.FindId(bson.ObjectIdHex(id)).One(&post)
 
 	if err != nil {
 
-		response := map[string]string{
-			"error":  "Couldnt found post with that id.",
-			"status": "201",
-		}
-
-		r.JSON(404, response)
+		c.JSON(404, gin.H{"error": "Couldnt found post with that slug.", "status": 203})
 
 		return
 	}
 
-	r.JSON(200, post)
+	// Get the users and stuff
+	if post.Users != nil && len(post.Users) > 0 {
+
+		var users []User
+
+		// Get the users
+		collection := database.C("users")
+
+		err := collection.Find(bson.M{"_id": bson.M{"$in": post.Users}}).All(&users)
+
+		if err != nil {
+
+			panic(err)
+		}
+
+		usersMap := make(map[bson.ObjectId]interface{})
+
+		var description string
+
+		for _, user := range users {
+
+			if user.Id == post.UserId {
+
+				// Set the author
+				post.Author = user
+			}
+
+			description = "Solo otro mas Spartan Geek"
+
+			if user_description, has_description := user.Profile["bio"]; has_description {
+
+				description = user_description.(string)
+			} 
+
+			usersMap[user.Id] = map[string]string{
+				"id":    user.Id.Hex(),
+				"username":  user.UserName,
+				"description": description,
+				"email": user.Email,
+			}
+		}
+
+		// Get the query parameters
+		qs := c.Request.URL.Query()
+
+		// Name of the set to get
+		token := qs.Get("token")
+
+		// Look for votes that has been already given
+		var votes []Vote
+		var likes []Vote
+
+		if token != "" {
+
+			// Get user by token
+			user_token := UserToken{}
+
+			// Try to fetch the user using token header though
+			err = database.C("tokens").Find(bson.M{"token": token}).One(&user_token)
+
+			if err == nil {
+
+				err = database.C("votes").Find(bson.M{"type": "component", "related_id": post.Id, "user_id": user_token.UserId}).All(&votes)
+
+				// Get the likes given by the current user
+				_ = database.C("votes").Find(bson.M{"type": "comment", "related_id": post.Id, "user_id": user_token.UserId}).All(&likes)
+			}
+
+			if user_token.UserId != post.UserId {
+
+				// Check if following
+				following := UserFollowing{}
+
+				err = database.C("followers").Find(bson.M{"follower": user_token.UserId, "following": post.UserId}).One(&following)
+
+				// The user is following the author so tell the post struct
+				if err == nil {
+
+					post.Following = true
+				}
+			}
+
+			// Increase user saw posts and its gamification in another thread
+			go func(token UserToken, users []User) {
+
+				var target User
+
+				// Update the user saw posts
+				_ = database.C("users").Update(bson.M{"_id": token.UserId}, bson.M{"$inc": bson.M{"stats.saw": 1}})
+				player := false
+
+				for _, user := range users {
+
+					if user.Id == token.UserId {
+
+						// The user is a player of the post so we dont have to get it from the database again
+						player = true
+						target = user
+					}
+				}
+
+				if player == false {
+
+					err = collection.Find(bson.M{"_id": token.UserId}).One(&target)
+
+					if err != nil {
+						panic(err)
+					}
+				}
+
+				// Update user achievements (saw posts)
+				updateUserAchievement(target, "saw")
+
+			}(user_token, users)
+		}
+
+		for index := range post.Comments.Set {
+
+			comment := &post.Comments.Set[index]
+
+			// Save the position over the comment
+			post.Comments.Set[index].Position = index
+
+			// Check if user liked that comment already
+			for _, vote := range likes {
+
+				if vote.NestedType == strconv.Itoa(index) {
+
+					post.Comments.Set[index].Liked = true
+				}
+			}
+
+			if _, okay := usersMap[comment.UserId]; okay {
+
+				post.Comments.Set[index].User = usersMap[comment.UserId]
+			}
+		}
+
+		// Sort by created at
+		sort.Sort(ByCommentCreatedAt(post.Comments.Set))
+
+		components := reflect.ValueOf(&post.Components).Elem()
+		components_type := reflect.TypeOf(&post.Components).Elem()
+
+		for i := 0; i < components.NumField(); i++ {
+
+			f := components.Field(i)
+			t := components_type.Field(i)
+
+			if f.Type().String() == "main.Component" {
+
+				component := f.Interface().(Component)
+
+				for _, vote := range votes {
+
+					if vote.NestedType == strings.ToLower(t.Name) {
+
+						if vote.Value == 1 {
+
+							component.Voted = "up"
+
+						} else if vote.Value == -1 {
+
+							component.Voted = "down"
+						}
+					}
+				}
+
+				if component.Elections == true {
+
+					for option_index, option := range component.Options {
+
+						if _, okay := usersMap[option.UserId]; okay {
+
+							component.Options[option_index].User = usersMap[option.UserId]
+						}
+					}
+
+					// Sort by created at
+					sort.Sort(ByElectionsCreatedAt(component.Options))
+				}
+
+				f.Set(reflect.ValueOf(component))
+			}
+		}
+	}
+
+	c.JSON(200, post)
 }
 
 func PostsGetOneSlug(c *gin.Context) {

@@ -9,6 +9,7 @@ import (
 	"github.com/mrvdot/golang-utils"
 	"gopkg.in/mgo.v2/bson"
 	"time"
+	"log"
 	"sort"
 )
 
@@ -65,11 +66,12 @@ type UserActivity struct {
 }
 
 type UserProfileForm struct {
-	Country       string `json:"country" binding:"required"`
-	FavouriteGame string `json:"favourite_game" binding:"required"`
-	Microsoft     string `json:"microsoft" binding:"required"`
-	Biography     string `json:"bio" binding:"required"`
-	ShowEmail     bool   `json:"show_email" binding:"required"`
+	Country       string `json:"country"`
+	FavouriteGame string `json:"favourite_game"`
+	Microsoft     string `json:"skype"`
+	Biography     string `json:"description"`
+	UserName      string `json:"username"`
+	ShowEmail     bool   `json:"show_email"`
 }
 
 type UserRegisterForm struct {
@@ -138,7 +140,7 @@ func UserGetToken(c *gin.Context) {
 
 	if err != nil {
 
-		c.JSON(401, gin.H{"error": "Couldnt found user with that email", "status": 101})
+		c.JSON(400, gin.H{"status": "error", "message": "Couldnt found user with that email", "code": 400})
 		return
 	}
 
@@ -151,7 +153,7 @@ func UserGetToken(c *gin.Context) {
 
 	if user.Password != hash {
 
-		c.JSON(401, gin.H{"error": "Credentials are not correct.", "status": 102})
+		c.JSON(400, gin.H{"status": "error", "message": "Credentials are not correct", "code": 400})
 		return
 	}
 
@@ -295,18 +297,48 @@ func UserUpdateProfile(c *gin.Context) {
 
 			if c.BindWith(&profileUpdate, binding.JSON) {
 
-				changes := bson.M{"$set": bson.M{
-					"profile.country":        profileUpdate.Country,
-					"profile.favourite_game": profileUpdate.FavouriteGame,
-					"profile.microsoft":      profileUpdate.Microsoft,
-					"profile.bio":            profileUpdate.Biography,
-					"updated_at":             time.Now(),
-				}}
+				set := bson.M{}
+				
+				if profileUpdate.Biography != "" {
+					
+					set["profile.bio"] = profileUpdate.Biography
+				}
+				
+				if profileUpdate.UserName != "" {
+					
+					// Check whether user exists
+					count, _ := database.C("users").Find(bson.M{"username": profileUpdate.UserName}).Count()
+					
+					if count == 0 {
+						
+						set["username"] = profileUpdate.UserName
+					}
+				}
+				
+				if profileUpdate.Country != "" {
+					
+					set["profile.country"] = profileUpdate.Country
+				}
+				
+				if profileUpdate.FavouriteGame != "" {
+					
+					set["profile.favourite_game"] = profileUpdate.FavouriteGame
+				}
+				
+				if profileUpdate.Microsoft != "" {
+					
+					set["profile.microsoft"] = profileUpdate.Microsoft
+				}
+				
+				set["updated_at"] = time.Now()
+				
+				log.Printf("%v", set)
+				log.Printf("%v", profileUpdate)
 
 				// Update the user profile with some godness
-				users_collection.Update(bson.M{"_id": user.Id}, changes)
+				users_collection.Update(bson.M{"_id": user.Id}, bson.M{"$set": set})
 
-				c.JSON(200, gin.H{"message": "okay", "status": 900})
+				c.JSON(200, gin.H{"message": "okay", "status": "okay", "code": 200})
 				return
 			}
 		}
