@@ -197,16 +197,43 @@ func UserGetTokenFacebook(c *gin.Context) {
 	// Create a new user
 	if err != nil {
 
+		var facebook_first_name, facebook_last_name, facebook_email string
+
 		username := facebook["first_name"].(string) + " " + facebook["last_name"].(string)
 		id := bson.NewObjectId()
 
+		// Ensure the facebook data is alright
+		if _, ok := facebook["first_name"]; ok {
+
+			facebook_first_name = facebook["first_name"].(string)
+		} else {
+
+			facebook_first_name = ""
+		}
+
+		if _, ok := facebook["last_name"]; ok {
+
+			facebook_last_name = facebook["last_name"].(string)
+		} else {
+
+			facebook_last_name = ""
+		}
+
+		if _, ok := facebook["email"]; ok {
+
+			facebook_email = facebook["email"].(string)
+		} else {
+
+			facebook_email = ""
+		}
+
 		user := &User{
 			Id:          id,
-			FirstName:   facebook["first_name"].(string),
-			LastName:    facebook["last_name"].(string),
+			FirstName:   facebook_first_name,
+			LastName:    facebook_last_name,
 			UserName:    utils.GenerateSlug(username),
 			Password:    "",
-			Email:       facebook["email"].(string),
+			Email:       facebook_email,
 			Roles:       make([]string, 0),
 			Permissions: make([]string, 0),
 			Description: "",
