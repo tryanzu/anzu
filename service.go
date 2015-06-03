@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/getsentry/raven-go"
 	"github.com/xuyu/goredis"
 	"gopkg.in/mgo.v2"
 	"io/ioutil"
 	"os"
+	"errors"
 	"runtime"
 )
 
@@ -17,6 +19,7 @@ var (
 	config   gin.H
 	redis    *goredis.Redis
 	zmq_messages chan string
+	error_tracking *raven.Client
 )
 
 func main() {
@@ -51,11 +54,14 @@ func main() {
 	// Start gin classic middlewares
 	g := gin.Default()
 
-	// Use deferpanic recovery
-	//g.Use(recovery.Recovery())
-
 	// Use cors middleware
 	g.Use(CORS())
+
+	// Exception tracking setup
+	config_sentry := config["sentry"].(map[string]interface{})
+	error_tracking, _ = raven.NewClient(config_sentry["dns"].(string), nil)
+
+	g.Use(DeferTracking())
 
 	// Start a session with redis-service
 	config_redis := config["cache"].(map[string]interface{})
@@ -112,6 +118,11 @@ func main() {
 
 		// Categories routes
 		v1.GET("/category", CategoriesGet)
+
+		v1.GET("/error", func(c *gin.Context) {
+
+			panic("Oh no! shit happened")
+		})
 	}
 
 	// Run over the 3000 port
@@ -170,6 +181,45 @@ func CORS() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+		c.Next()
+	}
+}
+
+func DeferTracking() gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		envfile := os.Getenv("ENV_FILE")
+
+		if envfile == "" {
+
+			envfile = "./env.json"
+		}
+
+		tags := map[string]string {
+			"config_file": envfile,
+		}
+
+		defer func() {
+
+			var packet *raven.Packet
+
+			switch rval := recover().(type) {
+			case nil:
+				return
+			case error:
+				packet = raven.NewPacket(rval.Error(), raven.NewException(rval, raven.NewStacktrace(2, 3, nil)))
+			default:
+				rvalStr := fmt.Sprint(rval)
+				packet = raven.NewPacket(rvalStr, raven.NewException(errors.New(rvalStr), raven.NewStacktrace(2, 3, nil)))
+			}
+
+			// Grab the error and send it to sentry
+			error_tracking.Capture(packet, tags)
+
+			// Also abort the request with 500
+			c.AbortWithStatus(500)
+		}()
+
 		c.Next()
 	}
 }
