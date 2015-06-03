@@ -54,9 +54,6 @@ func main() {
 	// Start gin classic middlewares
 	g := gin.Default()
 
-	// Use cors middleware
-	g.Use(CORS())
-
 	// Exception tracking setup
 	config_sentry := config["sentry"].(map[string]interface{})
 	error_tracking, _ = raven.NewClient(config_sentry["dns"].(string), nil)
@@ -77,6 +74,8 @@ func main() {
 
 	// Close the database connection when needed
 	defer mongo.Close()
+
+	g.Use(CORS())
 
 	v1 := g.Group("/v1")
 	{
@@ -176,9 +175,10 @@ func CORS() gin.HandlerFunc {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET,POST,OPTIONS,PUT")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Auth-Token,Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+
 		if c.Request.Method == "OPTIONS" {
-			fmt.Println("options")
-			c.Abort()
+
+			c.AbortWithStatus(200)
 			return
 		}
 		c.Next()
