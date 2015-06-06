@@ -1,6 +1,8 @@
-package main
+package handle
 
 import (
+    "github.com/fernandez14/spartangeek-blacker/mongo"
+    "github.com/fernandez14/spartangeek-blacker/model"
     "gopkg.in/mgo.v2/bson"
     "github.com/gin-gonic/gin"
     "github.com/gin-gonic/gin/binding"
@@ -8,28 +10,15 @@ import (
     "bytes"
 )
 
-type ElectionOption struct {
-    UserId  bson.ObjectId `bson:"user_id" json:"user_id"`
-    Content string `bson:"content" json:"content"`
-    User    interface{} `bson:"author,omitempty" json:"author,omitempty"`
-    Votes   Votes `bson:"votes" json:"votes"`
-    Created time.Time `bson:"created_at" json:"created_at"`
+type ElectionAPI struct {
+    DataService  *mongo.Service `inject:""`
 }
 
-type ElectionForm struct {
-    Component  string `json:"component" binding:"required"`     
-    Content  string `json:"content" binding:"required"`  
-}
-
-// ByElectionsCreatedAt implements sort.Interface for []ElectionOption based on Created field
-type ByElectionsCreatedAt []ElectionOption
-
-func (a ByElectionsCreatedAt) Len() int           { return len(a) }
-func (a ByElectionsCreatedAt) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a ByElectionsCreatedAt) Less(i, j int) bool { return !a[i].Created.Before(a[j].Created) }
-
-func ElectionAddOption (c *gin.Context) {
+func (di *ElectionAPI) ElectionAddOption (c *gin.Context) {
     
+    // Get the database interface from the DI
+    database := di.DataService.Database
+
     id := c.Params.ByName("id")
     
     if bson.IsObjectIdHex(id) == false {
@@ -53,7 +42,7 @@ func ElectionAddOption (c *gin.Context) {
     }
     
     // Get user by token
-    user_token  := UserToken{}
+    user_token  := model.UserToken{}
     
     // Try to fetch the user using token header though
 	err := database.C("tokens").Find(bson.M{"token": token}).One(&user_token)
@@ -65,9 +54,9 @@ func ElectionAddOption (c *gin.Context) {
         return 
 	}
 	
-    var option ElectionForm
+    var option model.ElectionForm
     
-    if c.BindWith(&option, binding.JSON) {
+    if c.BindWith(&option, binding.JSON) != nil {
         
         // Check if component is valid
         component := option.Component   
@@ -87,7 +76,7 @@ func ElectionAddOption (c *gin.Context) {
             // Posts collection
             collection := database.C("posts")
             
-            var post Post
+            var post model.Post
             
             err := collection.FindId(id).One(&post)    
             
@@ -99,12 +88,12 @@ func ElectionAddOption (c *gin.Context) {
                 return
             }
             
-            votes := Votes {
+            votes := model.Votes {
                 Up: 0,
                 Down: 0,
             }
             
-            election := ElectionOption {
+            election := model.ElectionOption {
                 UserId: user_token.UserId,
                 Content: content,
                 Votes: votes,

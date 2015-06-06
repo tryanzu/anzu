@@ -1,10 +1,12 @@
-package main
+package handle
 
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/mrvdot/golang-utils"
 	"github.com/kennygrant/sanitize"
+	"github.com/fernandez14/spartangeek-blacker/mongo"
+	"github.com/fernandez14/spartangeek-blacker/model"
 	"gopkg.in/mgo.v2/bson"
 	"math/rand"
 	"reflect"
@@ -13,6 +15,10 @@ import (
 	"strings"
 	"time"
 )
+
+type PostAPI struct {
+	DataService *mongo.Service `inject:""`
+}
 
 /**
  * Avaliable components
@@ -23,101 +29,12 @@ var avaliable_components = []string{
 	"cpu", "motherboard", "ram", "cabinet", "screen", "storage", "cooler", "power", "videocard",
 }
 
-type Votes struct {
-	Up     int `bson:"up" json:"up"`
-	Down   int `bson:"down" json:"down"`
-	Rating int `bson:"rating,omitempty" json:"rating,omitempty"`
-}
+func (di *PostAPI) FeedGet(c *gin.Context) {
 
-type Author struct {
-	Id      bson.ObjectId `bson:"id,omitempty" json:"id,omitempty"`
-	Name    string        `bson:"name" json:"name"`
-	Email   string        `bson:"email" json:"email"`
-	Avatar  string        `bson:"avatar" json:"avatar"`
-	Profile interface{}   `bson:"profile,omitempty" json:"profile,omitempty"`
-}
+	// Get the database interface from the DI
+	database := di.DataService.Database
 
-type Comments struct {
-	Count int       `bson:"count" json:"count"`
-	Set   []Comment `bson:"set" json:"set"`
-}
-
-type Comment struct {
-	UserId   bson.ObjectId `bson:"user_id" json:"user_id"`
-	Votes    Votes         `bson:"votes" json:"votes"`
-	User     interface{}   `bson:"author,omitempty" json:"author,omitempty"`
-	Position int           `bson:"position,omitempty" json:"position"`
-	Liked    bool          `bson:"liked,omitempty" json:"liked,omitempty"`
-	Content  string        `bson:"content" json:"content"`
-	Created  time.Time     `bson:"created_at" json:"created_at"`
-}
-
-type Components struct {
-	Cpu               Component `bson:"cpu,omitempty" json:"cpu,omitempty"`
-	Motherboard       Component `bson:"motherboard,omitempty" json:"motherboard,omitempty"`
-	Ram               Component `bson:"ram,omitempty" json:"ram,omitempty"`
-	Storage           Component `bson:"storage,omitempty" json:"storage,omitempty"`
-	Cooler            Component `bson:"cooler,omitempty" json:"cooler,omitempty"`
-	Power             Component `bson:"power,omitempty" json:"power,omitempty"`
-	Cabinet           Component `bson:"cabinet,omitempty" json:"cabinet,omitempty"`
-	Screen            Component `bson:"screen,omitempty" json:"screen,omitempty"`
-	Videocard         Component `bson:"videocard,omitempty" json:"videocard,omitempty"`
-	Software          string    `bson:"software,omitempty" json:"software,omitempty"`
-	Budget            string    `bson:"budget,omitempty" json:"budget,omitempty"`
-	BudgetCurrency    string    `bson:"budget_currency,omitempty" json:"budget_currency,omitempty"`
-	BudgetType        string    `bson:"budget_type,omitempty" json:"budget_type,omitempty"`
-	BudgetFlexibility string    `bson:"budget_flexibility,omitempty" json:"budget_flexibility,omitempty"`
-}
-
-type Component struct {
-	Content   string           `bson:"content" json:"content"`
-	Elections bool             `bson:"elections" json:"elections"`
-	Options   []ElectionOption `bson:"options,omitempty" json:"options"`
-	Votes     Votes            `bson:"votes" json:"votes"`
-	Status    string           `bson:"status" json:"status"`
-	Voted     string           `bson:"voted,omitempty" json:"voted,omitempty"`
-}
-
-type Post struct {
-	Id         bson.ObjectId   `bson:"_id,omitempty" json:"id,omitempty"`
-	Title      string          `bson:"title" json:"title"`
-	Slug       string          `bson:"slug" json:"slug"`
-	Type       string          `bson:"type" json:"type"`
-	Content    string          `bson:"content" json:"content"`
-	Categories []string        `bson:"categories" json:"categories"`
-	Comments   Comments        `bson:"comments" json:"comments"`
-	Author     User            `bson:"author,omitempty" json:"author,omitempty"`
-	UserId     bson.ObjectId   `bson:"user_id,omitempty" json:"user_id,omitempty"`
-	Users      []bson.ObjectId `bson:"users,omitempty" json:"users,omitempty"`
-	Votes      Votes           `bson:"votes" json:"votes"`
-	Components Components      `bson:"components,omitempty" json:"components,omitempty"`
-	Following  bool            `bson:"following,omitempty" json:"following,omitempty"`
-	Created    time.Time       `bson:"created_at" json:"created_at"`
-	Updated    time.Time       `bson:"updated_at" json:"updated_at"`
-}
-
-type PostForm struct {
-	Kind       string                 `json:"kind" binding:"required"`
-	Name       string                 `json:"name" binding:"required"`
-	Content    string                 `json:"content" binding:"required"`
-	Budget     string                 `json:"budget"`
-	Currency   string                 `json:"currency"`
-	Moves      string                 `json:"moves"`
-	Software   string                 `json:"software"`
-	Tag        string                 `json:"tag"`
-	Components map[string]interface{} `json:"components"`
-}
-
-// ByCommentCreatedAt implements sort.Interface for []ElectionOption based on Created field
-type ByCommentCreatedAt []Comment
-
-func (a ByCommentCreatedAt) Len() int           { return len(a) }
-func (a ByCommentCreatedAt) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a ByCommentCreatedAt) Less(i, j int) bool { return !a[i].Created.Before(a[j].Created) }
-
-func FeedGet(c *gin.Context) {
-
-	var feed []Post
+	var feed []model.Post
 	offset := 0
 	limit := 10
 
@@ -158,7 +75,7 @@ func FeedGet(c *gin.Context) {
 		search["categories"] = f
 		
 		 // Check whether auth or not
-		user_token := UserToken{}
+		user_token := model.UserToken{}
 		token := c.Request.Header.Get("Auth-Token")
 	
 		if token != "" {
@@ -169,7 +86,7 @@ func FeedGet(c *gin.Context) {
 	    	if err == nil {
 	    
 	    		// Reset the counters for that category
-				counterReset(f, user_token.UserId)
+				//counterReset(f, user_token.UserId)
 	    	}
 		}
 		
@@ -187,7 +104,7 @@ func FeedGet(c *gin.Context) {
 	}
 
 	var authors []bson.ObjectId
-	var users []User
+	var users []model.User
 
 	for _, post := range feed {
 
@@ -203,7 +120,7 @@ func FeedGet(c *gin.Context) {
 
 	if len(feed) > 0 {
 
-		usersMap := make(map[bson.ObjectId]User)
+		usersMap := make(map[bson.ObjectId]model.User)
 
 		for _, user := range users {
 
@@ -228,7 +145,7 @@ func FeedGet(c *gin.Context) {
                     authorLevel = 0
                 }
 
-				post.Author = User{
+				post.Author = model.User{
 					Id:        postUser.Id,
 					UserName:  postUser.UserName,
 					FirstName: postUser.FirstName,
@@ -246,10 +163,13 @@ func FeedGet(c *gin.Context) {
 	}
 }
 
-func PostsGet(c *gin.Context) {
+func (di *PostAPI) PostsGet(c *gin.Context) {
 
-	var recommendations []Post
-	var published []Post
+	// Get the database interface from the DI
+	database := di.DataService.Database
+
+	var recommendations []model.Post
+	var published []model.Post
 
 	// Get recommendation posts
 	posts_collection := database.C("posts")
@@ -284,7 +204,7 @@ func PostsGet(c *gin.Context) {
 		authors = append(authors, post.UserId)
 	}
 
-	var users []User
+	var users []model.User
 
 	// Get the users
 	collection := database.C("users")
@@ -295,7 +215,7 @@ func PostsGet(c *gin.Context) {
 		panic(err)
 	}
 
-	usersMap := make(map[bson.ObjectId]User)
+	usersMap := make(map[bson.ObjectId]model.User)
 
 	for _, user := range users {
 
@@ -310,7 +230,7 @@ func PostsGet(c *gin.Context) {
 
 			postUser := usersMap[post.UserId]
 
-			post.Author = User{
+			post.Author = model.User{
 				Id:        postUser.Id,
 				UserName:  postUser.UserName,
 				FirstName: postUser.FirstName,
@@ -327,7 +247,7 @@ func PostsGet(c *gin.Context) {
 
 			postUser := usersMap[post.UserId]
 
-			post.Author = User{
+			post.Author = model.User{
 				Id:        postUser.Id,
 				UserName:  postUser.UserName,
 				FirstName: postUser.FirstName,
@@ -339,7 +259,10 @@ func PostsGet(c *gin.Context) {
 	c.JSON(200, gin.H{"recommendations": recommendations, "last": published})
 }
 
-func PostsGetOne(c *gin.Context) {
+func (di *PostAPI) PostsGetOne(c *gin.Context) {
+
+	// Get the database interface from the DI
+	database := di.DataService.Database
 
 	// Get the post using the slug
 	id := c.Params.ByName("id")
@@ -354,7 +277,7 @@ func PostsGetOne(c *gin.Context) {
 	// Get the collection
 	collection := database.C("posts")
 
-	post := Post{}
+	post := model.Post{}
 
 	// Try to fetch the needed post by id
 	err := collection.FindId(bson.ObjectIdHex(id)).One(&post)
@@ -369,7 +292,7 @@ func PostsGetOne(c *gin.Context) {
 	// Get the users and stuff
 	if post.Users != nil && len(post.Users) > 0 {
 
-		var users []User
+		var users []model.User
 
 		// Get the users
 		collection := database.C("users")
@@ -415,13 +338,13 @@ func PostsGetOne(c *gin.Context) {
 		token := qs.Get("token")
 
 		// Look for votes that has been already given
-		var votes []Vote
-		var likes []Vote
+		var votes []model.Vote
+		var likes []model.Vote
 
 		if token != "" {
 
 			// Get user by token
-			user_token := UserToken{}
+			user_token := model.UserToken{}
 
 			// Try to fetch the user using token header though
 			err = database.C("tokens").Find(bson.M{"token": token}).One(&user_token)
@@ -437,7 +360,7 @@ func PostsGetOne(c *gin.Context) {
 			if user_token.UserId != post.UserId {
 
 				// Check if following
-				following := UserFollowing{}
+				following := model.UserFollowing{}
 
 				err = database.C("followers").Find(bson.M{"follower": user_token.UserId, "following": post.UserId}).One(&following)
 
@@ -449,9 +372,9 @@ func PostsGetOne(c *gin.Context) {
 			}
 
 			// Increase user saw posts and its gamification in another thread
-			go func(token UserToken, users []User) {
+			go func(token model.UserToken, users []model.User) {
 
-				var target User
+				var target model.User
 
 				// Update the user saw posts
 				_ = database.C("users").Update(bson.M{"_id": token.UserId}, bson.M{"$inc": bson.M{"stats.saw": 1}})
@@ -477,7 +400,7 @@ func PostsGetOne(c *gin.Context) {
 				}
 
 				// Update user achievements (saw posts)
-				updateUserAchievement(target, "saw")
+				//updateUserAchievement(target, "saw")
 
 			}(user_token, users)
 		}
@@ -505,7 +428,7 @@ func PostsGetOne(c *gin.Context) {
 		}
 
 		// Sort by created at
-		sort.Sort(ByCommentCreatedAt(post.Comments.Set))
+		sort.Sort(model.ByCommentCreatedAt(post.Comments.Set))
 
 		components := reflect.ValueOf(&post.Components).Elem()
 		components_type := reflect.TypeOf(&post.Components).Elem()
@@ -515,9 +438,9 @@ func PostsGetOne(c *gin.Context) {
 			f := components.Field(i)
 			t := components_type.Field(i)
 
-			if f.Type().String() == "main.Component" {
+			if f.Type().String() == "model.Component" {
 
-				component := f.Interface().(Component)
+				component := f.Interface().(model.Component)
 
 				for _, vote := range votes {
 
@@ -545,7 +468,7 @@ func PostsGetOne(c *gin.Context) {
 					}
 
 					// Sort by created at
-					sort.Sort(ByElectionsCreatedAt(component.Options))
+					sort.Sort(model.ByElectionsCreatedAt(component.Options))
 				}
 
 				f.Set(reflect.ValueOf(component))
@@ -556,7 +479,10 @@ func PostsGetOne(c *gin.Context) {
 	c.JSON(200, post)
 }
 
-func PostsGetOneSlug(c *gin.Context) {
+func (di *PostAPI) PostsGetOneSlug(c *gin.Context) {
+
+	// Get the database interface from the DI
+	database := di.DataService.Database
 
 	// Get the post using the slug
 	slug := c.Params.ByName("slug")
@@ -564,7 +490,7 @@ func PostsGetOneSlug(c *gin.Context) {
 	// Get the collection
 	collection := database.C("posts")
 
-	post := Post{}
+	post := model.Post{}
 
 	// Try to fetch the needed post by id
 	err := collection.Find(bson.M{"slug": slug}).One(&post)
@@ -579,7 +505,7 @@ func PostsGetOneSlug(c *gin.Context) {
 	// Get the users and stuff
 	if post.Users != nil && len(post.Users) > 0 {
 
-		var users []User
+		var users []model.User
 
 		// Get the users
 		collection := database.C("users")
@@ -615,13 +541,13 @@ func PostsGetOneSlug(c *gin.Context) {
 		token := qs.Get("token")
 
 		// Look for votes that has been already given
-		var votes []Vote
-		var likes []Vote
+		var votes []model.Vote
+		var likes []model.Vote
 
 		if token != "" {
 
 			// Get user by token
-			user_token := UserToken{}
+			user_token := model.UserToken{}
 
 			// Try to fetch the user using token header though
 			err = database.C("tokens").Find(bson.M{"token": token}).One(&user_token)
@@ -637,7 +563,7 @@ func PostsGetOneSlug(c *gin.Context) {
 			if user_token.UserId != post.UserId {
 
 				// Check if following
-				following := UserFollowing{}
+				following := model.UserFollowing{}
 
 				err = database.C("followers").Find(bson.M{"follower": user_token.UserId, "following": post.UserId}).One(&following)
 
@@ -649,9 +575,9 @@ func PostsGetOneSlug(c *gin.Context) {
 			}
 
 			// Increase user saw posts and its gamification in another thread
-			go func(token UserToken, users []User) {
+			go func(token model.UserToken, users []model.User) {
 
-				var target User
+				var target model.User
 
 				// Update the user saw posts
 				_ = database.C("users").Update(bson.M{"_id": token.UserId}, bson.M{"$inc": bson.M{"stats.saw": 1}})
@@ -677,7 +603,7 @@ func PostsGetOneSlug(c *gin.Context) {
 				}
 
 				// Update user achievements (saw posts)
-				updateUserAchievement(target, "saw")
+				//updateUserAchievement(target, "saw")
 
 			}(user_token, users)
 		}
@@ -705,7 +631,7 @@ func PostsGetOneSlug(c *gin.Context) {
 		}
 
 		// Sort by created at
-		sort.Sort(ByCommentCreatedAt(post.Comments.Set))
+		sort.Sort(model.ByCommentCreatedAt(post.Comments.Set))
 
 		components := reflect.ValueOf(&post.Components).Elem()
 		components_type := reflect.TypeOf(&post.Components).Elem()
@@ -715,9 +641,9 @@ func PostsGetOneSlug(c *gin.Context) {
 			f := components.Field(i)
 			t := components_type.Field(i)
 
-			if f.Type().String() == "main.Component" {
+			if f.Type().String() == "model.Component" {
 
-				component := f.Interface().(Component)
+				component := f.Interface().(model.Component)
 
 				for _, vote := range votes {
 
@@ -745,7 +671,7 @@ func PostsGetOneSlug(c *gin.Context) {
 					}
 
 					// Sort by created at
-					sort.Sort(ByElectionsCreatedAt(component.Options))
+					sort.Sort(model.ByElectionsCreatedAt(component.Options))
 				}
 
 				f.Set(reflect.ValueOf(component))
@@ -756,10 +682,13 @@ func PostsGetOneSlug(c *gin.Context) {
 	c.JSON(200, post)
 }
 
-func PostCreate(c *gin.Context) {
+func (di *PostAPI) PostCreate(c *gin.Context) {
+
+	// Get the database interface from the DI
+	database := di.DataService.Database
 
 	// Get user by token
-	user_token := UserToken{}
+	user_token := model.UserToken{}
 	token := c.Request.Header.Get("Auth-Token")
 
 	if token == "" {
@@ -777,17 +706,17 @@ func PostCreate(c *gin.Context) {
 		return
 	}
 
-	var post PostForm
+	var post model.PostForm
 
 	// Get the form otherwise tell it has been an error
-	if c.BindWith(&post, binding.JSON) {
+	if c.BindWith(&post, binding.JSON) != nil {
 
-		comments := Comments{
+		comments := model.Comments{
 			Count: 0,
-			Set:   make([]Comment, 0),
+			Set:   make([]model.Comment, 0),
 		}
 
-		votes := Votes{
+		votes := model.Votes{
 			Up:     0,
 			Down:   0,
 			Rating: 0,
@@ -825,7 +754,7 @@ func PostCreate(c *gin.Context) {
 				
 				post_name := "PC " + post.Name + " - presupuesto de $" + budget.(string) + " " + budget_currency.(string) 
 
-				publish := &Post{
+				publish := &model.Post{
 					Title:      post_name,
 					Content:    post.Content,
 					Type:       "recommendations",
@@ -839,7 +768,7 @@ func PostCreate(c *gin.Context) {
 					Updated:    time.Now(),
 				}
 				
-				publish_components := Components{
+				publish_components := model.Components{
 				    Budget: budget.(string),
 				    BudgetType: budget_type.(string),
 				    BudgetCurrency: budget_currency.(string),
@@ -865,7 +794,7 @@ func PostCreate(c *gin.Context) {
 
                         if name == component || name == component + ",omitempty" {
                             
-                            c := Component{
+                            c := model.Component{
                                 Elections: component_elements["poll"].(bool),
                                 Status:  status,
                                 Votes:   votes,
@@ -888,7 +817,7 @@ func PostCreate(c *gin.Context) {
 				}
 				
 				// Add a counter for the category
-				counterAdd("recommendations")
+				//counterAdd("recommendations")
 
 				// Finished creating the post
 				c.JSON(200, gin.H{"status": "okay", "code": 200})
@@ -919,7 +848,7 @@ func PostCreate(c *gin.Context) {
 				slug = utils.GenerateSlug(post.Name)
 			}
 
-			publish := &Post{
+			publish := &model.Post{
 				Title:      post.Name,
 				Content:    post.Content,
 				Type:       "category-post",
@@ -940,7 +869,7 @@ func PostCreate(c *gin.Context) {
 			}
 			
 			// Add a counter for the category
-			counterAdd(post.Tag)
+			//counterAdd(post.Tag)
 
 			// Finished creating the post
 			c.JSON(200, gin.H{"status": "okay", "code": 200})

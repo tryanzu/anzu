@@ -1,37 +1,25 @@
-package main
+package handle
 
 import (
     "gopkg.in/mgo.v2/bson"
     "github.com/gin-gonic/gin"
     "github.com/gin-gonic/gin/binding"
-    "github.com/ftrvxmtrx/gravatar"
-    "fmt"
+    "github.com/fernandez14/spartangeek-blacker/mongo"
+    "github.com/fernandez14/spartangeek-blacker/model"
     "bytes"
     "time"
     "strconv"
 )
 
-type Vote struct {
-    Id bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
-    UserId     bson.ObjectId `bson:"user_id" json:"user_id"`
-    Type       string `bson:"type" json:"type"`
-    NestedType string `bson:"nested_type" json:"nested_type"`
-    RelatedId  bson.ObjectId `bson:"related_id" json:"related_id"`
-    Value      int `bson:"value" json:"value"`
-    Created time.Time `bson:"created_at" json:"created_at"`
+type VoteAPI struct {
+    Data *mongo.Service `inject:""`
 }
 
-type VoteForm struct {
-    Component  string `json:"component" binding:"required"`
-    Direction  string `json:"direction" binding:"required"`
-}
-
-type VoteCommentForm struct {
-    Comment string `json:"comment" binding:"required"`
-}
-
-func VoteComponent (c *gin.Context) {
+func (di *VoteAPI) VoteComponent (c *gin.Context) {
     
+    // Get the database interface from the DI
+    database := di.Data.Database
+
     id := c.Params.ByName("id")
     
     if bson.IsObjectIdHex(id) == false {
@@ -49,7 +37,7 @@ func VoteComponent (c *gin.Context) {
     token := qs.Get("token")
     
     // Get user by token
-    user_token  := UserToken{}
+    user_token  := model.UserToken{}
     
     if token == "" {
         
@@ -73,9 +61,9 @@ func VoteComponent (c *gin.Context) {
     }
 	
     // Get the vote content
-    var vote VoteForm
+    var vote model.VoteForm
     
-    if c.BindWith(&vote, binding.JSON) {
+    if c.BindWith(&vote, binding.JSON) != nil {
         
         if vote.Direction == "up" || vote.Direction == "down" {
             
@@ -109,7 +97,7 @@ func VoteComponent (c *gin.Context) {
                 id := bson.ObjectIdHex(id)
                 collection := database.C("posts")
                 
-                var post Post
+                var post model.Post
                 err := collection.FindId(id).One(&post)    
                 
                 if err != nil {
@@ -130,7 +118,7 @@ func VoteComponent (c *gin.Context) {
                     
                     inc := add.String()
             
-                    var already_voted Vote
+                    var already_voted model.Vote
                     
                     err = database.C("votes").Find(bson.M{"type": "component", "user_id": user_token.UserId, "related_id": id, "nested_type": component}).One(&already_voted)               
                     
@@ -204,7 +192,7 @@ func VoteComponent (c *gin.Context) {
                         panic(err)   
                     }
                     
-                    vote := &Vote{
+                    vote := &model.Vote{
                         UserId: user_token.UserId,
                         Type: "component",
                         NestedType: component,
@@ -229,8 +217,11 @@ func VoteComponent (c *gin.Context) {
     c.JSON(401, gin.H{"error": "Couldnt create post, missing information...", "status": 205})
 }
 
-func VoteComment (c *gin.Context) {
+func (di *VoteAPI) VoteComment (c *gin.Context) {
     
+    // Get the database interface from the DI
+    database := di.Data.Database
+
     id := c.Params.ByName("id")
     
     if bson.IsObjectIdHex(id) == false {
@@ -248,7 +239,7 @@ func VoteComment (c *gin.Context) {
     token := qs.Get("token")
     
     // Get user by token
-    user_token  := UserToken{}
+    user_token  := model.UserToken{}
     
     if token == "" {
         
@@ -272,15 +263,15 @@ func VoteComment (c *gin.Context) {
     }
 	
     // Get the vote content
-    var vote VoteCommentForm
+    var vote model.VoteCommentForm
     
-    if c.BindWith(&vote, binding.JSON) {
+    if c.BindWith(&vote, binding.JSON) != nil {
         
         // Get the post using the slug
         id := bson.ObjectIdHex(id)
         collection := database.C("posts")
         
-        var post Post
+        var post model.Post
         err := collection.FindId(id).One(&post)    
         
         if err != nil {
@@ -304,7 +295,7 @@ func VoteComment (c *gin.Context) {
                 
                 inc := add.String()
         
-                var already_voted Vote
+                var already_voted model.Vote
                 
                 err = database.C("votes").Find(bson.M{"type": "comment", "user_id": user_token.UserId, "related_id": id, "nested_type": index}).One(&already_voted)               
                 
@@ -345,7 +336,7 @@ func VoteComment (c *gin.Context) {
                     panic(err)   
                 }
                 
-                vote := &Vote{
+                vote := &model.Vote{
                     UserId: user_token.UserId,
                     Type: "comment",
                     NestedType: index,
@@ -359,14 +350,14 @@ func VoteComment (c *gin.Context) {
                 comment_ := post.Comments.Set[comment_index]
                 
                 // Notify the author of the comment
-                go func(comment Comment, token UserToken, post Post) {
+                go func(comment model.Comment, token model.UserToken, post model.Post) {
                     
-                    user_id := comment.UserId
+                    /*user_id := comment.UserId
                     
                     // Get the comment like author
-                    var user User
+                    var user model.User
                 
-                    err := database.C("users").Find(bson.M{"_id": token.UserId}).One(&user)
+                    database.C("users").Find(bson.M{"_id": token.UserId}).One(&user)
                     
                     if err == nil {
                         
@@ -379,8 +370,8 @@ func VoteComment (c *gin.Context) {
                         message := post.Title
                         
                         // We are inside an isolated routine, so we dont need to worry about the processing cost
-                        notify(user_id, "like", post.Id, "/post/" + post.Slug, title, message, image.String())   
-                    }
+                        //notify(user_id, "like", post.Id, "/post/" + post.Slug, title, message, image.String())   
+                    }*/
                     
                 }(comment_, user_token, post)
                 

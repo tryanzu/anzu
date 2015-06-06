@@ -1,21 +1,26 @@
-package main
+package handle
 
 import (
+    "github.com/fernandez14/spartangeek-blacker/mongo"
+    "github.com/fernandez14/spartangeek-blacker/model"
     "gopkg.in/mgo.v2/bson"
     "github.com/gin-gonic/gin"
     "github.com/gin-gonic/gin/binding"
-    "github.com/ftrvxmtrx/gravatar"
+    //"github.com/ftrvxmtrx/gravatar"
     "time"
     "regexp"
     "strings"
-    "fmt"
+    //"fmt"
 )
 
-type CommentForm struct {
-    Content   string `json:"content" binding:"required"`
+type CommentAPI struct {
+    DataService  *mongo.Service `inject:""`
 }
 
-func CommentAdd (c *gin.Context) {
+func (di *CommentAPI) CommentAdd (c *gin.Context) {
+
+    // Get the database interface from the DI
+    database := di.DataService.Database
 
     id := c.Params.ByName("id")
 
@@ -35,7 +40,7 @@ func CommentAdd (c *gin.Context) {
     }
 
     // Get user by token
-    user_token  := UserToken{}
+    user_token  := model.UserToken{}
 
     // Try to fetch the user using token header though
 	err := database.C("tokens").Find(bson.M{"token": token}).One(&user_token)
@@ -45,9 +50,9 @@ func CommentAdd (c *gin.Context) {
         return
 	}
 
-    var comment CommentForm
+    var comment model.CommentForm
 
-    if c.BindWith(&comment, binding.JSON) {
+    if c.BindWith(&comment, binding.JSON) != nil {
 
         // Get the post using the slug
         id := bson.ObjectIdHex(id)
@@ -55,7 +60,7 @@ func CommentAdd (c *gin.Context) {
         // Posts collection
         collection := database.C("posts")
         
-        var post Post
+        var post model.Post
         
         err := collection.FindId(id).One(&post)
         
@@ -65,12 +70,12 @@ func CommentAdd (c *gin.Context) {
             return
         }
         
-        votes := Votes{
+        votes := model.Votes{
             Up: 0,
             Down: 0,
         }
         
-        comment := Comment{
+        comment := model.Comment{
             UserId: user_token.UserId,
             Votes: votes,
             Content: comment.Content,
@@ -135,9 +140,9 @@ func CommentAdd (c *gin.Context) {
         }
         
         // Notifications for the author 
-        if post.UserId != user_token.UserId {
+        /*if post.UserId != user_token.UserId {
             
-            go func(post Post, token UserToken) {
+            go func(post model.Post, token model.UserToken) {
                 
                 // Get the comment author
                 var user User
@@ -159,7 +164,7 @@ func CommentAdd (c *gin.Context) {
                 }
                             
             }(post, user_token)
-        }
+        }*/
 
         c.JSON(200, gin.H{"message": "okay", "status": 706})
         return
@@ -168,9 +173,9 @@ func CommentAdd (c *gin.Context) {
     c.JSON(401, gin.H{"error": "Not authorized.", "status": 704})
 }
 
-func mentionUserComment(mentioned string, post Post, token UserToken) {
+func mentionUserComment(mentioned string, post model.Post, token model.UserToken) {
     
-    var user User
+    /*var user User
     var author User
     
     username := mentioned[1:]
@@ -194,5 +199,5 @@ func mentionUserComment(mentioned string, post Post, token UserToken) {
             // We are inside an isolated routine, so we dont need to worry about the processing cost
             notify(user.Id, "mention", post.Id, "/post/" + post.Slug, title, message, image.String())
         }
-    }
+    }*/
 }
