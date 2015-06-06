@@ -1,7 +1,9 @@
-package main
+package handle
 
 import (
 	"code.google.com/p/go-uuid/uuid"
+	"github.com/fernandez14/spartangeek-blacker/mongo"
+	"github.com/fernandez14/spartangeek-blacker/model"
 	"crypto/sha256"
 	"encoding/hex"
 	"github.com/gin-gonic/gin"
@@ -13,85 +15,20 @@ import (
 	"sort"
 )
 
-type User struct {
-	Id          bson.ObjectId          `bson:"_id,omitempty" json:"id"`
-	FirstName   string                 `bson:"first_name" json:"first_name"`
-	LastName    string                 `bson:"last_name" json:"last_name"`
-	UserName    string                 `bson:"username" json:"username"`
-	Password    string                 `bson:"password" json:"-"`
-	Step        int                    `bson:"step,omitempty" json:"step"`
-	Email       string                 `bson:"email" json:"email,omitempty"`
-	Roles       []string               `bson:"roles" json:"roles,omitempty"`
-	Permissions []string               `bson:"permissions" json:"permissions,omitempty"`
-	Description string                 `bson:"description" json:"description,omitempty"`
-	Facebook    interface{}            `bson:"facebook,omitempty" json:"facebook,omitempty"`
-	Notifications interface{}          `bson:"notifications,omitempty" json:"notifications,omitempty"`
-	Profile     map[string]interface{} `bson:"profile,omitempty" json:"profile,omitempty"`
-	Stats       UserStats              `bson:"stats,omitempty" json:"stats,omitempty"`
-	Created     time.Time              `bson:"created_at" json:"created_at"`
-	Updated     time.Time              `bson:"updated_at" json:"updated_at"`
+type UserAPI struct {
+	DataService *mongo.Service `inject:""`
 }
 
-type UserStats struct {
-	Saw int `bson:"saw,omitempty" json:"saw,omitempty"`
-}
+func (di *UserAPI) UserGetByToken(c *gin.Context) {
 
-type UserToken struct {
-	Id      bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
-	UserId  bson.ObjectId `bson:"user_id" json:"user_id"`
-	Token   string        `bson:"token" json:"token"`
-	Closed  bool          `bson:"closed,omitempty" json"closed,omitempty"`
-	Created time.Time     `bson:"created_at" json:"created_at"`
-	Updated time.Time     `bson:"updated_at" json:"updated_at"`
-}
-
-type UserPc struct{
-	Type string `bson:"type" json:"type"`
-}
-
-type UserFollowing struct {
-	Id            bson.ObjectId `bson:"_id,omitempty" json:"id"`
-	Follower      bson.ObjectId `bson:"follower,omitempty" json:"follower"`
-	Following     bson.ObjectId `bson:"following,omitempty" json:"following"`
-	Notifications bool          `bson:"notifications,omitempty" json:"notifications"`
-	Created       time.Time     `bson:"created_at" json:"created_at"`
-}
-
-type UserActivity struct {
-	Title 		string 		`json:"title"`
-	Directive 	string 		`json:"directive"`
-	Content 	string 		`json:"content"`
-	Author		map[string]string        `json:"user"`
-	Created 	time.Time 	`json:"created_at"`
-}
-
-type UserProfileForm struct {
-	Country       string `json:"country"`
-	FavouriteGame string `json:"favourite_game"`
-	Microsoft     string `json:"skype"`
-	Biography     string `json:"description"`
-	UserName      string `json:"username"`
-	ShowEmail     bool   `json:"show_email"`
-}
-
-type UserRegisterForm struct {
-	UserName  string  `json:"username" binding:"required"`
-	Password  string  `json:"password" binding:"required"`
-	Email     string  `json:"email" binding:"required"`
-}
-
-type ByCreatedAt []UserActivity
-func (a ByCreatedAt) Len() int  		 { return len(a) }
-func (a ByCreatedAt) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a ByCreatedAt) Less(i, j int) bool { return !a[i].Created.Before(a[j].Created) }
-
-func UserGetByToken(c *gin.Context) {
+	// Get the database interface from the DI
+	database := di.DataService.Database
 
 	// Users collection
 	collection := database.C("users")
 
 	// Get user by token
-	user_token := UserToken{}
+	user_token := model.UserToken{}
 	token := c.Request.Header.Get("Auth-Token")
 
 	// Try to fetch the user using token header though
@@ -99,7 +36,7 @@ func UserGetByToken(c *gin.Context) {
 
 	if err == nil {
 
-		user := User{}
+		user := model.User{}
 		err = collection.Find(bson.M{"_id": user_token.UserId}).One(&user)
 
 		if err == nil {
@@ -123,7 +60,10 @@ func UserGetByToken(c *gin.Context) {
 	c.JSON(401, gin.H{"error": "Could find user by token...", "status": 103})
 }
 
-func UserGetToken(c *gin.Context) {
+func (di *UserAPI) UserGetToken(c *gin.Context) {
+
+	// Get the database interface from the DI
+	database := di.DataService.Database
 
 	// Get the query parameters
 	qs := c.Request.URL.Query()
@@ -133,7 +73,7 @@ func UserGetToken(c *gin.Context) {
 
 	collection := database.C("users")
 
-	user := User{}
+	user := model.User{}
 
 	// Try to fetch the user using email param though
 	err := collection.Find(bson.M{"email": email}).One(&user)
@@ -159,7 +99,7 @@ func UserGetToken(c *gin.Context) {
 
 	// Generate user token
 	uuid := uuid.New()
-	token := &UserToken{
+	token := &model.UserToken{
 		UserId:  user.Id,
 		Token:   uuid,
 		Closed:  false,
@@ -172,7 +112,10 @@ func UserGetToken(c *gin.Context) {
 	c.JSON(200, token)
 }
 
-func UserGetTokenFacebook(c *gin.Context) {
+func (di *UserAPI) UserGetTokenFacebook(c *gin.Context) {
+
+	// Get the database interface from the DI
+	database := di.DataService.Database
 
 	var facebook map[string]interface{}
 
@@ -189,7 +132,7 @@ func UserGetTokenFacebook(c *gin.Context) {
 	}
 
 	collection := database.C("users")
-	user := User{}
+	user := model.User{}
 
 	// Try to fetch the user using the facebook id param though
 	err := collection.Find(bson.M{"facebook.id": facebook_id}).One(&user)
@@ -227,7 +170,7 @@ func UserGetTokenFacebook(c *gin.Context) {
 			facebook_email = ""
 		}
 
-		user := &User{
+		user := &model.User{
 			Id:          id,
 			FirstName:   facebook_first_name,
 			LastName:    facebook_last_name,
@@ -250,10 +193,10 @@ func UserGetTokenFacebook(c *gin.Context) {
 			return
 		}
 		
-		err = database.C("counters").Insert(Counter{
+		err = database.C("counters").Insert(model.Counter{
 			UserId: id,
-			Counters: map[string]PostCounter{
-				"news": PostCounter{
+			Counters: map[string]model.PostCounter{
+				"news": model.PostCounter{
 					Counter: 0,
 					Updated: time.Now(),
 				},
@@ -262,7 +205,7 @@ func UserGetTokenFacebook(c *gin.Context) {
 
 		// Generate user token
 		uuid := uuid.New()
-		token := &UserToken{
+		token := &model.UserToken{
 			UserId:  id,
 			Token:   uuid,
 			Created: time.Now(),
@@ -282,7 +225,7 @@ func UserGetTokenFacebook(c *gin.Context) {
 
 		// Generate user token
 		uuid := uuid.New()
-		token := &UserToken{
+		token := &model.UserToken{
 			UserId:  user.Id,
 			Token:   uuid,
 			Closed:  false,
@@ -301,13 +244,16 @@ func UserGetTokenFacebook(c *gin.Context) {
 	}
 }
 
-func UserUpdateProfile(c *gin.Context) {
+func (di *UserAPI) UserUpdateProfile(c *gin.Context) {
+
+	// Get the database interface from the DI
+	database := di.DataService.Database
 
 	// Users collection
 	users_collection := database.C("users")
 
 	// Get user by token
-	user_token := UserToken{}
+	user_token := model.UserToken{}
 	token := c.Request.Header.Get("Auth-Token")
 
 	// Try to fetch the user using token header though
@@ -315,14 +261,14 @@ func UserUpdateProfile(c *gin.Context) {
 
 	if err == nil {
 
-		user := User{}
+		user := model.User{}
 		err = users_collection.Find(bson.M{"_id": user_token.UserId}).One(&user)
 
 		if err == nil {
 
-			var profileUpdate UserProfileForm
+			var profileUpdate model.UserProfileForm
 
-			if c.BindWith(&profileUpdate, binding.JSON) {
+			if c.BindWith(&profileUpdate, binding.JSON) != nil {
 
 				set := bson.M{}
 				
@@ -372,11 +318,14 @@ func UserUpdateProfile(c *gin.Context) {
 	}
 }
 
-func UserRegisterAction(c *gin.Context) {
+func (di *UserAPI) UserRegisterAction(c *gin.Context) {
 
-    var registerAction UserRegisterForm
+	// Get the database interface from the DI
+	database := di.DataService.Database
 
-    if c.BindWith(&registerAction, binding.JSON) {
+    var registerAction model.UserRegisterForm
+
+    if c.BindWith(&registerAction, binding.JSON) != nil {
 
         // Check if already registered
         email_exists, _ := database.C("users").Find(bson.M{"email": registerAction.Email}).Count()
@@ -419,7 +368,7 @@ func UserRegisterAction(c *gin.Context) {
 		
 		id := bson.NewObjectId()
 		
-        user := &User{
+        user := &model.User{
         	Id: id,
             FirstName: "",
             LastName: "",
@@ -430,7 +379,7 @@ func UserRegisterAction(c *gin.Context) {
             Permissions: make([]string, 0),
             Description: "",
             Profile: profile,
-            Stats: UserStats{
+            Stats: model.UserStats{
                 Saw: 0,
             },
             Created: time.Now(),
@@ -443,10 +392,10 @@ func UserRegisterAction(c *gin.Context) {
             panic(err)
         }
         
-        err = database.C("counters").Insert(Counter{
+        err = database.C("counters").Insert(model.Counter{
 			UserId: id,
-			Counters: map[string]PostCounter{
-				"news": PostCounter{
+			Counters: map[string]model.PostCounter{
+				"news": model.PostCounter{
 					Counter: 0,
 					Updated: time.Now(),
 				},
@@ -464,14 +413,17 @@ func UserRegisterAction(c *gin.Context) {
     c.JSON(400, gin.H{"status": "error", "message": "Missing information to process the request", "code": 400})
 }
 
-func UserInvolvedFeedGet(c *gin.Context) {
+func (di *UserAPI) UserInvolvedFeedGet(c *gin.Context) {
 	
-	var user_posts []Post
-	var commented_posts []Post
-	var activity = make([]UserActivity, 0)
+	// Get the database interface from the DI
+	database := di.DataService.Database
+
+	var user_posts []model.Post
+	var commented_posts []model.Post
+	var activity = make([]model.UserActivity, 0)
 	
 	 // Check whether auth or not
-	user_token := UserToken{}
+	user_token := model.UserToken{}
 	token := c.Request.Header.Get("Auth-Token")
 
 	if token != "" {
@@ -481,7 +433,7 @@ func UserInvolvedFeedGet(c *gin.Context) {
     
     	if err == nil {
     		
-    		var user User
+    		var user model.User
     		
     		// Get the current user
     		err := database.C("users").Find(bson.M{"_id": user_token.UserId}).One(&user)
@@ -506,7 +458,7 @@ func UserInvolvedFeedGet(c *gin.Context) {
 			
 			for _, post := range user_posts {
 				
-				activity = append(activity, UserActivity{
+				activity = append(activity, model.UserActivity{
 					Title: post.Title,
 					Content: post.Content,
 					Created: post.Created,
@@ -525,7 +477,7 @@ func UserInvolvedFeedGet(c *gin.Context) {
 					
 					if comment.UserId == user.Id {
 						
-						activity = append(activity, UserActivity{
+						activity = append(activity, model.UserActivity{
 							Title: post.Title,
 							Content: comment.Content,
 							Created: comment.Created,
@@ -541,15 +493,18 @@ func UserInvolvedFeedGet(c *gin.Context) {
 			}
 			
 			// Sort the full set of posts by the time they happened
-			sort.Sort(ByCreatedAt(activity))
+			sort.Sort(model.ByCreatedAt(activity))
 			
 			c.JSON(200, gin.H{"activity": activity})
     	}
 	}
 }
 
-func UserAutocompleteGet(c *gin.Context) {
+func (di *UserAPI) UserAutocompleteGet(c *gin.Context) {
 	
+	// Get the database interface from the DI
+	database := di.DataService.Database
+
 	var users []gin.H
 	
 	qs := c.Request.URL.Query()

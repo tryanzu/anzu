@@ -1,50 +1,28 @@
-package main
+package handle
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/mongo"
+	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/gin-gonic/gin"
+	"github.com/xuyu/goredis"
 	"gopkg.in/mgo.v2/bson"
 	"strings"
 	"sort"
 	"encoding/json"
 )
 
-type Category struct {
-	Id          bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
-	Name        string        `bson:"name" json:"name"`
-	Description string        `bson:"description" json:"description"`
-	Slug        string        `bson:"slug" json:"slug"`
-	Permissions interface{}   `bson:"permissions" json:"permissions"`
-	Count       int 		  `bson:"count,omitempty" json:"count,omitempty"`
-	Recent      int           `bson:"recent,omitempty" json:"recent,omitempty"`
+type CategoryAPI struct {
+	DataService  *mongo.Service `inject:""`
+	CacheService *goredis.Redis `inject:""`
 }
 
-type CategoryCounters struct {
-	List 		[]CategoryCounter `json:"list"`
-}
+func (di *CategoryAPI) CategoriesGet(c *gin.Context) {
 
-type CategoryCounter struct {
-	Slug 		string `json:"slug"`
-	Count 		int    `json:"count"`
-}
+	// Get the database interface from the DI
+	database := di.DataService.Database
+	redis := di.CacheService
 
-
-type Categories []Category
-
-func (slice Categories) Len() int {
-    return len(slice)
-}
-
-func (slice Categories) Less(i, j int) bool {
-    return slice[i].Count > slice[j].Count;
-}
-
-func (slice Categories) Swap(i, j int) {
-    slice[i], slice[j] = slice[j], slice[i]
-}
-
-func CategoriesGet(c *gin.Context) {
-
-	var categories []Category
+	var categories []model.Category
 
 	// Get the categories collection to perform there
 	collection := database.C("categories")
@@ -56,7 +34,7 @@ func CategoriesGet(c *gin.Context) {
 	}
 
 	// Check whether auth or not
-	user_token := UserToken{}
+	user_token := model.UserToken{}
 	token := c.Request.Header.Get("Auth-Token")
 
 	if token != "" {
@@ -66,7 +44,7 @@ func CategoriesGet(c *gin.Context) {
 
 		if err == nil {
 
-			user_counter := Counter{}
+			user_counter := model.Counter{}
 			err := database.C("counters").Find(bson.M{"user_id": user_token.UserId}).One(&user_counter)
 
 			if err == nil {
@@ -87,7 +65,7 @@ func CategoriesGet(c *gin.Context) {
 
 	if counters == nil {
 
-		list := []CategoryCounter{}
+		list := []model.CategoryCounter{}
 
 		for category_index, category := range categories {
 
@@ -96,7 +74,7 @@ func CategoriesGet(c *gin.Context) {
 			if err == nil {
 
 				// Append to the list of counters
-				list = append(list, CategoryCounter{
+				list = append(list, model.CategoryCounter{
 					Slug: category.Slug,
 					Count: count,
 				})
@@ -106,7 +84,7 @@ func CategoriesGet(c *gin.Context) {
 			}
 		}
 
-		cache := CategoryCounters{
+		cache := model.CategoryCounters{
 			List: list,
 		}
 
@@ -120,7 +98,7 @@ func CategoriesGet(c *gin.Context) {
 
 	} else {
 
-		var cache CategoryCounters
+		var cache model.CategoryCounters
 
 		// Unmarshal already warmed up user achievements
         if err := json.Unmarshal(counters, &cache); err != nil {
@@ -140,7 +118,7 @@ func CategoriesGet(c *gin.Context) {
         }
 	}
 
-	sort.Sort(Categories(categories))
+	sort.Sort(model.Categories(categories))
 
 	c.JSON(200, categories)
 }
