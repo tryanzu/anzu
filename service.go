@@ -39,6 +39,7 @@ func main() {
 	var categories handle.CategoryAPI
 	var elections handle.ElectionAPI
 	var comments handle.CommentAPI
+	var middlewares handle.MiddlewareAPI
 	
 	// Services for the DI
 	configService, _ := config.ParseJsonFile(envfile)
@@ -58,6 +59,7 @@ func main() {
         &inject.Object{Value: &categories},
         &inject.Object{Value: &elections},
         &inject.Object{Value: &comments},
+        &inject.Object{Value: &middlewares},
 	)
     if err != nil {
         fmt.Fprintln(os.Stderr, err)
@@ -76,9 +78,9 @@ func main() {
 	// Start gin classic middlewares
 	router := gin.Default()
 
-	// Exception tracking setup
-	//g.Use(DeferTracking())
-	router.Use(CORS())
+	// Middlewares setup
+	router.Use(middlewares.ErrorTracking())
+	router.Use(middlewares.CORS())
 
 	v1 := router.Group("/v1")
 	{
@@ -150,23 +152,6 @@ func main() {
 	router.Run(":" + port)
 }
 
-func CORS() gin.HandlerFunc {
-	return func(c *gin.Context) {
-
-		c.Writer.Header().Set("Content-Type", "application/json")
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET,POST,OPTIONS,PUT")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Auth-Token,Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
-
-		if c.Request.Method == "OPTIONS" {
-
-			c.AbortWithStatus(200)
-			return
-		}
-		c.Next()
-	}
-}
-
 func string_value(value string, err error) string {
 
 	if err != nil {
@@ -175,42 +160,3 @@ func string_value(value string, err error) string {
 
 	return value
 }
-
-/*func DeferTracking() gin.HandlerFunc {
-	return func(c *gin.Context) {
-
-		envfile := os.Getenv("ENV_FILE")
-
-		if envfile == "" {
-
-			envfile = "./env.json"
-		}
-
-		tags := map[string]string {
-			"config_file": envfile,
-		}
-
-		defer func() {
-
-			var packet *raven.Packet
-
-			switch rval := recover().(type) {
-			case nil:
-				return
-			case error:
-				packet = raven.NewPacket(rval.Error(), raven.NewException(rval, raven.NewStacktrace(2, 3, nil)))
-			default:
-				rvalStr := fmt.Sprint(rval)
-				packet = raven.NewPacket(rvalStr, raven.NewException(errors.New(rvalStr), raven.NewStacktrace(2, 3, nil)))
-			}
-
-			// Grab the error and send it to sentry
-			error_tracking.Capture(packet, tags)
-
-			// Also abort the request with 500
-			c.AbortWithStatus(500)
-		}()
-
-		c.Next()
-	}
-}*/
