@@ -83,6 +83,8 @@ func main() {
 	router.Use(middlewares.CORS())
 
 	v1 := router.Group("/v1")
+
+	v1.Use(middlewares.Authorization())
 	{
 		// Comment routes
 		v1.POST("/post/comment/:id", comments.CommentAdd)
@@ -110,6 +112,7 @@ func main() {
 		v1.PUT("/user/my", users.UserUpdateProfile)
 		v1.POST("/user/get-token/facebook", users.UserGetTokenFacebook)
 		v1.GET("/user/get-token", users.UserGetToken)
+		v1.GET("/auth/get-token", users.UserGetJwtToken)
 		//v1.GET("/user/:id", users.UserGetOne)
 		
 		// Messaging routes

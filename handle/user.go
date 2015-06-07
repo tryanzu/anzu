@@ -4,10 +4,12 @@ import (
 	"code.google.com/p/go-uuid/uuid"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/fernandez14/spartangeek-blacker/model"
+	"github.com/olebedev/config"
 	"crypto/sha256"
 	"encoding/hex"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/mrvdot/golang-utils"
 	"gopkg.in/mgo.v2/bson"
 	"time"
@@ -17,9 +19,19 @@ import (
 
 type UserAPI struct {
 	DataService *mongo.Service `inject:""`
+	ConfigService *config.Config `inject:""`
 }
 
 func (di *UserAPI) UserGetByToken(c *gin.Context) {
+
+
+	// Get user by token
+	tokens := c.MustGet("token").(string)
+
+	c.JSON(200, gin.H{"token": tokens})
+
+	return
+
 
 	// Get the database interface from the DI
 	database := di.DataService.Database
@@ -110,6 +122,60 @@ func (di *UserAPI) UserGetToken(c *gin.Context) {
 	err = database.C("tokens").Insert(token)
 
 	c.JSON(200, token)
+}
+
+func (di *UserAPI) UserGetJwtToken(c *gin.Context) {
+
+	// Get the database interface from the DI
+	database := di.DataService.Database
+
+	// Get the query parameters
+	qs := c.Request.URL.Query()
+
+	// Get the email or the username or the id and its password
+	email, password := qs.Get("email"), qs.Get("password")
+	collection := database.C("users")
+	user := model.User{}
+
+	// Try to fetch the user using email param though
+	err := collection.Find(bson.M{"email": email}).One(&user)
+
+	if err != nil {
+
+		c.JSON(400, gin.H{"status": "error", "message": "Couldnt found user with that email", "code": 400})
+		return
+	}
+
+	// Check whether the password match the user password or not
+	password_encrypted := []byte(password)
+	sha256 := sha256.New()
+	sha256.Write(password_encrypted)
+	md := sha256.Sum(nil)
+	hash := hex.EncodeToString(md)
+
+	if user.Password != hash {
+		c.JSON(400, gin.H{"status": "error", "message": "Credentials are not correct", "code": 400})
+		return
+	}
+
+	// Generate JWT with the information about the user
+	token := jwt.New(jwt.SigningMethodHS256)
+	token.Claims["user_id"] = user.Id.Hex()
+	token.Claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
+
+	// Use the secret inside the configuration to encrypt it
+	secret, err := di.ConfigService.String("application.secret")
+	if err != nil {
+		panic(err)
+	}
+
+	tokenString, err := token.SignedString([]byte(secret))
+
+	if err != nil {
+		panic(err)
+	}
+
+	c.JSON(200, gin.H{"status": "okay", "token": tokenString})
 }
 
 func (di *UserAPI) UserGetTokenFacebook(c *gin.Context) {
