@@ -9,6 +9,7 @@ type Category struct {
 	Name        string        `bson:"name" json:"name"`
 	Description string        `bson:"description" json:"description"`
 	Slug        string        `bson:"slug" json:"slug"`
+    Color       string        `bson:"color" json:"color"`
 	Permissions interface{}   `bson:"permissions" json:"permissions"`
 	Count       int 		  `bson:"count,omitempty" json:"count,omitempty"`
 	Recent      int           `bson:"recent,omitempty" json:"recent,omitempty"`
