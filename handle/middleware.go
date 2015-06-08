@@ -40,7 +40,7 @@ func (di *MiddlewareAPI) Authorization() gin.HandlerFunc {
 
 		if token != "" {
 
-			// Check for the JWT over the header
+			// Check for the JWT inside the header
 			if token[0:6] == "Bearer" {
 
 				jtw_token := token[7:len(token)]
@@ -99,6 +99,7 @@ func (di *MiddlewareAPI) Authorization() gin.HandlerFunc {
 
 				// Set the token for further usage
 				c.Set("token", jtw_token)
+				c.Set("user_id", signed.Claims["user_id"].(string))
 			}
 		}
 
