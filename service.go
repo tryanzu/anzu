@@ -39,6 +39,7 @@ func main() {
 	var categories handle.CategoryAPI
 	var elections handle.ElectionAPI
 	var comments handle.CommentAPI
+	var parts handle.PartAPI
 	var middlewares handle.MiddlewareAPI
 	
 	// Services for the DI
@@ -59,6 +60,7 @@ func main() {
         &inject.Object{Value: &categories},
         &inject.Object{Value: &elections},
         &inject.Object{Value: &comments},
+        &inject.Object{Value: &parts},
         &inject.Object{Value: &middlewares},
 	)
     if err != nil {
@@ -94,7 +96,6 @@ func main() {
 		v1.GET("/post", posts.PostsGet)
 		v1.GET("/posts/:id", posts.PostsGetOne)
 		v1.GET("/post/s/:slug", posts.PostsGetOneSlug)
-		v1.POST("/post", posts.PostCreate)
 
 		// // Election routes
 		v1.POST("/election/:id", elections.ElectionAddOption)
@@ -126,10 +127,23 @@ func main() {
 		// Categories routes
 		v1.GET("/category", categories.CategoriesGet)
 
+		// Parts routes
+		v1.GET("/part", parts.GetPartTypes)
+		v1.GET("/part/:type/manufacturers", parts.GetPartManufacturers)
+		v1.GET("/part/:type/models", parts.GetPartManufacturerModels)
+
 		v1.GET("/error", func(c *gin.Context) {
 
 			panic("Oh no! shit happened")
 		})
+
+		authorized := v1.Group("")
+
+		authorized.Use(middlewares.NeedAuthorization())
+		{
+			// Post routes
+			authorized.POST("/post", posts.PostCreate)
+		}
 	}
 
 	// Run over the 3000 port

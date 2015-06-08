@@ -679,24 +679,9 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 	// Get the database interface from the DI
 	database := di.DataService.Database
 
-	// Get user by token
-	user_token := model.UserToken{}
-	token := c.Request.Header.Get("Auth-Token")
-
-	if token == "" {
-
-		c.JSON(401, gin.H{"message": "No auth credentials", "status": "error", "code": 401})
-		return
-	}
-
-	// Try to fetch the user using token header though
-	err := database.C("tokens").Find(bson.M{"token": token}).One(&user_token)
-
-	if err != nil {
-
-		c.JSON(401, gin.H{"message": "No valid auth credentials", "status": "error", "code": 401})
-		return
-	}
+	// Check for user token
+	user_id, _ := c.Get("user_id")
+	bson_id := bson.ObjectIdHex(user_id.(string))
 
 	var post model.PostForm
 
@@ -715,7 +700,7 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 		}
 
 		// Empty participants list - only author included
-		users := []bson.ObjectId{user_token.UserId}
+		users := []bson.ObjectId{bson_id}
 
 		switch post.Kind {
 		case "recommendations":
@@ -752,7 +737,7 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 					Type:       "recommendations",
 					Slug:       sanitize.Path(post.Name),
 					Comments:   comments,
-					UserId:     user_token.UserId,
+					UserId:     bson_id,
 					Users:      users,
 					Categories: []string{"recommendations"},
 					Votes:      votes,
@@ -802,14 +787,14 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
                 // Now bind the components to the post 
                 publish.Components = publish_components
 
-				err = database.C("posts").Insert(publish)
+				err := database.C("posts").Insert(publish)
 
 				if err != nil {
 					panic(err)
 				}
 				
 				// Add a counter for the category
-				//counterAdd("recommendations")
+				di.addUserCategoryCounter("recommendations")
 
 				// Finished creating the post
 				c.JSON(200, gin.H{"status": "okay", "code": 200})
@@ -846,7 +831,7 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 				Type:       "category-post",
 				Slug:       slug,
 				Comments:   comments,
-				UserId:     user_token.UserId,
+				UserId:     bson_id,
 				Users:      users,
 				Categories: []string{post.Tag},
 				Votes:      votes,
@@ -854,14 +839,14 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 				Updated:    time.Now(),
 			}
 
-			err = database.C("posts").Insert(publish)
+			err := database.C("posts").Insert(publish)
 
 			if err != nil {
 				panic(err)
 			}
 			
 			// Add a counter for the category
-			//counterAdd(post.Tag)
+			di.addUserCategoryCounter(post.Tag)
 
 			// Finished creating the post
 			c.JSON(200, gin.H{"status": "okay", "code": 200})
@@ -885,6 +870,18 @@ func (di *PostAPI) resetUserCategoryCounter(category string, user_id bson.Object
     if err != nil {
         panic(err)   
     }
+    
+    return
+}
+
+func (di *PostAPI) addUserCategoryCounter(category string) {
+    
+    // Replace the slug dash with underscore 
+    counter := strings.Replace(category, "-", "_", -1)
+    find := "counters." + counter + ".counter"
+    
+    // Update the collection of counters
+    di.DataService.Database.C("counters").UpdateAll(nil, bson.M{"$inc": bson.M{find: 1}})
     
     return
 }
