@@ -159,42 +159,31 @@ func (di *UserAPI) UserGetJwtToken(c *gin.Context) {
 	}
 
 	// Generate JWT with the information about the user
-	token := jwt.New(jwt.SigningMethodHS256)
-	token.Claims["user_id"] = user.Id.Hex()
-	token.Claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
+	token := di.generateUserToken(user.Id)
 
-	// Use the secret inside the configuration to encrypt it
-	secret, err := di.ConfigService.String("application.secret")
-	if err != nil {
-		panic(err)
-	}
-
-	tokenString, err := token.SignedString([]byte(secret))
-
-	if err != nil {
-		panic(err)
-	}
-
-	c.JSON(200, gin.H{"status": "okay", "token": tokenString})
+	c.JSON(200, gin.H{"status": "okay", "token": token})
 }
 
 func (di *UserAPI) UserGetTokenFacebook(c *gin.Context) {
 
+	var facebook map[string]interface{}
+	var id bson.ObjectId
+
 	// Get the database interface from the DI
 	database := di.DataService.Database
 
-	var facebook map[string]interface{}
-
-	// Bind to map
+	// Bind to strings map
 	c.BindWith(&facebook, binding.JSON)
 
-	facebook_id := facebook["id"]
+	var facebook_id interface{}
 
-	// Validate the facebook id
-	if facebook_id == "" {
+	if _, okay := facebook["id"]; okay == false {
 
 		c.JSON(401, gin.H{"error": "Invalid oAuth facebook token...", "status": 105})
 		return
+	} else {
+
+		facebook_id = facebook["id"]
 	}
 
 	collection := database.C("users")
@@ -209,7 +198,7 @@ func (di *UserAPI) UserGetTokenFacebook(c *gin.Context) {
 		var facebook_first_name, facebook_last_name, facebook_email string
 
 		username := facebook["first_name"].(string) + " " + facebook["last_name"].(string)
-		id := bson.NewObjectId()
+		id = bson.NewObjectId()
 
 		// Ensure the facebook data is alright
 		if _, ok := facebook["first_name"]; ok {
@@ -269,45 +258,16 @@ func (di *UserAPI) UserGetTokenFacebook(c *gin.Context) {
 			},
 		})
 
-		// Generate user token
-		uuid := uuid.New()
-		token := &model.UserToken{
-			UserId:  id,
-			Token:   uuid,
-			Created: time.Now(),
-			Updated: time.Now(),
-		}
-
-		err = database.C("tokens").Insert(token)
-
-		if err != nil {
-
-			panic(err)
-		}
-
-		c.JSON(200, token)
-
 	} else {
 
-		// Generate user token
-		uuid := uuid.New()
-		token := &model.UserToken{
-			UserId:  user.Id,
-			Token:   uuid,
-			Closed:  false,
-			Created: time.Now(),
-			Updated: time.Now(),
-		}
-
-		err = database.C("tokens").Insert(token)
-
-		if err != nil {
-
-			panic(err)
-		}
-
-		c.JSON(200, token)
+		// The id for the token would be the same as the facebook user
+		id = user.Id
 	}
+
+	// Generate JWT with the information about the user
+	token := di.generateUserToken(id)
+
+	c.JSON(200, gin.H{"status": "okay", "token": token})
 }
 
 func (di *UserAPI) UserUpdateProfile(c *gin.Context) {
@@ -467,11 +427,12 @@ func (di *UserAPI) UserRegisterAction(c *gin.Context) {
 				},
 			},
 		})
-        
-        // Send a confirmation email
+   
+        // Generate token if auth is going to perform
+        token := di.generateUserToken(user.Id)
 
         // Finished creating the post
-		c.JSON(200, gin.H{"status": "okay", "code": 200})
+		c.JSON(200, gin.H{"status": "okay", "code": 200, "token": token})
 		return
     }
     
@@ -586,4 +547,25 @@ func (di *UserAPI) UserAutocompleteGet(c *gin.Context) {
 		
 		c.JSON(200, gin.H{"users": users})
 	}
+}
+
+func (di *UserAPI) generateUserToken(id bson.ObjectId) string {
+
+	// Generate JWT with the information about the user
+	token := jwt.New(jwt.SigningMethodHS256)
+	token.Claims["user_id"] = id.Hex()
+	token.Claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
+
+	// Use the secret inside the configuration to encrypt it
+	secret, err := di.ConfigService.String("application.secret")
+	if err != nil {
+		panic(err)
+	}
+
+	tokenString, err := token.SignedString([]byte(secret))
+	if err != nil {
+		panic(err)
+	}
+
+	return tokenString
 }
