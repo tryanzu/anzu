@@ -334,7 +334,7 @@ func (di *UserAPI) UserUpdateProfile(c *gin.Context) {
 
 			var profileUpdate model.UserProfileForm
 
-			if c.BindWith(&profileUpdate, binding.JSON) != nil {
+			if c.BindWith(&profileUpdate, binding.JSON) == nil {
 
 				set := bson.M{}
 				
@@ -391,7 +391,7 @@ func (di *UserAPI) UserRegisterAction(c *gin.Context) {
 
     var registerAction model.UserRegisterForm
 
-    if c.BindWith(&registerAction, binding.JSON) != nil {
+    if c.BindWith(&registerAction, binding.JSON) == nil {
 
         // Check if already registered
         email_exists, _ := database.C("users").Find(bson.M{"email": registerAction.Email}).Count()

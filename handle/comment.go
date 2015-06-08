@@ -52,7 +52,7 @@ func (di *CommentAPI) CommentAdd (c *gin.Context) {
 
     var comment model.CommentForm
 
-    if c.BindWith(&comment, binding.JSON) != nil {
+    if c.BindWith(&comment, binding.JSON) == nil {
 
         // Get the post using the slug
         id := bson.ObjectIdHex(id)

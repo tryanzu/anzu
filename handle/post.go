@@ -74,22 +74,14 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 		
 		search["categories"] = f
 		
-		 // Check whether auth or not
-		user_token := model.UserToken{}
-		token := c.Request.Header.Get("Auth-Token")
+		// Check for user token
+		user_token, signed_in := c.Get("user_id")
 	
-		if token != "" {
+		if signed_in {
 	
-	    	// Try to fetch the user using token header though
-	    	err := database.C("tokens").Find(bson.M{"token": token}).One(&user_token)
-	    
-	    	if err == nil {
-	    
-	    		// Reset the counters for that category
-				//counterReset(f, user_token.UserId)
-	    	}
+			// Reset the counter for the user			
+			di.resetUserCategoryCounter(f, bson.ObjectIdHex(user_token.(string)))
 		}
-		
 	}
 
 	// Prepare the database to fetch the feed
@@ -709,7 +701,7 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 	var post model.PostForm
 
 	// Get the form otherwise tell it has been an error
-	if c.BindWith(&post, binding.JSON) != nil {
+	if c.BindWith(&post, binding.JSON) == nil {
 
 		comments := model.Comments{
 			Count: 0,
@@ -878,4 +870,21 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 	}
 
 	c.JSON(400, gin.H{"status": "error", "message": "Couldnt create post, missing information...", "code": 205})
+}
+
+func (di *PostAPI) resetUserCategoryCounter(category string, user_id bson.ObjectId) {
+    
+    // Replace the slug dash with underscore 
+    counter := strings.Replace(category, "-", "_", -1)
+    find := "counters." + counter + ".counter"
+    updated_at := "counters." + counter + ".updated_at"
+    
+    // Update the collection of counters
+    err := di.DataService.Database.C("counters").Update(bson.M{"user_id": user_id}, bson.M{"$set": bson.M{find: 0, updated_at: time.Now()}})
+    
+    if err != nil {
+        panic(err)   
+    }
+    
+    return
 }
