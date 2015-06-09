@@ -7,6 +7,7 @@ import (
 	"github.com/facebookgo/inject"
 	"github.com/olebedev/config"
 	"github.com/xuyu/goredis"	
+	"github.com/cosn/firebase"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/fernandez14/spartangeek-blacker/handle"
 	"os"
@@ -47,6 +48,9 @@ func main() {
 	mongoService     := mongo.NewService(string_value(configService.String("database.uri")), string_value(configService.String("database.name")))
 	errorService, _  := raven.NewClient(string_value(configService.String("sentry.dns")), nil)
 	cacheService, _  := goredis.Dial(&goredis.DialConfig{Address: string_value(configService.String("cache.redis"))})
+	
+	firebaseService := new(firebase.Client)
+	firebaseService.Init(string_value(configService.String("firebase.url")), string_value(configService.String("firebase.secret")), nil)
 
 	// Provide graph with service instances
 	err := g.Provide(
@@ -54,6 +58,7 @@ func main() {
         &inject.Object{Value: mongoService},
         &inject.Object{Value: errorService},
         &inject.Object{Value: cacheService},
+        &inject.Object{Value: firebaseService},
         &inject.Object{Value: &posts},
         &inject.Object{Value: &votes},
         &inject.Object{Value: &users},
@@ -88,9 +93,6 @@ func main() {
 
 	v1.Use(middlewares.Authorization())
 	{
-		// Comment routes
-		v1.POST("/post/comment/:id", comments.CommentAdd)
-
 		// Post routes
 		v1.GET("/feed", posts.FeedGet)
 		v1.GET("/post", posts.PostsGet)
@@ -107,10 +109,8 @@ func main() {
 		// User routes
 		v1.POST("/user", users.UserRegisterAction)
 		//v1.GET("/user/my/notifications", users.UserNotificationsGet)
-		v1.GET("/user/my", users.UserGetByToken)
 		v1.GET("/user/activity", users.UserInvolvedFeedGet)
 		v1.GET("/user/search", users.UserAutocompleteGet)
-		v1.PUT("/user/my", users.UserUpdateProfile)
 		v1.POST("/user/get-token/facebook", users.UserGetTokenFacebook)
 		v1.GET("/user/get-token", users.UserGetToken)
 		v1.GET("/auth/get-token", users.UserGetJwtToken)
@@ -141,8 +141,15 @@ func main() {
 
 		authorized.Use(middlewares.NeedAuthorization())
 		{
+			// Comment routes
+			authorized.POST("/post/comment/:id", comments.CommentAdd)
+
 			// Post routes
 			authorized.POST("/post", posts.PostCreate)
+
+			// User routes
+			v1.GET("/user/my", users.UserGetByToken)
+			v1.PUT("/user/my", users.UserUpdateProfile)
 		}
 	}
 
