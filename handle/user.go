@@ -24,52 +24,30 @@ type UserAPI struct {
 
 func (di *UserAPI) UserGetByToken(c *gin.Context) {
 
-
-	// Get user by token
-	tokens := c.MustGet("token").(string)
-
-	c.JSON(200, gin.H{"token": tokens})
-
-	return
-
-
 	// Get the database interface from the DI
 	database := di.DataService.Database
+	user_id 	 := c.MustGet("user_id")
+    user_bson_id := bson.ObjectIdHex(user_id.(string))
 
-	// Users collection
-	collection := database.C("users")
+    // Get the user using the session
+	user := model.User{}
+	err := database.C("users").Find(bson.M{"_id": user_bson_id}).One(&user)
 
-	// Get user by token
-	user_token := model.UserToken{}
-	token := c.Request.Header.Get("Auth-Token")
-
-	// Try to fetch the user using token header though
-	err := database.C("tokens").Find(bson.M{"token": token}).One(&user_token)
-
-	if err == nil {
-
-		user := model.User{}
-		err = collection.Find(bson.M{"_id": user_token.UserId}).One(&user)
-
-		if err == nil {
-			
-			// Get the user notifications
-			notifications, err := database.C("notifications").Find(bson.M{"user_id": user.Id, "seen": false}).Count()
-			
-			if err !=  nil {
-				panic(err)
-			}
-			
-			user.Notifications = notifications
-			
-			// Alright, go back and send the user info
-			c.JSON(200, user)
-
-			return
-		}
+	if err != nil {
+		panic(err)
 	}
-
-	c.JSON(401, gin.H{"error": "Could find user by token...", "status": 103})
+		
+	// Get the user notifications
+	notifications, err := database.C("notifications").Find(bson.M{"user_id": user.Id, "seen": false}).Count()
+	
+	if err !=  nil {
+		panic(err)
+	}
+	
+	user.Notifications = notifications
+	
+	// Alright, go back and send the user info
+	c.JSON(200, user)
 }
 
 func (di *UserAPI) UserGetToken(c *gin.Context) {

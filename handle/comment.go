@@ -3,6 +3,7 @@ package handle
 import (
     "github.com/fernandez14/spartangeek-blacker/mongo"
     "github.com/fernandez14/spartangeek-blacker/model"
+    "github.com/cosn/firebase"
     "gopkg.in/mgo.v2/bson"
     "github.com/gin-gonic/gin"
     "github.com/gin-gonic/gin/binding"
@@ -15,6 +16,7 @@ import (
 
 type CommentAPI struct {
     DataService  *mongo.Service `inject:""`
+    Firebase *firebase.Client `inject:""`
 }
 
 func (di *CommentAPI) CommentAdd (c *gin.Context) {
@@ -30,25 +32,8 @@ func (di *CommentAPI) CommentAdd (c *gin.Context) {
         return
     }
 
-    // Name of the set to get
-    token := c.Request.Header.Get("Auth-Token")
-
-    if token == "" {
-
-        c.JSON(401, gin.H{"error": "Not authorized.", "status": 702})
-        return
-    }
-
-    // Get user by token
-    user_token  := model.UserToken{}
-
-    // Try to fetch the user using token header though
-	err := database.C("tokens").Find(bson.M{"token": token}).One(&user_token)
-
-	if err != nil {
-	    c.JSON(401, gin.H{"error": "Not authorized.", "status": 703})
-        return
-	}
+    user_id := c.MustGet("user_id")
+    user_bson_id := bson.ObjectIdHex(user_id.(string))
 
     var comment model.CommentForm
 
@@ -76,7 +61,7 @@ func (di *CommentAPI) CommentAdd (c *gin.Context) {
         }
         
         comment := model.Comment{
-            UserId: user_token.UserId,
+            UserId: user_bson_id,
             Votes: votes,
             Content: comment.Content,
             Created: time.Now(),
@@ -101,7 +86,7 @@ func (di *CommentAPI) CommentAdd (c *gin.Context) {
         
         for _, mention_user := range mentions_users {
             
-            go mentionUserComment(mention_user, post, user_token)    
+            go di.mentionUserComment(mention_user, post, user_bson_id)    
             
             // Replace the mentioned user
             markdown := "[" + mention_user + "](/user/profile/" + mention_user[1:] + " \""+ mention_user[1:] +"\")"  
@@ -122,7 +107,7 @@ func (di *CommentAPI) CommentAdd (c *gin.Context) {
         
         for _, already_within := range users {
 
-            if already_within == user_token.UserId {
+            if already_within == user_bson_id {
 
                 need_add = false
             }
@@ -131,7 +116,7 @@ func (di *CommentAPI) CommentAdd (c *gin.Context) {
         if need_add == true {
 
             // Add the user to the user list
-            change := bson.M{"$push": bson.M{"users": user_token.UserId}}
+            change := bson.M{"$push": bson.M{"users": user_bson_id}}
             err = collection.Update(bson.M{"_id": post.Id}, change)
             
             if err != nil {
@@ -173,7 +158,7 @@ func (di *CommentAPI) CommentAdd (c *gin.Context) {
     c.JSON(401, gin.H{"error": "Not authorized.", "status": 704})
 }
 
-func mentionUserComment(mentioned string, post model.Post, token model.UserToken) {
+func (di *CommentAPI) mentionUserComment(mentioned string, post model.Post, user_id bson.ObjectId) {
     
     /*var user User
     var author User
@@ -184,7 +169,7 @@ func mentionUserComment(mentioned string, post model.Post, token model.UserToken
     
     if err == nil {
         
-        err := database.C("users").Find(bson.M{"_id": token.UserId}).One(&author)
+        err := database.C("users").Find(bson.M{"_id": user_id}).One(&author)
         
         if err == nil {
             
