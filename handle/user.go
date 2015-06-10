@@ -13,7 +13,6 @@ import (
 	"github.com/mrvdot/golang-utils"
 	"gopkg.in/mgo.v2/bson"
 	"time"
-	"log"
 	"sort"
 )
 
@@ -26,6 +25,8 @@ func (di *UserAPI) UserGetByToken(c *gin.Context) {
 
 	// Get the database interface from the DI
 	database := di.DataService.Database
+
+	// Token should be inside the runtime request
 	user_id 	 := c.MustGet("user_id")
     user_bson_id := bson.ObjectIdHex(user_id.(string))
 
@@ -256,70 +257,63 @@ func (di *UserAPI) UserUpdateProfile(c *gin.Context) {
 	// Users collection
 	users_collection := database.C("users")
 
-	// Get user by token
-	user_token := model.UserToken{}
-	token := c.Request.Header.Get("Auth-Token")
+	// Token should be inside the runtime request
+	user_id 	 := c.MustGet("user_id")
+    user_bson_id := bson.ObjectIdHex(user_id.(string))
 
-	// Try to fetch the user using token header though
-	err := database.C("tokens").Find(bson.M{"token": token}).One(&user_token)
+    // Get the authtenticated user from the users collection
+	user := model.User{}
+	err := users_collection.Find(bson.M{"_id": user_bson_id}).One(&user)
 
 	if err == nil {
 
-		user := model.User{}
-		err = users_collection.Find(bson.M{"_id": user_token.UserId}).One(&user)
+		var profileUpdate model.UserProfileForm
 
-		if err == nil {
+		if c.BindWith(&profileUpdate, binding.JSON) == nil {
 
-			var profileUpdate model.UserProfileForm
-
-			if c.BindWith(&profileUpdate, binding.JSON) == nil {
-
-				set := bson.M{}
+			set := bson.M{}
+			
+			if profileUpdate.Biography != "" {
 				
-				if profileUpdate.Biography != "" {
-					
-					set["profile.bio"] = profileUpdate.Biography
-				}
-				
-				if profileUpdate.UserName != "" {
-					
-					// Check whether user exists
-					count, _ := database.C("users").Find(bson.M{"username": profileUpdate.UserName}).Count()
-					
-					if count == 0 {
-						
-						set["username"] = profileUpdate.UserName
-					}
-				}
-				
-				if profileUpdate.Country != "" {
-					
-					set["profile.country"] = profileUpdate.Country
-				}
-				
-				if profileUpdate.FavouriteGame != "" {
-					
-					set["profile.favourite_game"] = profileUpdate.FavouriteGame
-				}
-				
-				if profileUpdate.Microsoft != "" {
-					
-					set["profile.microsoft"] = profileUpdate.Microsoft
-				}
-				
-				set["updated_at"] = time.Now()
-				
-				log.Printf("%v", set)
-				log.Printf("%v", profileUpdate)
-
-				// Update the user profile with some godness
-				users_collection.Update(bson.M{"_id": user.Id}, bson.M{"$set": set})
-
-				c.JSON(200, gin.H{"message": "okay", "status": "okay", "code": 200})
-				return
+				set["profile.bio"] = profileUpdate.Biography
 			}
+			
+			if profileUpdate.UserName != "" {
+				
+				// Check whether user exists
+				count, _ := database.C("users").Find(bson.M{"username": profileUpdate.UserName}).Count()
+				
+				if count == 0 {
+					
+					set["username"] = profileUpdate.UserName
+				}
+			}
+			
+			if profileUpdate.Country != "" {
+				
+				set["profile.country"] = profileUpdate.Country
+			}
+			
+			if profileUpdate.FavouriteGame != "" {
+				
+				set["profile.favourite_game"] = profileUpdate.FavouriteGame
+			}
+			
+			if profileUpdate.Microsoft != "" {
+				
+				set["profile.microsoft"] = profileUpdate.Microsoft
+			}
+			
+			set["updated_at"] = time.Now()
+
+			// Update the user profile with some godness
+			users_collection.Update(bson.M{"_id": user.Id}, bson.M{"$set": set})
+
+			c.JSON(200, gin.H{"message": "okay", "status": "okay", "code": 200})
+			return
 		}
 	}
+	
 }
 
 func (di *UserAPI) UserRegisterAction(c *gin.Context) {
@@ -512,8 +506,7 @@ func (di *UserAPI) UserAutocompleteGet(c *gin.Context) {
 
 	var users []gin.H
 	
-	qs := c.Request.URL.Query()
-	name := qs.Get("search")
+	name := c.Query("search")
 	
 	if name != "" {
 		
