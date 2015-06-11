@@ -313,7 +313,8 @@ func (di *UserAPI) UserUpdateProfile(c *gin.Context) {
 			return
 		}
 	}
-	
+
+    c.JSON(400, gin.H{"status": "error", "message": "Couldnt proccess the information"})
 }
 
 func (di *UserAPI) UserRegisterAction(c *gin.Context) {

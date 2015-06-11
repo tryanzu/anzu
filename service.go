@@ -102,10 +102,6 @@ func main() {
 		// // Election routes
 		v1.POST("/election/:id", elections.ElectionAddOption)
 
-		// // Votes routes
-		v1.POST("/vote/comment/:id", votes.VoteComment)
-		v1.POST("/vote/component/:id", votes.VoteComponent)
-
 		// User routes
 		v1.POST("/user", users.UserRegisterAction)
 		//v1.GET("/user/my/notifications", users.UserNotificationsGet)
@@ -132,11 +128,6 @@ func main() {
 		v1.GET("/part/:type/manufacturers", parts.GetPartManufacturers)
 		v1.GET("/part/:type/models", parts.GetPartManufacturerModels)
 
-		v1.GET("/error", func(c *gin.Context) {
-
-			panic("Oh no! shit happened")
-		})
-
 		authorized := v1.Group("")
 
 		authorized.Use(middlewares.NeedAuthorization())
@@ -150,6 +141,10 @@ func main() {
 			// User routes
 			v1.GET("/user/my", users.UserGetByToken)
 			v1.PUT("/user/my", users.UserUpdateProfile)
+
+			// // Votes routes
+			v1.POST("/vote/comment/:id", votes.VoteComment)
+			v1.POST("/vote/component/:id", votes.VoteComponent)
 		}
 	}
 
