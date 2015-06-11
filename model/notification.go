@@ -28,3 +28,20 @@ type Notification struct {
     Created   time.Time `bson:"created_at" json:"created_at"`
     Updated   time.Time `bson:"updated_at" json:"updated_at"`
 }
+
+type UserFirebaseNotification struct {
+    UserId    bson.ObjectId `json:"user_id"`
+    RelatedId bson.ObjectId `json:"related_id"`
+    Title     string `json:"title"`
+    Text      string `json:"text"`
+    Related   string `json:"related"`
+    Seen      bool   `json:"seen"`
+    Image     string `json:"image"`
+    Created   time.Time `json:"created_at"`
+    Updated   time.Time `json:"updated_at"`
+}
+
+type UserFirebaseNotifications struct {
+    Count int `json:"count"`
+    List  []UserFirebaseNotification `json:"list,omitempty"`
+}

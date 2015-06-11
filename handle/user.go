@@ -5,6 +5,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/olebedev/config"
+	"github.com/CloudCom/fireauth"
 	"crypto/sha256"
 	"encoding/hex"
 	"github.com/gin-gonic/gin"
@@ -13,6 +14,7 @@ import (
 	"github.com/mrvdot/golang-utils"
 	"gopkg.in/mgo.v2/bson"
 	"time"
+	"log"
 	"sort"
 )
 
@@ -25,8 +27,6 @@ func (di *UserAPI) UserGetByToken(c *gin.Context) {
 
 	// Get the database interface from the DI
 	database := di.DataService.Database
-
-	// Token should be inside the runtime request
 	user_id 	 := c.MustGet("user_id")
     user_bson_id := bson.ObjectIdHex(user_id.(string))
 
@@ -138,9 +138,9 @@ func (di *UserAPI) UserGetJwtToken(c *gin.Context) {
 	}
 
 	// Generate JWT with the information about the user
-	token := di.generateUserToken(user.Id)
+	token, firebase := di.generateUserToken(user.Id)
 
-	c.JSON(200, gin.H{"status": "okay", "token": token})
+	c.JSON(200, gin.H{"status": "okay", "token": token, "firebase": firebase})
 }
 
 func (di *UserAPI) UserGetTokenFacebook(c *gin.Context) {
@@ -244,9 +244,9 @@ func (di *UserAPI) UserGetTokenFacebook(c *gin.Context) {
 	}
 
 	// Generate JWT with the information about the user
-	token := di.generateUserToken(id)
+	token, firebase := di.generateUserToken(id)
 
-	c.JSON(200, gin.H{"status": "okay", "token": token})
+	c.JSON(200, gin.H{"status": "okay", "token": token, "firebase": firebase})
 }
 
 func (di *UserAPI) UserUpdateProfile(c *gin.Context) {
@@ -257,64 +257,70 @@ func (di *UserAPI) UserUpdateProfile(c *gin.Context) {
 	// Users collection
 	users_collection := database.C("users")
 
-	// Token should be inside the runtime request
-	user_id 	 := c.MustGet("user_id")
-    user_bson_id := bson.ObjectIdHex(user_id.(string))
+	// Get user by token
+	user_token := model.UserToken{}
+	token := c.Request.Header.Get("Auth-Token")
 
-    // Get the authtenticated user from the users collection
-	user := model.User{}
-	err := users_collection.Find(bson.M{"_id": user_bson_id}).One(&user)
+	// Try to fetch the user using token header though
+	err := database.C("tokens").Find(bson.M{"token": token}).One(&user_token)
 
 	if err == nil {
 
-		var profileUpdate model.UserProfileForm
+		user := model.User{}
+		err = users_collection.Find(bson.M{"_id": user_token.UserId}).One(&user)
 
-		if c.BindWith(&profileUpdate, binding.JSON) == nil {
+		if err == nil {
 
-			set := bson.M{}
-			
-			if profileUpdate.Biography != "" {
+			var profileUpdate model.UserProfileForm
+
+			if c.BindWith(&profileUpdate, binding.JSON) == nil {
+
+				set := bson.M{}
 				
-				set["profile.bio"] = profileUpdate.Biography
-			}
-			
-			if profileUpdate.UserName != "" {
-				
-				// Check whether user exists
-				count, _ := database.C("users").Find(bson.M{"username": profileUpdate.UserName}).Count()
-				
-				if count == 0 {
+				if profileUpdate.Biography != "" {
 					
-					set["username"] = profileUpdate.UserName
+					set["profile.bio"] = profileUpdate.Biography
 				}
-			}
-			
-			if profileUpdate.Country != "" {
 				
-				set["profile.country"] = profileUpdate.Country
-			}
-			
-			if profileUpdate.FavouriteGame != "" {
+				if profileUpdate.UserName != "" {
+					
+					// Check whether user exists
+					count, _ := database.C("users").Find(bson.M{"username": profileUpdate.UserName}).Count()
+					
+					if count == 0 {
+						
+						set["username"] = profileUpdate.UserName
+					}
+				}
 				
-				set["profile.favourite_game"] = profileUpdate.FavouriteGame
-			}
-			
-			if profileUpdate.Microsoft != "" {
+				if profileUpdate.Country != "" {
+					
+					set["profile.country"] = profileUpdate.Country
+				}
 				
-				set["profile.microsoft"] = profileUpdate.Microsoft
-			}
-			
-			set["updated_at"] = time.Now()
+				if profileUpdate.FavouriteGame != "" {
+					
+					set["profile.favourite_game"] = profileUpdate.FavouriteGame
+				}
+				
+				if profileUpdate.Microsoft != "" {
+					
+					set["profile.microsoft"] = profileUpdate.Microsoft
+				}
+				
+				set["updated_at"] = time.Now()
+				
+				log.Printf("%v", set)
+				log.Printf("%v", profileUpdate)
 
-			// Update the user profile with some godness
-			users_collection.Update(bson.M{"_id": user.Id}, bson.M{"$set": set})
+				// Update the user profile with some godness
+				users_collection.Update(bson.M{"_id": user.Id}, bson.M{"$set": set})
 
-			c.JSON(200, gin.H{"message": "okay", "status": "okay", "code": 200})
-			return
+				c.JSON(200, gin.H{"message": "okay", "status": "okay", "code": 200})
+				return
+			}
 		}
 	}
-
-    c.JSON(400, gin.H{"status": "error", "message": "Couldnt proccess the information"})
 }
 
 func (di *UserAPI) UserRegisterAction(c *gin.Context) {
@@ -402,10 +408,10 @@ func (di *UserAPI) UserRegisterAction(c *gin.Context) {
 		})
    
         // Generate token if auth is going to perform
-        token := di.generateUserToken(user.Id)
+        token, firebase := di.generateUserToken(user.Id)
 
         // Finished creating the post
-		c.JSON(200, gin.H{"status": "okay", "code": 200, "token": token})
+		c.JSON(200, gin.H{"status": "okay", "code": 200, "token": token, "firebase": firebase})
 		return
     }
     
@@ -507,7 +513,8 @@ func (di *UserAPI) UserAutocompleteGet(c *gin.Context) {
 
 	var users []gin.H
 	
-	name := c.Query("search")
+	qs := c.Request.URL.Query()
+	name := qs.Get("search")
 	
 	if name != "" {
 		
@@ -521,7 +528,7 @@ func (di *UserAPI) UserAutocompleteGet(c *gin.Context) {
 	}
 }
 
-func (di *UserAPI) generateUserToken(id bson.ObjectId) string {
+func (di *UserAPI) generateUserToken(id bson.ObjectId) (string, string) {
 
 	// Generate JWT with the information about the user
 	token := jwt.New(jwt.SigningMethodHS256)
@@ -534,10 +541,24 @@ func (di *UserAPI) generateUserToken(id bson.ObjectId) string {
 		panic(err)
 	}
 
+	firebase_secret, err := di.ConfigService.String("firebase.secret")
+	if err != nil {
+		panic(err)
+	}
+
 	tokenString, err := token.SignedString([]byte(secret))
 	if err != nil {
 		panic(err)
 	}
 
-	return tokenString
+	// Generate firebase auth token for further usage
+	firebase_auth := fireauth.New(firebase_secret)
+	firebase_data := fireauth.Data{"uid": id.Hex()}
+
+	firebase_token, err := firebase_auth.CreateToken(firebase_data, nil)
+	if err != nil {
+		panic(err)
+	}
+
+	return tokenString, firebase_token
 }

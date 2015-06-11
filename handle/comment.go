@@ -7,11 +7,11 @@ import (
     "gopkg.in/mgo.v2/bson"
     "github.com/gin-gonic/gin"
     "github.com/gin-gonic/gin/binding"
-    //"github.com/ftrvxmtrx/gravatar"
+    "github.com/ftrvxmtrx/gravatar"
     "time"
     "regexp"
     "strings"
-    //"fmt"
+    "fmt"
 )
 
 type CommentAPI struct {
@@ -125,37 +125,56 @@ func (di *CommentAPI) CommentAdd (c *gin.Context) {
         }
         
         // Notifications for the author 
-        /*if post.UserId != user_token.UserId {
-            
-            go func(post model.Post, token model.UserToken) {
-                
-                // Get the comment author
-                var user User
-                
-                err := database.C("users").Find(bson.M{"_id": token.UserId}).One(&user)
-                
-                if err == nil {
-                    
-                    // Gravatar url
-                    emailHash := gravatar.EmailHash(user.Email)
-                    image := gravatar.GetAvatarURL("http", emailHash, "http://spartangeek.com/images/default-avatar.png", 80)
-                    
-                    // Construct the notification message
-                    title := fmt.Sprintf("Nuevo comentario de **%s**", user.UserName)
-                    message := post.Title
-                    
-                    // We are inside an isolated routine, so we dont need to worry about the processing cost
-                    notify(post.UserId, "comment", post.Id, "/post/" + post.Slug, title, message, image.String())
-                }
-                            
-            }(post, user_token)
-        }*/
+        if post.UserId != user_bson_id {
+
+            go di.notifyCommentPostAuth(post, user_bson_id)
+        }
 
         c.JSON(200, gin.H{"message": "okay", "status": 706})
         return
     }
     
     c.JSON(401, gin.H{"error": "Not authorized.", "status": 704})
+}
+
+func (di *CommentAPI) notifyCommentPostAuth(post model.Post, user_id bson.ObjectId) {
+
+    // Get the comment author
+    var user model.User
+    var notifications model.UserFirebaseNotifications
+    
+    err := di.DataService.Database.C("users").Find(bson.M{"_id": user_id}).One(&user)
+    
+    if err == nil {
+        
+        // Gravatar url
+        emailHash := gravatar.EmailHash(user.Email)
+        image := gravatar.GetAvatarURL("http", emailHash, "http://spartangeek.com/images/default-avatar.png", 80)
+        
+        // Construct the notification message
+        title := fmt.Sprintf("Nuevo comentario de **%s**", user.UserName)
+        message := post.Title
+        
+        // Process notification using firebase
+        authorPath := "users/" + user_id.Hex() + "/notifications"
+        authorRef  := di.Firebase.Child(authorPath, nil, &notifications)
+
+        authorRef.Set("count", notifications.Count + 1, nil)
+
+        notification := &model.UserFirebaseNotification {
+            UserId: post.UserId,
+            RelatedId: post.Id,
+            Title: title,
+            Text: message,
+            Related: "comment",
+            Seen: false,
+            Image: image.String(),
+            Created: time.Now(),
+            Updated: time.Now(),
+        }
+
+        authorRef.Child("list", nil, nil).Push(notification, nil)
+    }       
 }
 
 func (di *CommentAPI) mentionUserComment(mentioned string, post model.Post, user_id bson.ObjectId) {
