@@ -43,5 +43,5 @@ type UserFirebaseNotification struct {
 
 type UserFirebaseNotifications struct {
     Count int `json:"count"`
-    List  []UserFirebaseNotification `json:"list,omitempty"`
+    List  map[string]UserFirebaseNotification `json:"list,omitempty"`
 }
