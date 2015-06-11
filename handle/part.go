@@ -36,7 +36,7 @@ func (di *PartAPI) GetPartManufacturerModels(c *gin.Context) {
 
 	var parts []model.PartByModel
 
-	err := database.C("parts").Find(bson.M{"type": part_type, "manufacturer": manufacturer}).Select(bson.M{"_id": 1, "name": 1}).All(&parts)
+	err := database.C("parts").Find(bson.M{"type": part_type, "manufacturer": manufacturer}).All(&parts)
 	if err != nil {
 		panic(err)
 	}
