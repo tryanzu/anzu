@@ -30,36 +30,10 @@ func (di *VoteAPI) VoteComponent (c *gin.Context) {
         return
     }
     
-    // Get the query parameters
-    qs := c.Request.URL.Query()
-    
-    // Name of the set to get
-    token := qs.Get("token")
-    
-    // Get user by token
-    user_token  := model.UserToken{}
-    
-    if token == "" {
-        
-        // No guest can vote
-        c.JSON(401, gin.H{"error": "Not authorized...", "status": 602})
-        
-        return
-        
-    } else {
-        
-        // Try to fetch the user using token header though
-    	err := database.C("tokens").Find(bson.M{"token": token}).One(&user_token)
-    	
-    	if err != nil {
-    	 
-    	    // No guest can vote
-            c.JSON(401, gin.H{"error": "Not authorized...", "status": 603})
-            
-            return
-    	}
-    }
-	
+    // Get the user
+    user_id      := c.MustGet("user_id")
+    user_bson_id := bson.ObjectIdHex(user_id.(string))
+
     // Get the vote content
     var vote model.VoteForm
     
@@ -120,7 +94,7 @@ func (di *VoteAPI) VoteComponent (c *gin.Context) {
             
                     var already_voted model.Vote
                     
-                    err = database.C("votes").Find(bson.M{"type": "component", "user_id": user_token.UserId, "related_id": id, "nested_type": component}).One(&already_voted)               
+                    err = database.C("votes").Find(bson.M{"type": "component", "user_id": user_bson_id, "related_id": id, "nested_type": component}).One(&already_voted)               
                     
                     if err == nil {
                         
@@ -193,7 +167,7 @@ func (di *VoteAPI) VoteComponent (c *gin.Context) {
                     }
                     
                     vote := &model.Vote{
-                        UserId: user_token.UserId,
+                        UserId: user_bson_id,
                         Type: "component",
                         NestedType: component,
                         RelatedId: id,
@@ -232,35 +206,9 @@ func (di *VoteAPI) VoteComment (c *gin.Context) {
         return   
     }
     
-    // Get the query parameters
-    qs := c.Request.URL.Query()
-    
-    // Name of the set to get
-    token := qs.Get("token")
-    
-    // Get user by token
-    user_token  := model.UserToken{}
-    
-    if token == "" {
-        
-        // No guest can vote
-        c.JSON(401, gin.H{"error": "Not authorized...", "status": 602})
-        
-        return
-        
-    } else {
-        
-        // Try to fetch the user using token header though
-    	err := database.C("tokens").Find(bson.M{"token": token}).One(&user_token)
-    	
-    	if err != nil {
-    	 
-    	    // No guest can vote
-            c.JSON(401, gin.H{"error": "Not authorized...", "status": 603})
-            
-            return
-    	}
-    }
+    // Get the user
+    user_id      := c.MustGet("user_id")
+    user_bson_id := bson.ObjectIdHex(user_id.(string))
 	
     // Get the vote content
     var vote model.VoteCommentForm
@@ -297,7 +245,7 @@ func (di *VoteAPI) VoteComment (c *gin.Context) {
         
                 var already_voted model.Vote
                 
-                err = database.C("votes").Find(bson.M{"type": "comment", "user_id": user_token.UserId, "related_id": id, "nested_type": index}).One(&already_voted)               
+                err = database.C("votes").Find(bson.M{"type": "comment", "user_id": user_bson_id, "related_id": id, "nested_type": index}).One(&already_voted)               
                 
                 if err == nil {
                     
@@ -337,7 +285,7 @@ func (di *VoteAPI) VoteComment (c *gin.Context) {
                 }
                 
                 vote := &model.Vote{
-                    UserId: user_token.UserId,
+                    UserId: user_bson_id,
                     Type: "comment",
                     NestedType: index,
                     RelatedId: id,
@@ -350,7 +298,7 @@ func (di *VoteAPI) VoteComment (c *gin.Context) {
                 comment_ := post.Comments.Set[comment_index]
                 
                 // Notify the author of the comment
-                go func(comment model.Comment, token model.UserToken, post model.Post) {
+                go func(comment model.Comment, token bson.ObjectId, post model.Post) {
                     
                     /*user_id := comment.UserId
                     
@@ -373,7 +321,7 @@ func (di *VoteAPI) VoteComment (c *gin.Context) {
                         //notify(user_id, "like", post.Id, "/post/" + post.Slug, title, message, image.String())   
                     }*/
                     
-                }(comment_, user_token, post)
+                }(comment_, user_bson_id, post)
                 
                 c.JSON(200, gin.H{"message": "okay", "status": 606})
                 return
