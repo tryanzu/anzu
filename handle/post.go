@@ -725,7 +725,12 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 					return
 				}
 
-				post_name := "PC " + post.Name + " - presupuesto de $" + budget.(string) + " " + budget_currency.(string)
+                post_name := "PC '" + post.Name
+                if budget.(string) != "0" {
+				    post_name += "' con presupuesto de $" + budget.(string) + " " + budget_currency.(string)
+                } else {
+                    post_name += "'"
+                }
 
 				publish := &model.Post{
 					Title:      post_name,
@@ -871,13 +876,13 @@ func (di *PostAPI) resetUserCategoryCounter(category string, user_id bson.Object
 }
 
 func (di *PostAPI) addUserCategoryCounter(category string) {
-    
-    // Replace the slug dash with underscore 
+
+    // Replace the slug dash with underscore
     counter := strings.Replace(category, "-", "_", -1)
     find := "counters." + counter + ".counter"
-    
+
     // Update the collection of counters
     di.DataService.Database.C("counters").UpdateAll(nil, bson.M{"$inc": bson.M{find: 1}})
-    
+
     return
 }
