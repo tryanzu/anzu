@@ -709,7 +709,7 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 	var post model.PostForm
 
 	// Get the form otherwise tell it has been an error
-	if c.BindWith(&post, binding.JSON) != nil {
+	if c.BindWith(&post, binding.JSON) == nil {
 
 		comments := model.Comments{
 			Count: 0,
