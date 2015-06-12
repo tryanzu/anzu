@@ -127,7 +127,7 @@ func (di *CommentAPI) CommentAdd (c *gin.Context) {
         // Notifications for the author 
         if post.UserId != user_bson_id {
 
-            go di.notifyCommentPostAuth(post, user_bson_id)
+            go di.notifyCommentPostAuth(post, post.UserId)
         }
 
         c.JSON(200, gin.H{"message": "okay", "status": 706})
