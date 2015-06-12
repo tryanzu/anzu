@@ -72,6 +72,17 @@ type UserRegisterForm struct {
 	Email     string  `json:"email" binding:"required"`
 }
 
+type UserSubscribe struct {
+	Id        bson.ObjectId `bson:"_id,omitempty" json:"id"`
+	Category  string  `bson:"category" json:"category"`
+	Email  	  string  `bson:"email" json:"email"`
+}
+
+type UserSubscribeForm struct {
+	Category  string  `json:"category" binding:"required"`
+	Email  	  string  `json:"email" binding:"required"`
+}
+
 type ByCreatedAt []UserActivity
 func (a ByCreatedAt) Len() int  		 { return len(a) }
 func (a ByCreatedAt) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }

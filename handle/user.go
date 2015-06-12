@@ -19,6 +19,29 @@ type UserAPI struct {
 	DataService *mongo.Service `inject:""`
 }
 
+func (di *UserAPI) UserSubscribe(c *gin.Context) {
+
+	// Get the database interface from the DI
+	database := di.DataService.Database
+
+	var register model.UserSubscribeForm
+
+	if c.BindWith(&register, binding.JSON) == nil {
+
+		subscribe := &model.UserSubscribe{
+			Category: register.Category,
+			Email: register.Email,
+		}
+
+		err := database.C("subscribes").Insert(subscribe)
+
+		if err != nil {
+			panic(err)
+		}
+		c.JSON(200, gin.H{"status": "okay"})
+	}
+}
+
 func (di *UserAPI) UserGetByToken(c *gin.Context) {
 
 	// Get the database interface from the DI

@@ -84,6 +84,8 @@ func main() {
 
 	v1 := router.Group("/v1")
 	{
+		v1.POST("/subscribe", users.UserSubscribe)
+		
 		// Comment routes
 		v1.POST("/post/comment/:id", comments.CommentAdd)
 
