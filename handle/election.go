@@ -56,7 +56,7 @@ func (di *ElectionAPI) ElectionAddOption (c *gin.Context) {
 	
     var option model.ElectionForm
     
-    if c.BindWith(&option, binding.JSON) != nil {
+    if c.BindWith(&option, binding.JSON) == nil {
         
         // Check if component is valid
         component := option.Component   

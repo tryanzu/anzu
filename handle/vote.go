@@ -63,7 +63,7 @@ func (di *VoteAPI) VoteComponent (c *gin.Context) {
     // Get the vote content
     var vote model.VoteForm
     
-    if c.BindWith(&vote, binding.JSON) != nil {
+    if c.BindWith(&vote, binding.JSON) == nil {
         
         if vote.Direction == "up" || vote.Direction == "down" {
             
@@ -265,7 +265,7 @@ func (di *VoteAPI) VoteComment (c *gin.Context) {
     // Get the vote content
     var vote model.VoteCommentForm
     
-    if c.BindWith(&vote, binding.JSON) != nil {
+    if c.BindWith(&vote, binding.JSON) == nil {
         
         // Get the post using the slug
         id := bson.ObjectIdHex(id)
