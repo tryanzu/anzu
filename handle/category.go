@@ -1,14 +1,14 @@
 package handle
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/mongo"
+	"encoding/json"
 	"github.com/fernandez14/spartangeek-blacker/model"
+	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/gin-gonic/gin"
 	"github.com/xuyu/goredis"
 	"gopkg.in/mgo.v2/bson"
-	"strings"
 	"sort"
-	"encoding/json"
+	"strings"
 )
 
 type CategoryAPI struct {
@@ -75,7 +75,7 @@ func (di *CategoryAPI) CategoriesGet(c *gin.Context) {
 
 				// Append to the list of counters
 				list = append(list, model.CategoryCounter{
-					Slug: category.Slug,
+					Slug:  category.Slug,
 					Count: count,
 				})
 
@@ -101,21 +101,21 @@ func (di *CategoryAPI) CategoriesGet(c *gin.Context) {
 		var cache model.CategoryCounters
 
 		// Unmarshal already warmed up user achievements
-        if err := json.Unmarshal(counters, &cache); err != nil {
-            panic(err)
-        }
+		if err := json.Unmarshal(counters, &cache); err != nil {
+			panic(err)
+		}
 
-        for _, category := range cache.List {
+		for _, category := range cache.List {
 
-        	for current_index, current := range categories {
+			for current_index, current := range categories {
 
-        		if current.Slug == category.Slug {
+				if current.Slug == category.Slug {
 
-        			// Set the current count of the category
-        			categories[current_index].Count = category.Count
-        		}
-        	}
-        }
+					// Set the current count of the category
+					categories[current_index].Count = category.Count
+				}
+			}
+		}
 	}
 
 	sort.Sort(model.Categories(categories))

@@ -1,21 +1,21 @@
 package model
 
 import (
-	"time"
 	"gopkg.in/mgo.v2/bson"
+	"time"
 )
 
 type ElectionOption struct {
-    UserId  bson.ObjectId `bson:"user_id" json:"user_id"`
-    Content string `bson:"content" json:"content"`
-    User    interface{} `bson:"author,omitempty" json:"author,omitempty"`
-    Votes   Votes `bson:"votes" json:"votes"`
-    Created time.Time `bson:"created_at" json:"created_at"`
+	UserId  bson.ObjectId `bson:"user_id" json:"user_id"`
+	Content string        `bson:"content" json:"content"`
+	User    interface{}   `bson:"author,omitempty" json:"author,omitempty"`
+	Votes   Votes         `bson:"votes" json:"votes"`
+	Created time.Time     `bson:"created_at" json:"created_at"`
 }
 
 type ElectionForm struct {
-    Component  string `json:"component" binding:"required"`     
-    Content  string `json:"content" binding:"required"`  
+	Component string `json:"component" binding:"required"`
+	Content   string `json:"content" binding:"required"`
 }
 
 // ByElectionsCreatedAt implements sort.Interface for []ElectionOption based on Created field

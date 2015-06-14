@@ -1,17 +1,17 @@
 package handle
 
-import (	
+import (
+	"errors"
+	"fmt"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/getsentry/raven-go"
 	"github.com/gin-gonic/gin"
-	"github.com/dgrijalva/jwt-go"
 	"github.com/olebedev/config"
 	"os"
-	"fmt"
-	"errors"
 )
 
 type MiddlewareAPI struct {
-	ErrorService *raven.Client `inject:""`
+	ErrorService  *raven.Client  `inject:""`
 	ConfigService *config.Config `inject:""`
 }
 
@@ -58,43 +58,43 @@ func (di *MiddlewareAPI) Authorization() gin.HandlerFunc {
 
 				// Branch out into the possible error from signing
 				switch err.(type) {
-					case nil:
+				case nil:
 
-						if ! signed.Valid { // but may still be invalid
+					if !signed.Valid { // but may still be invalid
 
-							c.JSON(401, gin.H{"status": "error", "message": "Token compromised, will be notified"})
+						c.JSON(401, gin.H{"status": "error", "message": "Token compromised, will be notified"})
 
-							// Abort the request
-							c.AbortWithStatus(401)
-							return
-						}
+						// Abort the request
+						c.AbortWithStatus(401)
+						return
+					}
 
-					case *jwt.ValidationError: // Something went wrong during validation
-						
-						signingError := err.(*jwt.ValidationError)
+				case *jwt.ValidationError: // Something went wrong during validation
 
-						switch signingError.Errors {
-							case jwt.ValidationErrorExpired:
-								c.JSON(401, gin.H{"status": "error", "message": "Token expired, request new one"})
+					signingError := err.(*jwt.ValidationError)
 
-								// Abort the request
-								c.AbortWithStatus(401)
-								return
+					switch signingError.Errors {
+					case jwt.ValidationErrorExpired:
+						c.JSON(401, gin.H{"status": "error", "message": "Token expired, request new one"})
 
-							default:
-								c.JSON(401, gin.H{"status": "error", "message": "Error parsing token, will be notified"})
+						// Abort the request
+						c.AbortWithStatus(401)
+						return
 
-								// Abort the request
-								c.AbortWithStatus(401)
-								return
-						}
-
-					default: // Something weird went wrong
+					default:
 						c.JSON(401, gin.H{"status": "error", "message": "Error parsing token, will be notified"})
 
 						// Abort the request
 						c.AbortWithStatus(401)
 						return
+					}
+
+				default: // Something weird went wrong
+					c.JSON(401, gin.H{"status": "error", "message": "Error parsing token, will be notified"})
+
+					// Abort the request
+					c.AbortWithStatus(401)
+					return
 				}
 
 				// Set the token for further usage
@@ -127,7 +127,6 @@ func (di *MiddlewareAPI) NeedAuthorization() gin.HandlerFunc {
 	}
 }
 
-
 func (di *MiddlewareAPI) ErrorTracking() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
@@ -138,7 +137,7 @@ func (di *MiddlewareAPI) ErrorTracking() gin.HandlerFunc {
 			envfile = "./env.json"
 		}
 
-		tags := map[string]string {
+		tags := map[string]string{
 			"config_file": envfile,
 		}
 

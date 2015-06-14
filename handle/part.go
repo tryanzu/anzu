@@ -3,8 +3,8 @@ package handle
 import (
 	"github.com/gin-gonic/gin"
 	//"github.com/gin-gonic/gin/binding"
-	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/fernandez14/spartangeek-blacker/model"
+	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -15,7 +15,7 @@ type PartAPI struct {
 func (di *PartAPI) GetPartTypes(c *gin.Context) {
 
 	// Get the database service from the DI container
-	database  := di.Data.Database
+	database := di.Data.Database
 
 	var types []string
 
@@ -30,7 +30,7 @@ func (di *PartAPI) GetPartTypes(c *gin.Context) {
 func (di *PartAPI) GetPartManufacturerModels(c *gin.Context) {
 
 	// Get the database service from the DI container
-	database  := di.Data.Database
+	database := di.Data.Database
 	part_type := c.Param("type")
 	manufacturer := c.Query("manufacturer")
 
@@ -47,7 +47,7 @@ func (di *PartAPI) GetPartManufacturerModels(c *gin.Context) {
 func (di *PartAPI) GetPartManufacturers(c *gin.Context) {
 
 	// Get the database service from the DI container
-	database  := di.Data.Database
+	database := di.Data.Database
 	part_type := c.Param("type")
 
 	var manufacturers []string

@@ -1,12 +1,12 @@
 package handle
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/model"
+	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
-	"github.com/mrvdot/golang-utils"
 	"github.com/kennygrant/sanitize"
-	"github.com/fernandez14/spartangeek-blacker/mongo"
-	"github.com/fernandez14/spartangeek-blacker/model"
+	"github.com/mrvdot/golang-utils"
 	"gopkg.in/mgo.v2/bson"
 	"math/rand"
 	"reflect"
@@ -127,15 +127,15 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 
 				postUser := usersMap[post.UserId]
 
-                var authorLevel int
+				var authorLevel int
 
-                if _, stepOkay := postUser.Profile["step"]; stepOkay {
-                    authorLevel = 1
-                } else {
-                    authorLevel = 0
-                }
+				if _, stepOkay := postUser.Profile["step"]; stepOkay {
+					authorLevel = 1
+				} else {
+					authorLevel = 0
+				}
 
-				post.Author = model.User {
+				post.Author = model.User{
 					Id:        postUser.Id,
 					UserName:  postUser.UserName,
 					FirstName: postUser.FirstName,
@@ -312,10 +312,10 @@ func (di *PostAPI) PostsGetOne(c *gin.Context) {
 			}
 
 			usersMap[user.Id] = map[string]string{
-				"id":    user.Id.Hex(),
-				"username":  user.UserName,
+				"id":          user.Id.Hex(),
+				"username":    user.UserName,
 				"description": description,
-				"email": user.Email,
+				"email":       user.Email,
 			}
 		}
 
@@ -725,12 +725,12 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 					return
 				}
 
-                post_name := "PC '" + post.Name
-                if budget.(string) != "0" {
-				    post_name += "' con presupuesto de $" + budget.(string) + " " + budget_currency.(string)
-                } else {
-                    post_name += "'"
-                }
+				post_name := "PC '" + post.Name
+				if budget.(string) != "0" {
+					post_name += "' con presupuesto de $" + budget.(string) + " " + budget_currency.(string)
+				} else {
+					post_name += "'"
+				}
 
 				publish := &model.Post{
 					Title:      post_name,
@@ -747,46 +747,46 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 				}
 
 				publish_components := model.Components{
-				    Budget: budget.(string),
-				    BudgetType: budget_type.(string),
-				    BudgetCurrency: budget_currency.(string),
-				    BudgetFlexibility: budget_flexibility.(string),
-				    Software: software.(string),
+					Budget:            budget.(string),
+					BudgetType:        budget_type.(string),
+					BudgetCurrency:    budget_currency.(string),
+					BudgetFlexibility: budget_flexibility.(string),
+					Software:          software.(string),
 				}
 
 				for component, value := range components {
 
-				    component_elements := value.(map[string]interface{})
-				    bindable := reflect.ValueOf(&publish_components).Elem()
+					component_elements := value.(map[string]interface{})
+					bindable := reflect.ValueOf(&publish_components).Elem()
 
-				    for i := 0; i < bindable.NumField(); i++ {
+					for i := 0; i < bindable.NumField(); i++ {
 
-                        t := bindable.Type().Field(i)
-                        json_tag := t.Tag
-                        name := json_tag.Get("json")
-                        status := "owned"
+						t := bindable.Type().Field(i)
+						json_tag := t.Tag
+						name := json_tag.Get("json")
+						status := "owned"
 
-                        if component_elements["owned"].(bool) == false {
-                            status = "needed"
-                        }
+						if component_elements["owned"].(bool) == false {
+							status = "needed"
+						}
 
-                        if name == component || name == component + ",omitempty" {
+						if name == component || name == component+",omitempty" {
 
-                            c := model.Component{
-                                Elections: component_elements["poll"].(bool),
-                                Status:  status,
-                                Votes:   votes,
-                                Content: component_elements["value"].(string),
-                            }
+							c := model.Component{
+								Elections: component_elements["poll"].(bool),
+								Status:    status,
+								Votes:     votes,
+								Content:   component_elements["value"].(string),
+							}
 
-                            // Set the component with the component we've build above
-                            bindable.Field(i).Set(reflect.ValueOf(c))
-                        }
-                    }
+							// Set the component with the component we've build above
+							bindable.Field(i).Set(reflect.ValueOf(c))
+						}
+					}
 				}
 
-                // Now bind the components to the post
-                publish.Components = publish_components
+				// Now bind the components to the post
+				publish.Components = publish_components
 
 				err := database.C("posts").Insert(publish)
 
@@ -860,29 +860,29 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 
 func (di *PostAPI) resetUserCategoryCounter(category string, user_id bson.ObjectId) {
 
-    // Replace the slug dash with underscore
-    counter := strings.Replace(category, "-", "_", -1)
-    find := "counters." + counter + ".counter"
-    updated_at := "counters." + counter + ".updated_at"
+	// Replace the slug dash with underscore
+	counter := strings.Replace(category, "-", "_", -1)
+	find := "counters." + counter + ".counter"
+	updated_at := "counters." + counter + ".updated_at"
 
-    // Update the collection of counters
-    err := di.DataService.Database.C("counters").Update(bson.M{"user_id": user_id}, bson.M{"$set": bson.M{find: 0, updated_at: time.Now()}})
+	// Update the collection of counters
+	err := di.DataService.Database.C("counters").Update(bson.M{"user_id": user_id}, bson.M{"$set": bson.M{find: 0, updated_at: time.Now()}})
 
-    if err != nil {
-        panic(err)
-    }
+	if err != nil {
+		panic(err)
+	}
 
-    return
+	return
 }
 
 func (di *PostAPI) addUserCategoryCounter(category string) {
 
-    // Replace the slug dash with underscore
-    counter := strings.Replace(category, "-", "_", -1)
-    find := "counters." + counter + ".counter"
+	// Replace the slug dash with underscore
+	counter := strings.Replace(category, "-", "_", -1)
+	find := "counters." + counter + ".counter"
 
-    // Update the collection of counters
-    di.DataService.Database.C("counters").UpdateAll(nil, bson.M{"$inc": bson.M{find: 1}})
+	// Update the collection of counters
+	di.DataService.Database.C("counters").UpdateAll(nil, bson.M{"$inc": bson.M{find: 1}})
 
-    return
+	return
 }

@@ -2,14 +2,15 @@ package main
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/getsentry/raven-go"
-	"github.com/facebookgo/inject"
-	"github.com/olebedev/config"
-	"github.com/xuyu/goredis"	
 	"github.com/cosn/firebase"
-	"github.com/fernandez14/spartangeek-blacker/mongo"
+	"github.com/facebookgo/inject"
 	"github.com/fernandez14/spartangeek-blacker/handle"
+	"github.com/fernandez14/spartangeek-blacker/mongo"
+	"github.com/getsentry/raven-go"
+	"github.com/gin-gonic/gin"
+	"github.com/loldesign/azure"
+	"github.com/olebedev/config"
+	"github.com/xuyu/goredis"
 	"os"
 	//"errors"
 	"runtime"
@@ -26,7 +27,7 @@ func main() {
 
 	// Start by using the power of the machine cores
 	runtime.GOMAXPROCS(runtime.NumCPU())
-	
+
 	// Run with the specified env file
 	envfile := os.Getenv("ENV_FILE")
 	if envfile == "" {
@@ -42,46 +43,49 @@ func main() {
 	var comments handle.CommentAPI
 	var parts handle.PartAPI
 	var middlewares handle.MiddlewareAPI
-	
+	var azureService azure.Azure
+
 	// Services for the DI
 	configService, _ := config.ParseJsonFile(envfile)
-	mongoService     := mongo.NewService(string_value(configService.String("database.uri")), string_value(configService.String("database.name")))
-	errorService, _  := raven.NewClient(string_value(configService.String("sentry.dns")), nil)
-	cacheService, _  := goredis.Dial(&goredis.DialConfig{Address: string_value(configService.String("cache.redis"))})
-	
+	mongoService := mongo.NewService(string_value(configService.String("database.uri")), string_value(configService.String("database.name")))
+	errorService, _ := raven.NewClient(string_value(configService.String("sentry.dns")), nil)
+	cacheService, _ := goredis.Dial(&goredis.DialConfig{Address: string_value(configService.String("cache.redis"))})
+	azureService = azure.New(string_value(configService.String("azure.account")), string_value(configService.String("azure.key")))
+
 	firebaseService := new(firebase.Client)
 	firebaseService.Init(string_value(configService.String("firebase.url")), string_value(configService.String("firebase.secret")), nil)
 
 	// Provide graph with service instances
 	err := g.Provide(
-        &inject.Object{Value: configService},
-        &inject.Object{Value: mongoService},
-        &inject.Object{Value: errorService},
-        &inject.Object{Value: cacheService},
-        &inject.Object{Value: firebaseService},
-        &inject.Object{Value: &posts},
-        &inject.Object{Value: &votes},
-        &inject.Object{Value: &users},
-        &inject.Object{Value: &categories},
-        &inject.Object{Value: &elections},
-        &inject.Object{Value: &comments},
-        &inject.Object{Value: &parts},
-        &inject.Object{Value: &middlewares},
+		&inject.Object{Value: configService},
+		&inject.Object{Value: mongoService},
+		&inject.Object{Value: errorService},
+		&inject.Object{Value: cacheService},
+		&inject.Object{Value: azureService, Name: "filesystem"},
+		&inject.Object{Value: firebaseService},
+		&inject.Object{Value: &posts},
+		&inject.Object{Value: &votes},
+		&inject.Object{Value: &users},
+		&inject.Object{Value: &categories},
+		&inject.Object{Value: &elections},
+		&inject.Object{Value: &comments},
+		&inject.Object{Value: &parts},
+		&inject.Object{Value: &middlewares},
 	)
-    if err != nil {
-        fmt.Fprintln(os.Stderr, err)
-        os.Exit(1)
-    }
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 
-    // Populate the DI with the instances
-    if err := g.Populate(); err != nil {
-        fmt.Fprintln(os.Stderr, err)
-        os.Exit(1)
-    }
-	
-    // Channel to send the socket messages
-    zmq_messages = make(chan string)
-    
+	// Populate the DI with the instances
+	if err := g.Populate(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	// Channel to send the socket messages
+	zmq_messages = make(chan string)
+
 	// Start gin classic middlewares
 	router := gin.Default()
 
@@ -111,7 +115,7 @@ func main() {
 		v1.GET("/user/get-token", users.UserGetToken)
 		v1.GET("/auth/get-token", users.UserGetJwtToken)
 		//v1.GET("/user/:id", users.UserGetOne)
-		
+
 		// Messaging routes
 		//v1.GET("/messages", MessagesGet)
 		//v1.POST("/messages", MessagePublish)
@@ -153,21 +157,21 @@ func main() {
 	if port == "" {
 		port = "3000"
 	}
-	
+
 	// Wait for zmq messages to send to the socket server
 	go func(zmq_messages chan string) {
-    	
-    	for {
-    		select {
-    		case _ = <- zmq_messages:	
-	    		
-	    		// Send to the socket
-	    		//socket.Send(message, 0)
-	    		//socket.Recv(0)
-    		}
-    	}
-    }(zmq_messages)
-    
+
+		for {
+			select {
+			case _ = <-zmq_messages:
+
+				// Send to the socket
+				//socket.Send(message, 0)
+				//socket.Recv(0)
+			}
+		}
+	}(zmq_messages)
+
 	router.Run(":" + port)
 }
 
