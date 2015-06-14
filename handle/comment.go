@@ -162,13 +162,13 @@ func (di *CommentAPI) notifyCommentPostAuth(post model.Post, user_id bson.Object
 		message := post.Title
 
 		// Process notification using firebase
-		authorPath := "users/" + user_id.Hex() + "/notifications"
+		authorPath := "users/" + post.UserId.Hex() + "/notifications"
 		authorRef := di.Firebase.Child(authorPath, nil, &notifications)
 
 		authorRef.Set("count", notifications.Count+1, nil)
 
 		notification := &model.UserFirebaseNotification{
-			UserId:    post.UserId,
+			UserId:    user_id,
 			RelatedId: post.Id,
 			Title:     title,
 			Text:      message,
