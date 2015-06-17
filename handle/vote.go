@@ -12,7 +12,7 @@ import (
 )
 
 type VoteAPI struct {
-	Data *mongo.Service `inject:"mongo"`
+	Data *mongo.Service `inject:""`
 }
 
 func (di *VoteAPI) VoteComponent(c *gin.Context) {

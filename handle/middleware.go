@@ -12,9 +12,9 @@ import (
 )
 
 type MiddlewareAPI struct {
-	ErrorService  *raven.Client  `inject:"error"`
-	ConfigService *config.Config `inject:"config"`
-	DataService *mongo.Service `inject:"mongo"`
+	ErrorService  *raven.Client  `inject:""`
+	ConfigService *config.Config `inject:""`
+	DataService *mongo.Service `inject:""`
 }
 
 func (di *MiddlewareAPI) CORS() gin.HandlerFunc {

@@ -11,7 +11,7 @@ import (
 )
 
 type ElectionAPI struct {
-	DataService *mongo.Service `inject:"mongo"`
+	DataService *mongo.Service `inject:""`
 }
 
 func (di *ElectionAPI) ElectionAddOption(c *gin.Context) {

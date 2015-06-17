@@ -22,9 +22,9 @@ import (
 )
 
 type CommentAPI struct {
-	DataService *mongo.Service   `inject:"mongo"`
-	Firebase    *firebase.Client `inject:"firebase"`
-	S3Bucket    *s3.Bucket      `inject:"s3bucket"`
+	DataService *mongo.Service   `inject:""`
+	Firebase    *firebase.Client `inject:""`
+	S3Bucket    *s3.Bucket      `inject:""`
 }
 
 func (di *CommentAPI) CommentAdd(c *gin.Context) {
