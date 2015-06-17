@@ -8,7 +8,8 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/getsentry/raven-go"
 	"github.com/gin-gonic/gin"
-	"github.com/loldesign/azure"
+	"github.com/mitchellh/goamz/aws"
+	"github.com/mitchellh/goamz/s3"
 	"github.com/olebedev/config"
 	"github.com/xuyu/goredis"
 	"os"
@@ -43,25 +44,34 @@ func main() {
 	var comments handle.CommentAPI
 	var parts handle.PartAPI
 	var middlewares handle.MiddlewareAPI
-	var azureService azure.Azure
 
 	// Services for the DI
 	configService, _ := config.ParseJsonFile(envfile)
 	mongoService := mongo.NewService(string_value(configService.String("database.uri")), string_value(configService.String("database.name")))
 	errorService, _ := raven.NewClient(string_value(configService.String("sentry.dns")), nil)
 	cacheService, _ := goredis.Dial(&goredis.DialConfig{Address: string_value(configService.String("cache.redis"))})
-	azureService = azure.New(string_value(configService.String("azure.account")), string_value(configService.String("azure.key")))
 
 	firebaseService := new(firebase.Client)
 	firebaseService.Init(string_value(configService.String("firebase.url")), string_value(configService.String("firebase.secret")), nil)
 
+	// Amazon services for the DI
+	amazonAuth, err := aws.GetAuth(string_value(configService.String("amazon.access_key")), string_value(configService.String("amazon.secret")))
+	if err != nil {
+		panic(err)
+	}
+
+	s3Region := aws.USWest
+	s3Service := s3.New(amazonAuth, s3Region)
+	s3BucketService := s3Service.Bucket(string_value(configService.String("amazon.s3.bucket")))
+
 	// Provide graph with service instances
-	err := g.Provide(
+	err = g.Provide(
 		&inject.Object{Value: configService},
 		&inject.Object{Value: mongoService},
 		&inject.Object{Value: errorService},
-		&inject.Object{Value: cacheService},
-		&inject.Object{Value: azureService, Name: "filesystem"},
+		&inject.Object{Value: cacheService},		
+		&inject.Object{Value: s3Service},
+		&inject.Object{Value: s3BucketService},
 		&inject.Object{Value: firebaseService},
 		&inject.Object{Value: &posts},
 		&inject.Object{Value: &votes},

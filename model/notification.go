@@ -32,6 +32,7 @@ type Notification struct {
 type UserFirebaseNotification struct {
 	UserId    bson.ObjectId `json:"user_id"`
 	RelatedId bson.ObjectId `json:"related_id"`
+	RelatedExtra string 	`bson:"related_extra" json:"related_extra"`
 	Title     string        `json:"title"`
 	Text      string        `json:"text"`
 	Related   string        `json:"related"`

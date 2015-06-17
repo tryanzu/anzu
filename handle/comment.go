@@ -10,19 +10,21 @@ import (
 	"github.com/ftrvxmtrx/gravatar"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
-	"github.com/loldesign/azure"
+	"github.com/mitchellh/goamz/s3"
 	"gopkg.in/mgo.v2/bson"
 	"net/http"
 	"net/url"
 	"regexp"
+	"io/ioutil"
 	"strings"
 	"time"
+	"mime"
 )
 
 type CommentAPI struct {
 	DataService *mongo.Service   `inject:""`
 	Firebase    *firebase.Client `inject:""`
-	Azure       azure.Azure      `inject:"filesystem"`
+	S3Bucket    *s3.Bucket      `inject:""`
 }
 
 func (di *CommentAPI) CommentAdd(c *gin.Context) {
@@ -170,6 +172,7 @@ func (di *CommentAPI) notifyCommentPostAuth(post model.Post, user_id bson.Object
 		notification := &model.UserFirebaseNotification{
 			UserId:    user_id,
 			RelatedId: post.Id,
+			RelatedExtra: post.Slug,
 			Title:     title,
 			Text:      message,
 			Related:   "comment",
@@ -200,8 +203,24 @@ func (di *CommentAPI) downloadAssetFromUrl(from string) error {
 		return errors.New(fmt.Sprint("Error while downloading", from, "-", err))
 	}
 
-	// Use azure instance to save the file
-	di.Azure.FileUpload("board", fileName, response.Body)
+	// Read all the bytes to the image
+	data, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return errors.New(fmt.Sprint("Error while downloading", from, "-", err))
+	}
+
+	// Get the file type
+	fileNameDots := strings.Split(fileName, ".")
+	fileNameExt  := fileNameDots[len(fileNameDots)-1]
+	fileMime := "." + mime.TypeByExtension(fileNameExt)
+	path := "posts/" + fileName
+
+	// Use s3 instance to save the file
+	err = di.S3Bucket.Put(path, data, fileMime, s3.ACL("public-read"))
+
+	if err != nil {
+		panic(err)
+	}
 
 	// Close the request channel when needed
 	response.Body.Close()
