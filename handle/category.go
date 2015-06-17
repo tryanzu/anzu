@@ -34,28 +34,23 @@ func (di *CategoryAPI) CategoriesGet(c *gin.Context) {
 	}
 
 	// Check whether auth or not
-	user_token := model.UserToken{}
-	token := c.Request.Header.Get("Auth-Token")
+	_, signed_in := c.Get("token")
 
-	if token != "" {
+	if signed_in {
 
-		// Try to fetch the user using token header though
-		err := database.C("tokens").Find(bson.M{"token": token}).One(&user_token)
+		user_id := c.MustGet("user_id")
+
+		user_counter := model.Counter{}
+		err := database.C("counters").Find(bson.M{"user_id": user_id}).One(&user_counter)
 
 		if err == nil {
 
-			user_counter := model.Counter{}
-			err := database.C("counters").Find(bson.M{"user_id": user_token.UserId}).One(&user_counter)
+			for category_index, category := range categories {
 
-			if err == nil {
+				counter_name := strings.Replace(category.Slug, "-", "_", -1)
+				if _, okay := user_counter.Counters[counter_name]; okay {
 
-				for category_index, category := range categories {
-
-					counter_name := strings.Replace(category.Slug, "-", "_", -1)
-					if _, okay := user_counter.Counters[counter_name]; okay {
-
-						categories[category_index].Recent = user_counter.Counters[counter_name].Counter
-					}
+					categories[category_index].Recent = user_counter.Counters[counter_name].Counter
 				}
 			}
 		}

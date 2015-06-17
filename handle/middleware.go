@@ -7,12 +7,14 @@ import (
 	"github.com/getsentry/raven-go"
 	"github.com/gin-gonic/gin"
 	"github.com/olebedev/config"
+	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"os"
 )
 
 type MiddlewareAPI struct {
 	ErrorService  *raven.Client  `inject:""`
 	ConfigService *config.Config `inject:""`
+	DataService *mongo.Service `inject:""`
 }
 
 func (di *MiddlewareAPI) CORS() gin.HandlerFunc {
@@ -29,6 +31,16 @@ func (di *MiddlewareAPI) CORS() gin.HandlerFunc {
 			return
 		}
 		c.Next()
+	}
+}
+
+func (di *MiddlewareAPI) MongoRefresher() gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		c.Next()
+
+		// Refresh the session after the request is done (mongo gets tooooo hot after a while)
+		go di.DataService.Session.Refresh()
 	}
 }
 

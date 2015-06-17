@@ -102,6 +102,7 @@ func main() {
 	// Middlewares setup
 	router.Use(middlewares.ErrorTracking())
 	router.Use(middlewares.CORS())
+	router.Use(middlewares.MongoRefresher())
 
 	v1 := router.Group("/v1")
 
@@ -109,9 +110,9 @@ func main() {
 	{
 		// Post routes
 		v1.GET("/feed", posts.FeedGet)
-		v1.GET("/post", posts.PostsGet)
+		v1.GET("/post", posts.FeedGet)
 		v1.GET("/posts/:id", posts.PostsGetOne)
-		v1.GET("/post/s/:slug", posts.PostsGetOneSlug)
+		v1.GET("/post/s/:id", posts.PostsGetOne)
 
 		// // Election routes
 		v1.POST("/election/:id", elections.ElectionAddOption)
