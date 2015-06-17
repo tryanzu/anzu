@@ -9,7 +9,7 @@ import (
 )
 
 type PartAPI struct {
-	Data *mongo.Service `inject:""`
+	Data *mongo.Service `inject:"mongo"`
 }
 
 func (di *PartAPI) GetPartTypes(c *gin.Context) {

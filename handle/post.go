@@ -18,7 +18,7 @@ import (
 )
 
 type PostAPI struct {
-	DataService *mongo.Service `inject:""`
+	DataService *mongo.Service `inject:"mongo"`
 }
 
 /**

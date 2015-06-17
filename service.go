@@ -66,13 +66,13 @@ func main() {
 
 	// Provide graph with service instances
 	err = g.Provide(
-		&inject.Object{Value: configService},
-		&inject.Object{Value: mongoService},
-		&inject.Object{Value: errorService},
-		&inject.Object{Value: cacheService},		
-		&inject.Object{Value: s3Service},
-		&inject.Object{Value: s3BucketService},
-		&inject.Object{Value: firebaseService},
+		&inject.Object{Value: configService, Name: "config"},
+		&inject.Object{Value: mongoService, Name: "mongo"},
+		&inject.Object{Value: errorService, Name: "error"},
+		&inject.Object{Value: cacheService, Name: "redis"},		
+		&inject.Object{Value: s3Service, Name: "s3"},
+		&inject.Object{Value: s3BucketService, Name: "s3bucket"},
+		&inject.Object{Value: firebaseService, Name: "firebase"},
 		&inject.Object{Value: &posts},
 		&inject.Object{Value: &votes},
 		&inject.Object{Value: &users},

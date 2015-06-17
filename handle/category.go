@@ -12,8 +12,8 @@ import (
 )
 
 type CategoryAPI struct {
-	DataService  *mongo.Service `inject:""`
-	CacheService *goredis.Redis `inject:""`
+	DataService  *mongo.Service `inject:"mongo"`
+	CacheService *goredis.Redis `inject:"redis"`
 }
 
 func (di *CategoryAPI) CategoriesGet(c *gin.Context) {

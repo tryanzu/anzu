@@ -19,8 +19,8 @@ import (
 )
 
 type UserAPI struct {
-	DataService   *mongo.Service `inject:""`
-	ConfigService *config.Config `inject:""`
+	DataService   *mongo.Service `inject:"mongo"`
+	ConfigService *config.Config `inject:"config"`
 }
 
 func (di *UserAPI) UserGetByToken(c *gin.Context) {
