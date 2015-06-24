@@ -143,6 +143,7 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 					LastName:  postUser.LastName,
 					Step:      authorLevel,
 					Email:     postUser.Email,
+                    Image:     postUser.Image,
 				}
 			}
 		}
@@ -215,17 +216,9 @@ func (di *PostAPI) PostsGetOne(c *gin.Context) {
 		var description string
 
 		for _, user := range users {
-
-			if user.Id == post.UserId {
-
-				// Set the author
-				post.Author = user
-			}
-
-			description = "Solo otro mas Spartan Geek"
+			description = "Solo otro Spartan Geek más"
 
 			if user_description, has_description := user.Profile["bio"]; has_description {
-
 				description = user_description.(string)
 			}
 
@@ -234,7 +227,13 @@ func (di *PostAPI) PostsGetOne(c *gin.Context) {
 				"username":    user.UserName,
 				"description": description,
 				"email":       user.Email,
+                "image":       user.Image,
 			}
+
+            if user.Id == post.UserId {
+                // Set the author
+                post.Author = user
+            }
 		}
 
 		// Name of the set to get
