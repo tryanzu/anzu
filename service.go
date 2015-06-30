@@ -69,7 +69,7 @@ func main() {
 		&inject.Object{Value: configService, Complete: true},
 		&inject.Object{Value: mongoService, Complete: true},
 		&inject.Object{Value: errorService, Complete: true},
-		&inject.Object{Value: cacheService, Complete: true},		
+		&inject.Object{Value: cacheService, Complete: true},
 		&inject.Object{Value: s3Service, Complete: true},
 		&inject.Object{Value: s3BucketService, Complete: true},
 		&inject.Object{Value: firebaseService, Complete: true},
@@ -120,12 +120,12 @@ func main() {
 		// User routes
 		v1.POST("/user", users.UserRegisterAction)
 		//v1.GET("/user/my/notifications", users.UserNotificationsGet)
+		v1.GET("/users/:id", users.UserGetOne)
 		v1.GET("/user/activity", users.UserInvolvedFeedGet)
 		v1.GET("/user/search", users.UserAutocompleteGet)
 		v1.POST("/user/get-token/facebook", users.UserGetTokenFacebook)
 		v1.GET("/user/get-token", users.UserGetToken)
 		v1.GET("/auth/get-token", users.UserGetJwtToken)
-		//v1.GET("/user/:id", users.UserGetOne)
 
 		// Messaging routes
 		//v1.GET("/messages", MessagesGet)

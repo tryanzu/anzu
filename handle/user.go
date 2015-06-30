@@ -23,6 +23,30 @@ type UserAPI struct {
 	ConfigService *config.Config `inject:""`
 }
 
+func (di *UserAPI) UserGetOne(c *gin.Context) {
+
+	database := di.DataService.Database
+	user_id := c.Param("id")
+
+	if bson.IsObjectIdHex(user_id) == false {
+
+		c.JSON(400, gin.H{"status": "error", "message": "Invalid user id."})
+		return
+	}
+
+	user_bson_id := bson.ObjectIdHex(user_id)
+
+	// Get the user using the specified id
+	user := model.User{}
+	err := database.C("users").Find(bson.M{"_id": user_bson_id}).One(&user)
+
+	if err != nil {
+		panic(err)
+	}
+
+	c.JSON(200, user)
+}
+
 func (di *UserAPI) UserGetByToken(c *gin.Context) {
 
 	// Get the database interface from the DI
