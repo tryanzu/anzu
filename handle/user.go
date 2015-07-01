@@ -21,6 +21,7 @@ import (
 type UserAPI struct {
 	DataService   *mongo.Service `inject:""`
 	ConfigService *config.Config `inject:""`
+	Collector CollectorAPI `inject:""`
 }
 
 func (di *UserAPI) UserGetOne(c *gin.Context) {
@@ -42,6 +43,15 @@ func (di *UserAPI) UserGetOne(c *gin.Context) {
 
 	if err != nil {
 		panic(err)
+	}
+
+	// Save the activity
+	user_logged_id, signed_in := c.Get("user_id")
+
+	if signed_in {
+
+		// Save the activity in other routine
+		go di.Collector.Activity(model.Activity{UserId: bson.ObjectIdHex(user_logged_id.(string)), Event: "user", RelatedId: user.Id})
 	}
 
 	c.JSON(200, user)
@@ -163,6 +173,15 @@ func (di *UserAPI) UserGetJwtToken(c *gin.Context) {
 
 	// Generate JWT with the information about the user
 	token, firebase := di.generateUserToken(user.Id)
+
+	// Save the activity
+	user_id, signed_in := c.Get("user_id")
+
+	if signed_in {
+
+		// Save the activity in other routine
+		go di.Collector.Activity(model.Activity{UserId: bson.ObjectIdHex(user_id.(string)), Event: "user-view", RelatedId: user.Id})
+	}
 
 	c.JSON(200, gin.H{"status": "okay", "token": token, "firebase": firebase})
 }

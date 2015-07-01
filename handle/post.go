@@ -19,6 +19,7 @@ import (
 
 type PostAPI struct {
 	DataService *mongo.Service `inject:""`
+	Collector CollectorAPI `inject:""`
 }
 
 /**
@@ -39,11 +40,9 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 	offset := 0
 	limit := 10
 
-	qs := c.Request.URL.Query()
-
-	o := qs.Get("offset")
-	l := qs.Get("limit")
-	f := qs.Get("category")
+	o := c.Query("offset")
+	l := c.Query("limit")
+	f := c.Query("category")
 
 	// Check if offset has been specified
 	if o != "" {
@@ -97,11 +96,22 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 	}
 
 	var authors []bson.ObjectId
+	var list []bson.ObjectId
 	var users []model.User
 
 	for _, post := range feed {
 
+		list = append(list, post.Id)
 		authors = append(authors, post.UserId)
+	}
+
+	// Check for user token
+	user_id, signed_in := c.Get("user_id")
+
+	if signed_in {
+
+		// Save the activity in other routine
+		go di.Collector.Activity(model.Activity{UserId: bson.ObjectIdHex(user_id.(string)), Event: "feed", List: list})
 	}
 
 	// Get the users needed by the feed
@@ -370,6 +380,15 @@ func (di *PostAPI) PostsGetOne(c *gin.Context) {
 				f.Set(reflect.ValueOf(component))
 			}
 		}
+	}
+
+	// Save the activity
+	user_id, signed_in := c.Get("user_id")
+
+	if signed_in {
+
+		// Save the activity in other routine
+		go di.Collector.Activity(model.Activity{UserId: bson.ObjectIdHex(user_id.(string)), Event: "post", RelatedId: post.Id})
 	}
 
 	c.JSON(200, post)

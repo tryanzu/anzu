@@ -44,6 +44,7 @@ func main() {
 	var comments handle.CommentAPI
 	var parts handle.PartAPI
 	var middlewares handle.MiddlewareAPI
+	var collector handle.CollectorAPI
 
 	// Services for the DI
 	configService, _ := config.ParseJsonFile(envfile)
@@ -73,6 +74,7 @@ func main() {
 		&inject.Object{Value: s3Service, Complete: true},
 		&inject.Object{Value: s3BucketService, Complete: true},
 		&inject.Object{Value: firebaseService, Complete: true},
+		&inject.Object{Value: &collector},
 		&inject.Object{Value: &posts},
 		&inject.Object{Value: &votes},
 		&inject.Object{Value: &users},
