@@ -45,6 +45,7 @@ func main() {
 	var parts handle.PartAPI
 	var middlewares handle.MiddlewareAPI
 	var collector handle.CollectorAPI
+	var sitemap handle.SitemapAPI
 
 	// Services for the DI
 	configService, _ := config.ParseJsonFile(envfile)
@@ -83,6 +84,7 @@ func main() {
 		&inject.Object{Value: &comments},
 		&inject.Object{Value: &parts},
 		&inject.Object{Value: &middlewares},
+		&inject.Object{Value: &sitemap},
 	)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -105,6 +107,9 @@ func main() {
 	router.Use(middlewares.ErrorTracking())
 	router.Use(middlewares.CORS())
 	router.Use(middlewares.MongoRefresher())
+
+	// Sitemap generator
+	router.GET("/sitemap.xml", sitemap.GetSitemap)
 
 	v1 := router.Group("/v1")
 
