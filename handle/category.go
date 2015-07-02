@@ -1,14 +1,14 @@
 package handle
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/mongo"
+	"encoding/json"
 	"github.com/fernandez14/spartangeek-blacker/model"
+	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/gin-gonic/gin"
 	"github.com/xuyu/goredis"
 	"gopkg.in/mgo.v2/bson"
-	"strings"
 	"sort"
-	"encoding/json"
+	"strings"
 )
 
 type CategoryAPI struct {
@@ -34,28 +34,23 @@ func (di *CategoryAPI) CategoriesGet(c *gin.Context) {
 	}
 
 	// Check whether auth or not
-	user_token := model.UserToken{}
-	token := c.Request.Header.Get("Auth-Token")
+	_, signed_in := c.Get("token")
 
-	if token != "" {
+	if signed_in {
 
-		// Try to fetch the user using token header though
-		err := database.C("tokens").Find(bson.M{"token": token}).One(&user_token)
+		user_id := c.MustGet("user_id")
+
+		user_counter := model.Counter{}
+		err := database.C("counters").Find(bson.M{"user_id": user_id}).One(&user_counter)
 
 		if err == nil {
 
-			user_counter := model.Counter{}
-			err := database.C("counters").Find(bson.M{"user_id": user_token.UserId}).One(&user_counter)
+			for category_index, category := range categories {
 
-			if err == nil {
+				counter_name := strings.Replace(category.Slug, "-", "_", -1)
+				if _, okay := user_counter.Counters[counter_name]; okay {
 
-				for category_index, category := range categories {
-
-					counter_name := strings.Replace(category.Slug, "-", "_", -1)
-					if _, okay := user_counter.Counters[counter_name]; okay {
-
-						categories[category_index].Recent = user_counter.Counters[counter_name].Counter
-					}
+					categories[category_index].Recent = user_counter.Counters[counter_name].Counter
 				}
 			}
 		}
@@ -75,7 +70,7 @@ func (di *CategoryAPI) CategoriesGet(c *gin.Context) {
 
 				// Append to the list of counters
 				list = append(list, model.CategoryCounter{
-					Slug: category.Slug,
+					Slug:  category.Slug,
 					Count: count,
 				})
 
@@ -101,21 +96,21 @@ func (di *CategoryAPI) CategoriesGet(c *gin.Context) {
 		var cache model.CategoryCounters
 
 		// Unmarshal already warmed up user achievements
-        if err := json.Unmarshal(counters, &cache); err != nil {
-            panic(err)
-        }
+		if err := json.Unmarshal(counters, &cache); err != nil {
+			panic(err)
+		}
 
-        for _, category := range cache.List {
+		for _, category := range cache.List {
 
-        	for current_index, current := range categories {
+			for current_index, current := range categories {
 
-        		if current.Slug == category.Slug {
+				if current.Slug == category.Slug {
 
-        			// Set the current count of the category
-        			categories[current_index].Count = category.Count
-        		}
-        	}
-        }
+					// Set the current count of the category
+					categories[current_index].Count = category.Count
+				}
+			}
+		}
 	}
 
 	sort.Sort(model.Categories(categories))

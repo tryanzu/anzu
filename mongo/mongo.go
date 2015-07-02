@@ -7,7 +7,7 @@ import (
 type Service struct {
 	Session  *mgo.Session
 	Database *mgo.Database
-	Name string
+	Name     string
 }
 
 func NewService(connection string, name string) *Service {

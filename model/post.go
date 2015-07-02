@@ -1,8 +1,8 @@
-package model 
+package model
 
 import (
-	"time"
 	"gopkg.in/mgo.v2/bson"
+	"time"
 )
 
 type Votes struct {
@@ -74,6 +74,7 @@ type Post struct {
 	Votes      Votes           `bson:"votes" json:"votes"`
 	Components Components      `bson:"components,omitempty" json:"components,omitempty"`
 	Following  bool            `bson:"following,omitempty" json:"following,omitempty"`
+	Pinned     bool            `bson:"pinned,omitempty" json:"pinned,omitempty"`
 	Created    time.Time       `bson:"created_at" json:"created_at"`
 	Updated    time.Time       `bson:"updated_at" json:"updated_at"`
 }
