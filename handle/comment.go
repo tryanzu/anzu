@@ -76,7 +76,7 @@ func (di *CommentAPI) CommentAdd(c *gin.Context) {
 		}
 
 		urls, _ := regexp.Compile(`http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+`)
-		mentions, _ := regexp.Compile(`(?i)\@[a-z0-9\-\_]+`)
+		mentions, _ := regexp.Compile(`(?i)\B\@([\w\-]+)`)
 
 		var assets []string
 
