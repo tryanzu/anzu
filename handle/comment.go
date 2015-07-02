@@ -12,19 +12,19 @@ import (
 	"github.com/gin-gonic/gin/binding"
 	"github.com/mitchellh/goamz/s3"
 	"gopkg.in/mgo.v2/bson"
+	"io/ioutil"
+	"mime"
 	"net/http"
 	"net/url"
 	"regexp"
-	"io/ioutil"
 	"strings"
 	"time"
-	"mime"
 )
 
 type CommentAPI struct {
 	DataService *mongo.Service   `inject:""`
 	Firebase    *firebase.Client `inject:""`
-	S3Bucket    *s3.Bucket      `inject:""`
+	S3Bucket    *s3.Bucket       `inject:""`
 }
 
 func (di *CommentAPI) CommentAdd(c *gin.Context) {
@@ -97,7 +97,7 @@ func (di *CommentAPI) CommentAdd(c *gin.Context) {
 			go di.mentionUserComment(mention_user, post, user_bson_id)
 
 			// Replace the mentioned user
-			markdown := "[" + mention_user + "](/user/profile/" + mention_user[1:] + " \"" + mention_user[1:] + "\")"
+			markdown := "[" + mention_user + "](/u/" + mention_user[1:] + " \"" + mention_user[1:] + "\")"
 			comment.Content = strings.Replace(comment.Content, mention_user, markdown, -1)
 		}
 
@@ -170,16 +170,16 @@ func (di *CommentAPI) notifyCommentPostAuth(post model.Post, user_id bson.Object
 		authorRef.Set("count", notifications.Count+1, nil)
 
 		notification := &model.UserFirebaseNotification{
-			UserId:    user_id,
-			RelatedId: post.Id,
+			UserId:       user_id,
+			RelatedId:    post.Id,
 			RelatedExtra: post.Slug,
-			Title:     title,
-			Text:      message,
-			Related:   "comment",
-			Seen:      false,
-			Image:     image.String(),
-			Created:   time.Now(),
-			Updated:   time.Now(),
+			Title:        title,
+			Text:         message,
+			Related:      "comment",
+			Seen:         false,
+			Image:        image.String(),
+			Created:      time.Now(),
+			Updated:      time.Now(),
 		}
 
 		authorRef.Child("list", nil, nil).Push(notification, nil)
@@ -211,7 +211,7 @@ func (di *CommentAPI) downloadAssetFromUrl(from string) error {
 
 	// Get the file type
 	fileNameDots := strings.Split(fileName, ".")
-	fileNameExt  := fileNameDots[len(fileNameDots)-1]
+	fileNameExt := fileNameDots[len(fileNameDots)-1]
 	fileMime := "." + mime.TypeByExtension(fileNameExt)
 	path := "posts/" + fileName
 
@@ -230,21 +230,51 @@ func (di *CommentAPI) downloadAssetFromUrl(from string) error {
 
 func (di *CommentAPI) mentionUserComment(mentioned string, post model.Post, user_id bson.ObjectId) {
 
-	/*var user User
-	  var author User
-	  username := mentioned[1:]
-	  err := database.C("users").Find(bson.M{"username": username}).One(&user)
-	  if err == nil {
-	      err := database.C("users").Find(bson.M{"_id": user_id}).One(&author)
-	      if err == nil {
-	          // Gravatar url
-	          emailHash := gravatar.EmailHash(author.Email)
-	          image := gravatar.GetAvatarURL("http", emailHash, "http://spartangeek.com/images/default-avatar.png", 80)
-	          // Construct the notification message
-	          title := fmt.Sprintf("**%s** te menciono en un comentario", author.UserName)
-	          message := post.Title
-	          // We are inside an isolated routine, so we dont need to worry about the processing cost
-	          notify(user.Id, "mention", post.Id, "/post/" + post.Slug, title, message, image.String())
-	      }
-	  }*/
+	// Get the comment author
+	var user model.User
+	var author model.User
+	var notifications model.UserFirebaseNotifications
+
+	// Get the author user
+	err := di.DataService.Database.C("users").Find(bson.M{"_id": user_id}).One(&author)
+
+	if err != nil {
+		return
+	}
+
+	// Get the mentioned user
+	username := mentioned[1:]
+	err = di.DataService.Database.C("users").Find(bson.M{"username": username}).One(&user)
+
+	if err == nil {
+
+		// Gravatar url
+		emailHash := gravatar.EmailHash(user.Email)
+		image := gravatar.GetAvatarURL("http", emailHash, "http://spartangeek.com/images/default-avatar.png", 80)
+
+		// Construct the notification message
+		title := fmt.Sprintf("**%s** te mencionó en un comentario", author.UserName)
+		message := post.Title
+
+		// Process notification using firebase
+		userPath := "users/" + user.Id.Hex() + "/notifications"
+		userRef := di.Firebase.Child(userPath, nil, &notifications)
+
+		userRef.Set("count", notifications.Count+1, nil)
+
+		notification := &model.UserFirebaseNotification{
+			UserId:       user_id,
+			RelatedId:    post.Id,
+			RelatedExtra: post.Slug,
+			Title:        title,
+			Text:         message,
+			Related:      "mention",
+			Seen:         false,
+			Image:        image.String(),
+			Created:      time.Now(),
+			Updated:      time.Now(),
+		}
+
+		userRef.Child("list", nil, nil).Push(notification, nil)
+	}
 }
