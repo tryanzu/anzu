@@ -12,19 +12,19 @@ import (
 	"github.com/gin-gonic/gin/binding"
 	"github.com/mitchellh/goamz/s3"
 	"gopkg.in/mgo.v2/bson"
-	"io/ioutil"
-	"mime"
 	"net/http"
 	"net/url"
 	"regexp"
+	"io/ioutil"
 	"strings"
 	"time"
+	"mime"
 )
 
 type CommentAPI struct {
 	DataService *mongo.Service   `inject:""`
 	Firebase    *firebase.Client `inject:""`
-	S3Bucket    *s3.Bucket       `inject:""`
+	S3Bucket    *s3.Bucket      `inject:""`
 }
 
 func (di *CommentAPI) CommentAdd(c *gin.Context) {
@@ -170,16 +170,17 @@ func (di *CommentAPI) notifyCommentPostAuth(post model.Post, user_id bson.Object
 		authorRef.Set("count", notifications.Count+1, nil)
 
 		notification := &model.UserFirebaseNotification{
-			UserId:       user_id,
-			RelatedId:    post.Id,
+			UserId:    user_id,
+			RelatedId: post.Id,
 			RelatedExtra: post.Slug,
-			Title:        title,
-			Text:         message,
-			Related:      "comment",
-			Seen:         false,
-			Image:        image.String(),
-			Created:      time.Now(),
-			Updated:      time.Now(),
+			Position:  post.Comments.Count,
+			Title:     title,
+			Text:      message,
+			Related:   "comment",
+			Seen:      false,
+			Image:     image.String(),
+			Created:   time.Now(),
+			Updated:   time.Now(),
 		}
 
 		authorRef.Child("list", nil, nil).Push(notification, nil)
@@ -211,7 +212,7 @@ func (di *CommentAPI) downloadAssetFromUrl(from string) error {
 
 	// Get the file type
 	fileNameDots := strings.Split(fileName, ".")
-	fileNameExt := fileNameDots[len(fileNameDots)-1]
+	fileNameExt  := fileNameDots[len(fileNameDots)-1]
 	fileMime := "." + mime.TypeByExtension(fileNameExt)
 	path := "posts/" + fileName
 
@@ -263,16 +264,17 @@ func (di *CommentAPI) mentionUserComment(mentioned string, post model.Post, user
 		userRef.Set("count", notifications.Count+1, nil)
 
 		notification := &model.UserFirebaseNotification{
-			UserId:       user_id,
-			RelatedId:    post.Id,
+			UserId:    user_id,
+			RelatedId: post.Id,
 			RelatedExtra: post.Slug,
-			Title:        title,
-			Text:         message,
-			Related:      "mention",
-			Seen:         false,
-			Image:        image.String(),
-			Created:      time.Now(),
-			Updated:      time.Now(),
+			Position:  post.Comments.Count,
+			Title:     title,
+			Text:      message,
+			Related:   "mention",
+			Seen:      false,
+			Image:     image.String(),
+			Created:   time.Now(),
+			Updated:   time.Now(),
 		}
 
 		userRef.Child("list", nil, nil).Push(notification, nil)
