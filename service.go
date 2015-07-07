@@ -12,8 +12,7 @@ import (
 	"github.com/mitchellh/goamz/s3"
 	"github.com/olebedev/config"
 	"github.com/xuyu/goredis"
-	"github.com/quipo/statsd"
-	"time"
+	"github.com/cactus/go-statsd-client/statsd"
 	"os"
 	//"errors"
 	"runtime"
@@ -69,11 +68,11 @@ func main() {
 	s3BucketService := s3Service.Bucket(string_value(configService.String("amazon.s3.bucket")))
 
 	// Statsd - Tracking
-	prefix := "black."
-    statsdclient := statsd.NewStatsdClient("127.0.0.1:8125", prefix)
-    statsdclient.CreateSocket()
-    interval := time.Second * 4 // aggregate stats and flush every 2 seconds
-    statsService := statsd.NewStatsdBuffer(interval, statsdclient)
+	prefix := "blacker."
+	statsService, err := statsd.NewClient("127.0.0.1:8125", prefix)
+	if err != nil {
+		panic(err)
+	}
 
 	// Provide graph with service instances
 	err = g.Provide(

@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/olebedev/config"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
-	"github.com/quipo/statsd"
+	"github.com/cactus/go-statsd-client/statsd"
 	"os"
 	"time"
 	"strings"
@@ -18,7 +18,7 @@ type MiddlewareAPI struct {
 	ErrorService  *raven.Client  `inject:""`
 	ConfigService *config.Config `inject:""`
 	DataService *mongo.Service `inject:""`
-	StatsService *statsd.StatsdBuffer `inject:""`
+	StatsService *statsd.Client `inject:""`
 }
 
 func (di *MiddlewareAPI) CORS() gin.HandlerFunc {
@@ -52,7 +52,7 @@ func (di *MiddlewareAPI) StatsdTiming() gin.HandlerFunc {
 		name  = name[0:len(name)-4]
 
 		// Send the latency information about the handler
-		di.StatsService.PrecisionTiming(name, latency)
+		di.StatsService.TimingDuration(name, latency, 1.0)
 	}
 }
 
