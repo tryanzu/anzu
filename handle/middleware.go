@@ -8,13 +8,17 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/olebedev/config"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
+	"github.com/quipo/statsd"
 	"os"
+	"time"
+	"strings"
 )
 
 type MiddlewareAPI struct {
 	ErrorService  *raven.Client  `inject:""`
 	ConfigService *config.Config `inject:""`
 	DataService *mongo.Service `inject:""`
+	StatsService *statsd.StatsdBuffer `inject:""`
 }
 
 func (di *MiddlewareAPI) CORS() gin.HandlerFunc {
@@ -31,6 +35,24 @@ func (di *MiddlewareAPI) CORS() gin.HandlerFunc {
 			return
 		}
 		c.Next()
+	}
+}
+
+func (di *MiddlewareAPI) StatsdTiming() gin.HandlerFunc {
+
+	return func(c *gin.Context) {
+
+		t := time.Now()
+
+		c.Next()
+
+		latency := time.Since(t)
+		name := c.HandlerName()
+		name  = strings.Replace(name, "github.com/fernandez14/spartangeek-blacker/handle.*", "", -1)
+		name  = name[0:len(name)-4]
+
+		// Send the latency information about the handler
+		di.StatsService.PrecisionTiming(name, latency)
 	}
 }
 

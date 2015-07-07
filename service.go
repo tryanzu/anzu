@@ -12,6 +12,8 @@ import (
 	"github.com/mitchellh/goamz/s3"
 	"github.com/olebedev/config"
 	"github.com/xuyu/goredis"
+	"github.com/quipo/statsd"
+	"time"
 	"os"
 	//"errors"
 	"runtime"
@@ -66,6 +68,13 @@ func main() {
 	s3Service := s3.New(amazonAuth, s3Region)
 	s3BucketService := s3Service.Bucket(string_value(configService.String("amazon.s3.bucket")))
 
+	// Statsd - Tracking
+	prefix := "black."
+    statsdclient := statsd.NewStatsdClient("127.0.0.1:8125", prefix)
+    statsdclient.CreateSocket()
+    interval := time.Second * 4 // aggregate stats and flush every 2 seconds
+    statsService := statsd.NewStatsdBuffer(interval, statsdclient)
+
 	// Provide graph with service instances
 	err = g.Provide(
 		&inject.Object{Value: configService, Complete: true},
@@ -75,6 +84,7 @@ func main() {
 		&inject.Object{Value: s3Service, Complete: true},
 		&inject.Object{Value: s3BucketService, Complete: true},
 		&inject.Object{Value: firebaseService, Complete: true},
+		&inject.Object{Value: statsService, Complete: true},
 		&inject.Object{Value: &collector},
 		&inject.Object{Value: &posts},
 		&inject.Object{Value: &votes},
@@ -103,10 +113,15 @@ func main() {
 	// Start gin classic middlewares
 	router := gin.Default()
 
+	router.GET("/loaderio-9d2a383a6a8ed580a4a26cf61ce183c3/", func(c *gin.Context) {
+
+		c.String(200, "loaderio-9d2a383a6a8ed580a4a26cf61ce183c3")
+	})
 	// Middlewares setup
 	router.Use(middlewares.ErrorTracking())
 	router.Use(middlewares.CORS())
 	router.Use(middlewares.MongoRefresher())
+	router.Use(middlewares.StatsdTiming())
 
 	// Sitemap generator
 	router.GET("/sitemap.xml", sitemap.GetSitemap)
