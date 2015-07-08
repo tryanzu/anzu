@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/cactus/go-statsd-client/statsd"
 	"github.com/cosn/firebase"
 	"github.com/facebookgo/inject"
 	"github.com/fernandez14/spartangeek-blacker/handle"
@@ -12,7 +13,6 @@ import (
 	"github.com/mitchellh/goamz/s3"
 	"github.com/olebedev/config"
 	"github.com/xuyu/goredis"
-	"github.com/cactus/go-statsd-client/statsd"
 	"os"
 	//"errors"
 	"runtime"
@@ -47,6 +47,7 @@ func main() {
 	var middlewares handle.MiddlewareAPI
 	var collector handle.CollectorAPI
 	var sitemap handle.SitemapAPI
+	var errors handle.ErrorAPI
 
 	// Services for the DI
 	configService, _ := config.ParseJsonFile(envfile)
@@ -85,6 +86,7 @@ func main() {
 		&inject.Object{Value: firebaseService, Complete: true},
 		&inject.Object{Value: statsService, Complete: true},
 		&inject.Object{Value: &collector},
+		&inject.Object{Value: &errors},
 		&inject.Object{Value: &posts},
 		&inject.Object{Value: &votes},
 		&inject.Object{Value: &users},

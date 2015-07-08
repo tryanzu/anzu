@@ -27,7 +27,9 @@ import (
 type PostAPI struct {
 	DataService *mongo.Service `inject:""`
 	Collector   CollectorAPI   `inject:""`
+	Errors      ErrorAPI       `inject:""`
 	S3Bucket    *s3.Bucket     `inject:""`
+	Context     *gin.Context
 }
 
 /**
@@ -407,6 +409,9 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 	// Get the database interface from the DI
 	database := di.DataService.Database
 
+	// Same context for subroutines
+	di.Context = c.Copy()
+
 	// Check for user token
 	user_id, _ := c.Get("user_id")
 	bson_id := bson.ObjectIdHex(user_id.(string))
@@ -614,6 +619,9 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 
 func (di *PostAPI) downloadAssetFromUrl(from string, post_id bson.ObjectId) error {
 
+	// Recover from any panic even inside this goroutine
+	defer di.Errors.Recover()
+
 	// Get the database interface from the DI
 	database := di.DataService.Database
 
@@ -695,6 +703,9 @@ func (di *PostAPI) downloadAssetFromUrl(from string, post_id bson.ObjectId) erro
 
 func (di *PostAPI) resetUserCategoryCounter(category string, user_id bson.ObjectId) {
 
+	// Recover from any panic even inside this goroutine
+	defer di.Errors.Recover()
+
 	// Replace the slug dash with underscore
 	counter := strings.Replace(category, "-", "_", -1)
 	find := "counters." + counter + ".counter"
@@ -711,6 +722,9 @@ func (di *PostAPI) resetUserCategoryCounter(category string, user_id bson.Object
 }
 
 func (di *PostAPI) addUserCategoryCounter(category string) {
+
+	// Recover from any panic even inside this goroutine
+	defer di.Errors.Recover()
 
 	// Replace the slug dash with underscore
 	counter := strings.Replace(category, "-", "_", -1)

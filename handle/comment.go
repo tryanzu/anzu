@@ -28,6 +28,7 @@ type CommentAPI struct {
 	DataService *mongo.Service   `inject:""`
 	Firebase    *firebase.Client `inject:""`
 	S3Bucket    *s3.Bucket       `inject:""`
+	Errors      ErrorAPI         `inject:""`
 }
 
 func (di *CommentAPI) CommentAdd(c *gin.Context) {
@@ -152,6 +153,9 @@ func (di *CommentAPI) CommentAdd(c *gin.Context) {
 
 func (di *CommentAPI) notifyCommentPostAuth(post model.Post, user_id bson.ObjectId) {
 
+	// Recover from any panic even inside this goroutine
+	defer di.Errors.Recover()
+
 	// Get the comment author
 	var user model.User
 	var notifications model.UserFirebaseNotifications
@@ -193,6 +197,9 @@ func (di *CommentAPI) notifyCommentPostAuth(post model.Post, user_id bson.Object
 }
 
 func (di *CommentAPI) downloadAssetFromUrl(from string, post_id bson.ObjectId) error {
+
+	// Recover from any panic even inside this goroutine
+	defer di.Errors.Recover()
 
 	// Get the database interface from the DI
 	database := di.DataService.Database
@@ -285,6 +292,9 @@ func (di *CommentAPI) downloadAssetFromUrl(from string, post_id bson.ObjectId) e
 }
 
 func (di *CommentAPI) mentionUserComment(mentioned string, post model.Post, user_id bson.ObjectId) {
+
+	// Recover from any panic even inside this goroutine
+	defer di.Errors.Recover()
 
 	// Get the comment author
 	var user model.User
