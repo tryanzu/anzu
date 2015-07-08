@@ -21,6 +21,7 @@ type User struct {
 	Notifications interface{}            `bson:"notifications,omitempty" json:"notifications,omitempty"`
 	Profile       map[string]interface{} `bson:"profile,omitempty" json:"profile,omitempty"`
 	Stats         UserStats              `bson:"stats,omitempty" json:"stats,omitempty"`
+	Version       string              	 `bson:"version,omitempty" json:"version,omitempty"`
 	Created       time.Time              `bson:"created_at" json:"created_at"`
 	Updated       time.Time              `bson:"updated_at" json:"updated_at"`
 }
