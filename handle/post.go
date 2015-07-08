@@ -1,25 +1,33 @@
 package handle
 
 import (
+	"crypto/tls"
+	"errors"
+	"fmt"
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/kennygrant/sanitize"
-	"github.com/mrvdot/golang-utils"
+	"github.com/mitchellh/goamz/s3"
 	"gopkg.in/mgo.v2/bson"
+	"io/ioutil"
 	"math/rand"
+	"net/http"
+	"net/url"
+	"path/filepath"
 	"reflect"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
-	"regexp"
 	"time"
 )
 
 type PostAPI struct {
 	DataService *mongo.Service `inject:""`
-	Collector CollectorAPI `inject:""`
+	Collector   CollectorAPI   `inject:""`
+	S3Bucket    *s3.Bucket     `inject:""`
 }
 
 /**
@@ -153,7 +161,7 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 					LastName:  postUser.LastName,
 					Step:      authorLevel,
 					Email:     postUser.Email,
-                    Image:     postUser.Image,
+					Image:     postUser.Image,
 				}
 			}
 		}
@@ -237,13 +245,13 @@ func (di *PostAPI) PostsGetOne(c *gin.Context) {
 				"username":    user.UserName,
 				"description": description,
 				"email":       user.Email,
-                "image":       user.Image,
+				"image":       user.Image,
 			}
 
-            if user.Id == post.UserId {
-                // Set the author
-                post.Author = user
-            }
+			if user.Id == post.UserId {
+				// Set the author
+				post.Author = user
+			}
 		}
 
 		// Name of the set to get
@@ -419,6 +427,14 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 			Rating: 0,
 		}
 
+		content := sanitize.HTML(post.Content)
+		urls, _ := regexp.Compile(`http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+`)
+		post_id := bson.NewObjectId()
+
+		var assets []string
+
+		assets = urls.FindAllString(content, -1)
+
 		// Empty participants list - only author included
 		users := []bson.ObjectId{bson_id}
 
@@ -457,10 +473,11 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 				}
 
 				publish := &model.Post{
+					Id:         post_id,
 					Title:      post_name,
-					Content:    post.Content,
+					Content:    content,
 					Type:       "recommendations",
-					Slug:       sanitize.Path(post.Name),
+					Slug:       sanitize.Path(sanitize.Accents(post.Name)),
 					Comments:   comments,
 					UserId:     bson_id,
 					Users:      users,
@@ -518,6 +535,12 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 					panic(err)
 				}
 
+				for _, asset := range assets {
+
+					// Download the asset on other routine in order to non block the API request
+					go di.downloadAssetFromUrl(asset, publish.Id)
+				}
+
 				// Add a counter for the category
 				di.addUserCategoryCounter("recommendations")
 
@@ -528,7 +551,7 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 
 		case "category-post":
 
-			slug_exists, _ := database.C("posts").Find(bson.M{"slug": utils.GenerateSlug(post.Name)}).Count()
+			slug_exists, _ := database.C("posts").Find(bson.M{"slug": sanitize.Path(sanitize.Accents(post.Name))}).Count()
 			slug := ""
 
 			if slug_exists > 0 {
@@ -542,17 +565,18 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 				suffix := string(b)
 
 				// Duplicated so suffix it
-				slug = sanitize.Path(post.Name) + "-" + suffix
+				slug = sanitize.Path(sanitize.Accents(post.Name)) + "-" + suffix
 
 			} else {
 
 				// No duplicates
-				slug = utils.GenerateSlug(post.Name)
+				slug = sanitize.Path(sanitize.Accents(post.Name))
 			}
 
 			publish := &model.Post{
+				Id:         post_id,
 				Title:      post.Name,
-				Content:    post.Content,
+				Content:    content,
 				Type:       "category-post",
 				Slug:       slug,
 				Comments:   comments,
@@ -570,6 +594,12 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 				panic(err)
 			}
 
+			for _, asset := range assets {
+
+				// Download the asset on other routine in order to non block the API request
+				go di.downloadAssetFromUrl(asset, publish.Id)
+			}
+
 			// Add a counter for the category
 			di.addUserCategoryCounter(post.Tag)
 
@@ -580,6 +610,87 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 	}
 
 	c.JSON(400, gin.H{"status": "error", "message": "Couldnt create post, missing information...", "code": 205})
+}
+
+func (di *PostAPI) downloadAssetFromUrl(from string, post_id bson.ObjectId) error {
+
+	// Get the database interface from the DI
+	database := di.DataService.Database
+
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	client := &http.Client{Transport: tr}
+
+	// Download the file
+	response, err := client.Get(from)
+	if err != nil {
+		return errors.New(fmt.Sprint("Error while downloading", from, "-", err))
+	}
+
+	// Read all the bytes to the image
+	data, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return errors.New(fmt.Sprint("Error while downloading", from, "-", err))
+	}
+
+	// Detect the downloaded file type
+	dataType := http.DetectContentType(data)
+
+	if dataType[0:5] == "image" {
+
+		var extension, name string
+
+		// Parse the filename
+		u, err := url.Parse(from)
+
+		if err != nil {
+			return errors.New(fmt.Sprint("Error while parsing url", from, "-", err))
+		}
+
+		extension = filepath.Ext(u.Path)
+		name = bson.NewObjectId().Hex()
+
+		if extension != "" {
+
+			name = name + extension
+		} else {
+
+			// If no extension is provided on the url then add a dummy one
+			name = name + ".jpg"
+		}
+
+		path := "posts/" + name
+		err = di.S3Bucket.Put(path, data, dataType, s3.ACL("public-read"))
+
+		if err != nil {
+
+			panic(err)
+		}
+
+		var post model.Post
+
+		err = database.C("posts").Find(bson.M{"_id": post_id}).One(&post)
+
+		if err == nil {
+
+			post_content := post.Content
+
+			// Replace the url on the comment
+			if strings.Contains(post_content, from) {
+
+				content := strings.Replace(post_content, from, "http://s3-us-west-1.amazonaws.com/spartan-board/"+path, -1)
+
+				// Update the comment
+				di.DataService.Database.C("posts").Update(bson.M{"_id": post_id}, bson.M{"$set": bson.M{"content": content}})
+			}
+
+		}
+	}
+
+	response.Body.Close()
+
+	return nil
 }
 
 func (di *PostAPI) resetUserCategoryCounter(category string, user_id bson.ObjectId) {

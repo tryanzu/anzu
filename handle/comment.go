@@ -1,6 +1,7 @@
 package handle
 
 import (
+	"bytes"
 	"crypto/tls"
 	"errors"
 	"fmt"
@@ -10,13 +11,15 @@ import (
 	"github.com/ftrvxmtrx/gravatar"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
+	"github.com/kennygrant/sanitize"
 	"github.com/mitchellh/goamz/s3"
 	"gopkg.in/mgo.v2/bson"
 	"io/ioutil"
-	"mime"
 	"net/http"
 	"net/url"
+	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -68,10 +71,12 @@ func (di *CommentAPI) CommentAdd(c *gin.Context) {
 			Down: 0,
 		}
 
+		// Html sanitize
+		content := sanitize.HTML(comment.Content)
 		comment := model.Comment{
 			UserId:  user_bson_id,
 			Votes:   votes,
-			Content: comment.Content,
+			Content: content,
 			Created: time.Now(),
 		}
 
@@ -80,17 +85,17 @@ func (di *CommentAPI) CommentAdd(c *gin.Context) {
 
 		var assets []string
 
-		assets = urls.FindAllString(comment.Content, -1)
+		assets = urls.FindAllString(content, -1)
 
 		for _, asset := range assets {
 
 			// Download the asset on other routine in order to non block the API request
-			go di.downloadAssetFromUrl(asset)
+			go di.downloadAssetFromUrl(asset, post.Id)
 		}
 
 		var mentions_users []string
 
-		mentions_users = mentions.FindAllString(comment.Content, -1)
+		mentions_users = mentions.FindAllString(content, -1)
 
 		for _, mention_user := range mentions_users {
 
@@ -187,18 +192,17 @@ func (di *CommentAPI) notifyCommentPostAuth(post model.Post, user_id bson.Object
 	}
 }
 
-func (di *CommentAPI) downloadAssetFromUrl(from string) error {
+func (di *CommentAPI) downloadAssetFromUrl(from string, post_id bson.ObjectId) error {
+
+	// Get the database interface from the DI
+	database := di.DataService.Database
 
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 	client := &http.Client{Transport: tr}
 
-	// Parse the filename
-	u, err := url.Parse(from)
-	tokens := strings.Split(u.Path, "/")
-	fileName := tokens[len(tokens)-1]
-
+	// Download the file
 	response, err := client.Get(from)
 	if err != nil {
 		return errors.New(fmt.Sprint("Error while downloading", from, "-", err))
@@ -210,20 +214,71 @@ func (di *CommentAPI) downloadAssetFromUrl(from string) error {
 		return errors.New(fmt.Sprint("Error while downloading", from, "-", err))
 	}
 
-	// Get the file type
-	fileNameDots := strings.Split(fileName, ".")
-	fileNameExt := fileNameDots[len(fileNameDots)-1]
-	fileMime := "." + mime.TypeByExtension(fileNameExt)
-	path := "posts/" + fileName
+	// Detect the downloaded file type
+	dataType := http.DetectContentType(data)
 
-	// Use s3 instance to save the file
-	err = di.S3Bucket.Put(path, data, fileMime, s3.ACL("public-read"))
+	if dataType[0:5] == "image" {
 
-	if err != nil {
-		panic(err)
+		var extension, name string
+
+		// Parse the filename
+		u, err := url.Parse(from)
+
+		if err != nil {
+			return errors.New(fmt.Sprint("Error while parsing url", from, "-", err))
+		}
+
+		extension = filepath.Ext(u.Path)
+		name = bson.NewObjectId().Hex()
+
+		if extension != "" {
+
+			name = name + extension
+		} else {
+
+			// If no extension is provided on the url then add a dummy one
+			name = name + ".jpg"
+		}
+
+		path := "posts/" + name
+		err = di.S3Bucket.Put(path, data, dataType, s3.ACL("public-read"))
+
+		if err != nil {
+
+			panic(err)
+		}
+
+		var post model.Post
+
+		err = database.C("posts").Find(bson.M{"_id": post_id}).One(&post)
+
+		if err == nil {
+
+			for index := range post.Comments.Set {
+
+				comment := post.Comments.Set[index].Content
+
+				// Replace the url on the comment
+				if strings.Contains(comment, from) {
+
+					var rem bytes.Buffer
+
+					// Make the push string
+					rem.WriteString("comments.set.")
+					rem.WriteString(strconv.Itoa(index))
+					rem.WriteString(".content")
+
+					ctc := rem.String()
+
+					content := strings.Replace(comment, from, "http://s3-us-west-1.amazonaws.com/spartan-board/"+path, -1)
+
+					// Update the comment
+					di.DataService.Database.C("posts").Update(bson.M{"_id": post_id}, bson.M{"$set": bson.M{ctc: content}})
+				}
+			}
+		}
 	}
 
-	// Close the request channel when needed
 	response.Body.Close()
 
 	return nil
