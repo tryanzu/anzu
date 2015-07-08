@@ -1,9 +1,6 @@
 package handle
 
 import (
-	"crypto/tls"
-	"errors"
-	"fmt"
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/gin-gonic/gin"
@@ -11,25 +8,29 @@ import (
 	"github.com/kennygrant/sanitize"
 	"github.com/mitchellh/goamz/s3"
 	"gopkg.in/mgo.v2/bson"
-	"io/ioutil"
+	"github.com/cosn/firebase"
 	"math/rand"
-	"net/http"
-	"net/url"
-	"path/filepath"
 	"reflect"
-	"regexp"
 	"sort"
 	"strconv"
 	"strings"
+	"regexp"
 	"time"
+	"net/http"
+	"net/url"
+	"path/filepath"
+	"io/ioutil"
+	"errors"
+	"fmt"
+	"crypto/tls"
 )
 
 type PostAPI struct {
-	DataService *mongo.Service `inject:""`
-	Collector   CollectorAPI   `inject:""`
-	Errors      ErrorAPI       `inject:""`
-	S3Bucket    *s3.Bucket     `inject:""`
-	Context     *gin.Context
+	DataService *mongo.Service 	`inject:""`
+	Collector   CollectorAPI 	`inject:"inline"`
+	Errors 		ErrorAPI 		`inject:"inline"`
+	S3Bucket    *s3.Bucket 		`inject:""`
+	Firebase    *firebase.Client `inject:""`
 }
 
 /**
@@ -163,7 +164,7 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 					LastName:  postUser.LastName,
 					Step:      authorLevel,
 					Email:     postUser.Email,
-					Image:     postUser.Image,
+                    Image:     postUser.Image,
 				}
 			}
 		}
@@ -247,13 +248,13 @@ func (di *PostAPI) PostsGetOne(c *gin.Context) {
 				"username":    user.UserName,
 				"description": description,
 				"email":       user.Email,
-				"image":       user.Image,
+                "image":       user.Image,
 			}
 
-			if user.Id == post.UserId {
-				// Set the author
-				post.Author = user
-			}
+            if user.Id == post.UserId {
+                // Set the author
+                post.Author = user
+            }
 		}
 
 		// Name of the set to get
@@ -409,9 +410,6 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 	// Get the database interface from the DI
 	database := di.DataService.Database
 
-	// Same context for subroutines
-	di.Context = c.Copy()
-
 	// Check for user token
 	user_id, _ := c.Get("user_id")
 	bson_id := bson.ObjectIdHex(user_id.(string))
@@ -478,7 +476,7 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 				}
 
 				publish := &model.Post{
-					Id:         post_id,
+					Id: post_id,
 					Title:      post_name,
 					Content:    content,
 					Type:       "recommendations",
@@ -549,6 +547,9 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 				// Add a counter for the category
 				di.addUserCategoryCounter("recommendations")
 
+				// Sync everyone's feed
+				go di.syncUsersFeed(publish)
+
 				// Finished creating the post
 				c.JSON(200, gin.H{"status": "okay", "code": 200})
 				return
@@ -579,7 +580,7 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 			}
 
 			publish := &model.Post{
-				Id:         post_id,
+				Id: post_id,
 				Title:      post.Name,
 				Content:    content,
 				Type:       "category-post",
@@ -608,6 +609,9 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 			// Add a counter for the category
 			di.addUserCategoryCounter(post.Tag)
 
+			// Sync everyone's feed
+			go di.syncUsersFeed(publish)
+
 			// Finished creating the post
 			c.JSON(200, gin.H{"status": "okay", "code": 200})
 			return
@@ -615,6 +619,36 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 	}
 
 	c.JSON(400, gin.H{"status": "error", "message": "Couldnt create post, missing information...", "code": 205})
+}
+
+func (di *PostAPI) syncUsersFeed(post *model.Post) {
+
+	var users map[string]model.UserFirebase
+
+	// Recover from any panic even inside this goroutine
+	defer di.Errors.Recover()
+
+	// Search the online users
+	onlineParams := map[string]string{
+		"orderBy": "\"online\"",
+		"startAt": "1",
+	}
+	_ = di.Firebase.Child("users", onlineParams, &users)
+
+	// Information about the post
+	category := post.Categories[0]
+
+	for user_id, user := range users {
+
+		if user.Viewing == "all" || user.Viewing == category {
+
+			// Add a pending counter
+			userPath := "users/" + user_id
+			userRef := di.Firebase.Child(userPath, nil, nil)
+
+			userRef.Set("pending", user.Pending+1, nil)
+		}
+	}
 }
 
 func (di *PostAPI) downloadAssetFromUrl(from string, post_id bson.ObjectId) error {
@@ -687,12 +721,12 @@ func (di *PostAPI) downloadAssetFromUrl(from string, post_id bson.ObjectId) erro
 			// Replace the url on the comment
 			if strings.Contains(post_content, from) {
 
-				content := strings.Replace(post_content, from, "http://s3-us-west-1.amazonaws.com/spartan-board/"+path, -1)
+                content := strings.Replace(post_content, from, "http://s3-us-west-1.amazonaws.com/spartan-board/" + path, -1)
 
-				// Update the comment
-				di.DataService.Database.C("posts").Update(bson.M{"_id": post_id}, bson.M{"$set": bson.M{"content": content}})
+                // Update the comment
+                di.DataService.Database.C("posts").Update(bson.M{"_id": post_id}, bson.M{"$set": bson.M{"content": content}})
 			}
-
+			
 		}
 	}
 

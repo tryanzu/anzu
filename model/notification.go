@@ -47,3 +47,9 @@ type UserFirebaseNotifications struct {
 	Count int                                 `json:"count"`
 	List  map[string]UserFirebaseNotification `json:"list,omitempty"`
 }
+
+type UserFirebase struct {
+	Online int `json:"online"`
+	Viewing string `json:"viewing"`
+	Pending int `json:"pending"`
+}
