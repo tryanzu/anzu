@@ -1,9 +1,6 @@
 package handle
 
 import (
-	"crypto/tls"
-	"errors"
-	"fmt"
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/gin-gonic/gin"
@@ -11,23 +8,26 @@ import (
 	"github.com/kennygrant/sanitize"
 	"github.com/mitchellh/goamz/s3"
 	"gopkg.in/mgo.v2/bson"
-	"io/ioutil"
 	"math/rand"
-	"net/http"
-	"net/url"
-	"path/filepath"
 	"reflect"
-	"regexp"
 	"sort"
 	"strconv"
 	"strings"
+	"regexp"
 	"time"
+	"net/http"
+	"net/url"
+	"path/filepath"
+	"io/ioutil"
+	"errors"
+	"fmt"
+	"crypto/tls"
 )
 
 type PostAPI struct {
 	DataService *mongo.Service `inject:""`
-	Collector   CollectorAPI   `inject:""`
-	S3Bucket    *s3.Bucket     `inject:""`
+	Collector CollectorAPI `inject:""`
+	S3Bucket    *s3.Bucket `inject:""`
 }
 
 /**
@@ -161,7 +161,7 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 					LastName:  postUser.LastName,
 					Step:      authorLevel,
 					Email:     postUser.Email,
-					Image:     postUser.Image,
+                    Image:     postUser.Image,
 				}
 			}
 		}
@@ -245,13 +245,13 @@ func (di *PostAPI) PostsGetOne(c *gin.Context) {
 				"username":    user.UserName,
 				"description": description,
 				"email":       user.Email,
-				"image":       user.Image,
+                "image":       user.Image,
 			}
 
-			if user.Id == post.UserId {
-				// Set the author
-				post.Author = user
-			}
+            if user.Id == post.UserId {
+                // Set the author
+                post.Author = user
+            }
 		}
 
 		// Name of the set to get
@@ -473,11 +473,11 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 				}
 
 				publish := &model.Post{
-					Id:         post_id,
+					Id: post_id,
 					Title:      post_name,
 					Content:    content,
 					Type:       "recommendations",
-					Slug:       sanitize.Path(sanitize.Accents(post.Name)),
+					Slug:       strings.Replace(sanitize.Path(sanitize.Accents(post.Name)), "/", "", -1),
 					Comments:   comments,
 					UserId:     bson_id,
 					Users:      users,
@@ -551,7 +551,7 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 
 		case "category-post":
 
-			slug_exists, _ := database.C("posts").Find(bson.M{"slug": sanitize.Path(sanitize.Accents(post.Name))}).Count()
+			slug_exists, _ := database.C("posts").Find(bson.M{"slug": strings.Replace(sanitize.Path(sanitize.Accents(post.Name)), "/", "", -1)}).Count()
 			slug := ""
 
 			if slug_exists > 0 {
@@ -565,16 +565,16 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 				suffix := string(b)
 
 				// Duplicated so suffix it
-				slug = sanitize.Path(sanitize.Accents(post.Name)) + "-" + suffix
+				slug = strings.Replace(sanitize.Path(sanitize.Accents(post.Name)), "/", "", -1) + "-" + suffix
 
 			} else {
 
 				// No duplicates
-				slug = sanitize.Path(sanitize.Accents(post.Name))
+				slug = strings.Replace(sanitize.Path(sanitize.Accents(post.Name)), "/", "", -1)
 			}
 
 			publish := &model.Post{
-				Id:         post_id,
+				Id: post_id,
 				Title:      post.Name,
 				Content:    content,
 				Type:       "category-post",
@@ -679,12 +679,12 @@ func (di *PostAPI) downloadAssetFromUrl(from string, post_id bson.ObjectId) erro
 			// Replace the url on the comment
 			if strings.Contains(post_content, from) {
 
-				content := strings.Replace(post_content, from, "http://s3-us-west-1.amazonaws.com/spartan-board/"+path, -1)
+                content := strings.Replace(post_content, from, "http://s3-us-west-1.amazonaws.com/spartan-board/" + path, -1)
 
-				// Update the comment
-				di.DataService.Database.C("posts").Update(bson.M{"_id": post_id}, bson.M{"$set": bson.M{"content": content}})
+                // Update the comment
+                di.DataService.Database.C("posts").Update(bson.M{"_id": post_id}, bson.M{"$set": bson.M{"content": content}})
 			}
-
+			
 		}
 	}
 
@@ -692,6 +692,7 @@ func (di *PostAPI) downloadAssetFromUrl(from string, post_id bson.ObjectId) erro
 
 	return nil
 }
+
 
 func (di *PostAPI) resetUserCategoryCounter(category string, user_id bson.ObjectId) {
 
