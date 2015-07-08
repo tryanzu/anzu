@@ -54,6 +54,8 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 	o := c.Query("offset")
 	l := c.Query("limit")
 	f := c.Query("category")
+	before := c.Query("before")
+	after := c.Query("after")
 
 	// Check if offset has been specified
 	if o != "" {
@@ -92,6 +94,24 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 
 			// Reset the counter for the user
 			di.resetUserCategoryCounter(f, bson.ObjectIdHex(user_token.(string)))
+		}
+	}
+
+	if after != "" {
+
+		t, err := time.Parse(time.RFC3339Nano, after)
+
+		if err == nil {
+			search["created_at"] = bson.M{"$lt": t}
+		}
+	}
+
+	if before != "" {
+
+		t, err := time.Parse(time.RFC3339Nano, before)
+
+		if err == nil {
+			search["created_at"] = bson.M{"$gt": t}
 		}
 	}
 
