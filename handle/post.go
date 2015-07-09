@@ -127,7 +127,7 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 
 	// Prepare the database to fetch the feed
 	posts_collection := database.C("posts")
-	get_feed := posts_collection.Find(search)
+	get_feed := posts_collection.Find(search).Select(bson.M{"comments.set": 0, "content": 0, "components": 0})
 
 	// Add the sort depending on the context
 	if user_order {

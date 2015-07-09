@@ -24,6 +24,10 @@ type Comments struct {
 	Set   []Comment `bson:"set" json:"set"`
 }
 
+type FeedComments struct {
+	Count int       `bson:"count" json:"count"`
+}
+
 type Comment struct {
 	UserId   bson.ObjectId `bson:"user_id" json:"user_id"`
 	Votes    Votes         `bson:"votes" json:"votes"`
@@ -85,6 +89,7 @@ type FeedPost struct {
 	Slug       string          `bson:"slug" json:"slug"`
 	Type       string          `bson:"type" json:"type"`
 	Categories []string        `bson:"categories" json:"categories"`
+	Comments   FeedComments     `bson:"comments" json:"comments"`
 	Author     User            `bson:"author,omitempty" json:"author,omitempty"`
 	UserId     bson.ObjectId   `bson:"user_id,omitempty" json:"user_id,omitempty"`
 	Votes      Votes           `bson:"votes" json:"votes"`
