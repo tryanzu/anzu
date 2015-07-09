@@ -116,14 +116,30 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 		}
 	}
 
-	if from_author != ""  && bson.IsObjectIdHex(from_author) {
+	user_order := false 
+
+	if from_author != "" && bson.IsObjectIdHex(from_author) {
 
 		search["user_id"] = bson.ObjectIdHex(from_author)
+
+		user_order = true
 	}
 
 	// Prepare the database to fetch the feed
 	posts_collection := database.C("posts")
-	get_feed := posts_collection.Find(search).Sort("-pinned", "-created_at").Limit(limit).Skip(offset)
+	get_feed := posts_collection.Find(search)
+
+	// Add the sort depending on the context
+	if user_order {
+
+		get_feed = get_feed.Sort("-created_at")
+	} else {
+
+		get_feed = get_feed.Sort("-pinned", "-created_at")
+	}
+
+	// Add the limits of the resultset
+	get_feed = get_feed.Limit(limit).Skip(offset)
 
 	// Get the results from the feed algo
 	err := get_feed.All(&feed)
