@@ -308,6 +308,12 @@ func (di *CommentAPI) mentionUserComment(mentioned string, post model.Post, user
 		return
 	}
 
+	// Do not notify mentions for te author of the post (already notified by the notifyCommentPostAuth)
+	if user_id == post.UserId {
+
+		return
+	}
+
 	// Get the mentioned user
 	username := mentioned[1:]
 	err = di.DataService.Database.C("users").Find(bson.M{"username": username}).One(&user)

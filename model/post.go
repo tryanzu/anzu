@@ -79,6 +79,20 @@ type Post struct {
 	Updated    time.Time       `bson:"updated_at" json:"updated_at"`
 }
 
+type FeedPost struct {
+	Id         bson.ObjectId   `bson:"_id,omitempty" json:"id,omitempty"`
+	Title      string          `bson:"title" json:"title"`
+	Slug       string          `bson:"slug" json:"slug"`
+	Type       string          `bson:"type" json:"type"`
+	Categories []string        `bson:"categories" json:"categories"`
+	Author     User            `bson:"author,omitempty" json:"author,omitempty"`
+	UserId     bson.ObjectId   `bson:"user_id,omitempty" json:"user_id,omitempty"`
+	Votes      Votes           `bson:"votes" json:"votes"`
+	Pinned     bool            `bson:"pinned,omitempty" json:"pinned,omitempty"`
+	Created    time.Time       `bson:"created_at" json:"created_at"`
+	Updated    time.Time       `bson:"updated_at" json:"updated_at"`
+}
+
 type PostForm struct {
 	Kind       string                 `json:"kind" binding:"required"`
 	Name       string                 `json:"name" binding:"required"`

@@ -47,7 +47,7 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 	// Get the database interface from the DI
 	database := di.DataService.Database
 
-	var feed []model.Post
+	var feed []model.FeedPost
 	offset := 0
 	limit := 10
 
@@ -56,6 +56,7 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 	f := c.Query("category")
 	before := c.Query("before")
 	after := c.Query("after")
+	from_author  := c.Query("user_id")
 
 	// Check if offset has been specified
 	if o != "" {
@@ -113,6 +114,11 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 		if err == nil {
 			search["created_at"] = bson.M{"$gt": t}
 		}
+	}
+
+	if from_author != ""  && bson.IsObjectIdHex(from_author) {
+
+		search["user_id"] = bson.ObjectIdHex(from_author)
 	}
 
 	// Prepare the database to fetch the feed
