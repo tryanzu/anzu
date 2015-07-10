@@ -44,6 +44,7 @@ func main() {
 	var elections handle.ElectionAPI
 	var comments handle.CommentAPI
 	var parts handle.PartAPI
+	var stats handle.StatAPI
 	var middlewares handle.MiddlewareAPI
 	var collector handle.CollectorAPI
 	var sitemap handle.SitemapAPI
@@ -94,6 +95,7 @@ func main() {
 		&inject.Object{Value: &elections},
 		&inject.Object{Value: &comments},
 		&inject.Object{Value: &parts},
+		&inject.Object{Value: &stats},
 		&inject.Object{Value: &middlewares},
 		&inject.Object{Value: &sitemap},
 	)
@@ -167,6 +169,9 @@ func main() {
 		v1.GET("/part", parts.GetPartTypes)
 		v1.GET("/part/:type/manufacturers", parts.GetPartManufacturers)
 		v1.GET("/part/:type/models", parts.GetPartManufacturerModels)
+
+		// Stats routes
+		v1.GET("/stats/board", stats.BoardGet)
 
 		authorized := v1.Group("")
 
