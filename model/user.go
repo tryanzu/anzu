@@ -10,18 +10,20 @@ type User struct {
 	FirstName     string                 `bson:"first_name" json:"first_name"`
 	LastName      string                 `bson:"last_name" json:"last_name"`
 	UserName      string                 `bson:"username" json:"username"`
+	UserNameSlug  string                 `bson:"username_slug" json:"username_slug"`
+	NameChanges   int                    `bson:"name_changes" json:"name_changes"`
 	Password      string                 `bson:"password" json:"-"`
 	Step          int                    `bson:"step,omitempty" json:"step"`
 	Email         string                 `bson:"email" json:"email,omitempty"`
 	Roles         []string               `bson:"roles" json:"roles,omitempty"`
 	Permissions   []string               `bson:"permissions" json:"permissions,omitempty"`
 	Description   string                 `bson:"description" json:"description,omitempty"`
-    Image         string                 `bson:"image" json:"image,omitempty"`
+	Image         string                 `bson:"image" json:"image,omitempty"`
 	Facebook      interface{}            `bson:"facebook,omitempty" json:"facebook,omitempty"`
 	Notifications interface{}            `bson:"notifications,omitempty" json:"notifications,omitempty"`
 	Profile       map[string]interface{} `bson:"profile,omitempty" json:"profile,omitempty"`
 	Stats         UserStats              `bson:"stats,omitempty" json:"stats,omitempty"`
-	Version       string              	 `bson:"version,omitempty" json:"version,omitempty"`
+	Version       string                 `bson:"version,omitempty" json:"version,omitempty"`
 	Created       time.Time              `bson:"created_at" json:"created_at"`
 	Updated       time.Time              `bson:"updated_at" json:"updated_at"`
 }
@@ -60,12 +62,7 @@ type UserActivity struct {
 }
 
 type UserProfileForm struct {
-	Country       string `json:"country"`
-	FavouriteGame string `json:"favourite_game"`
-	Microsoft     string `json:"skype"`
-	Biography     string `json:"description"`
-	UserName      string `json:"username"`
-	ShowEmail     bool   `json:"show_email"`
+	UserName string `json:"username,omitempty"`
 }
 
 type UserRegisterForm struct {
@@ -75,14 +72,14 @@ type UserRegisterForm struct {
 }
 
 type UserSubscribe struct {
-	Id        bson.ObjectId `bson:"_id,omitempty" json:"id"`
-	Category  string  `bson:"category" json:"category"`
-	Email  	  string  `bson:"email" json:"email"`
+	Id       bson.ObjectId `bson:"_id,omitempty" json:"id"`
+	Category string        `bson:"category" json:"category"`
+	Email    string        `bson:"email" json:"email"`
 }
 
 type UserSubscribeForm struct {
-	Category  string  `json:"category" binding:"required"`
-	Email  	  string  `json:"email" binding:"required"`
+	Category string `json:"category" binding:"required"`
+	Email    string `json:"email" binding:"required"`
 }
 
 type ByCreatedAt []UserActivity

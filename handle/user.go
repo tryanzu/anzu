@@ -10,24 +10,25 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
+	"github.com/kennygrant/sanitize"
+	"github.com/mitchellh/goamz/s3"
 	"github.com/mrvdot/golang-utils"
 	"github.com/olebedev/config"
-	"github.com/mitchellh/goamz/s3"
-	"gopkg.in/mgo.v2/bson"
 	"gopkg.in/h2non/bimg.v0"
-	"log"
-	"sort"
-	"time"
+	"gopkg.in/mgo.v2/bson"
 	"io/ioutil"
 	"net/http"
 	"path/filepath"
+	"regexp"
+	"sort"
+	"time"
 )
 
 type UserAPI struct {
 	DataService   *mongo.Service `inject:""`
 	ConfigService *config.Config `inject:""`
-	S3Bucket    *s3.Bucket       `inject:""`
-	Collector CollectorAPI `inject:"inline"`
+	S3Bucket      *s3.Bucket     `inject:""`
+	Collector     CollectorAPI   `inject:"inline"`
 }
 
 func (di *UserAPI) UserSubscribe(c *gin.Context) {
@@ -41,7 +42,7 @@ func (di *UserAPI) UserSubscribe(c *gin.Context) {
 
 		subscribe := &model.UserSubscribe{
 			Category: register.Category,
-			Email: register.Email,
+			Email:    register.Email,
 		}
 
 		err := database.C("subscribes").Insert(subscribe)
@@ -322,91 +323,91 @@ func (di *UserAPI) UserGetTokenFacebook(c *gin.Context) {
 }
 
 func (di *UserAPI) UserUpdateProfileAvatar(c *gin.Context) {
-	
+
 	// Check for user token
 	user_id := c.MustGet("user_id")
 	user_bson_id := bson.ObjectIdHex(user_id.(string))
-	
+
 	// Check the file inside the request
 	file, header, err := c.Request.FormFile("file")
-	
+
 	if err != nil {
 		c.JSON(400, gin.H{"status": "error", "message": "Could not get the file..."})
 		return
 	}
-	
+
 	defer file.Close()
-	
+
 	// Read all the bytes from the image
 	data, err := ioutil.ReadAll(file)
 	if err != nil {
 		c.JSON(400, gin.H{"status": "error", "message": "Could not read the file contents..."})
 		return
 	}
-	
+
 	// Detect the downloaded file type
 	dataType := http.DetectContentType(data)
-	
+
 	if dataType[0:5] == "image" {
-		
+
 		var extension, name string
-		
+
 		extension = filepath.Ext(header.Filename)
 		name = bson.NewObjectId().Hex()
-		
+
 		if extension == "" {
 
 			extension = ".jpg"
-		} 
-		
+		}
+
 		path := "users/" + name + extension
 		err = di.S3Bucket.Put(path, data, dataType, s3.ACL("public-read"))
-		
+
 		if err != nil {
 			panic(err)
 		}
-		
+
 		thumbnail, err := bimg.NewImage(data).ResizeAndCrop(120, 120)
-		
+
 		if err != nil {
 			panic(err)
 		}
-		
+
 		path = "users/" + name + "-120x120" + extension
 		err = di.S3Bucket.Put(path, thumbnail, dataType, s3.ACL("public-read"))
-		
+
 		if err != nil {
 			panic(err)
 		}
-		
+
 		s3_url := "http://s3-us-west-1.amazonaws.com/spartan-board/" + path
-			
+
 		// Update the user image as well
 		di.DataService.Database.C("users").Update(bson.M{"_id": user_bson_id}, bson.M{"$set": bson.M{"image": s3_url}})
-		
+
 		// Done
 		c.JSON(200, gin.H{"status": "okay", "url": s3_url})
-		
+
 		return
 	}
-	
+
 	c.JSON(400, gin.H{"status": "error", "message": "Could not detect an image file..."})
 }
 
 func (di *UserAPI) UserUpdateProfile(c *gin.Context) {
 
 	var user model.User
-	
+
 	// Get the database interface from the DI
 	database := di.DataService.Database
 
 	// Users collection
 	users_collection := database.C("users")
-	
+
 	// Check for user token
 	user_id := c.MustGet("user_id")
 	user_bson_id := bson.ObjectIdHex(user_id.(string))
-	
+
 	err := users_collection.Find(bson.M{"_id": user_bson_id}).One(&user)
 
 	if err == nil {
@@ -417,41 +418,28 @@ func (di *UserAPI) UserUpdateProfile(c *gin.Context) {
 
 			set := bson.M{}
 
-			if profileUpdate.Biography != "" {
+			if profileUpdate.UserName != "" && user.NameChanges < 1 {
 
-				set["profile.bio"] = profileUpdate.Biography
-			}
+				valid_username, _ := regexp.Compile(`^[0-9a-zA-Z\-]{0,32}$`)
 
-			if profileUpdate.UserName != "" {
+				if valid_username.MatchString(profileUpdate.UserName) {
 
-				// Check whether user exists
-				count, _ := database.C("users").Find(bson.M{"username": profileUpdate.UserName}).Count()
+					// Generate a slug for the username
+					username_slug := sanitize.Path(sanitize.Accents(profileUpdate.UserName))
 
-				if count == 0 {
+					// Check whether user exists
+					count, _ := database.C("users").Find(bson.M{"username_slug": username_slug}).Count()
 
-					set["username"] = profileUpdate.UserName
+					if count == 0 {
+
+						set["username"] = profileUpdate.UserName
+						set["username_slug"] = username_slug
+						set["name_changes"] = user.NameChanges + 1
+					}
 				}
 			}
 
-			if profileUpdate.Country != "" {
-
-				set["profile.country"] = profileUpdate.Country
-			}
-
-			if profileUpdate.FavouriteGame != "" {
-
-				set["profile.favourite_game"] = profileUpdate.FavouriteGame
-			}
-
-			if profileUpdate.Microsoft != "" {
-
-				set["profile.microsoft"] = profileUpdate.Microsoft
-			}
-
 			set["updated_at"] = time.Now()
-
-			log.Printf("%v", set)
-			log.Printf("%v", profileUpdate)
 
 			// Update the user profile with some godness
 			users_collection.Update(bson.M{"_id": user.Id}, bson.M{"$set": set})
@@ -460,6 +448,8 @@ func (di *UserAPI) UserUpdateProfile(c *gin.Context) {
 			return
 		}
 	}
+
+	c.JSON(400, gin.H{"status": "error", "message": "Invalid auth request."})
 }
 
 func (di *UserAPI) UserRegisterAction(c *gin.Context) {
@@ -481,7 +471,17 @@ func (di *UserAPI) UserRegisterAction(c *gin.Context) {
 			return
 		}
 
-		user_exists, _ := database.C("users").Find(bson.M{"username": registerAction.UserName}).Count()
+		valid_username, _ := regexp.Compile(`^[0-9a-zA-Z\-]{0,32}$`)
+
+		if valid_username.MatchString(registerAction.UserName) == false {
+
+			// Only some characters in the username
+			c.JSON(400, gin.H{"status": "error", "message": "Username not valid"})
+			return
+		}
+
+		username_slug := sanitize.Path(sanitize.Accents(registerAction.UserName))
+		user_exists, _ := database.C("users").Find(bson.M{"username_slug": username_slug}).Count()
 
 		if user_exists > 0 {
 
@@ -513,16 +513,18 @@ func (di *UserAPI) UserRegisterAction(c *gin.Context) {
 		id := bson.NewObjectId()
 
 		user := &model.User{
-			Id:          id,
-			FirstName:   "",
-			LastName:    "",
-			UserName:    registerAction.UserName,
-			Password:    hash,
-			Email:       registerAction.Email,
-			Roles:       []string{"registered"},
-			Permissions: make([]string, 0),
-			Description: "",
-			Profile:     profile,
+			Id:           id,
+			FirstName:    "",
+			LastName:     "",
+			UserName:     registerAction.UserName,
+			UserNameSlug: username_slug,
+			NameChanges:  0,
+			Password:     hash,
+			Email:        registerAction.Email,
+			Roles:        []string{"registered"},
+			Permissions:  make([]string, 0),
+			Description:  "",
+			Profile:      profile,
 			Stats: model.UserStats{
 				Saw: 0,
 			},
