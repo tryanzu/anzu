@@ -12,15 +12,21 @@ import (
 	"github.com/gin-gonic/gin/binding"
 	"github.com/mrvdot/golang-utils"
 	"github.com/olebedev/config"
+	"github.com/mitchellh/goamz/s3"
 	"gopkg.in/mgo.v2/bson"
+	"gopkg.in/h2non/bimg.v0"
 	"log"
 	"sort"
 	"time"
+	"io/ioutil"
+	"net/http"
+	"path/filepath"
 )
 
 type UserAPI struct {
 	DataService   *mongo.Service `inject:""`
 	ConfigService *config.Config `inject:""`
+	S3Bucket    *s3.Bucket       `inject:""`
 	Collector CollectorAPI `inject:"inline"`
 }
 
@@ -315,76 +321,143 @@ func (di *UserAPI) UserGetTokenFacebook(c *gin.Context) {
 	c.JSON(200, gin.H{"status": "okay", "token": token, "firebase": firebase})
 }
 
+func (di *UserAPI) UserUpdateProfileAvatar(c *gin.Context) {
+	
+	// Check for user token
+	user_id := c.MustGet("user_id")
+	user_bson_id := bson.ObjectIdHex(user_id.(string))
+	
+	// Check the file inside the request
+	file, header, err := c.Request.FormFile("file")
+	
+	if err != nil {
+		c.JSON(400, gin.H{"status": "error", "message": "Could not get the file..."})
+		return
+	}
+	
+	defer file.Close()
+	
+	// Read all the bytes from the image
+	data, err := ioutil.ReadAll(file)
+	if err != nil {
+		c.JSON(400, gin.H{"status": "error", "message": "Could not read the file contents..."})
+		return
+	}
+	
+	// Detect the downloaded file type
+	dataType := http.DetectContentType(data)
+	
+	if dataType[0:5] == "image" {
+		
+		var extension, name string
+		
+		extension = filepath.Ext(header.Filename)
+		name = bson.NewObjectId().Hex()
+		
+		if extension == "" {
+
+			extension = ".jpg"
+		} 
+		
+		path := "users/" + name + extension
+		err = di.S3Bucket.Put(path, data, dataType, s3.ACL("public-read"))
+		
+		if err != nil {
+			panic(err)
+		}
+		
+		thumbnail, err := bimg.NewImage(data).ResizeAndCrop(120, 120)
+		
+		if err != nil {
+			panic(err)
+		}
+		
+		path = "users/" + name + "-120x120" + extension
+		err = di.S3Bucket.Put(path, thumbnail, dataType, s3.ACL("public-read"))
+		
+		if err != nil {
+			panic(err)
+		}
+		
+		s3_url := "http://s3-us-west-1.amazonaws.com/spartan-board/" + path
+			
+		// Update the user image as well
+		di.DataService.Database.C("users").Update(bson.M{"_id": user_bson_id}, bson.M{"$set": bson.M{"image": s3_url}})
+		
+		// Done
+		c.JSON(200, gin.H{"status": "okay", "url": s3_url})
+		
+		return
+	}
+	
+	c.JSON(400, gin.H{"status": "error", "message": "Could not detect an image file..."})
+}
+
 func (di *UserAPI) UserUpdateProfile(c *gin.Context) {
 
+	var user model.User
+	
 	// Get the database interface from the DI
 	database := di.DataService.Database
 
 	// Users collection
 	users_collection := database.C("users")
-
-	// Get user by token
-	user_token := model.UserToken{}
-	token := c.Request.Header.Get("Auth-Token")
-
-	// Try to fetch the user using token header though
-	err := database.C("tokens").Find(bson.M{"token": token}).One(&user_token)
+	
+	// Check for user token
+	user_id := c.MustGet("user_id")
+	user_bson_id := bson.ObjectIdHex(user_id.(string))
+	
+	err := users_collection.Find(bson.M{"_id": user_bson_id}).One(&user)
 
 	if err == nil {
 
-		user := model.User{}
-		err = users_collection.Find(bson.M{"_id": user_token.UserId}).One(&user)
+		var profileUpdate model.UserProfileForm
 
-		if err == nil {
+		if c.BindWith(&profileUpdate, binding.JSON) == nil {
 
-			var profileUpdate model.UserProfileForm
+			set := bson.M{}
 
-			if c.BindWith(&profileUpdate, binding.JSON) == nil {
+			if profileUpdate.Biography != "" {
 
-				set := bson.M{}
-
-				if profileUpdate.Biography != "" {
-
-					set["profile.bio"] = profileUpdate.Biography
-				}
-
-				if profileUpdate.UserName != "" {
-
-					// Check whether user exists
-					count, _ := database.C("users").Find(bson.M{"username": profileUpdate.UserName}).Count()
-
-					if count == 0 {
-
-						set["username"] = profileUpdate.UserName
-					}
-				}
-
-				if profileUpdate.Country != "" {
-
-					set["profile.country"] = profileUpdate.Country
-				}
-
-				if profileUpdate.FavouriteGame != "" {
-
-					set["profile.favourite_game"] = profileUpdate.FavouriteGame
-				}
-
-				if profileUpdate.Microsoft != "" {
-
-					set["profile.microsoft"] = profileUpdate.Microsoft
-				}
-
-				set["updated_at"] = time.Now()
-
-				log.Printf("%v", set)
-				log.Printf("%v", profileUpdate)
-
-				// Update the user profile with some godness
-				users_collection.Update(bson.M{"_id": user.Id}, bson.M{"$set": set})
-
-				c.JSON(200, gin.H{"message": "okay", "status": "okay", "code": 200})
-				return
+				set["profile.bio"] = profileUpdate.Biography
 			}
+
+			if profileUpdate.UserName != "" {
+
+				// Check whether user exists
+				count, _ := database.C("users").Find(bson.M{"username": profileUpdate.UserName}).Count()
+
+				if count == 0 {
+
+					set["username"] = profileUpdate.UserName
+				}
+			}
+
+			if profileUpdate.Country != "" {
+
+				set["profile.country"] = profileUpdate.Country
+			}
+
+			if profileUpdate.FavouriteGame != "" {
+
+				set["profile.favourite_game"] = profileUpdate.FavouriteGame
+			}
+
+			if profileUpdate.Microsoft != "" {
+
+				set["profile.microsoft"] = profileUpdate.Microsoft
+			}
+
+			set["updated_at"] = time.Now()
+
+			log.Printf("%v", set)
+			log.Printf("%v", profileUpdate)
+
+			// Update the user profile with some godness
+			users_collection.Update(bson.M{"_id": user.Id}, bson.M{"$set": set})
+
+			c.JSON(200, gin.H{"message": "okay", "status": "okay", "code": 200})
+			return
 		}
 	}
 }

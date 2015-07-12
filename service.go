@@ -184,6 +184,7 @@ func main() {
 			authorized.POST("/post", posts.PostCreate)
 
 			// User routes
+			v1.POST("/user/my/avatar", users.UserUpdateProfileAvatar)
 			v1.GET("/user/my", users.UserGetByToken)
 			v1.PUT("/user/my", users.UserUpdateProfile)
 
