@@ -1,18 +1,18 @@
 package handle
 
 import (
+	"bytes"
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"bytes"
 	"github.com/cosn/firebase"
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/ftrvxmtrx/gravatar"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
-	"github.com/mitchellh/goamz/s3"
 	"github.com/kennygrant/sanitize"
+	"github.com/mitchellh/goamz/s3"
 	"gopkg.in/mgo.v2/bson"
 	"io/ioutil"
 	"net/http"
@@ -28,7 +28,8 @@ type CommentAPI struct {
 	DataService *mongo.Service   `inject:""`
 	Firebase    *firebase.Client `inject:""`
 	S3Bucket    *s3.Bucket       `inject:""`
-	Errors 		ErrorAPI 		 `inject:"inline"`
+	Gaming      *GamingAPI       `inject:""`
+	Errors      ErrorAPI         `inject:"inline"`
 }
 
 func (di *CommentAPI) CommentAdd(c *gin.Context) {
@@ -138,10 +139,14 @@ func (di *CommentAPI) CommentAdd(c *gin.Context) {
 			}
 		}
 
-		// Notifications for the author
+		// Triggers when the author of the comment is not the post's author
 		if post.UserId != user_bson_id {
 
+			// Notify the post's author
 			go di.notifyCommentPostAuth(post, user_bson_id)
+
+			// Add the gamification contribution
+			go di.Gaming.Related(user_bson_id).Did("comment")
 		}
 
 		c.JSON(200, gin.H{"message": "okay", "status": 706})
@@ -261,7 +266,7 @@ func (di *CommentAPI) downloadAssetFromUrl(from string, post_id bson.ObjectId) e
 
 		if err == nil {
 
-			for index := range post.Comments.Set { 
+			for index := range post.Comments.Set {
 
 				comment := post.Comments.Set[index].Content
 
@@ -270,17 +275,17 @@ func (di *CommentAPI) downloadAssetFromUrl(from string, post_id bson.ObjectId) e
 
 					var rem bytes.Buffer
 
-                    // Make the push string
-                    rem.WriteString("comments.set.")
-                    rem.WriteString(strconv.Itoa(index))
-                    rem.WriteString(".content")
+					// Make the push string
+					rem.WriteString("comments.set.")
+					rem.WriteString(strconv.Itoa(index))
+					rem.WriteString(".content")
 
-                    ctc := rem.String()
+					ctc := rem.String()
 
-                    content := strings.Replace(comment, from, "http://s3-us-west-1.amazonaws.com/spartan-board/" + path, -1)
+					content := strings.Replace(comment, from, "http://s3-us-west-1.amazonaws.com/spartan-board/"+path, -1)
 
-                    // Update the comment
-                    di.DataService.Database.C("posts").Update(bson.M{"_id": post_id}, bson.M{"$set": bson.M{ctc: content}})
+					// Update the comment
+					di.DataService.Database.C("posts").Update(bson.M{"_id": post_id}, bson.M{"$set": bson.M{ctc: content}})
 				}
 			}
 		}
@@ -311,7 +316,7 @@ func (di *CommentAPI) mentionUserComment(mentioned string, post model.Post, user
 	// Get the mentioned user
 	username := mentioned[1:]
 	err = di.DataService.Database.C("users").Find(bson.M{"username": username}).One(&user)
-	
+
 	// Do not notify mentions for te author of the post (already notified by the notifyCommentPostAuth)
 	if user.Id == post.UserId {
 

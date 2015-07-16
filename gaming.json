@@ -1,0 +1,140 @@
+{
+    "updated_at": "2015-07-16T18:24:10.282Z",
+    "rules": [
+        {
+            "level": 0,
+            "name": "Extranjero",
+            "swords_start": 0,
+            "swords_end": 15,
+            "tribute": 1,
+            "shit": 0,
+            "coins": 1
+        },
+        {
+            "level": 1,
+            "name": "Habitante",
+            "swords_start": 16,
+            "swords_end": 29,
+            "tribute": 3,
+            "shit": 0,
+            "coins": 1
+        },
+        {
+            "level": 2,
+            "name": "Ciudadano",
+            "swords_start": 30,
+            "swords_end": 65,
+            "tribute": 5,
+            "shit": 0,
+            "coins": 2
+        },
+        {
+            "level": 3,
+            "name": "Recluta",
+            "swords_start": 66,
+            "swords_end": 99,
+            "tribute": 10,
+            "shit": 1,
+            "coins": 5
+        },
+        {
+            "level": 4,
+            "name": "Spartan",
+            "swords_start": 100,
+            "swords_end": 174,
+            "tribute": 10,
+            "shit": 2,
+            "coins": 7
+        },
+        {
+            "level": 5,
+            "name": "Spartan Fighter",
+            "swords_start": 175,
+            "swords_end": 249,
+            "tribute": 50,
+            "shit": 2,
+            "coins": 10
+        },
+        {
+            "level": 6,
+            "name": "Spartan Hoplita",
+            "swords_start": 250,
+            "swords_end": 374,
+            "tribute": 50,
+            "shit": 3,
+            "coins": 15
+        },
+        {
+            "level": 7,
+            "name": "Spartan Warrior",
+            "swords_start": 375,
+            "swords_end": 499,
+            "tribute": 50,
+            "shit": 3,
+            "coins": 25
+        },
+        {
+            "level": 8,
+            "name": "Spartan Elite",
+            "swords_start": 500,
+            "swords_end": 749,
+            "tribute": 50,
+            "shit": 5,
+            "coins": 50
+        },
+        {
+            "level": 9,
+            "name": "Spartan Commander",
+            "swords_start": 750,
+            "swords_end": 999,
+            "tribute": 50,
+            "shit": 5,
+            "coins": 75
+        },
+        {
+            "level": 10,
+            "name": "Spartan Warlord",
+            "swords_start": 1000,
+            "swords_end": 1499,
+            "tribute": 100,
+            "shit": 5,
+            "coins": 150
+        },
+        {
+            "level": 11,
+            "name": "Spartan Hero",
+            "swords_start": 1500,
+            "swords_end": 2499,
+            "tribute": 100,
+            "shit": 5,
+            "coins": 250
+        },
+        {
+            "level": 12,
+            "name": "Spartan Mercenary",
+            "swords_start": 2500,
+            "swords_end": 4999,
+            "tribute": 100,
+            "shit": 5,
+            "coins": 500
+        },
+        {
+            "level": 13,
+            "name": "Spartan King",
+            "swords_start": 5000,
+            "swords_end": 9999,
+            "tribute": 100,
+            "shit": 10,
+            "coins": 750
+        },
+        {
+            "level": 14,
+            "name": "Spartan Legend",
+            "swords_start": 10000,
+            "swords_end": 16999,
+            "tribute": 100,
+            "shit": 10,
+            "coins": 1000
+        }
+    ]
+}

@@ -12,14 +12,10 @@ import (
 	"github.com/mitchellh/goamz/aws"
 	"github.com/mitchellh/goamz/s3"
 	"github.com/olebedev/config"
+	"github.com/robfig/cron"
 	"github.com/xuyu/goredis"
 	"os"
-	//"errors"
 	"runtime"
-)
-
-var (
-	zmq_messages chan string
 )
 
 func main() {
@@ -55,9 +51,9 @@ func main() {
 	mongoService := mongo.NewService(string_value(configService.String("database.uri")), string_value(configService.String("database.name")))
 	errorService, _ := raven.NewClient(string_value(configService.String("sentry.dns")), nil)
 	cacheService, _ := goredis.Dial(&goredis.DialConfig{Address: string_value(configService.String("cache.redis"))})
-
 	firebaseService := new(firebase.Client)
 	firebaseService.Init(string_value(configService.String("firebase.url")), string_value(configService.String("firebase.secret")), nil)
+	gamingService := new(handle.GamingAPI)
 
 	// Amazon services for the DI
 	amazonAuth, err := aws.GetAuth(string_value(configService.String("amazon.access_key")), string_value(configService.String("amazon.secret")))
@@ -86,6 +82,7 @@ func main() {
 		&inject.Object{Value: s3BucketService, Complete: true},
 		&inject.Object{Value: firebaseService, Complete: true},
 		&inject.Object{Value: statsService, Complete: true},
+		&inject.Object{Value: gamingService, Complete: false},
 		&inject.Object{Value: &collector},
 		&inject.Object{Value: &errors},
 		&inject.Object{Value: &posts},
@@ -110,8 +107,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Channel to send the socket messages
-	zmq_messages = make(chan string)
+	// After DI populate initializations
+	gamingService.Init()
 
 	// Start gin classic middlewares
 	router := gin.Default()
@@ -200,19 +197,14 @@ func main() {
 		port = "3000"
 	}
 
-	// Wait for zmq messages to send to the socket server
-	go func(zmq_messages chan string) {
+	// Start the jobs
+	c := cron.New()
 
-		for {
-			select {
-			case _ = <-zmq_messages:
+	// Reset the user temporal stuff each X
+	c.AddFunc("@midnight", gamingService.ResetTempStuff)
 
-				// Send to the socket
-				//socket.Send(message, 0)
-				//socket.Recv(0)
-			}
-		}
-	}(zmq_messages)
+	// Start the jobs
+	c.Start()
 
 	router.Run(":" + port)
 }

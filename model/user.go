@@ -22,6 +22,7 @@ type User struct {
 	Facebook      interface{}            `bson:"facebook,omitempty" json:"facebook,omitempty"`
 	Notifications interface{}            `bson:"notifications,omitempty" json:"notifications,omitempty"`
 	Profile       map[string]interface{} `bson:"profile,omitempty" json:"profile,omitempty"`
+	Gaming        UserGaming             `bson:"gaming,omitempty" json:"gaming,omitempty"`
 	Stats         UserStats              `bson:"stats,omitempty" json:"stats,omitempty"`
 	Version       string                 `bson:"version,omitempty" json:"version,omitempty"`
 	Created       time.Time              `bson:"created_at" json:"created_at"`
@@ -30,6 +31,14 @@ type User struct {
 
 type UserStats struct {
 	Saw int `bson:"saw,omitempty" json:"saw,omitempty"`
+}
+
+type UserGaming struct {
+	Swords  int `bson:"swords" json:"swords"`
+	Tribute int `bson:"tribute" json:"tribute"`
+	Shit    int `bson:"shit" json:"shit"`
+	Coins   int `bson:"coins" json:"coins"`
+	Level   int `bson:"level" json:"level"`
 }
 
 type UserToken struct {
