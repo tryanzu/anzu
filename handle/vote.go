@@ -245,6 +245,9 @@ func (di *VoteAPI) VoteComment(c *gin.Context) {
 
             err = database.C("votes").Find(bson.M{"type": "comment", "user_id": user_bson_id, "related_id": id, "nested_type": index}).One(&already_voted)
             
+            comment_index, _ := strconv.Atoi(index)
+            comment_ := post.Comments.Set[comment_index]
+            
             if err == nil {
                 
                 // Cannot allow to change a vote once 15 minutes have passed
@@ -278,14 +281,12 @@ func (di *VoteAPI) VoteComment(c *gin.Context) {
                 err = collection.Update(bson.M{"_id": post.Id}, change)
 
                 if err != nil {
-
                     panic(err)
                 }
 
                 err = database.C("votes").RemoveId(already_voted.Id)
 
                 if err != nil {
-
                     panic(err)
                 }
                 
@@ -294,9 +295,23 @@ func (di *VoteAPI) VoteComment(c *gin.Context) {
                     
                     go di.Gaming.Related(user_bson_id).RelatedUser(user).Tribute(1)
                     
+                    if comment_.Votes.Up - 1 < 5 {
+                        
+                        go di.Gaming.Related(comment_.UserId).Swords(-1)  
+                    }
+                    
+                    go di.Gaming.Related(comment_.UserId).Coins(-1)  
+                    
                 } else if already_voted.Value == -1 {
                     
-                    go di.Gaming.Related(user_bson_id).RelatedUser(user).Shit(1)   
+                    go di.Gaming.Related(user_bson_id).RelatedUser(user).Shit(1)
+                    
+                    if comment_.Votes.Down - 1 < 5 {
+                        
+                        go di.Gaming.Related(comment_.UserId).Swords(1)  
+                    }
+                    
+                    go di.Gaming.Related(comment_.UserId).Coins(1)  
                 }
                 
 
@@ -348,10 +363,6 @@ func (di *VoteAPI) VoteComment(c *gin.Context) {
             
             err = database.C("votes").Insert(vote)
 
-            comment_index, _ := strconv.Atoi(index)
-            comment_ := post.Comments.Set[comment_index]
-            
-
             // Remove the spend of tribute or shit when giving the vote to the comment (only if comment's user is not the same as the vote's user)
             if comment_.UserId != user_bson_id {
                 
@@ -362,8 +373,10 @@ func (di *VoteAPI) VoteComment(c *gin.Context) {
                     // Remove the swords to the author of the comment
                     if post.Votes.Down <= 5 {
                         
-                        go di.Gaming.Related(post.UserId).Swords(-1)
+                        go di.Gaming.Related(comment_.UserId).Swords(-1)
                     }
+                    
+                    go di.Gaming.Related(comment_.UserId).Coins(-1)
                     
                 } else {
                     
@@ -372,10 +385,10 @@ func (di *VoteAPI) VoteComment(c *gin.Context) {
                     // Give the swords to the author of the comment
                     if post.Votes.Up <= 5 {
                  
-                        go di.Gaming.Related(post.UserId).Swords(1)
+                        go di.Gaming.Related(comment_.UserId).Swords(1)
                     }
                     
-                    go di.Gaming.Related(post.UserId).Coins(1)
+                    go di.Gaming.Related(comment_.UserId).Coins(1)
                 }
             }
             

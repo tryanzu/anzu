@@ -122,12 +122,34 @@ func (di *GamingAPI) Related(user_id bson.ObjectId) *GamingUserAPI {
 }
 
 func (di *GamingUserAPI) syncFirebase(data model.UserGaming) {
-
+	
+	// Recover from any panic even inside this goroutine
+	defer di.Services.Errors.Recover()
+	
 	// Get the user path from firebase
 	userPath := "users/" + di.UserId.Hex()
 
 	// Update the gaming part
 	di.Services.Firebase.Set(userPath+"/gaming", data, nil)
+}
+
+func (di *GamingUserAPI) getUserIfNeeded() {
+	
+	// Recover from any panic even inside this goroutine
+	defer di.Services.Errors.Recover()
+	
+	if di.User.UserName == "" {
+		
+		// Get the database interface from the DI
+		database := di.Services.DataService.Database
+	
+		// Get the user to sync
+		err := database.C("users").Find(bson.M{"_id": di.UserId}).One(&di.User)
+		
+		if err != nil {
+			panic(err)
+		}
+	}
 }
 
 func (di *GamingUserAPI) ExploreRules(reset bool) {
@@ -138,12 +160,10 @@ func (di *GamingUserAPI) ExploreRules(reset bool) {
 	database := di.Services.DataService.Database
 	rules := di.Services.Rules.Rules
 
-	// Get the user to sync
-	err := database.C("users").Find(bson.M{"_id": di.UserId}).One(&user)
-
-	if err != nil {
-		return
-	}
+	// Get the user if we dont have the reference to it
+	di.getUserIfNeeded()
+	
+	user = di.User
 
 	// How many swords the user has
 	user_swords := user.Gaming.Swords
@@ -168,13 +188,13 @@ func (di *GamingUserAPI) ExploreRules(reset bool) {
 				user.Gaming.Level = rule.Level
 				user.Gaming.Shit = rule.Shit
 				user.Gaming.Tribute = rule.Tribute
-
-				di.syncFirebase(user.Gaming)
 			}
 
 			break
 		}
 	}
+	
+	di.syncFirebase(user.Gaming)
 }
 
 func (di *GamingUserAPI) Did(event string) *GamingUserAPI {
@@ -240,6 +260,10 @@ func (di *GamingUserAPI) Coins(how_many int) *GamingUserAPI {
 		panic(err)	
 	}
 	
+	// Check for level changes and stuff
+	di.getUserIfNeeded()
+	di.syncFirebase(di.User.Gaming)
+	
 	return di
 }
 
@@ -247,6 +271,8 @@ func (di *GamingUserAPI) Tribute(how_many int) *GamingUserAPI {
 	
 	// Recover from any panic even inside this goroutine
 	defer di.Services.Errors.Recover()
+	
+	di.getUserIfNeeded()
 	
 	// Get the database interface from the DI
 	database := di.Services.DataService.Database
@@ -271,6 +297,8 @@ func (di *GamingUserAPI) Shit(how_many int) *GamingUserAPI {
 	
 	// Recover from any panic even inside this goroutine
 	defer di.Services.Errors.Recover()
+	
+	di.getUserIfNeeded()
 	
 	// Get the database interface from the DI
 	database := di.Services.DataService.Database
