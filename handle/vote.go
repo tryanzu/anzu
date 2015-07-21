@@ -12,7 +12,8 @@ import (
 )
 
 type VoteAPI struct {
-    Data *mongo.Service `inject:""`
+    Data        *mongo.Service `inject:""`
+	Gaming      *GamingAPI       `inject:""`
 }
 
 func (di *VoteAPI) VoteComponent(c *gin.Context) {
@@ -215,68 +216,65 @@ func (di *VoteAPI) VoteComment(c *gin.Context) {
 
     if c.BindWith(&vote, binding.JSON) == nil {
 
-        // Get the post using the slug
+        // Get the post using the id
         id := bson.ObjectIdHex(id)
         collection := database.C("posts")
 
         var post model.Post
         err := collection.FindId(id).One(&post)
-
+        
         if err != nil {
+            panic(err)
+        }
+        
+        // Get the author of the vote
+        var user model.User
+        err = database.C("users").FindId(user_bson_id).One(&user)
+        
+        if err != nil {
+            panic(err)
+        }
+    
+        index := vote.Comment
 
-            // No guest can vote
-            c.JSON(404, gin.H{"error": "No post found...", "status": 605})
+        if _, err := strconv.Atoi(index); err == nil {
+            
+            var add bytes.Buffer
+            var already_voted model.Vote
+            var vote_value int
 
-            return
-        } else {
-
-            index := vote.Comment
-
-            if _, err := strconv.Atoi(index); err == nil {
-
-                var add bytes.Buffer
-
-                // Make the push string
-                add.WriteString("comments.set.")
-                add.WriteString(index)
-                add.WriteString(".votes.up")
-
-                inc := add.String()
-
-                var already_voted model.Vote
-
-                err = database.C("votes").Find(bson.M{"type": "comment", "user_id": user_bson_id, "related_id": id, "nested_type": index}).One(&already_voted)
-
-                if err == nil {
-
-                    var rem bytes.Buffer
-
-                    // Make the push string
-                    rem.WriteString("comments.set.")
-                    rem.WriteString(index)
-                    rem.WriteString(".votes.up")
-                    ctc := rem.String()
-
-                    change := bson.M{"$inc": bson.M{ctc: -1}}
-                    err = collection.Update(bson.M{"_id": post.Id}, change)
-
-                    if err != nil {
-
-                        panic(err)
-                    }
-
-                    err = database.C("votes").RemoveId(already_voted.Id)
-
-                    if err != nil {
-
-                        panic(err)
-                    }
-
-                    c.JSON(200, gin.H{"message": "okay", "status": 609})
+            err = database.C("votes").Find(bson.M{"type": "comment", "user_id": user_bson_id, "related_id": id, "nested_type": index}).One(&already_voted)
+            
+            if err == nil {
+                
+                // Cannot allow to change a vote once 15 minutes have passed
+                if time.Since(already_voted.Created) > time.Minute * 15 {
+                    
+                    c.JSON(400, gin.H{"message": "Cannot allow vote changes after 15 minutes.", "status": "error"})
+            
                     return
                 }
+                
+                var rem bytes.Buffer
 
-                change := bson.M{"$inc": bson.M{inc: 1}}
+                // Remove the vote from the comment using $inc 
+                rem.WriteString("comments.set.")
+                rem.WriteString(index)
+                
+                if already_voted.Value == 1 {
+                    
+                    rem.WriteString(".votes.up")
+                }
+                
+                if already_voted.Value == -1 {
+                  
+                    rem.WriteString(".votes.down")
+                }
+                
+                // Comment-To-Change
+                ctc := rem.String()
+
+                change := bson.M{"$inc": bson.M{ctc: -1}}
                 err = collection.Update(bson.M{"_id": post.Id}, change)
 
                 if err != nil {
@@ -284,48 +282,131 @@ func (di *VoteAPI) VoteComment(c *gin.Context) {
                     panic(err)
                 }
 
-                vote := &model.Vote{
-                    UserId:     user_bson_id,
-                    Type:       "comment",
-                    NestedType: index,
-                    RelatedId:  id,
-                    Value:      1,
-                    Created:    time.Now(),
+                err = database.C("votes").RemoveId(already_voted.Id)
+
+                if err != nil {
+
+                    panic(err)
                 }
-                err = database.C("votes").Insert(vote)
+                
+                // Return the gamification points
+                if already_voted.Value == 1 {
+                    
+                    go di.Gaming.Related(user_bson_id).RelatedUser(user).Tribute(1)
+                    
+                } else if already_voted.Value == -1 {
+                    
+                    go di.Gaming.Related(user_bson_id).RelatedUser(user).Shit(1)   
+                }
+                
 
-                comment_index, _ := strconv.Atoi(index)
-                comment_ := post.Comments.Set[comment_index]
-
-                // Notify the author of the comment
-                go func(comment model.Comment, token bson.ObjectId, post model.Post) {
-
-                    /*user_id := comment.UserId
-
-                      // Get the comment like author
-                      var user model.User
-
-                      database.C("users").Find(bson.M{"_id": token.UserId}).One(&user)
-
-                      if err == nil {
-
-                          // Gravatar url
-                          emailHash := gravatar.EmailHash(user.Email)
-                          image := gravatar.GetAvatarURL("http", emailHash, "http://spartangeek.com/images/default-avatar.png", 80)
-
-                          // Construct the notification message
-                          title := fmt.Sprintf("A **%s** le gusta tu comentario.", user.UserName)
-                          message := post.Title
-
-                          // We are inside an isolated routine, so we dont need to worry about the processing cost
-                          //notify(user_id, "like", post.Id, "/post/" + post.Slug, title, message, image.String())
-                      }*/
-
-                }(comment_, user_bson_id, post)
-
-                c.JSON(200, gin.H{"message": "okay", "status": 606})
+                c.JSON(200, gin.H{"status": "okay"})
                 return
             }
+            
+            // Check if has enough tribute or shit to give    
+            if (vote.Direction == "up" && user.Gaming.Tribute < 1) || (vote.Direction == "down" && user.Gaming.Shit < 1) {
+                    
+                c.JSON(400, gin.H{"message": "Dont have enough gaming points to do this.", "status": "error"})
+                
+                return
+            }
+            
+            // Make the push string
+            add.WriteString("comments.set.")
+            add.WriteString(index)
+            
+            if vote.Direction == "up" {
+                
+                vote_value = 1
+                add.WriteString(".votes.up")
+            }
+            
+            if vote.Direction == "down" {
+              
+                vote_value = -1
+                add.WriteString(".votes.down")
+            }
+
+            inc := add.String()
+            
+            change := bson.M{"$inc": bson.M{inc: 1}}
+            err = collection.Update(bson.M{"_id": post.Id}, change)
+
+            if err != nil {
+                panic(err)
+            }
+
+            vote := &model.Vote{
+                UserId:     user_bson_id,
+                Type:       "comment",
+                NestedType: index,
+                RelatedId:  id,
+                Value:      vote_value,
+                Created:    time.Now(),
+            }
+            
+            err = database.C("votes").Insert(vote)
+
+            comment_index, _ := strconv.Atoi(index)
+            comment_ := post.Comments.Set[comment_index]
+            
+
+            // Remove the spend of tribute or shit when giving the vote to the comment (only if comment's user is not the same as the vote's user)
+            if comment_.UserId != user_bson_id {
+                
+                if vote_value == -1 {
+                 
+                    go di.Gaming.Related(user_bson_id).RelatedUser(user).Shit(-1)  
+                    
+                    // Remove the swords to the author of the comment
+                    if post.Votes.Down <= 5 {
+                        
+                        go di.Gaming.Related(post.UserId).Swords(-1)
+                    }
+                    
+                } else {
+                    
+                    go di.Gaming.Related(user_bson_id).RelatedUser(user).Tribute(-1)     
+                    
+                    // Give the swords to the author of the comment
+                    if post.Votes.Up <= 5 {
+                 
+                        go di.Gaming.Related(post.UserId).Swords(1)
+                    }
+                    
+                    go di.Gaming.Related(post.UserId).Coins(1)
+                }
+            }
+            
+            // Notify the author of the comment
+            go func(comment model.Comment, token bson.ObjectId, post model.Post) {
+
+                /*user_id := comment.UserId
+
+                  // Get the comment like author
+                  var user model.User
+
+                  database.C("users").Find(bson.M{"_id": token.UserId}).One(&user)
+
+                  if err == nil {
+
+                      // Gravatar url
+                      emailHash := gravatar.EmailHash(user.Email)
+                      image := gravatar.GetAvatarURL("http", emailHash, "http://spartangeek.com/images/default-avatar.png", 80)
+
+                      // Construct the notification message
+                      title := fmt.Sprintf("A **%s** le gusta tu comentario.", user.UserName)
+                      message := post.Title
+
+                      // We are inside an isolated routine, so we dont need to worry about the processing cost
+                      //notify(user_id, "like", post.Id, "/post/" + post.Slug, title, message, image.String())
+                  }*/
+
+            }(comment_, user_bson_id, post)
+
+            c.JSON(200, gin.H{"status": "okay"})
+            return
         }
     }
 

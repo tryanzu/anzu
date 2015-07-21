@@ -31,6 +31,7 @@ type PostAPI struct {
 	Errors 		ErrorAPI 		`inject:"inline"`
 	S3Bucket    *s3.Bucket 		`inject:""`
 	Firebase    *firebase.Client `inject:""`
+	Gaming      *GamingAPI       `inject:""`
 }
 
 /**
@@ -585,12 +586,16 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 					// Download the asset on other routine in order to non block the API request
 					go di.downloadAssetFromUrl(asset, publish.Id)
 				}
+				
+				// Add the gamification contribution
+				go di.Gaming.Related(bson_id).Did("publish")
 
 				// Add a counter for the category
 				di.addUserCategoryCounter("recommendations")
 
 				// Sync everyone's feed
 				go di.syncUsersFeed(publish)
+				
 
 				// Finished creating the post
 				c.JSON(200, gin.H{"status": "okay", "code": 200})
@@ -637,7 +642,7 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 			}
 
 			err := database.C("posts").Insert(publish)
-
+		
 			if err != nil {
 				panic(err)
 			}
@@ -647,6 +652,9 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 				// Download the asset on other routine in order to non block the API request
 				go di.downloadAssetFromUrl(asset, publish.Id)
 			}
+			
+			// Add the gamification contribution
+			go di.Gaming.Related(bson_id).Did("publish")
 
 			// Add a counter for the category
 			di.addUserCategoryCounter(post.Tag)

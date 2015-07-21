@@ -24,6 +24,7 @@ type GamingAPI struct {
 type GamingUserAPI struct {
 	Services *GamingAPI
 	UserId   bson.ObjectId
+	User     model.User
 }
 
 func (di *GamingAPI) Init() {
@@ -181,11 +182,7 @@ func (di *GamingUserAPI) Did(event string) *GamingUserAPI {
 	// Recover from any panic even inside this goroutine
 	defer di.Services.Errors.Recover()
 
-	var swords int
-
-	// Get the database interface from the DI
-	database := di.Services.DataService.Database
-	swords = 0
+	swords := 0
 
 	// Usually the events are translated to swords in the gaming API
 	if event == "comment" {
@@ -195,15 +192,101 @@ func (di *GamingUserAPI) Did(event string) *GamingUserAPI {
 
 		swords = swords + 1
 	}
+	
+	// Update the user swords async
+	di.Swords(swords)
 
-	err := database.C("users").Update(bson.M{"_id": di.UserId}, bson.M{"$inc": bson.M{"gaming.swords": swords}})
+	return di
+}
 
+func (di *GamingUserAPI) RelatedUser(user model.User) *GamingUserAPI {
+	
+	di.User = user
+
+	return di
+}
+
+func (di *GamingUserAPI) Swords(how_many int) *GamingUserAPI {
+	
+	// Recover from any panic even inside this goroutine
+	defer di.Services.Errors.Recover()
+	
+	// Get the database interface from the DI
+	database := di.Services.DataService.Database
+	
+	err := database.C("users").Update(bson.M{"_id": di.UserId}, bson.M{"$inc": bson.M{"gaming.swords": how_many}})
+	
 	if err != nil {
-		panic(err)
+		panic(err)	
 	}
 
 	// Check for level changes and stuff
 	di.ExploreRules(false)
+	
+	return di
+}
 
+func (di *GamingUserAPI) Coins(how_many int) *GamingUserAPI {
+	
+	// Recover from any panic even inside this goroutine
+	defer di.Services.Errors.Recover()
+	
+	// Get the database interface from the DI
+	database := di.Services.DataService.Database
+	
+	err := database.C("users").Update(bson.M{"_id": di.UserId}, bson.M{"$inc": bson.M{"gaming.coins": how_many}})
+	
+	if err != nil {
+		panic(err)	
+	}
+	
+	return di
+}
+
+func (di *GamingUserAPI) Tribute(how_many int) *GamingUserAPI {
+	
+	// Recover from any panic even inside this goroutine
+	defer di.Services.Errors.Recover()
+	
+	// Get the database interface from the DI
+	database := di.Services.DataService.Database
+	
+	// Increment or decrement the temporal structure
+	di.User.Gaming.Tribute = di.User.Gaming.Tribute + how_many
+	
+	// Sync the database
+	err := database.C("users").Update(bson.M{"_id": di.User.Id}, bson.M{"$inc": bson.M{"gaming.tribute": how_many}})
+	
+	if err != nil {
+		panic(err)	
+	}
+	
+	// Sync firebase though
+	di.syncFirebase(di.User.Gaming)
+	
+	return di
+}
+
+func (di *GamingUserAPI) Shit(how_many int) *GamingUserAPI {
+	
+	// Recover from any panic even inside this goroutine
+	defer di.Services.Errors.Recover()
+	
+	// Get the database interface from the DI
+	database := di.Services.DataService.Database
+	
+	// Increment or decrement the temporal structure
+	di.User.Gaming.Shit = di.User.Gaming.Shit + how_many
+	
+	// Sync the database
+	err := database.C("users").Update(bson.M{"_id": di.User.Id}, bson.M{"$inc": bson.M{"gaming.shit": how_many}})
+	
+	if err != nil {
+		panic(err)	
+	}
+	
+	// Sync firebase though
+	di.syncFirebase(di.User.Gaming)
+	
 	return di
 }
