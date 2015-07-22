@@ -314,7 +314,6 @@ func (di *VoteAPI) VoteComment(c *gin.Context) {
                     go di.Gaming.Related(comment_.UserId).Coins(1)  
                 }
                 
-
                 c.JSON(200, gin.H{"status": "okay"})
                 return
             }

@@ -131,7 +131,10 @@ func main() {
 	v1.Use(middlewares.Authorization())
 	{
 		v1.POST("/subscribe", users.UserSubscribe)
-
+		
+		// Gamification routes
+		v1.GET("/gamification", gamingService.GetRules)
+		
 		// Post routes
 		v1.GET("/feed", posts.FeedGet)
 		v1.GET("/post", posts.FeedGet)

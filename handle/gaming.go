@@ -5,6 +5,7 @@ import (
 	"github.com/cosn/firebase"
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
+	"github.com/gin-gonic/gin"
 	"github.com/olebedev/config"
 	"github.com/xuyu/goredis"
 	"gopkg.in/mgo.v2/bson"
@@ -62,6 +63,12 @@ func (di *GamingAPI) Init() {
 			panic(err)
 		}
 	}
+}
+
+func (di *GamingAPI) GetRules(c *gin.Context) {
+	
+	// Just return the previously loaded rules	
+	c.JSON(200, di.Rules)	
 }
 
 func (di *GamingAPI) ResetTempStuff() {
