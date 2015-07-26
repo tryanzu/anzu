@@ -7,3 +7,4 @@ Procfile
 manifest.yml
 Godeps
 test/
+.c9/

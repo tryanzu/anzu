@@ -92,7 +92,7 @@ func (di *GamingAPI) ResetTempStuff() {
 
 		for j := range jobs {
 
-			log.Printf("[job] [ResetTempStuff] [worker %v] User: %s\n", id, user.Id.Hex())
+			log.Printf("[job] [ResetTempStuff] [worker %v] User: %s\n", id, j.Id.Hex())
 
 			// Explore the user level and reset the stuff
 			di.Related(j.Id).ExploreRules(true)

@@ -525,7 +525,7 @@ func (di *VoteAPI) VotePost(c *gin.Context) {
                     go di.Gaming.Related(post.UserId).Swords(-1)  
                 }
                 
-                go di.Gaming.Related(post.UserId).Coins(-1)  
+                go di.Gaming.Related(post.UserId).Coins(-2)  
                 
             } else if already_voted.Value == -1 {
                 
@@ -536,7 +536,7 @@ func (di *VoteAPI) VotePost(c *gin.Context) {
                     go di.Gaming.Related(post.UserId).Swords(1)  
                 }
                 
-                go di.Gaming.Related(post.UserId).Coins(2)  
+                go di.Gaming.Related(post.UserId).Coins(1)  
             }
             
             c.JSON(200, gin.H{"status": "okay"})
@@ -610,7 +610,7 @@ func (di *VoteAPI) VotePost(c *gin.Context) {
                     go di.Gaming.Related(post.UserId).Swords(1)
                 }
                 
-                go di.Gaming.Related(post.UserId).Coins(1)
+                go di.Gaming.Related(post.UserId).Coins(2)
             }
         }
         
