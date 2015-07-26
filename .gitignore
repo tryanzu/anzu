@@ -3,3 +3,7 @@ handle/ctrl
 blacker-osx
 dump.rdb
 env.json
+Procfile
+manifest.yml
+Godeps
+test/

@@ -376,8 +376,8 @@ func (di *PostAPI) PostsGetOne(c *gin.Context) {
 			for _, vote := range likes {
 
 				if vote.NestedType == strconv.Itoa(index) {
-
-					post.Comments.Set[index].Liked = true
+					
+					post.Comments.Set[index].Liked = vote.Value
 				}
 			}
 

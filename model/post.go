@@ -33,7 +33,7 @@ type Comment struct {
 	Votes    Votes         `bson:"votes" json:"votes"`
 	User     interface{}   `bson:"author,omitempty" json:"author,omitempty"`
 	Position int           `bson:"position,omitempty" json:"position"`
-	Liked    bool          `bson:"liked,omitempty" json:"liked,omitempty"`
+	Liked    int     	   `bson:"liked,omitempty" json:"liked,omitempty"`
 	Content  string        `bson:"content" json:"content"`
 	Created  time.Time     `bson:"created_at" json:"created_at"`
 }
