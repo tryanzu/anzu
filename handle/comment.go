@@ -263,7 +263,6 @@ func (di *CommentAPI) downloadAssetFromUrl(from string, post_id bson.ObjectId) e
 		err = di.S3Bucket.Put(path, data, dataType, s3.ACL("public-read"))
 
 		if err != nil {
-
 			panic(err)
 		}
 

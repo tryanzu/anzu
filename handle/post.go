@@ -308,6 +308,7 @@ func (di *PostAPI) PostsGetOne(c *gin.Context) {
 		// Look for votes that has been already given
 		var votes []model.Vote
 		var likes []model.Vote
+		var liked model.Vote
 
 		if signed_in {
 
@@ -315,7 +316,7 @@ func (di *PostAPI) PostsGetOne(c *gin.Context) {
 			user_bson_id := bson.ObjectIdHex(user_id.(string))
 
 			err = database.C("votes").Find(bson.M{"type": "component", "related_id": post.Id, "user_id": user_bson_id}).All(&votes)
-
+			
 			// Get the likes given by the current user
 			_ = database.C("votes").Find(bson.M{"type": "comment", "related_id": post.Id, "user_id": user_bson_id}).All(&likes)
 
@@ -331,6 +332,13 @@ func (di *PostAPI) PostsGetOne(c *gin.Context) {
 
 					post.Following = true
 				}
+			}
+			
+			err = database.C("votes").Find(bson.M{"type": "post", "related_id": post.Id, "user_id": user_bson_id}).One(&liked)
+			
+			if err == nil {
+				
+				post.Liked = liked.Value	
 			}
 
 			// Increase user saw posts and its gamification in another thread
