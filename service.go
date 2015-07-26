@@ -206,6 +206,7 @@ func main() {
 
 	// Reset the user temporal stuff each X
 	c.AddFunc("@midnight", gamingService.ResetTempStuff)
+	c.AddFunc("0 40 21 * * *", gamingService.ResetTempStuff)
 
 	// Start the jobs
 	c.Start()
