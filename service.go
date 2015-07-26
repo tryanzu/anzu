@@ -191,6 +191,7 @@ func main() {
 			// // Votes routes
 			v1.POST("/vote/comment/:id", votes.VoteComment)
 			v1.POST("/vote/component/:id", votes.VoteComponent)
+			v1.POST("/vote/post/:id", votes.VotePost)
 		}
 	}
 
