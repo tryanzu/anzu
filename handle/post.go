@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin/binding"
 	"github.com/kennygrant/sanitize"
 	"github.com/mitchellh/goamz/s3"
+	"github.com/olebedev/config"
 	"gopkg.in/mgo.v2/bson"
 	"github.com/cosn/firebase"
 	"math/rand"
@@ -26,12 +27,13 @@ import (
 )
 
 type PostAPI struct {
-	DataService *mongo.Service 	`inject:""`
-	Collector   CollectorAPI 	`inject:"inline"`
-	Errors 		ErrorAPI 		`inject:"inline"`
-	S3Bucket    *s3.Bucket 		`inject:""`
-	Firebase    *firebase.Client `inject:""`
-	Gaming      *GamingAPI       `inject:""`
+	DataService 	*mongo.Service 	`inject:""`
+	Collector   	CollectorAPI 	`inject:"inline"`
+	Errors 			ErrorAPI 		`inject:"inline"`
+	S3Bucket    	*s3.Bucket 		`inject:""`
+	Firebase    	*firebase.Client `inject:""`
+	Gaming      	*GamingAPI       `inject:""`
+	ConfigService 	*config.Config `inject:""`
 }
 
 /**
@@ -452,7 +454,7 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 
 	// Get the database interface from the DI
 	database := di.DataService.Database
-
+	
 	// Check for user token
 	user_id, _ := c.Get("user_id")
 	bson_id := bson.ObjectIdHex(user_id.(string))
@@ -708,7 +710,13 @@ func (di *PostAPI) downloadAssetFromUrl(from string, post_id bson.ObjectId) erro
 
 	// Get the database interface from the DI
 	database := di.DataService.Database
+	amazon_url, err := di.ConfigService.String("amazon.url")
+	
+	if err != nil {
+		panic(err)
+	}
 
+	
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
@@ -771,7 +779,7 @@ func (di *PostAPI) downloadAssetFromUrl(from string, post_id bson.ObjectId) erro
 			// Replace the url on the comment
 			if strings.Contains(post_content, from) {
 
-                content := strings.Replace(post_content, from, "http://s3-us-west-1.amazonaws.com/spartan-board/" + path, -1)
+                content := strings.Replace(post_content, from, amazon_url + path, -1)
 
                 // Update the comment
                 di.DataService.Database.C("posts").Update(bson.M{"_id": post_id}, bson.M{"$set": bson.M{"content": content}})

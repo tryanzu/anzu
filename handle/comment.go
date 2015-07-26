@@ -13,6 +13,7 @@ import (
 	"github.com/gin-gonic/gin/binding"
 	"github.com/kennygrant/sanitize"
 	"github.com/mitchellh/goamz/s3"
+	"github.com/olebedev/config"
 	"gopkg.in/mgo.v2/bson"
 	"io/ioutil"
 	"net/http"
@@ -25,11 +26,12 @@ import (
 )
 
 type CommentAPI struct {
-	DataService *mongo.Service   `inject:""`
-	Firebase    *firebase.Client `inject:""`
-	S3Bucket    *s3.Bucket       `inject:""`
-	Gaming      *GamingAPI       `inject:""`
-	Errors      ErrorAPI         `inject:"inline"`
+	DataService 	*mongo.Service   `inject:""`
+	Firebase    	*firebase.Client `inject:""`
+	ConfigService 	*config.Config `inject:""`
+	S3Bucket    	*s3.Bucket       `inject:""`
+	Gaming      	*GamingAPI       `inject:""`
+	Errors      	ErrorAPI         `inject:"inline"`
 }
 
 func (di *CommentAPI) CommentAdd(c *gin.Context) {
@@ -208,7 +210,12 @@ func (di *CommentAPI) downloadAssetFromUrl(from string, post_id bson.ObjectId) e
 
 	// Get the database interface from the DI
 	database := di.DataService.Database
-
+	amazon_url, err := di.ConfigService.String("amazon.url")
+	
+	if err != nil {
+		panic(err)	
+	}
+	
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
@@ -282,7 +289,7 @@ func (di *CommentAPI) downloadAssetFromUrl(from string, post_id bson.ObjectId) e
 
 					ctc := rem.String()
 
-					content := strings.Replace(comment, from, "http://s3-us-west-1.amazonaws.com/spartan-board/"+path, -1)
+					content := strings.Replace(comment, from, amazon_url + path, -1)
 
 					// Update the comment
 					di.DataService.Database.C("posts").Update(bson.M{"_id": post_id}, bson.M{"$set": bson.M{ctc: content}})
