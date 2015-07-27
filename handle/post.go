@@ -57,9 +57,10 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 	o := c.Query("offset")
 	l := c.Query("limit")
 	f := c.Query("category")
-	before := c.Query("before")
-	after := c.Query("after")
-	from_author  := c.Query("user_id")
+	before 			:= c.Query("before")
+	after 			:= c.Query("after")
+	from_author  	:= c.Query("user_id")
+	user_id, signed_in := c.Get("user_id")
 
 	// Check if offset has been specified
 	if o != "" {
@@ -91,13 +92,10 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 
 		search["categories"] = f
 
-		// Check for user token
-		user_token, signed_in := c.Get("user_id")
-
 		if signed_in {
 
 			// Reset the counter for the user
-			di.resetUserCategoryCounter(f, bson.ObjectIdHex(user_token.(string)))
+			di.resetUserCategoryCounter(f, bson.ObjectIdHex(user_id.(string)))
 		}
 	}
 
@@ -106,6 +104,15 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 		t, err := time.Parse(time.RFC3339Nano, after)
 
 		if err == nil {
+			
+			if signed_in {
+				
+				userPath := "users/" + user_id.(string)
+				userRef := di.Firebase.Child(userPath, nil, nil)
+
+				userRef.Set("pending", 0, nil)
+			}
+			
 			search["created_at"] = bson.M{"$lt": t}
 		}
 	}
@@ -160,9 +167,6 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 		list = append(list, post.Id)
 		authors = append(authors, post.UserId)
 	}
-
-	// Check for user token
-	user_id, signed_in := c.Get("user_id")
 
 	if signed_in {
 
