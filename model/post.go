@@ -80,6 +80,7 @@ type Post struct {
 	Following  bool            `bson:"following,omitempty" json:"following,omitempty"`
 	Pinned     bool            `bson:"pinned,omitempty" json:"pinned,omitempty"`
 	NoComments bool            `bson:"comments_blocked" json:"comments_blocked"`
+	IsQuestion bool            `bson:"is_question" json:"is_question"`
 	Liked      int     	   	   `bson:"liked,omitempty" json:"liked,omitempty"`
 	Created    time.Time       `bson:"created_at" json:"created_at"`
 	Updated    time.Time       `bson:"updated_at" json:"updated_at"`
@@ -109,6 +110,7 @@ type PostForm struct {
 	Moves      string                 `json:"moves"`
 	Software   string                 `json:"software"`
 	Tag        string                 `json:"tag"`
+	IsQuestion bool                   `json:"isquestion"`
 	Components map[string]interface{} `json:"components"`
 }
 

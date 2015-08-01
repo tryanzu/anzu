@@ -126,6 +126,33 @@
             "tribute": 100,
             "shit": 10,
             "coins": 1000
+        },
+        {
+            "level": 14,
+            "name": "Spartan God",
+            "swords_start": 17000,
+            "swords_end": 24999,
+            "tribute": 100,
+            "shit": 10,
+            "coins": 2000
+        },
+        {
+            "level": 15,
+            "name": "Spartan Addict",
+            "swords_start": 25000,
+            "swords_end": 34999,
+            "tribute": 100,
+            "shit": 20,
+            "coins": 3500
+        },
+        {
+            "level": 16,
+            "name": "Spartan Geek",
+            "swords_start": 35000,
+            "swords_end": 50000,
+            "tribute": 100,
+            "shit": 50,
+            "coins": 5000
         }
     ]
 }

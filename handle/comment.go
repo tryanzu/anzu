@@ -69,6 +69,12 @@ func (di *CommentAPI) CommentAdd(c *gin.Context) {
 			c.JSON(404, gin.H{"error": "Couldnt find the post", "status": 705})
 			return
 		}
+		
+		if post.NoComments == true {
+			
+			c.JSON(403, gin.H{"status": "error", "message": "Commnets now allowed at all."})
+			return	
+		}
 
 		votes := model.Votes{
 			Up:   0,
@@ -92,19 +98,25 @@ func (di *CommentAPI) CommentAdd(c *gin.Context) {
 		assets = urls.FindAllString(content, -1)
 
 		for _, asset := range assets {
-
+			
 			// Download the asset on other routine in order to non block the API request
 			go di.downloadAssetFromUrl(asset, post.Id)
 		}
 
 		var mentions_users []string
+		var mentions_done []string
 
 		mentions_users = mentions.FindAllString(content, -1)
 
 		for _, mention_user := range mentions_users {
-
-			go di.mentionUserComment(mention_user, post, user_bson_id)
-
+			
+			if done, _ := in_array(mention_user[1:], mentions_done); done == false { 
+				
+				go di.mentionUserComment(mention_user, post, user_bson_id)
+				
+				mentions_done = append(mentions_done, mention_user[1:])
+			}
+			
 			// Replace the mentioned user
 			markdown := "[" + mention_user + "](/u/" + mention_user[1:] + " \"" + mention_user[1:] + "\")"
 			comment.Content = strings.Replace(comment.Content, mention_user, markdown, -1)

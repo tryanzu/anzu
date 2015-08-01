@@ -543,6 +543,7 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 					Users:      users,
 					Categories: []string{"recommendations"},
 					Votes:      votes,
+					IsQuestion: post.IsQuestion,
 					Created:    time.Now(),
 					Updated:    time.Now(),
 				}
@@ -651,6 +652,7 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 				Users:      users,
 				Categories: []string{post.Tag},
 				Votes:      votes,
+				IsQuestion: post.IsQuestion,
 				Created:    time.Now(),
 				Updated:    time.Now(),
 			}
