@@ -6,6 +6,7 @@ import (
 	"github.com/cosn/firebase"
 	"github.com/facebookgo/inject"
 	"github.com/fernandez14/spartangeek-blacker/handle"
+	"github.com/fernandez14/spartangeek-blacker/modules/notifications"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/getsentry/raven-go"
 	"github.com/gin-gonic/gin"
@@ -45,6 +46,7 @@ func main() {
 	var collector handle.CollectorAPI
 	var sitemap handle.SitemapAPI
 	var errors handle.ErrorAPI
+	var notifications notifications.NotificationsModule
 
 	// Services for the DI
 	configService, _ := config.ParseJsonFile(envfile)
@@ -83,6 +85,7 @@ func main() {
 		&inject.Object{Value: firebaseService, Complete: true},
 		&inject.Object{Value: statsService, Complete: true},
 		&inject.Object{Value: gamingService, Complete: false},
+		&inject.Object{Value: &notifications},
 		&inject.Object{Value: &collector},
 		&inject.Object{Value: &errors},
 		&inject.Object{Value: &posts},

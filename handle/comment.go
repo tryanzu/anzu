@@ -8,6 +8,7 @@ import (
 	"github.com/cosn/firebase"
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
+	"github.com/fernandez14/spartangeek-blacker/modules/notifications"
 	"github.com/ftrvxmtrx/gravatar"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -26,12 +27,13 @@ import (
 )
 
 type CommentAPI struct {
-	DataService 	*mongo.Service   `inject:""`
-	Firebase    	*firebase.Client `inject:""`
-	ConfigService 	*config.Config `inject:""`
-	S3Bucket    	*s3.Bucket       `inject:""`
-	Gaming      	*GamingAPI       `inject:""`
-	Errors      	ErrorAPI         `inject:"inline"`
+	DataService 	*mongo.Service   					`inject:""`
+	Firebase    	*firebase.Client 					`inject:""`
+	ConfigService 	*config.Config 						`inject:""`
+	S3Bucket    	*s3.Bucket       					`inject:""`
+	Notifications  	*notifications.NotificationsModule	`inject:""`
+	Gaming      	*GamingAPI       					`inject:""`
+	Errors      	ErrorAPI         					`inject:"inline"`
 }
 
 func (di *CommentAPI) CommentAdd(c *gin.Context) {
@@ -91,7 +93,6 @@ func (di *CommentAPI) CommentAdd(c *gin.Context) {
 		}
 
 		urls, _ := regexp.Compile(`http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+`)
-		mentions, _ := regexp.Compile(`(?i)\B\@([\w\-]+)`)
 
 		var assets []string
 
@@ -103,25 +104,6 @@ func (di *CommentAPI) CommentAdd(c *gin.Context) {
 			go di.downloadAssetFromUrl(asset, post.Id)
 		}
 
-		var mentions_users []string
-		var mentions_done []string
-
-		mentions_users = mentions.FindAllString(content, -1)
-
-		for _, mention_user := range mentions_users {
-			
-			if done, _ := in_array(mention_user[1:], mentions_done); done == false { 
-				
-				go di.mentionUserComment(mention_user, post, user_bson_id)
-				
-				mentions_done = append(mentions_done, mention_user[1:])
-			}
-			
-			// Replace the mentioned user
-			markdown := "[" + mention_user + "](/u/" + mention_user[1:] + " \"" + mention_user[1:] + "\")"
-			comment.Content = strings.Replace(comment.Content, mention_user, markdown, -1)
-		}
-
 		// Update the post and push the comments
 		change := bson.M{"$push": bson.M{"comments.set": comment}, "$set": bson.M{"updated_at": time.Now()}, "$inc": bson.M{"comments.count": 1}}
 		err = collection.Update(bson.M{"_id": post.Id}, change)
@@ -129,7 +111,17 @@ func (di *CommentAPI) CommentAdd(c *gin.Context) {
 		if err != nil {
 			panic(err)
 		}
-
+		
+		// Process the mentions. TODO - Determine race conditions
+		go di.Notifications.ParseContentMentions(notifications.MentionParseObject{
+			Type: "comment",
+			RelatedNested: strconv.Itoa(post.Comments.Count),
+			Content: comment.Content,
+			Title: post.Title,
+			Author: user_bson_id,
+			Post: post,
+		})
+		
 		// Check if we need to add participant
 		users := post.Users
 		need_add := true
@@ -163,7 +155,7 @@ func (di *CommentAPI) CommentAdd(c *gin.Context) {
 			go di.Gaming.Related(user_bson_id).Did("comment")
 		}
 
-		c.JSON(200, gin.H{"message": "okay", "status": 706})
+		c.JSON(200, gin.H{"status": "okay"})
 		return
 	}
 
@@ -312,65 +304,4 @@ func (di *CommentAPI) downloadAssetFromUrl(from string, post_id bson.ObjectId) e
 	response.Body.Close()
 
 	return nil
-}
-
-func (di *CommentAPI) mentionUserComment(mentioned string, post model.Post, user_id bson.ObjectId) {
-
-	// Recover from any panic even inside this goroutine
-	defer di.Errors.Recover()
-
-	// Get the comment author
-	var user model.User
-	var author model.User
-	var notifications model.UserFirebaseNotifications
-
-	// Get the author user
-	err := di.DataService.Database.C("users").Find(bson.M{"_id": user_id}).One(&author)
-
-	if err != nil {
-		return
-	}
-
-	// Get the mentioned user
-	username := mentioned[1:]
-	err = di.DataService.Database.C("users").Find(bson.M{"username": username}).One(&user)
-
-	// Do not notify mentions for te author of the post (already notified by the notifyCommentPostAuth)
-	if user.Id == post.UserId {
-
-		return
-	}
-
-	if err == nil {
-
-		// Gravatar url
-		emailHash := gravatar.EmailHash(user.Email)
-		image := gravatar.GetAvatarURL("http", emailHash, "http://spartangeek.com/images/default-avatar.png", 80)
-
-		// Construct the notification message
-		title := fmt.Sprintf("**%s** te mencionó en un comentario", author.UserName)
-		message := post.Title
-
-		// Process notification using firebase
-		userPath := "users/" + user.Id.Hex() + "/notifications"
-		userRef := di.Firebase.Child(userPath, nil, &notifications)
-
-		userRef.Set("count", notifications.Count+1, nil)
-
-		notification := &model.UserFirebaseNotification{
-			UserId:       user_id,
-			RelatedId:    post.Id,
-			RelatedExtra: post.Slug,
-			Position:     post.Comments.Count,
-			Title:        title,
-			Text:         message,
-			Related:      "mention",
-			Seen:         false,
-			Image:        image.String(),
-			Created:      time.Now(),
-			Updated:      time.Now(),
-		}
-
-		userRef.Child("list", nil, nil).Push(notification, nil)
-	}
 }

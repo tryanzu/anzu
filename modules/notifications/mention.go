@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func (di *NotificationsModule) parseContentMentions(obj MentionParseObject) {
+func (di *NotificationsModule) ParseContentMentions(obj MentionParseObject) {
     
     var mention_users, mentions_done []string
     var content string
@@ -58,10 +58,10 @@ func (di *NotificationsModule) parseContentMentions(obj MentionParseObject) {
             }
             
             // Replace the mention in the content so it can be a link to the profile
-            link = `<a class="user-profile" data-id="`+target_user.Id.Hex()+`">`+target_username+`</a>`
+            link = `<a class="user-profile" data-id="`+target_user.Id.Hex()+`">@`+target_username+`</a>`
             content = strings.Replace(content, user, link, -1)
             
-            title = fmt.Sprintf(titles[obj.Type], target_user.UserName)
+            title = fmt.Sprintf(titles[obj.Type], author.UserName)
             message = obj.Title
             
             target_path = "users/" + target_user.Id.Hex() + "/notifications"
