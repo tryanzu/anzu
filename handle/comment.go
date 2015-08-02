@@ -8,6 +8,7 @@ import (
 	"github.com/cosn/firebase"
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
+	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/notifications"
 	"github.com/ftrvxmtrx/gravatar"
 	"github.com/gin-gonic/gin"
@@ -32,8 +33,8 @@ type CommentAPI struct {
 	ConfigService 	*config.Config 						`inject:""`
 	S3Bucket    	*s3.Bucket       					`inject:""`
 	Notifications  	*notifications.NotificationsModule	`inject:""`
+	Errors      	*exceptions.ExceptionsModule		`inject:""`
 	Gaming      	*GamingAPI       					`inject:""`
-	Errors      	ErrorAPI         					`inject:"inline"`
 }
 
 func (di *CommentAPI) CommentAdd(c *gin.Context) {

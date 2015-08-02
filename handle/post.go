@@ -3,6 +3,7 @@ package handle
 import (
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
+	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/kennygrant/sanitize"
@@ -27,13 +28,13 @@ import (
 )
 
 type PostAPI struct {
-	DataService 	*mongo.Service 	`inject:""`
-	Collector   	CollectorAPI 	`inject:"inline"`
-	Errors 			ErrorAPI 		`inject:"inline"`
-	S3Bucket    	*s3.Bucket 		`inject:""`
-	Firebase    	*firebase.Client `inject:""`
-	Gaming      	*GamingAPI       `inject:""`
-	ConfigService 	*config.Config `inject:""`
+	DataService 	*mongo.Service 					`inject:""`
+	Collector   	CollectorAPI 					`inject:"inline"`
+	Errors      	*exceptions.ExceptionsModule	`inject:""`
+	S3Bucket    	*s3.Bucket 						`inject:""`
+	Firebase    	*firebase.Client 				`inject:""`
+	Gaming      	*GamingAPI       				`inject:""`
+	ConfigService 	*config.Config 					`inject:""`
 }
 
 /**

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/cosn/firebase"
 	"github.com/fernandez14/spartangeek-blacker/model"
+	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/gin-gonic/gin"
 	"github.com/olebedev/config"
@@ -18,7 +19,7 @@ type GamingAPI struct {
 	CacheService  *goredis.Redis   `inject:""`
 	ConfigService *config.Config   `inject:""`
 	Firebase      *firebase.Client `inject:""`
-	Errors        ErrorAPI         `inject:"inline"`
+	Errors        *exceptions.ExceptionsModule `inject:""`
 	Rules         *model.GamingRules
 }
 

@@ -12,6 +12,9 @@ import (
 
 func (di *NotificationsModule) ParseContentMentions(obj MentionParseObject) {
     
+    // Recover from any panic even inside this isolated process 
+    defer di.Errors.Recover()
+    
     var mention_users, mentions_done []string
     var content string
     var author model.User
@@ -66,7 +69,7 @@ func (di *NotificationsModule) ParseContentMentions(obj MentionParseObject) {
             
             target_path = "users/" + target_user.Id.Hex() + "/notifications"
             
-            // TODO - As the notifications increases this will slow down the whole proccess, change this
+            // TODO - As the notifications increases this will slow down the whole process, change this
 		    target_ref := firebase.Child(target_path, nil, &target_notification)
 		    
 		    // Increase the notifications count
