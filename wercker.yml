@@ -3,7 +3,7 @@
 # If you want Google's container you would reference google/golang
 # Read more about containers on our dev center
 # http://devcenter.wercker.com/docs/containers/index.html
-box: golang
+box: wercker/golang@1.3.3
 # This is the build pipeline. Pipelines are the core of wercker
 # Read more about pipelines on our dev center
 # http://devcenter.wercker.com/docs/pipelines/index.html
@@ -24,8 +24,8 @@ build:
   steps:
     # Sets the go workspace and places you package
     # at the right place in the workspace tree
+    - premist/libvips-install@0.0.4
     - setup-go-workspace
-    - premist/install-libvips@0.0.1
 
     # Gets the dependencies
     - script:
