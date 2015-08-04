@@ -24,9 +24,14 @@ build:
   steps:
     # Sets the go workspace and places you package
     # at the right place in the workspace tree
-    - premist/libvips-install@0.0.4
     - setup-go-workspace
-
+    
+    # Setup vips
+    - script:
+        name: vips install
+        code: |
+            curl -s https://raw.githubusercontent.com/lovell/sharp/master/preinstall.sh | sudo bash -
+            
     # Gets the dependencies
     - script:
         name: go get
