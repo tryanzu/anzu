@@ -25,6 +25,7 @@ build:
     # Sets the go workspace and places you package
     # at the right place in the workspace tree
     - setup-go-workspace
+    - premist/install-libvips@0.0.1
 
     # Gets the dependencies
     - script:
