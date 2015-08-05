@@ -31,7 +31,7 @@ func (di *NotificationsModule) ParseContentMentions(obj MentionParseObject) {
 
 	// Services we will need along the runtime
 	database := di.Mongo.Database
-	firebase := di.Firebase
+	broadcaster := di.Broadcaster
 
 	post = obj.Post
 	content = obj.Content
@@ -64,8 +64,7 @@ func (di *NotificationsModule) ParseContentMentions(obj MentionParseObject) {
 		if done, _ := helpers.InArray(username, mentions_done); done == false {
 
 			var target_user model.User
-			var target_username, target_path, title, message, link string
-			var target_notification model.UserFirebaseNotifications
+			var target_username, title, message, link string
 
 			target_username = username
 
@@ -90,14 +89,6 @@ func (di *NotificationsModule) ParseContentMentions(obj MentionParseObject) {
 			title = fmt.Sprintf(titles[obj.Type], author.UserName)
 			message = obj.Title
 
-			target_path = "users/" + target_user.Id.Hex() + "/notifications"
-
-			// TODO - As the notifications increases this will slow down the whole process, change this
-			target_ref := firebase.Child(target_path, nil, &target_notification)
-
-			// Increase the notifications count
-			target_ref.Set("count", target_notification.Count+1, nil)
-
 			// Compose notification
 			notification := &model.UserFirebaseNotification{
 				UserId:       obj.Author,
@@ -112,8 +103,9 @@ func (di *NotificationsModule) ParseContentMentions(obj MentionParseObject) {
 				Created:      time.Now(),
 				Updated:      time.Now(),
 			}
-
-			target_ref.Child("list", nil, nil).Push(notification, nil)
+			
+			// Send using the broadcaster
+			broadcaster.Send(notification)
 
 			// Dont send repeated notifications to the same user even if mentioned twice
 			mentions_done = append(mentions_done, target_username)
