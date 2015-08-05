@@ -29,7 +29,15 @@ build:
     # Sets the go workspace and places you package
     # at the right place in the workspace tree
     - setup-go-workspace
-            
+    
+    # Setup some exports
+    - script:
+        name: golang paths
+        code: |
+            export PATH=$PATH:/usr/local/go/bin
+            export GOPATH=/opt/go
+            export PATH=$GOPATH/bin:$PATH
+    
     # Gets the dependencies
     - script:
         name: go get
