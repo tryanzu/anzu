@@ -40,6 +40,11 @@ build:
     
     # Gets the dependencies
     - script:
+        name: goconvey
+        code: |
+            go get github.com/smartystreets/goconvey
+            
+    - script:
         name: go get
         code: |
           go get
