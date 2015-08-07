@@ -71,7 +71,7 @@ func (di *NotificationsModule) ParseContentMentions(obj MentionParseObject) {
 			err := database.C("users").Find(bson.M{"username": target_username}).One(&target_user)
 
 			// Don't send the notification if the user has not been found or if the target is the same as the author
-			if err != nil || target_user.Id == obj.Author {
+			if err != nil || target_user.Id == obj.Author || target_user.Id == post.UserId  {
 				continue
 			}
 
