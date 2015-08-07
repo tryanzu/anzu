@@ -72,11 +72,11 @@ func (di *CommentAPI) CommentAdd(c *gin.Context) {
 			c.JSON(404, gin.H{"error": "Couldnt find the post", "status": 705})
 			return
 		}
-		
+
 		if post.NoComments == true {
-			
+
 			c.JSON(403, gin.H{"status": "error", "message": "Commnets now allowed at all."})
-			return	
+			return
 		}
 
 		votes := model.Votes{
@@ -100,7 +100,7 @@ func (di *CommentAPI) CommentAdd(c *gin.Context) {
 		assets = urls.FindAllString(content, -1)
 
 		for _, asset := range assets {
-			
+
 			// Download the asset on other routine in order to non block the API request
 			go di.downloadAssetFromUrl(asset, post.Id)
 		}
@@ -112,7 +112,7 @@ func (di *CommentAPI) CommentAdd(c *gin.Context) {
 		if err != nil {
 			panic(err)
 		}
-		
+
 		// Process the mentions. TODO - Determine race conditions
 		go di.Notifications.ParseContentMentions(notifications.MentionParseObject{
 			Type: "comment",
@@ -122,7 +122,7 @@ func (di *CommentAPI) CommentAdd(c *gin.Context) {
 			Author: user_bson_id,
 			Post: post,
 		})
-		
+
 		// Check if we need to add participant
 		users := post.Users
 		need_add := true
@@ -156,7 +156,7 @@ func (di *CommentAPI) CommentAdd(c *gin.Context) {
 			go di.Gaming.Related(user_bson_id).Did("comment")
 		}
 
-		c.JSON(200, gin.H{"status": "okay"})
+		c.JSON(200, gin.H{"status": "okay", "message": comment.Content})
 		return
 	}
 
@@ -216,11 +216,11 @@ func (di *CommentAPI) downloadAssetFromUrl(from string, post_id bson.ObjectId) e
 	// Get the database interface from the DI
 	database := di.DataService.Database
 	amazon_url, err := di.ConfigService.String("amazon.url")
-	
+
 	if err != nil {
-		panic(err)	
+		panic(err)
 	}
-	
+
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
