@@ -8,6 +8,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/handle"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/notifications"
+	"github.com/fernandez14/spartangeek-blacker/modules/feed"
 	"github.com/fernandez14/spartangeek-blacker/interfaces"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/getsentry/raven-go"
@@ -48,6 +49,7 @@ func main() {
 	var collector handle.CollectorAPI
 	var sitemap handle.SitemapAPI
 	var notificationsModule notifications.NotificationsModule
+	var feedModule feed.FeedModule
 	var exceptions exceptions.ExceptionsModule
 
 	// Services for the DI
@@ -93,6 +95,7 @@ func main() {
 		&inject.Object{Value: gamingService, Complete: false},
 		&inject.Object{Value: broadcaster, Complete: true, Name: "Notifications"},
 		&inject.Object{Value: &notificationsModule},
+		&inject.Object{Value: &feedModule},
 		&inject.Object{Value: &collector},
 		&inject.Object{Value: &exceptions},
 		&inject.Object{Value: &posts},
