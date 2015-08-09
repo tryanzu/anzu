@@ -97,8 +97,17 @@ type FeedPost struct {
 	UserId     bson.ObjectId   `bson:"user_id,omitempty" json:"user_id,omitempty"`
 	Votes      Votes           `bson:"votes" json:"votes"`
 	Pinned     bool            `bson:"pinned,omitempty" json:"pinned,omitempty"`
+	Stats	   FeedPostStat	   `bson:"stats,omitempty" json:"stats"`
 	Created    time.Time       `bson:"created_at" json:"created_at"`
 	Updated    time.Time       `bson:"updated_at" json:"updated_at"`
+}
+
+type FeedPostStat struct {
+	Viewed	   	  int 			   `bson:"viewed,omitempty" json:"viewed"`
+	Reached	   	  int 			   `bson:"reached,omitempty" json:"reached"`
+	ViewRate   	  float64 		   `bson:"view_rate,omitempty" json:"view_rate"`
+	CommentRate   float64 		   `bson:"comment_rate,omitempty" json:"comment_rate"`
+	FinalRate	  float64		   `bson:"final_rate,omitempty" json:"final_rate"`
 }
 
 type PostForm struct {
@@ -120,3 +129,18 @@ type ByCommentCreatedAt []Comment
 func (a ByCommentCreatedAt) Len() int           { return len(a) }
 func (a ByCommentCreatedAt) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a ByCommentCreatedAt) Less(i, j int) bool { return !a[i].Created.Before(a[j].Created) }
+
+type ByBestRated []FeedPost
+
+func (slice ByBestRated) Len() int {
+	return len(slice)
+}
+
+func (slice ByBestRated) Less(i, j int) bool {
+	return slice[i].Stats.FinalRate > slice[j].Stats.FinalRate
+}
+
+func (slice ByBestRated) Swap(i, j int) {
+	slice[i], slice[j] = slice[j], slice[i]
+}
+

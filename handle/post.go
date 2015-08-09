@@ -4,11 +4,13 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
+	"github.com/fernandez14/spartangeek-blacker/modules/feed"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/kennygrant/sanitize"
 	"github.com/mitchellh/goamz/s3"
 	"github.com/olebedev/config"
+	"github.com/xuyu/goredis"
 	"gopkg.in/mgo.v2/bson"
 	"github.com/cosn/firebase"
 	"math/rand"
@@ -29,6 +31,8 @@ import (
 
 type PostAPI struct {
 	DataService 	*mongo.Service 					`inject:""`
+	CacheService 	*goredis.Redis 					`inject:""`
+	Feed  			*feed.FeedModule				`inject:""`
 	Collector   	CollectorAPI 					`inject:"inline"`
 	Errors      	*exceptions.ExceptionsModule	`inject:""`
 	S3Bucket    	*s3.Bucket 						`inject:""`
@@ -50,6 +54,7 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 
 	// Get the database interface from the DI
 	database := di.DataService.Database
+	redis := di.CacheService
 
 	var feed []model.FeedPost
 	offset := 0
@@ -58,6 +63,7 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 	o := c.Query("offset")
 	l := c.Query("limit")
 	f := c.Query("category")
+	relevant := c.Query("relevant")
 	before 			:= c.Query("before")
 	after 			:= c.Query("after")
 	from_author  	:= c.Query("user_id")
@@ -136,27 +142,78 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 		user_order = true
 	}
 
-	// Prepare the database to fetch the feed
-	posts_collection := database.C("posts")
-	get_feed := posts_collection.Find(search).Select(bson.M{"comments.set": 0, "content": 0, "components": 0})
+	if relevant != "" {
 
-	// Add the sort depending on the context
-	if user_order {
+		// Calculate the offset using the limit
+		list_start := offset
+		list_end   := offset + limit
 
-		get_feed = get_feed.Sort("-created_at")
+		relevant_date := relevant
+
+		relevant_list, err := redis.ZRevRange("feed:relevant:" + relevant_date, list_start, list_end, false)
+
+		if err == nil && len(relevant_list) > 0 {
+
+			var temp_feed []model.FeedPost
+			var relevant_ids []bson.ObjectId
+
+			for _, relevant_id := range relevant_list {
+
+				relevant_ids = append(relevant_ids, bson.ObjectIdHex(relevant_id))
+			} 
+
+			err := database.C("posts").Find(bson.M{"_id": bson.M{"$in": relevant_ids}}).Select(bson.M{"comments.set": 0, "content": 0, "components": 0}).All(&temp_feed)
+
+			if err != nil {
+				panic(err)
+			}
+
+			feed = []model.FeedPost{}
+
+			// Using the temp feed we will have to manually order them by the natural order given by the relevant list
+			for _, relevant_id := range relevant_ids {
+
+				for _, post := range temp_feed {
+
+					if post.Id == relevant_id {
+
+						feed = append(feed, post)
+						break
+					}
+				}
+			}
+
+		} else {
+
+			c.JSON(200, gin.H{"feed": []string{}, "offset": offset, "limit": limit})
+
+			return
+		}
+
 	} else {
 
-		get_feed = get_feed.Sort("-pinned", "-created_at")
-	}
+		// Prepare the database to fetch the feed
+		posts_collection := database.C("posts")
+		get_feed := posts_collection.Find(search).Select(bson.M{"comments.set": 0, "content": 0, "components": 0})
 
-	// Add the limits of the resultset
-	get_feed = get_feed.Limit(limit).Skip(offset)
+		// Add the sort depending on the context
+		if user_order {
 
-	// Get the results from the feed algo
-	err := get_feed.All(&feed)
+			get_feed = get_feed.Sort("-created_at")
+		} else {
 
-	if err != nil {
-		panic(err)
+			get_feed = get_feed.Sort("-pinned", "-created_at")
+		}
+
+		// Add the limits of the resultset
+		get_feed = get_feed.Limit(limit).Skip(offset)
+
+		// Get the results from the feed algo
+		err := get_feed.All(&feed)
+
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	var authors []bson.ObjectId
@@ -175,8 +232,11 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 		go di.Collector.Activity(model.Activity{UserId: bson.ObjectIdHex(user_id.(string)), Event: "feed", List: list})
 	}
 
+	// Update the feed rates for the most important stuff
+	go di.Feed.UpdateFeedRates(feed)
+
 	// Get the users needed by the feed
-	err = database.C("users").Find(bson.M{"_id": bson.M{"$in": authors}}).All(&users)
+	err := database.C("users").Find(bson.M{"_id": bson.M{"$in": authors}}).All(&users)
 
 	if err != nil {
 		panic(err)
@@ -193,7 +253,7 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 
 		for index := range feed {
 
-			post := &feed[index]
+			post := &feed[index]		
 
 			if _, okay := usersMap[post.UserId]; okay {
 
@@ -218,8 +278,11 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 				}
 			}
 		}
+
 		c.JSON(200, gin.H{"feed": feed, "offset": offset, "limit": limit})
+
 	} else {
+
 		c.JSON(200, gin.H{"feed": []string{}, "offset": offset, "limit": limit})
 	}
 }
