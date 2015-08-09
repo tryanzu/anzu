@@ -525,6 +525,9 @@ func (di *PostAPI) PostsGetOne(c *gin.Context) {
 		go di.Collector.Activity(model.Activity{UserId: bson.ObjectIdHex(user_id.(string)), Event: "post", RelatedId: post.Id})
 	}
 
+	// Update the post rates for the most important stuff
+	go di.Feed.UpdatePostRate(post)
+
 	c.JSON(200, post)
 }
 
