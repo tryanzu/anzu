@@ -92,7 +92,7 @@ type FeedPost struct {
 	Slug       string          `bson:"slug" json:"slug"`
 	Type       string          `bson:"type" json:"type"`
 	Categories []string        `bson:"categories" json:"categories"`
-	Comments   FeedComments     `bson:"comments" json:"comments"`
+	Comments   FeedComments    `bson:"comments" json:"comments"`
 	Author     User            `bson:"author,omitempty" json:"author,omitempty"`
 	UserId     bson.ObjectId   `bson:"user_id,omitempty" json:"user_id,omitempty"`
 	Votes      Votes           `bson:"votes" json:"votes"`

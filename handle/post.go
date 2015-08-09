@@ -111,15 +111,15 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 		t, err := time.Parse(time.RFC3339Nano, after)
 
 		if err == nil {
-			
+
 			if signed_in {
-				
+
 				userPath := "users/" + user_id.(string)
 				userRef := di.Firebase.Child(userPath, nil, nil)
 
 				userRef.Set("pending", 0, nil)
 			}
-			
+
 			search["created_at"] = bson.M{"$lt": t}
 		}
 	}
@@ -133,7 +133,7 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 		}
 	}
 
-	user_order := false 
+	user_order := false
 
 	if from_author != "" && bson.IsObjectIdHex(from_author) {
 
@@ -352,16 +352,17 @@ func (di *PostAPI) PostsGetOne(c *gin.Context) {
 		for _, user := range users {
 			description = "Solo otro Spartan Geek más"
 
-			if user_description, has_description := user.Profile["bio"]; has_description {
-				description = user_description.(string)
+			if len(user.Description) > 0  {
+				description = user.Description
 			}
 
-			usersMap[user.Id] = map[string]string{
+			usersMap[user.Id] = map[string]interface{}{
 				"id":          user.Id.Hex(),
 				"username":    user.UserName,
 				"description": description,
-				"email":       user.Email,
                 "image":       user.Image,
+                "level":       user.Gaming.Level,
+                "roles":       user.Roles,
 			}
 
             if user.Id == post.UserId {
@@ -384,7 +385,7 @@ func (di *PostAPI) PostsGetOne(c *gin.Context) {
 			user_bson_id := bson.ObjectIdHex(user_id.(string))
 
 			err = database.C("votes").Find(bson.M{"type": "component", "related_id": post.Id, "user_id": user_bson_id}).All(&votes)
-			
+
 			// Get the likes given by the current user
 			_ = database.C("votes").Find(bson.M{"type": "comment", "related_id": post.Id, "user_id": user_bson_id}).All(&likes)
 
@@ -401,12 +402,12 @@ func (di *PostAPI) PostsGetOne(c *gin.Context) {
 					post.Following = true
 				}
 			}
-			
+
 			err = database.C("votes").Find(bson.M{"type": "post", "related_id": post.Id, "user_id": user_bson_id}).One(&liked)
-			
+
 			if err == nil {
-				
-				post.Liked = liked.Value	
+
+				post.Liked = liked.Value
 			}
 
 			// Increase user saw posts and its gamification in another thread
@@ -454,7 +455,7 @@ func (di *PostAPI) PostsGetOne(c *gin.Context) {
 			for _, vote := range likes {
 
 				if vote.NestedType == strconv.Itoa(index) {
-					
+
 					post.Comments.Set[index].Liked = vote.Value
 				}
 			}
@@ -468,6 +469,7 @@ func (di *PostAPI) PostsGetOne(c *gin.Context) {
 		// Sort by created at
 		sort.Sort(model.ByCommentCreatedAt(post.Comments.Set))
 
+        // Get components information if components publication
 		components := reflect.ValueOf(&post.Components).Elem()
 		components_type := reflect.TypeOf(&post.Components).Elem()
 
@@ -530,7 +532,7 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 
 	// Get the database interface from the DI
 	database := di.DataService.Database
-	
+
 	// Check for user token
 	user_id, _ := c.Get("user_id")
 	bson_id := bson.ObjectIdHex(user_id.(string))
@@ -665,7 +667,7 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 					// Download the asset on other routine in order to non block the API request
 					go di.downloadAssetFromUrl(asset, publish.Id)
 				}
-				
+
 				// Add the gamification contribution
 				go di.Gaming.Related(bson_id).Did("publish")
 
@@ -674,7 +676,7 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 
 				// Sync everyone's feed
 				go di.syncUsersFeed(publish)
-				
+
 
 				// Finished creating the post
 				c.JSON(200, gin.H{"status": "okay", "code": 200})
@@ -722,7 +724,7 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 			}
 
 			err := database.C("posts").Insert(publish)
-		
+
 			if err != nil {
 				panic(err)
 			}
@@ -732,7 +734,7 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 				// Download the asset on other routine in order to non block the API request
 				go di.downloadAssetFromUrl(asset, publish.Id)
 			}
-			
+
 			// Add the gamification contribution
 			go di.Gaming.Related(bson_id).Did("publish")
 
@@ -789,12 +791,12 @@ func (di *PostAPI) downloadAssetFromUrl(from string, post_id bson.ObjectId) erro
 	// Get the database interface from the DI
 	database := di.DataService.Database
 	amazon_url, err := di.ConfigService.String("amazon.url")
-	
+
 	if err != nil {
 		panic(err)
 	}
 
-	
+
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
@@ -862,7 +864,7 @@ func (di *PostAPI) downloadAssetFromUrl(from string, post_id bson.ObjectId) erro
                 // Update the comment
                 di.DataService.Database.C("posts").Update(bson.M{"_id": post_id}, bson.M{"$set": bson.M{"content": content}})
 			}
-			
+
 		}
 	}
 
