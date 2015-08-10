@@ -77,7 +77,7 @@ func (di *FeedModule) UpdatePostRate(post model.Post) {
     }   
 }
 
-func (di *FeedModule) getPostReachViews(id bson.ObjectId) int, int {
+func (di *FeedModule) getPostReachViews(id bson.ObjectId) (int, int) {
 
     var reached, viewed int
 
