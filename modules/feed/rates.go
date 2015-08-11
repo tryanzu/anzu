@@ -24,18 +24,23 @@ func (di *FeedModule) UpdateFeedRates(list []model.FeedPost) {
         // Get reach and views 
         reached, viewed = di.getPostReachViews(post.Id)
 
-        // Calculate the rates
-        view_rate    := 100.0 / float64(reached) * float64(viewed)
-        comment_rate := 100.0 / float64(viewed) * float64(post.Comments.Count)
-        final_rate   := (view_rate + comment_rate) / 2.0
-        date := post.Created.Format("2006-01-02")
+        total := reached + viewed
 
-        if _, okay := zadd[date]; !okay {
+        if total > 101 {
+            
+            // Calculate the rates
+            view_rate    := 100.0 / float64(reached) * float64(viewed)
+            comment_rate := 100.0 / float64(viewed) * float64(post.Comments.Count)
+            final_rate   := (view_rate + comment_rate) / 2.0
+            date := post.Created.Format("2006-01-02")
 
-            zadd[date] = map[string]float64{}
+            if _, okay := zadd[date]; !okay {
+
+                zadd[date] = map[string]float64{}
+            }
+
+            zadd[date][post.Id.Hex()] = final_rate
         }
-
-        zadd[date][post.Id.Hex()] = final_rate
     }
 
     for date, items := range zadd {
@@ -62,19 +67,24 @@ func (di *FeedModule) UpdatePostRate(post model.Post) {
     // Get reach and views 
     reached, viewed := di.getPostReachViews(post.Id)
 
-    // Calculate the rates
-    view_rate    := 100.0 / float64(reached) * float64(viewed)
-    comment_rate := 100.0 / float64(viewed) * float64(post.Comments.Count)
-    final_rate   := (view_rate + comment_rate) / 2.0
-    date := post.Created.Format("2006-01-02")
+    total := reached + viewed
 
-    zadd[post.Id.Hex()] = final_rate
-    
-    _, err := redis.ZAdd("feed:relevant:" + date, zadd)
+    if total > 101 {
+        
+        // Calculate the rates
+        view_rate    := 100.0 / float64(reached) * float64(viewed)
+        comment_rate := 100.0 / float64(viewed) * float64(post.Comments.Count)
+        final_rate   := (view_rate + comment_rate) / 2.0
+        date := post.Created.Format("2006-01-02")
 
-    if err != nil {
-        panic(err)
-    }   
+        zadd[post.Id.Hex()] = final_rate
+        
+        _, err := redis.ZAdd("feed:relevant:" + date, zadd)
+
+        if err != nil {
+            panic(err)
+        }   
+    }
 }
 
 func (di *FeedModule) getPostReachViews(id bson.ObjectId) (int, int) {
