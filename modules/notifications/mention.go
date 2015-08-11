@@ -65,7 +65,7 @@ func (di *NotificationsModule) ParseContentMentions(obj MentionParseObject) {
 			err := database.C("users").Find(bson.M{"username": target_username}).One(&target_user)
 
 			// Don't send the notification if the user has not been found or if the target is the same as the author
-			if err != nil || target_user.Id == obj.Author || target_user.Id == post.UserId  {
+			if err != nil || target_user.Id == obj.Author {
 				continue
 			}
 
@@ -81,23 +81,26 @@ func (di *NotificationsModule) ParseContentMentions(obj MentionParseObject) {
 			content = strings.Replace(content, user, link, -1)
 			message = obj.Title
 
-			// Compose notification
-			notification := &model.UserFirebaseNotification{
-				UserId:       target_user.Id,
-				RelatedId:    post.Id,
-				RelatedExtra: post.Slug,
-				Position:     post.Comments.Count,
-				Username:     author.UserName,
-				Text:         message,
-				Related:      "mention",
-				Seen:         false,
-				Image:        author.Image,
-				Created:      time.Now(),
-				Updated:      time.Now(),
+			if target_user.Id != post.UserId {
+				
+				// Compose notification
+				notification := &model.UserFirebaseNotification{
+					UserId:       target_user.Id,
+					RelatedId:    post.Id,
+					RelatedExtra: post.Slug,
+					Position:     post.Comments.Count,
+					Username:     author.UserName,
+					Text:         message,
+					Related:      "mention",
+					Seen:         false,
+					Image:        author.Image,
+					Created:      time.Now(),
+					Updated:      time.Now(),
+				}
+				
+				// Send using the broadcaster
+				broadcaster.Send(notification)
 			}
-			
-			// Send using the broadcaster
-			broadcaster.Send(notification)
 
 			// Dont send repeated notifications to the same user even if mentioned twice
 			mentions_done = append(mentions_done, target_username)
