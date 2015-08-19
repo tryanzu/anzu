@@ -11,8 +11,10 @@ type Category struct {
 	Slug        string        `bson:"slug" json:"slug"`
 	Color       string        `bson:"color" json:"color"`
 	Permissions interface{}   `bson:"permissions" json:"permissions"`
+	Parent      bson.ObjectId `bson:"parent,omitempty" json:"parent,omitempty"`
 	Count       int           `bson:"count,omitempty" json:"count,omitempty"`
 	Recent      int           `bson:"recent,omitempty" json:"recent,omitempty"`
+	Child		[]Category    `bson:"subcategories,omitempty" json:"subcategories,omitempty"`
 }
 
 type CategoryCounters struct {
