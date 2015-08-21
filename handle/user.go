@@ -14,6 +14,7 @@ import (
 	"github.com/mitchellh/goamz/s3"
 	"github.com/mrvdot/golang-utils"
 	"github.com/olebedev/config"
+	"github.com/xuyu/goredis"
 	"gopkg.in/h2non/bimg.v0"
 	"gopkg.in/mgo.v2/bson"
 	"io/ioutil"
@@ -26,6 +27,7 @@ import (
 
 type UserAPI struct {
 	DataService   *mongo.Service `inject:""`
+	CacheService  *goredis.Redis `inject:""`
 	ConfigService *config.Config `inject:""`
 	S3Bucket      *s3.Bucket     `inject:""`
 	Collector     CollectorAPI   `inject:"inline"`
@@ -52,6 +54,96 @@ func (di *UserAPI) UserSubscribe(c *gin.Context) {
 		}
 		c.JSON(200, gin.H{"status": "okay"})
 	}
+}
+
+
+func (di *UserAPI) UserCategorySubscribe(c *gin.Context) {
+
+	var user model.User
+
+	// Get the database interface from the DI
+	database 	 := di.DataService.Database
+	redis := di.CacheService
+	user_id  	 := c.MustGet("user_id")
+	category_id  := c.Param("id")
+	user_bson_id := bson.ObjectIdHex(user_id.(string))
+
+	if bson.IsObjectIdHex(category_id) == false {
+
+		c.JSON(400, gin.H{"status": "error", "message": "Invalid category id."})
+		return
+	}
+
+	_, err := database.C("categories").Find(bson.M{"_id": bson.ObjectIdHex(category_id), "parent": bson.M{"$exists": true}}).Count()
+
+	if err != nil {
+
+		c.JSON(400, gin.H{"status": "error", "message": "No such category."})
+		return
+	}
+
+	// Get the user using the session
+	err = database.C("users").Find(bson.M{"_id": user_bson_id}).One(&user)
+
+	if err != nil {
+		panic(err)
+	}
+	
+	for _, user_category_id := range user.Categories {
+
+		if user_category_id.Hex() == category_id {
+
+			c.JSON(200, gin.H{"status": "okay", "message": "already-following"})
+			return
+		}
+	}
+
+	err = database.C("users").Update(bson.M{"_id": user.Id}, bson.M{"$push": bson.M{"categories": bson.ObjectIdHex(category_id)}})
+
+	if err != nil {
+		panic(err)
+	}
+
+	// Create the set inside redis and move on
+	redis.SAdd("user:categories:" + user_id.(string), category_id) 
+
+	c.JSON(200, gin.H{"status": "okay"})
+}
+
+func (di *UserAPI) UserCategoryUnsubscribe(c *gin.Context) {
+
+	// Get the database interface from the DI
+	database 	 := di.DataService.Database
+	redis := di.CacheService
+	user_id  	 := c.MustGet("user_id")
+	category_id  := c.Param("id")
+	user_bson_id := bson.ObjectIdHex(user_id.(string))
+
+	if bson.IsObjectIdHex(category_id) == false {
+
+		c.JSON(400, gin.H{"status": "error", "message": "Invalid category id."})
+		return
+	}
+
+	_, err := database.C("categories").Find(bson.M{"_id": bson.ObjectIdHex(category_id), "parent": bson.M{"$exists": true}}).Count()
+
+	if err != nil {
+
+		c.JSON(400, gin.H{"status": "error", "message": "No such category."})
+		return
+	}
+
+	remove := []bson.ObjectId{bson.ObjectIdHex(category_id)}
+	err = database.C("users").Update(bson.M{"_id": user_bson_id}, bson.M{"$pullAll": bson.M{"categories": remove}})
+
+	if err != nil {
+		panic(err)
+	}
+
+	// Create the set inside redis and move on
+	redis.SRem("user:categories:" + user_id.(string), category_id) 
+
+	c.JSON(200, gin.H{"status": "okay"})
 }
 
 func (di *UserAPI) UserGetOne(c *gin.Context) {

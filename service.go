@@ -200,6 +200,8 @@ func main() {
 			v1.POST("/user/my/avatar", users.UserUpdateProfileAvatar)
 			v1.GET("/user/my", users.UserGetByToken)
 			v1.PUT("/user/my", users.UserUpdateProfile)
+			v1.PUT("/category/subscription/:id", users.UserCategorySubscribe)
+			v1.DELETE("/category/subscription/:id", users.UserCategoryUnsubscribe)
 
 			// // Votes routes
 			v1.POST("/vote/comment/:id", votes.VoteComment)
