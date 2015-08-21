@@ -71,6 +71,7 @@ type Post struct {
 	Type       string          `bson:"type" json:"type"`
 	Content    string          `bson:"content" json:"content"`
 	Categories []string        `bson:"categories" json:"categories"`
+	Category   bson.ObjectId   `bson:"category" json:"category"`
 	Comments   Comments        `bson:"comments" json:"comments"`
 	Author     User            `bson:"author,omitempty" json:"author,omitempty"`
 	UserId     bson.ObjectId   `bson:"user_id,omitempty" json:"user_id,omitempty"`

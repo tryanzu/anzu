@@ -64,6 +64,7 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 	l := c.Query("limit")
 	f := c.Query("category")
 	relevant := c.Query("relevant")
+	fltr_categories := c.Query("categories")
 	before 			:= c.Query("before")
 	after 			:= c.Query("after")
 	from_author  	:= c.Query("user_id")
@@ -83,6 +84,7 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 
 	// Check if limit has been specified
 	if l != "" {
+
 		lim, err := strconv.Atoi(l)
 
 		if err != nil || lim <= 0 {
@@ -140,6 +142,78 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 		search["user_id"] = bson.ObjectIdHex(from_author)
 
 		user_order = true
+	}
+
+
+	// Get the list of categories a user is following when the request is authenticated
+	if signed_in {
+
+		var user_categories []bson.ObjectId
+
+		user_categories_list, err := redis.SMembers("user:categories:" + user_id.(string))
+
+		if err != nil {
+			panic(err)
+		}
+
+		if len(user_categories_list) == 0 {
+
+			var user model.User
+
+			err := database.C("users").Find(bson.M{"_id": bson.ObjectIdHex(user_id.(string))}).One(&user)
+
+			if err != nil {
+				panic(err)
+			}
+
+			if len(user.Categories) > 0 {
+
+				var category_members []string 
+
+				for _, category_id := range user.Categories {
+
+					user_categories = append(user_categories, category_id)
+					category_members = append(category_members, category_id.Hex())
+				}
+
+				// Create the set inside redis and move on
+				redis.SAdd("user:categories:" + user_id.(string), category_members...)
+			}
+ 
+		} else {
+
+			for _, category_id := range user_categories_list {
+
+				if bson.IsObjectIdHex(category_id) {
+
+					user_categories = append(user_categories, bson.ObjectIdHex(category_id))
+				}
+			}
+		}
+
+		if len(user_categories) > 0 {
+			
+			search["category"] = bson.M{"$in": user_categories}
+		}
+
+	} else if fltr_categories != "" {
+
+		var user_categories []bson.ObjectId
+
+		provided_categories := strings.Split(fltr_categories, ",")
+
+		for _, category_id := range provided_categories {
+
+			if bson.IsObjectIdHex(category_id) {
+
+				user_categories = append(user_categories, bson.ObjectIdHex(category_id))
+			}
+		}
+
+		if len(user_categories) > 0 {
+			
+			search["category"] = bson.M{"$in": user_categories}
+		}
 	}
 
 	if relevant != "" {
