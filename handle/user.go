@@ -460,7 +460,15 @@ func (di *UserAPI) UserUpdateProfileAvatar(c *gin.Context) {
 			panic(err)
 		}
 
-		thumbnail, err := bimg.NewImage(data).ResizeAndCrop(120, 120)
+		options := bimg.Options{
+			Width:  120,
+			Height: 120,
+			Embed:  true,
+			Crop:   true,
+			Quality: 100,
+		}
+
+		thumbnail, err := bimg.NewImage(data).Process(options)
 
 		if err != nil {
 			panic(err)
