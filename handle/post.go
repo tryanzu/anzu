@@ -830,6 +830,58 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 	c.JSON(400, gin.H{"status": "error", "message": "Couldnt create post, missing information...", "code": 205})
 }
 
+func (di *PostAPI) PostUploadAttachment(c *gin.Context) {
+
+	// Check the file inside the request
+	file, header, err := c.Request.FormFile("file")
+
+	if err != nil {
+		c.JSON(400, gin.H{"status": "error", "message": "Could not get the file..."})
+		return
+	}
+
+	defer file.Close()
+
+	// Read all the bytes from the image
+	data, err := ioutil.ReadAll(file)
+	if err != nil {
+		c.JSON(400, gin.H{"status": "error", "message": "Could not read the file contents..."})
+		return
+	}
+
+	// Detect the downloaded file type
+	dataType := http.DetectContentType(data)
+
+	if dataType[0:5] == "image" {
+
+		var extension, name string
+
+		extension = filepath.Ext(header.Filename)
+		name = bson.NewObjectId().Hex()
+
+		if extension == "" {
+
+			extension = ".jpg"
+		}
+
+		path := "posts/" + name + extension
+		err = di.S3Bucket.Put(path, data, dataType, s3.ACL("public-read"))
+
+		if err != nil {
+			panic(err)
+		}
+
+		s3_url := "http://assets.spartangeek.com/" + path
+
+		// Done
+		c.JSON(200, gin.H{"status": "okay", "url": s3_url})
+
+		return
+	}
+
+	c.JSON(400, gin.H{"status": "error", "message": "Could not detect an image file..."})
+}
+
 func (di *PostAPI) syncUsersFeed(post *model.Post) {
 
 	var users map[string]model.UserFirebase
