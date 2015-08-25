@@ -120,6 +120,7 @@ type PostForm struct {
 	Moves      string                 `json:"moves"`
 	Software   string                 `json:"software"`
 	Tag        string                 `json:"tag"`
+	Category   string                 `json:"category"`
 	IsQuestion bool                   `json:"isquestion"`
 	Components map[string]interface{} `json:"components"`
 }

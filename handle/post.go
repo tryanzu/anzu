@@ -619,6 +619,22 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 	// Get the form otherwise tell it has been an error
 	if c.BindWith(&post, binding.JSON) == nil {
 
+		post_category := post.Category
+
+		if bson.IsObjectIdHex(post_category) == false {
+
+			c.JSON(400, gin.H{"status": "error", "message": "Invalid category"})
+			return
+		}
+
+		category, err := database.C("categories").Find(bson.M{"parent": bson.M{"$exists": true}}).Count()
+
+		if err != nil || category < 1 {
+
+			c.JSON(400, gin.H{"status": "error", "message": "Invalid category"})
+			return
+		}
+
 		comments := model.Comments{
 			Count: 0,
 			Set:   make([]model.Comment, 0),
@@ -685,6 +701,7 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 					UserId:     bson_id,
 					Users:      users,
 					Categories: []string{"recommendations"},
+					Category:   bson.ObjectIdHex(post_category),
 					Votes:      votes,
 					IsQuestion: post.IsQuestion,
 					Created:    time.Now(),
@@ -794,6 +811,7 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 				UserId:     bson_id,
 				Users:      users,
 				Categories: []string{post.Tag},
+				Category:   bson.ObjectIdHex(post_category),
 				Votes:      votes,
 				IsQuestion: post.IsQuestion,
 				Created:    time.Now(),
