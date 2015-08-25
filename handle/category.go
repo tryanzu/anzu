@@ -139,7 +139,7 @@ func (di *CategoryAPI) CategoriesGet(c *gin.Context) {
 		}
 	}
 
-	sort.Sort(model.Categories(parent_categories))
+	sort.Sort(model.CategoriesOrder(parent_categories))
 
 	c.JSON(200, parent_categories)
 }

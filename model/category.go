@@ -12,6 +12,7 @@ type Category struct {
 	Color       string        `bson:"color" json:"color"`
 	Permissions interface{}   `bson:"permissions" json:"permissions"`
 	Parent      bson.ObjectId `bson:"parent,omitempty" json:"parent,omitempty"`
+	Order   	int 		  `bson:"order,omitempty" json:"order,omitempty"`
 	Count       int           `bson:"count,omitempty" json:"count,omitempty"`
 	Recent      int           `bson:"recent,omitempty" json:"recent,omitempty"`
 	Child		[]Category    `bson:"subcategories,omitempty" json:"subcategories,omitempty"`
@@ -37,5 +38,19 @@ func (slice Categories) Less(i, j int) bool {
 }
 
 func (slice Categories) Swap(i, j int) {
+	slice[i], slice[j] = slice[j], slice[i]
+}
+
+type CategoriesOrder []Category
+
+func (slice CategoriesOrder) Len() int {
+	return len(slice)
+}
+
+func (slice CategoriesOrder) Less(i, j int) bool {
+	return slice[i].Order < slice[j].Order
+}
+
+func (slice CategoriesOrder) Swap(i, j int) {
 	slice[i], slice[j] = slice[j], slice[i]
 }
