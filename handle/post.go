@@ -97,9 +97,9 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 
 	search := make(bson.M)
 
-	if f != "" && f != "recent" {
+	if f != "" && bson.IsObjectIdHex(f) {
 
-		search["categories"] = f
+		search["category"] = bson.ObjectIdHex(f)
 
 		if signed_in {
 
@@ -904,6 +904,8 @@ func (di *PostAPI) syncUsersFeed(post *model.Post) {
 
 	var users map[string]model.UserFirebase
 
+	redis := di.CacheService
+
 	// Recover from any panic even inside this goroutine
 	defer di.Errors.Recover()
 
@@ -915,18 +917,30 @@ func (di *PostAPI) syncUsersFeed(post *model.Post) {
 	_ = di.Firebase.Child("users", onlineParams, &users)
 
 	// Information about the post
-	category := post.Categories[0]
+	category := post.Category.Hex()
 
 	for user_id, user := range users {
 
-		if user.Viewing == "all" || user.Viewing == category {
-
-			// Add a pending counter
-			userPath := "users/" + user_id
-			userRef := di.Firebase.Child(userPath, nil, nil)
-
-			userRef.Set("pending", user.Pending+1, nil)
+		// Must be either seeing that category or own general feed
+		if user.Viewing != category && user.Viewing == "all" {
+			continue
 		}
+
+		if user.Viewing == "all" {
+
+			subscribed, err := redis.SIsMember("user:categories:" + user_id, category)
+
+			// User is actually not subscribed or and error just happened
+			if subscribed == true || err != nil {
+				continue
+			}
+		}
+
+		// Add a pending counter
+		userPath := "users/" + user_id
+		userRef := di.Firebase.Child(userPath, nil, nil)
+
+		userRef.Set("pending", user.Pending+1, nil)
 	}
 }
 
