@@ -932,7 +932,7 @@ func (di *PostAPI) syncUsersFeed(post *model.Post) {
 			subscribed, err := redis.SIsMember("user:categories:" + user_id, category)
 
 			// User is actually not subscribed or and error just happened
-			if subscribed == true || err != nil {
+			if subscribed == false || err != nil {
 				continue
 			}
 		}
