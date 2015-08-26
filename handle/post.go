@@ -104,7 +104,7 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 		if signed_in {
 
 			// Reset the counter for the user
-			di.resetUserCategoryCounter(f, bson.ObjectIdHex(user_id.(string)))
+			//di.resetUserCategoryCounter(f, bson.ObjectIdHex(user_id.(string)))
 		}
 	}
 
@@ -144,9 +144,10 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 		user_order = true
 	}
 
+	_, filter_by_category := search["category"]
 
 	// Get the list of categories a user is following when the request is authenticated
-	if signed_in {
+	if signed_in && !filter_by_category {
 
 		var user_categories []bson.ObjectId
 
