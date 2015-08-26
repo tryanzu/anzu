@@ -6,16 +6,17 @@ import (
 	"github.com/cosn/firebase"
 	"github.com/facebookgo/inject"
 	"github.com/fernandez14/spartangeek-blacker/handle"
+	"github.com/fernandez14/spartangeek-blacker/modules/api"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/notifications"
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
 	"github.com/fernandez14/spartangeek-blacker/interfaces"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/getsentry/raven-go"
-	"github.com/gin-gonic/gin"
 	"github.com/mitchellh/goamz/aws"
 	"github.com/mitchellh/goamz/s3"
 	"github.com/olebedev/config"
+	"github.com/spf13/cobra"
 	"github.com/robfig/cron"
 	"github.com/xuyu/goredis"
 	"os"
@@ -37,17 +38,7 @@ func main() {
 	}
 
 	// Resources for the API
-	var posts handle.PostAPI
-	var votes handle.VoteAPI
-	var users handle.UserAPI
-	var categories handle.CategoryAPI
-	var elections handle.ElectionAPI
-	var comments handle.CommentAPI
-	var parts handle.PartAPI
-	var stats handle.StatAPI
-	var middlewares handle.MiddlewareAPI
-	var collector handle.CollectorAPI
-	var sitemap handle.SitemapAPI
+	var api api.Module
 	var notificationsModule notifications.NotificationsModule
 	var feedModule feed.FeedModule
 	var exceptions exceptions.ExceptionsModule
@@ -81,7 +72,7 @@ func main() {
 	// Implementations will be fullfilled manually
 	firebaseBroadcaster := notifications.FirebaseBroadcaster{Firebase: firebaseService}
 	broadcaster := interfaces.NotificationBroadcaster(firebaseBroadcaster)
-	
+
 	// Provide graph with service instances
 	err = g.Provide(
 		&inject.Object{Value: configService, Complete: true},
@@ -96,137 +87,60 @@ func main() {
 		&inject.Object{Value: broadcaster, Complete: true, Name: "Notifications"},
 		&inject.Object{Value: &notificationsModule},
 		&inject.Object{Value: &feedModule},
-		&inject.Object{Value: &collector},
 		&inject.Object{Value: &exceptions},
-		&inject.Object{Value: &posts},
-		&inject.Object{Value: &votes},
-		&inject.Object{Value: &users},
-		&inject.Object{Value: &categories},
-		&inject.Object{Value: &elections},
-		&inject.Object{Value: &comments},
-		&inject.Object{Value: &parts},
-		&inject.Object{Value: &stats},
-		&inject.Object{Value: &middlewares},
-		&inject.Object{Value: &sitemap},
 	)
+
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 
-	// Populate the DI with the instances
-	if err := g.Populate(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
+    var cmdApi = &cobra.Command{
+        Use:   "api",
+        Short: "Starts API web server",
+        Long:  `Starts API web server listening
+        in the specified env port
+        `,
+        Run: func(cmd *cobra.Command, args []string) {
+        	
+        	// Populate dependencies using the already instantiated DI
+		    api.Populate(g)
 
-	// After DI populate initializations
-	gamingService.Init()
+		    // After DI populate initializations
+			gamingService.Init()
 
-	// Start gin classic middlewares
-	router := gin.Default()
+		    // Run API module
+		    api.Run()
+        },
+    }
 
-	router.GET("/loaderio-9d2a383a6a8ed580a4a26cf61ce183c3/", func(c *gin.Context) {
+    var cmdJobs = &cobra.Command{
+        Use:   "jobs",
+        Short: "Starts Jobs worker",
+        Long:  `Starts jobs worker daemon
+        so things can run like crons
+        `,
+        Run: func(cmd *cobra.Command, args []string) {
 
-		c.String(200, "loaderio-9d2a383a6a8ed580a4a26cf61ce183c3")
-	})
-	// Middlewares setup
-	router.Use(middlewares.ErrorTracking())
-	router.Use(middlewares.CORS())
-	router.Use(middlewares.MongoRefresher())
-	router.Use(middlewares.StatsdTiming())
+            // Start the jobs
+			c := cron.New()
 
-	// Sitemap generator
-	router.GET("/sitemap.xml", sitemap.GetSitemap)
+			// Reset the user temporal stuff each X
+			c.AddFunc("@midnight", gamingService.ResetTempStuff)
 
-	v1 := router.Group("/v1")
+			// Start the jobs
+			c.Start()
 
-	v1.Use(middlewares.Authorization())
-	{
-		v1.POST("/subscribe", users.UserSubscribe)
-		
-		// Gamification routes
-		v1.GET("/gamification", gamingService.GetRules)
-		
-		// Post routes
-		v1.GET("/feed", posts.FeedGet)
-		v1.GET("/post", posts.FeedGet)
-		v1.GET("/posts/:id", posts.PostsGetOne)
-		v1.GET("/post/s/:id", posts.PostsGetOne)
+			select{}
+        },
+    }
 
-		// // Election routes
-		v1.POST("/election/:id", elections.ElectionAddOption)
+    var rootCmd = &cobra.Command{Use: "blacker"}
+    rootCmd.AddCommand(cmdApi)
+    rootCmd.AddCommand(cmdJobs)
+    rootCmd.Execute()
 
-		// User routes
-		v1.POST("/user", users.UserRegisterAction)
-		//v1.GET("/user/my/notifications", users.UserNotificationsGet)
-		v1.GET("/users/:id", users.UserGetOne)
-		v1.GET("/user/activity", users.UserInvolvedFeedGet)
-		v1.GET("/user/search", users.UserAutocompleteGet)
-		v1.POST("/user/get-token/facebook", users.UserGetTokenFacebook)
-		v1.GET("/user/get-token", users.UserGetToken)
-		v1.GET("/auth/get-token", users.UserGetJwtToken)
-
-		// Messaging routes
-		//v1.GET("/messages", MessagesGet)
-		//v1.POST("/messages", MessagePublish)
-		//v1.GET("/hashtags", HashtagsGet)
-
-		// Playlist routes
-		//v1.GET("/playlist/l/:sections", PlaylistGetList)
-
-		// Categories routes
-		v1.GET("/category", categories.CategoriesGet)
-
-		// Parts routes
-		v1.GET("/part", parts.GetPartTypes)
-		v1.GET("/part/:type/manufacturers", parts.GetPartManufacturers)
-		v1.GET("/part/:type/models", parts.GetPartManufacturerModels)
-
-		// Stats routes
-		v1.GET("/stats/board", stats.BoardGet)
-
-		authorized := v1.Group("")
-
-		authorized.Use(middlewares.NeedAuthorization())
-		{
-			// Comment routes
-			authorized.POST("/post/comment/:id", comments.CommentAdd)
-
-			// Post routes
-			authorized.POST("/post", posts.PostCreate)
-			authorized.POST("/post/image", posts.PostUploadAttachment)
-
-			// User routes
-			authorized.POST("/user/my/avatar", users.UserUpdateProfileAvatar)
-			authorized.GET("/user/my", users.UserGetByToken)
-			authorized.PUT("/user/my", users.UserUpdateProfile)
-			authorized.PUT("/category/subscription/:id", users.UserCategorySubscribe)
-			authorized.DELETE("/category/subscription/:id", users.UserCategoryUnsubscribe)
-
-			// // Votes routes
-			authorized.POST("/vote/comment/:id", votes.VoteComment)
-			authorized.POST("/vote/component/:id", votes.VoteComponent)
-			authorized.POST("/vote/post/:id", votes.VotePost)
-		}
-	}
-
-	// Run over the 3000 port
-	port := os.Getenv("RUN_OVER")
-	if port == "" {
-		port = "3000"
-	}
-
-	// Start the jobs
-	c := cron.New()
-
-	// Reset the user temporal stuff each X
-	c.AddFunc("@midnight", gamingService.ResetTempStuff)
-
-	// Start the jobs
-	c.Start()
-
-	router.Run(":" + port)
+    return
 }
 
 func string_value(value string, err error) string {
