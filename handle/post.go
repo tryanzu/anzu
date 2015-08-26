@@ -933,7 +933,13 @@ func (di *PostAPI) syncUsersFeed(post *model.Post) {
 
 			// User is actually not subscribed or and error just happened
 			if subscribed == false || err != nil {
-				continue
+
+				// Temp stuff - check if user has no single subscription already
+				user_categories_list, err := redis.SMembers("user:categories:" + user_id)
+
+				if err != nil || len(user_categories_list) > 0 {
+					continue
+				}
 			}
 		}
 
