@@ -923,7 +923,7 @@ func (di *PostAPI) syncUsersFeed(post *model.Post) {
 	for user_id, user := range users {
 
 		// Must be either seeing that category or own general feed
-		if user.Viewing != category && user.Viewing == "all" {
+		if user.Viewing != category && user.Viewing != "all" {
 			continue
 		}
 
