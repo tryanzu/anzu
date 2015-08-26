@@ -1,0 +1,45 @@
+{
+	"roles": [
+		{
+			"user": {
+				"permissions": ["publish", "comment", "edit-own-posts", "delete-own-posts", "edit-own-comments", "delete-own-comments"],
+				"parents": false
+			},
+
+			"spartan-girl": {
+				"permissions": ["block-own-post-comments"],
+				"parents": ["user"]
+			},
+
+			"editor": {
+				"permissions": [],
+				"parents": ["user"]
+			},
+
+			"child-moderator": {
+				"permissions": ["edit-category-comments", "edit-category-posts", "delete-category-posts", "delete-category-comments"],
+				"parents": ["spartan-girl"]
+			},
+
+			"category-moderator": {
+				"permissions": [],
+				"parents": ["child-moderator"]
+			},
+
+			"super-moderator": {
+				"permissions": ["edit-board-comments", "edit-board-posts", "delete-board-comments", "delete-board-posts"],
+				"parents": ["category-moderator"]
+			},
+
+			"administrator": {
+				"permissions": ["board-config"],
+				"parents": ["super-moderator"]
+			},
+
+			"developer": {
+				"permissions": ["debug", "dev-tools"],
+				"parents": ["administrator"]
+			}
+		}
+	]
+}

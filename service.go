@@ -195,16 +195,19 @@ func main() {
 
 			// Post routes
 			authorized.POST("/post", posts.PostCreate)
+			authorized.POST("/post/image", posts.PostUploadAttachment)
 
 			// User routes
-			v1.POST("/user/my/avatar", users.UserUpdateProfileAvatar)
-			v1.GET("/user/my", users.UserGetByToken)
-			v1.PUT("/user/my", users.UserUpdateProfile)
+			authorized.POST("/user/my/avatar", users.UserUpdateProfileAvatar)
+			authorized.GET("/user/my", users.UserGetByToken)
+			authorized.PUT("/user/my", users.UserUpdateProfile)
+			authorized.PUT("/category/subscription/:id", users.UserCategorySubscribe)
+			authorized.DELETE("/category/subscription/:id", users.UserCategoryUnsubscribe)
 
 			// // Votes routes
-			v1.POST("/vote/comment/:id", votes.VoteComment)
-			v1.POST("/vote/component/:id", votes.VoteComponent)
-			v1.POST("/vote/post/:id", votes.VotePost)
+			authorized.POST("/vote/comment/:id", votes.VoteComment)
+			authorized.POST("/vote/component/:id", votes.VoteComponent)
+			authorized.POST("/vote/post/:id", votes.VotePost)
 		}
 	}
 

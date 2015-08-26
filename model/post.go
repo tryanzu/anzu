@@ -71,6 +71,7 @@ type Post struct {
 	Type       string          `bson:"type" json:"type"`
 	Content    string          `bson:"content" json:"content"`
 	Categories []string        `bson:"categories" json:"categories"`
+	Category   bson.ObjectId   `bson:"category" json:"category"`
 	Comments   Comments        `bson:"comments" json:"comments"`
 	Author     User            `bson:"author,omitempty" json:"author,omitempty"`
 	UserId     bson.ObjectId   `bson:"user_id,omitempty" json:"user_id,omitempty"`
@@ -92,6 +93,7 @@ type FeedPost struct {
 	Slug       string          `bson:"slug" json:"slug"`
 	Type       string          `bson:"type" json:"type"`
 	Categories []string        `bson:"categories" json:"categories"`
+	Category   bson.ObjectId   `bson:"category" json:"category"`
 	Comments   FeedComments    `bson:"comments" json:"comments"`
 	Author     User            `bson:"author,omitempty" json:"author,omitempty"`
 	UserId     bson.ObjectId   `bson:"user_id,omitempty" json:"user_id,omitempty"`
@@ -119,6 +121,7 @@ type PostForm struct {
 	Moves      string                 `json:"moves"`
 	Software   string                 `json:"software"`
 	Tag        string                 `json:"tag"`
+	Category   string                 `json:"category"`
 	IsQuestion bool                   `json:"isquestion"`
 	Components map[string]interface{} `json:"components"`
 }

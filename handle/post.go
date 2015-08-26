@@ -64,6 +64,7 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 	l := c.Query("limit")
 	f := c.Query("category")
 	relevant := c.Query("relevant")
+	fltr_categories := c.Query("categories")
 	before 			:= c.Query("before")
 	after 			:= c.Query("after")
 	from_author  	:= c.Query("user_id")
@@ -83,6 +84,7 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 
 	// Check if limit has been specified
 	if l != "" {
+
 		lim, err := strconv.Atoi(l)
 
 		if err != nil || lim <= 0 {
@@ -95,14 +97,14 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 
 	search := make(bson.M)
 
-	if f != "" && f != "recent" {
+	if f != "" && bson.IsObjectIdHex(f) {
 
-		search["categories"] = f
+		search["category"] = bson.ObjectIdHex(f)
 
 		if signed_in {
 
 			// Reset the counter for the user
-			di.resetUserCategoryCounter(f, bson.ObjectIdHex(user_id.(string)))
+			//di.resetUserCategoryCounter(f, bson.ObjectIdHex(user_id.(string)))
 		}
 	}
 
@@ -140,6 +142,79 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 		search["user_id"] = bson.ObjectIdHex(from_author)
 
 		user_order = true
+	}
+
+	_, filter_by_category := search["category"]
+
+	// Get the list of categories a user is following when the request is authenticated
+	if signed_in && !filter_by_category {
+
+		var user_categories []bson.ObjectId
+
+		user_categories_list, err := redis.SMembers("user:categories:" + user_id.(string))
+
+		if err != nil {
+			panic(err)
+		}
+
+		if len(user_categories_list) == 0 {
+
+			var user model.User
+
+			err := database.C("users").Find(bson.M{"_id": bson.ObjectIdHex(user_id.(string))}).One(&user)
+
+			if err != nil {
+				panic(err)
+			}
+
+			if len(user.Categories) > 0 {
+
+				var category_members []string 
+
+				for _, category_id := range user.Categories {
+
+					user_categories = append(user_categories, category_id)
+					category_members = append(category_members, category_id.Hex())
+				}
+
+				// Create the set inside redis and move on
+				redis.SAdd("user:categories:" + user_id.(string), category_members...)
+			}
+ 
+		} else {
+
+			for _, category_id := range user_categories_list {
+
+				if bson.IsObjectIdHex(category_id) {
+
+					user_categories = append(user_categories, bson.ObjectIdHex(category_id))
+				}
+			}
+		}
+
+		if len(user_categories) > 0 {
+			
+			search["category"] = bson.M{"$in": user_categories}
+		}
+
+	} else if fltr_categories != "" {
+
+		var user_categories []bson.ObjectId
+
+		provided_categories := strings.Split(fltr_categories, ",")
+
+		for _, category_id := range provided_categories {
+
+			if bson.IsObjectIdHex(category_id) {
+
+				user_categories = append(user_categories, bson.ObjectIdHex(category_id))
+			}
+		}
+
+		if len(user_categories) > 0 {
+			
+			search["category"] = bson.M{"$in": user_categories}
+		}
 	}
 
 	if relevant != "" {
@@ -545,6 +620,22 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 	// Get the form otherwise tell it has been an error
 	if c.BindWith(&post, binding.JSON) == nil {
 
+		post_category := post.Category
+
+		if bson.IsObjectIdHex(post_category) == false {
+
+			c.JSON(400, gin.H{"status": "error", "message": "Invalid category"})
+			return
+		}
+
+		category, err := database.C("categories").Find(bson.M{"parent": bson.M{"$exists": true}}).Count()
+
+		if err != nil || category < 1 {
+
+			c.JSON(400, gin.H{"status": "error", "message": "Invalid category"})
+			return
+		}
+
 		comments := model.Comments{
 			Count: 0,
 			Set:   make([]model.Comment, 0),
@@ -611,6 +702,7 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 					UserId:     bson_id,
 					Users:      users,
 					Categories: []string{"recommendations"},
+					Category:   bson.ObjectIdHex(post_category),
 					Votes:      votes,
 					IsQuestion: post.IsQuestion,
 					Created:    time.Now(),
@@ -720,6 +812,7 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 				UserId:     bson_id,
 				Users:      users,
 				Categories: []string{post.Tag},
+				Category:   bson.ObjectIdHex(post_category),
 				Votes:      votes,
 				IsQuestion: post.IsQuestion,
 				Created:    time.Now(),
@@ -756,9 +849,63 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 	c.JSON(400, gin.H{"status": "error", "message": "Couldnt create post, missing information...", "code": 205})
 }
 
+func (di *PostAPI) PostUploadAttachment(c *gin.Context) {
+
+	// Check the file inside the request
+	file, header, err := c.Request.FormFile("file")
+
+	if err != nil {
+		c.JSON(400, gin.H{"status": "error", "message": "Could not get the file..."})
+		return
+	}
+
+	defer file.Close()
+
+	// Read all the bytes from the image
+	data, err := ioutil.ReadAll(file)
+	if err != nil {
+		c.JSON(400, gin.H{"status": "error", "message": "Could not read the file contents..."})
+		return
+	}
+
+	// Detect the downloaded file type
+	dataType := http.DetectContentType(data)
+
+	if dataType[0:5] == "image" {
+
+		var extension, name string
+
+		extension = filepath.Ext(header.Filename)
+		name = bson.NewObjectId().Hex()
+
+		if extension == "" {
+
+			extension = ".jpg"
+		}
+
+		path := "posts/" + name + extension
+		err = di.S3Bucket.Put(path, data, dataType, s3.ACL("public-read"))
+
+		if err != nil {
+			panic(err)
+		}
+
+		s3_url := "http://assets.spartangeek.com/" + path
+
+		// Done
+		c.JSON(200, gin.H{"status": "okay", "url": s3_url})
+
+		return
+	}
+
+	c.JSON(400, gin.H{"status": "error", "message": "Could not detect an image file..."})
+}
+
 func (di *PostAPI) syncUsersFeed(post *model.Post) {
 
 	var users map[string]model.UserFirebase
+
+	redis := di.CacheService
 
 	// Recover from any panic even inside this goroutine
 	defer di.Errors.Recover()
@@ -771,18 +918,30 @@ func (di *PostAPI) syncUsersFeed(post *model.Post) {
 	_ = di.Firebase.Child("users", onlineParams, &users)
 
 	// Information about the post
-	category := post.Categories[0]
+	category := post.Category.Hex()
 
 	for user_id, user := range users {
 
-		if user.Viewing == "all" || user.Viewing == category {
-
-			// Add a pending counter
-			userPath := "users/" + user_id
-			userRef := di.Firebase.Child(userPath, nil, nil)
-
-			userRef.Set("pending", user.Pending+1, nil)
+		// Must be either seeing that category or own general feed
+		if user.Viewing != category && user.Viewing == "all" {
+			continue
 		}
+
+		if user.Viewing == "all" {
+
+			subscribed, err := redis.SIsMember("user:categories:" + user_id, category)
+
+			// User is actually not subscribed or and error just happened
+			if subscribed == true || err != nil {
+				continue
+			}
+		}
+
+		// Add a pending counter
+		userPath := "users/" + user_id
+		userRef := di.Firebase.Child(userPath, nil, nil)
+
+		userRef.Set("pending", user.Pending+1, nil)
 	}
 }
 

@@ -27,10 +27,36 @@ func (di *CategoryAPI) CategoriesGet(c *gin.Context) {
 	// Get the categories collection to perform there
 	collection := database.C("categories")
 
-	err := collection.Find(bson.M{}).All(&categories)
+	err := collection.Find(nil).All(&categories)
 
 	if err != nil {
 		panic(err)
+	}
+
+	// Filter the parent categories without allocating
+	parent_categories := []model.Category{}
+	child_categories := []model.Category{}
+
+	for _, category := range categories {
+
+		if category.Parent.Hex() == "" {
+
+			parent_categories = append(parent_categories, category)
+		} else {
+
+			child_categories = append(child_categories, category)
+		}
+	}
+
+	for category_index, category := range parent_categories {
+
+		for _, child := range child_categories {
+
+			if child.Parent == category.Id {
+
+				parent_categories[category_index].Child = append(parent_categories[category_index].Child, child)
+			}
+		}
 	}
 
 	// Check whether auth or not
@@ -113,7 +139,7 @@ func (di *CategoryAPI) CategoriesGet(c *gin.Context) {
 		}
 	}
 
-	sort.Sort(model.Categories(categories))
+	sort.Sort(model.CategoriesOrder(parent_categories))
 
-	c.JSON(200, categories)
+	c.JSON(200, parent_categories)
 }
