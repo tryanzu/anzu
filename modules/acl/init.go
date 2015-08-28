@@ -3,12 +3,33 @@ package acl
 import (
 	"encoding/json"
 	"github.com/mikespook/gorbac"
+	"github.com/fernandez14/spartangeek-blacker/model"
+	"github.com/fernandez14/spartangeek-blacker/mongo"
+	"gopkg.in/mgo.v2/bson"
 	"io/ioutil"
 )
 
 type Module struct {
-	Rules map[string]AclRole
 	Map   *gorbac.Rbac
+	Mongo *mongo.Service     `inject:""`
+	Rules map[string]AclRole
+}
+
+func (module *Module) User(id bson.ObjectId) *User {
+
+	var usr model.User
+	database := module.Mongo.Database
+
+	// Get the user using it's id
+	err := database.C("users").FindId(id).One(&usr)
+
+	if err != nil {
+		panic(err)
+	}
+
+	user := &User{data: usr, acl: module}
+
+	return user
 }
 
 func Boot(file string) *Module {
@@ -35,3 +56,4 @@ func Boot(file string) *Module {
 
 	return module
 }
+

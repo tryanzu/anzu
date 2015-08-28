@@ -85,7 +85,7 @@ func main() {
 		&inject.Object{Value: s3BucketService, Complete: true},
 		&inject.Object{Value: firebaseService, Complete: true},
 		&inject.Object{Value: statsService, Complete: true},
-		&inject.Object{Value: aclService, Complete: true},
+		&inject.Object{Value: aclService, Complete: false},
 		&inject.Object{Value: gamingService, Complete: false},
 		&inject.Object{Value: broadcaster, Complete: true, Name: "Notifications"},
 		&inject.Object{Value: &notificationsModule},

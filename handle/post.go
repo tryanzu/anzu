@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/cosn/firebase"
 	"github.com/fernandez14/spartangeek-blacker/model"
+	"github.com/fernandez14/spartangeek-blacker/modules/acl"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
@@ -39,6 +40,7 @@ type PostAPI struct {
 	Firebase      *firebase.Client             `inject:""`
 	Gaming        *GamingAPI                   `inject:""`
 	ConfigService *config.Config               `inject:""`
+	Acl           *acl.Module                  `inject:""`
 }
 
 /**
@@ -628,11 +630,21 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 			return
 		}
 
-		category, err := database.C("categories").Find(bson.M{"parent": bson.M{"$exists": true}}).Count()
+		var category model.Category
 
-		if err != nil || category < 1 {
+		err := database.C("categories").Find(bson.M{"parent": bson.M{"$exists": true}, "_id": bson.ObjectIdHex(post_category)}).One(&category)
+
+		if err != nil {
 
 			c.JSON(400, gin.H{"status": "error", "message": "Invalid category"})
+			return
+		}
+
+		user := di.Acl.User(bson_id)
+
+		if user.CanWrite(category) == false {
+
+			c.JSON(400, gin.H{"status": "error", "message": "Not enough permissions."})
 			return
 		}
 
