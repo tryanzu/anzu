@@ -6,18 +6,19 @@ import (
 	"github.com/cosn/firebase"
 	"github.com/facebookgo/inject"
 	"github.com/fernandez14/spartangeek-blacker/handle"
+	"github.com/fernandez14/spartangeek-blacker/interfaces"
+	"github.com/fernandez14/spartangeek-blacker/modules/acl"
 	"github.com/fernandez14/spartangeek-blacker/modules/api"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
-	"github.com/fernandez14/spartangeek-blacker/modules/notifications"
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
-	"github.com/fernandez14/spartangeek-blacker/interfaces"
+	"github.com/fernandez14/spartangeek-blacker/modules/notifications"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/getsentry/raven-go"
 	"github.com/mitchellh/goamz/aws"
 	"github.com/mitchellh/goamz/s3"
 	"github.com/olebedev/config"
-	"github.com/spf13/cobra"
 	"github.com/robfig/cron"
+	"github.com/spf13/cobra"
 	"github.com/xuyu/goredis"
 	"os"
 	"runtime"
@@ -45,6 +46,7 @@ func main() {
 
 	// Services for the DI
 	configService, _ := config.ParseJsonFile(envfile)
+	aclService := acl.Boot(string_value(configService.String("application.acl")))
 	mongoService := mongo.NewService(string_value(configService.String("database.uri")), string_value(configService.String("database.name")))
 	errorService, _ := raven.NewClient(string_value(configService.String("sentry.dns")), nil)
 	cacheService, _ := goredis.Dial(&goredis.DialConfig{Address: string_value(configService.String("cache.redis"))})
@@ -83,6 +85,7 @@ func main() {
 		&inject.Object{Value: s3BucketService, Complete: true},
 		&inject.Object{Value: firebaseService, Complete: true},
 		&inject.Object{Value: statsService, Complete: true},
+		&inject.Object{Value: aclService, Complete: true},
 		&inject.Object{Value: gamingService, Complete: false},
 		&inject.Object{Value: broadcaster, Complete: true, Name: "Notifications"},
 		&inject.Object{Value: &notificationsModule},
@@ -95,34 +98,37 @@ func main() {
 		os.Exit(1)
 	}
 
-    var cmdApi = &cobra.Command{
-        Use:   "api",
-        Short: "Starts API web server",
-        Long:  `Starts API web server listening
+	var cmdApi = &cobra.Command{
+		Use:   "api",
+		Short: "Starts API web server",
+		Long: `Starts API web server listening
         in the specified env port
         `,
-        Run: func(cmd *cobra.Command, args []string) {
-        	
-        	// Populate dependencies using the already instantiated DI
-		    api.Populate(g)
+		Run: func(cmd *cobra.Command, args []string) {
 
-		    // After DI populate initializations
+			// Populate dependencies using the already instantiated DI
+			api.Populate(g)
+
+			// After DI populate initializations
 			gamingService.Init()
 
-		    // Run API module
-		    api.Run()
-        },
-    }
+			// Setup gaming service manually
+			api.Gaming = gamingService
 
-    var cmdJobs = &cobra.Command{
-        Use:   "jobs",
-        Short: "Starts Jobs worker",
-        Long:  `Starts jobs worker daemon
+			// Run API module
+			api.Run()
+		},
+	}
+
+	var cmdJobs = &cobra.Command{
+		Use:   "jobs",
+		Short: "Starts Jobs worker",
+		Long: `Starts jobs worker daemon
         so things can run like crons
         `,
-        Run: func(cmd *cobra.Command, args []string) {
+		Run: func(cmd *cobra.Command, args []string) {
 
-            // Start the jobs
+			// Start the jobs
 			c := cron.New()
 
 			// Reset the user temporal stuff each X
@@ -131,16 +137,16 @@ func main() {
 			// Start the jobs
 			c.Start()
 
-			select{}
-        },
-    }
+			select {}
+		},
+	}
 
-    var rootCmd = &cobra.Command{Use: "blacker"}
-    rootCmd.AddCommand(cmdApi)
-    rootCmd.AddCommand(cmdJobs)
-    rootCmd.Execute()
+	var rootCmd = &cobra.Command{Use: "blacker"}
+	rootCmd.AddCommand(cmdApi)
+	rootCmd.AddCommand(cmdJobs)
+	rootCmd.Execute()
 
-    return
+	return
 }
 
 func string_value(value string, err error) string {

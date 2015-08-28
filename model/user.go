@@ -15,7 +15,7 @@ type User struct {
 	Password      string                 `bson:"password" json:"-"`
 	Step          int                    `bson:"step,omitempty" json:"step"`
 	Email         string                 `bson:"email" json:"email,omitempty"`
-	Categories 	  []bson.ObjectId		 `bson:"categories,omitempty" json:"categories,omitempty"`
+	Categories    []bson.ObjectId        `bson:"categories,omitempty" json:"categories,omitempty"`
 	Roles         []string               `bson:"roles" json:"roles,omitempty"`
 	Permissions   []string               `bson:"permissions" json:"permissions,omitempty"`
 	Description   string                 `bson:"description" json:"description,omitempty"`

@@ -82,7 +82,7 @@ func (di *NotificationsModule) ParseContentMentions(obj MentionParseObject) {
 			message = obj.Title
 
 			if target_user.Id != post.UserId {
-				
+
 				// Compose notification
 				notification := &model.UserFirebaseNotification{
 					UserId:       target_user.Id,
@@ -97,7 +97,7 @@ func (di *NotificationsModule) ParseContentMentions(obj MentionParseObject) {
 					Created:      time.Now(),
 					Updated:      time.Now(),
 				}
-				
+
 				// Send using the broadcaster
 				broadcaster.Send(notification)
 			}

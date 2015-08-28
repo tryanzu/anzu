@@ -21,7 +21,7 @@ type VoteForm struct {
 }
 
 type VoteCommentForm struct {
-	Comment string `json:"comment" binding:"required"`
+	Comment   string `json:"comment" binding:"required"`
 	Direction string `json:"direction" binding:"required"`
 }
 

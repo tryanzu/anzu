@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"github.com/cosn/firebase"
 	"github.com/fernandez14/spartangeek-blacker/model"
-	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/notifications"
+	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/ftrvxmtrx/gravatar"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -28,13 +28,13 @@ import (
 )
 
 type CommentAPI struct {
-	DataService 	*mongo.Service   					`inject:""`
-	Firebase    	*firebase.Client 					`inject:""`
-	ConfigService 	*config.Config 						`inject:""`
-	S3Bucket    	*s3.Bucket       					`inject:""`
-	Notifications  	*notifications.NotificationsModule	`inject:""`
-	Errors      	*exceptions.ExceptionsModule		`inject:""`
-	Gaming      	*GamingAPI       					`inject:""`
+	DataService   *mongo.Service                     `inject:""`
+	Firebase      *firebase.Client                   `inject:""`
+	ConfigService *config.Config                     `inject:""`
+	S3Bucket      *s3.Bucket                         `inject:""`
+	Notifications *notifications.NotificationsModule `inject:""`
+	Errors        *exceptions.ExceptionsModule       `inject:""`
+	Gaming        *GamingAPI                         `inject:""`
 }
 
 func (di *CommentAPI) CommentAdd(c *gin.Context) {
@@ -115,12 +115,12 @@ func (di *CommentAPI) CommentAdd(c *gin.Context) {
 
 		// Process the mentions. TODO - Determine race conditions
 		go di.Notifications.ParseContentMentions(notifications.MentionParseObject{
-			Type: "comment",
+			Type:          "comment",
 			RelatedNested: strconv.Itoa(post.Comments.Count),
-			Content: comment.Content,
-			Title: post.Title,
-			Author: user_bson_id,
-			Post: post,
+			Content:       comment.Content,
+			Title:         post.Title,
+			Author:        user_bson_id,
+			Post:          post,
 		})
 
 		// Check if we need to add participant
@@ -293,7 +293,7 @@ func (di *CommentAPI) downloadAssetFromUrl(from string, post_id bson.ObjectId) e
 
 					ctc := rem.String()
 
-					content := strings.Replace(comment, from, amazon_url + path, -1)
+					content := strings.Replace(comment, from, amazon_url+path, -1)
 
 					// Update the comment
 					di.DataService.Database.C("posts").Update(bson.M{"_id": post_id}, bson.M{"$set": bson.M{ctc: content}})

@@ -5,12 +5,12 @@ import (
 )
 
 type StatsComments struct {
-	Id  	bson.ObjectId `bson:"_id,omitempty" json:"_id,omitempty"`
-	Count 	int       	  `bson:"count" json:"count"`
+	Id    bson.ObjectId `bson:"_id,omitempty" json:"_id,omitempty"`
+	Count int           `bson:"count" json:"count"`
 }
 
 type Stats struct {
-	Comments 	int `json:"comments"`
-	Users 		int `json:"users"`
-	Posts 		int `json:"posts"`
+	Comments int `json:"comments"`
+	Users    int `json:"users"`
+	Posts    int `json:"posts"`
 }

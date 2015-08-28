@@ -1,26 +1,27 @@
 package api
 
 import (
+	"fmt"
 	"github.com/facebookgo/inject"
 	"github.com/fernandez14/spartangeek-blacker/handle"
 	"github.com/gin-gonic/gin"
-	"fmt"
 	"os"
 )
 
 type Module struct {
-	Posts 		handle.PostAPI
-	Votes 		handle.VoteAPI
-	Users 		handle.UserAPI
-	Categories 	handle.CategoryAPI
-	Elections 	handle.ElectionAPI
-	Comments 	handle.CommentAPI
-	Parts 		handle.PartAPI
-	Stats 		handle.StatAPI
+	Posts       handle.PostAPI
+	Votes       handle.VoteAPI
+	Users       handle.UserAPI
+	Categories  handle.CategoryAPI
+	Elections   handle.ElectionAPI
+	Comments    handle.CommentAPI
+	Parts       handle.PartAPI
+	Stats       handle.StatAPI
 	Middlewares handle.MiddlewareAPI
-	Collector 	handle.CollectorAPI
-	Sitemap 	handle.SitemapAPI
-	Gaming   	handle.GamingAPI
+	Collector   handle.CollectorAPI
+	Sitemap     handle.SitemapAPI
+	Acl         handle.AclAPI
+	Gaming      *handle.GamingAPI
 }
 
 func (module *Module) Populate(g inject.Graph) {
@@ -36,6 +37,7 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.Parts},
 		&inject.Object{Value: &module.Stats},
 		&inject.Object{Value: &module.Middlewares},
+		&inject.Object{Value: &module.Acl},
 		&inject.Object{Value: &module.Sitemap},
 	)
 
@@ -53,7 +55,7 @@ func (module *Module) Populate(g inject.Graph) {
 
 func (module *Module) Run() {
 
-    // Start gin classic middlewares
+	// Start gin classic middlewares
 	router := gin.Default()
 
 	// Middlewares setup
@@ -70,10 +72,13 @@ func (module *Module) Run() {
 	v1.Use(module.Middlewares.Authorization())
 	{
 		v1.POST("/subscribe", module.Users.UserSubscribe)
-		
+
 		// Gamification routes
 		v1.GET("/gamification", module.Gaming.GetRules)
-		
+
+		// ACL routes
+		v1.GET("/permissions", module.Acl.GetRules)
+
 		// Post routes
 		v1.GET("/feed", module.Posts.FeedGet)
 		v1.GET("/post", module.Posts.FeedGet)

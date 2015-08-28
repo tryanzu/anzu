@@ -1,8 +1,8 @@
 package handle
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
-    "github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/gin-gonic/gin"
 	"github.com/xuyu/goredis"
 	"gopkg.in/mgo.v2/bson"
@@ -41,9 +41,9 @@ func (di *SitemapAPI) GetSitemap(c *gin.Context) {
 	urls = append(urls, model.SitemapUrl{Location: "http://www.spartangeek.com", Updated: time.Now().Format("2006-01-02T15:04:05.999999-07:00"), Priority: "1.0"})
 
 	sitemap := model.SitemapSet{
-		Urls: urls,
-		XMLNs: "http://www.sitemaps.org/schemas/sitemap/0.9",
-		XSI: "http://www.w3.org/2001/XMLSchema-instance",
+		Urls:        urls,
+		XMLNs:       "http://www.sitemaps.org/schemas/sitemap/0.9",
+		XSI:         "http://www.w3.org/2001/XMLSchema-instance",
 		XSILocation: "http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd",
 	}
 

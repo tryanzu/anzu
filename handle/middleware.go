@@ -3,22 +3,22 @@ package handle
 import (
 	"errors"
 	"fmt"
+	"github.com/cactus/go-statsd-client/statsd"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/getsentry/raven-go"
 	"github.com/gin-gonic/gin"
 	"github.com/olebedev/config"
-	"github.com/fernandez14/spartangeek-blacker/mongo"
-	"github.com/cactus/go-statsd-client/statsd"
 	"os"
-	"time"
 	"strings"
+	"time"
 )
 
 type MiddlewareAPI struct {
 	ErrorService  *raven.Client  `inject:""`
 	ConfigService *config.Config `inject:""`
-	DataService *mongo.Service `inject:""`
-	StatsService *statsd.Client `inject:""`
+	DataService   *mongo.Service `inject:""`
+	StatsService  *statsd.Client `inject:""`
 }
 
 func (di *MiddlewareAPI) CORS() gin.HandlerFunc {
@@ -48,8 +48,8 @@ func (di *MiddlewareAPI) StatsdTiming() gin.HandlerFunc {
 
 		latency := time.Since(t)
 		name := c.HandlerName()
-		name  = strings.Replace(name, "github.com/fernandez14/spartangeek-blacker/handle.*", "", -1)
-		name  = name[0:len(name)-4]
+		name = strings.Replace(name, "github.com/fernandez14/spartangeek-blacker/handle.*", "", -1)
+		name = name[0 : len(name)-4]
 
 		// Send the latency information about the handler
 		di.StatsService.TimingDuration(name, latency, 1.0)

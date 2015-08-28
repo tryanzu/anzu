@@ -56,16 +56,15 @@ func (di *UserAPI) UserSubscribe(c *gin.Context) {
 	}
 }
 
-
 func (di *UserAPI) UserCategorySubscribe(c *gin.Context) {
 
 	var user model.User
 
 	// Get the database interface from the DI
-	database 	 := di.DataService.Database
+	database := di.DataService.Database
 	redis := di.CacheService
-	user_id  	 := c.MustGet("user_id")
-	category_id  := c.Param("id")
+	user_id := c.MustGet("user_id")
+	category_id := c.Param("id")
 	user_bson_id := bson.ObjectIdHex(user_id.(string))
 
 	if bson.IsObjectIdHex(category_id) == false {
@@ -88,7 +87,7 @@ func (di *UserAPI) UserCategorySubscribe(c *gin.Context) {
 	if err != nil {
 		panic(err)
 	}
-	
+
 	for _, user_category_id := range user.Categories {
 
 		if user_category_id.Hex() == category_id {
@@ -105,7 +104,7 @@ func (di *UserAPI) UserCategorySubscribe(c *gin.Context) {
 	}
 
 	// Create the set inside redis and move on
-	redis.SAdd("user:categories:" + user_id.(string), category_id) 
+	redis.SAdd("user:categories:"+user_id.(string), category_id)
 
 	c.JSON(200, gin.H{"status": "okay"})
 }
@@ -113,10 +112,10 @@ func (di *UserAPI) UserCategorySubscribe(c *gin.Context) {
 func (di *UserAPI) UserCategoryUnsubscribe(c *gin.Context) {
 
 	// Get the database interface from the DI
-	database 	 := di.DataService.Database
+	database := di.DataService.Database
 	redis := di.CacheService
-	user_id  	 := c.MustGet("user_id")
-	category_id  := c.Param("id")
+	user_id := c.MustGet("user_id")
+	category_id := c.Param("id")
 	user_bson_id := bson.ObjectIdHex(user_id.(string))
 
 	if bson.IsObjectIdHex(category_id) == false {
@@ -141,7 +140,7 @@ func (di *UserAPI) UserCategoryUnsubscribe(c *gin.Context) {
 	}
 
 	// Create the set inside redis and move on
-	redis.SRem("user:categories:" + user_id.(string), category_id) 
+	redis.SRem("user:categories:"+user_id.(string), category_id)
 
 	c.JSON(200, gin.H{"status": "okay"})
 }
@@ -461,10 +460,10 @@ func (di *UserAPI) UserUpdateProfileAvatar(c *gin.Context) {
 		}
 
 		options := bimg.Options{
-			Width:  120,
-			Height: 120,
-			Embed:  true,
-			Crop:   true,
+			Width:   120,
+			Height:  120,
+			Embed:   true,
+			Crop:    true,
 			Quality: 100,
 		}
 

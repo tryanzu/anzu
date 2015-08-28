@@ -5,7 +5,7 @@ import (
 )
 
 type CoreModule struct {
-	Dependencies []*inject.Object 
+	Dependencies []*inject.Object
 }
 
 func (core *CoreModule) Inject(service *inject.Object) {

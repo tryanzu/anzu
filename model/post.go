@@ -25,7 +25,7 @@ type Comments struct {
 }
 
 type FeedComments struct {
-	Count int       `bson:"count" json:"count"`
+	Count int `bson:"count" json:"count"`
 }
 
 type Comment struct {
@@ -33,7 +33,7 @@ type Comment struct {
 	Votes    Votes         `bson:"votes" json:"votes"`
 	User     interface{}   `bson:"author,omitempty" json:"author,omitempty"`
 	Position int           `bson:"position,omitempty" json:"position"`
-	Liked    int     	   `bson:"liked,omitempty" json:"liked,omitempty"`
+	Liked    int           `bson:"liked,omitempty" json:"liked,omitempty"`
 	Content  string        `bson:"content" json:"content"`
 	Created  time.Time     `bson:"created_at" json:"created_at"`
 }
@@ -82,34 +82,34 @@ type Post struct {
 	Pinned     bool            `bson:"pinned,omitempty" json:"pinned,omitempty"`
 	NoComments bool            `bson:"comments_blocked" json:"comments_blocked"`
 	IsQuestion bool            `bson:"is_question" json:"is_question"`
-	Liked      int     	   	   `bson:"liked,omitempty" json:"liked,omitempty"`
+	Liked      int             `bson:"liked,omitempty" json:"liked,omitempty"`
 	Created    time.Time       `bson:"created_at" json:"created_at"`
 	Updated    time.Time       `bson:"updated_at" json:"updated_at"`
 }
 
 type FeedPost struct {
-	Id         bson.ObjectId   `bson:"_id,omitempty" json:"id,omitempty"`
-	Title      string          `bson:"title" json:"title"`
-	Slug       string          `bson:"slug" json:"slug"`
-	Type       string          `bson:"type" json:"type"`
-	Categories []string        `bson:"categories" json:"categories"`
-	Category   bson.ObjectId   `bson:"category" json:"category"`
-	Comments   FeedComments    `bson:"comments" json:"comments"`
-	Author     User            `bson:"author,omitempty" json:"author,omitempty"`
-	UserId     bson.ObjectId   `bson:"user_id,omitempty" json:"user_id,omitempty"`
-	Votes      Votes           `bson:"votes" json:"votes"`
-	Pinned     bool            `bson:"pinned,omitempty" json:"pinned,omitempty"`
-	Stats	   FeedPostStat	   `bson:"stats,omitempty" json:"stats"`
-	Created    time.Time       `bson:"created_at" json:"created_at"`
-	Updated    time.Time       `bson:"updated_at" json:"updated_at"`
+	Id         bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
+	Title      string        `bson:"title" json:"title"`
+	Slug       string        `bson:"slug" json:"slug"`
+	Type       string        `bson:"type" json:"type"`
+	Categories []string      `bson:"categories" json:"categories"`
+	Category   bson.ObjectId `bson:"category" json:"category"`
+	Comments   FeedComments  `bson:"comments" json:"comments"`
+	Author     User          `bson:"author,omitempty" json:"author,omitempty"`
+	UserId     bson.ObjectId `bson:"user_id,omitempty" json:"user_id,omitempty"`
+	Votes      Votes         `bson:"votes" json:"votes"`
+	Pinned     bool          `bson:"pinned,omitempty" json:"pinned,omitempty"`
+	Stats      FeedPostStat  `bson:"stats,omitempty" json:"stats"`
+	Created    time.Time     `bson:"created_at" json:"created_at"`
+	Updated    time.Time     `bson:"updated_at" json:"updated_at"`
 }
 
 type FeedPostStat struct {
-	Viewed	   	  int 			   `bson:"viewed,omitempty" json:"viewed"`
-	Reached	   	  int 			   `bson:"reached,omitempty" json:"reached"`
-	ViewRate   	  float64 		   `bson:"view_rate,omitempty" json:"view_rate"`
-	CommentRate   float64 		   `bson:"comment_rate,omitempty" json:"comment_rate"`
-	FinalRate	  float64		   `bson:"final_rate,omitempty" json:"final_rate"`
+	Viewed      int     `bson:"viewed,omitempty" json:"viewed"`
+	Reached     int     `bson:"reached,omitempty" json:"reached"`
+	ViewRate    float64 `bson:"view_rate,omitempty" json:"view_rate"`
+	CommentRate float64 `bson:"comment_rate,omitempty" json:"comment_rate"`
+	FinalRate   float64 `bson:"final_rate,omitempty" json:"final_rate"`
 }
 
 type PostForm struct {
@@ -146,4 +146,3 @@ func (slice ByBestRated) Less(i, j int) bool {
 func (slice ByBestRated) Swap(i, j int) {
 	slice[i], slice[j] = slice[j], slice[i]
 }
-
