@@ -626,7 +626,7 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 
 		if bson.IsObjectIdHex(post_category) == false {
 
-			c.JSON(400, gin.H{"status": "error", "message": "Invalid category"})
+			c.JSON(400, gin.H{"status": "error", "message": "Invalid category id"})
 			return
 		}
 
