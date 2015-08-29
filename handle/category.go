@@ -3,6 +3,7 @@ package handle
 import (
 	"encoding/json"
 	"github.com/fernandez14/spartangeek-blacker/model"
+	"github.com/fernandez14/spartangeek-blacker/modules/acl"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/gin-gonic/gin"
 	"github.com/xuyu/goredis"
@@ -12,6 +13,7 @@ import (
 )
 
 type CategoryAPI struct {
+	Acl          *acl.Module    `inject:""`
 	DataService  *mongo.Service `inject:""`
 	CacheService *goredis.Redis `inject:""`
 }
@@ -62,9 +64,38 @@ func (di *CategoryAPI) CategoriesGet(c *gin.Context) {
 	// Check whether auth or not
 	_, signed_in := c.Get("token")
 
+	// Check the categories the user can write if parameter is provided
+	perms := c.Query("permissions")
+
 	if signed_in {
 
-		user_id := c.MustGet("user_id")
+		user_id := c.MustGet("user_id").(string)
+
+		if perms == "write" {
+
+			user := di.Acl.User(bson.ObjectIdHex(user_id))
+
+			// Remove child categories with no write permissions
+			for category_index, _ := range parent_categories {
+
+				for child_index, child := range parent_categories[category_index].Child {
+
+					if user.CanWrite(child) == false {
+
+						parent_categories[category_index].Child = append(parent_categories[category_index].Child[:child_index], parent_categories[category_index].Child[child_index+1:]...)
+					}
+				}
+			}
+
+			// Clean up parent categories with no subcategories
+			for category_index, category := range parent_categories {
+
+				if len(category.Child) == 0 {
+					
+					parent_categories = append(parent_categories[:category_index], parent_categories[category_index+1:]...)
+				}
+			}
+		}
 
 		user_counter := model.Counter{}
 		err := database.C("counters").Find(bson.M{"user_id": user_id}).One(&user_counter)
