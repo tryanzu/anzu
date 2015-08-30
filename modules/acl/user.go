@@ -7,7 +7,7 @@ import (
 )
 
 type User struct {
-	data model.User  
+	data model.User
 	acl  *Module
 }
 
@@ -25,7 +25,7 @@ func (user *User) CanWrite(category model.Category) bool {
 		// Basic check of the existence of the role inside the category
 		if allowed, _ := helpers.InArray(role, category.Permissions.Write); allowed {
 			return true
-		}	
+		}
 
 		// Deep check within parents
 		for _, allowed := range category.Permissions.Write {
@@ -53,23 +53,23 @@ func (user *User) CanRead(category model.Category) bool {
 
 		if allowed, _ := helpers.InArray(role, category.Permissions.Read); allowed {
 			return true
-		}	
+		}
 	}
 
 	return false
 }
 
-func (user *User) checkRolesRecursive(role string, compare string) bool{
+func (user *User) checkRolesRecursive(role string, compare string) bool {
 
 	if role_permissions := user.acl.Map.Get(role); role_permissions != nil {
 
 		parents := role_permissions.Parents()
 
-		log.Printf("%v has parents %v\n", role, parents) 
-		
+		log.Printf("%v has parents %v\n", role, parents)
+
 		if allowed, _ := helpers.InArray(compare, parents); allowed {
 			return true
-		} 
+		}
 
 		for _, parent_role := range parents {
 

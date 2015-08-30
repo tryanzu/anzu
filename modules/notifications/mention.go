@@ -96,7 +96,7 @@ func (di *NotificationsModule) ParseContentMentions(obj MentionParseObject) {
 				if err != nil || sent > 0 {
 					continue
 				}
-			
+
 				// Compose notification
 				notification := &model.UserFirebaseNotification{
 					UserId:       target_user.Id,
@@ -111,6 +111,15 @@ func (di *NotificationsModule) ParseContentMentions(obj MentionParseObject) {
 					Created:      time.Now(),
 					Updated:      time.Now(),
 				}
+
+				mention := &model.MentionModel{
+					PostId: post.Id,
+					UserId: target_user.Id,
+					Nested: position,
+				}
+
+				// Insert the mention for further uses
+				database.C("mentions").Insert(mention)
 
 				// Send using the broadcaster
 				broadcaster.Send(notification)

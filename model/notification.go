@@ -50,9 +50,9 @@ type UserFirebaseNotifications struct {
 }
 
 type MentionModel struct {
-	PostId     bson.ObjectId `bson:"post_id" json:"post_id"`
-	UserId     bson.ObjectId `bson:"user_id" json:"user_id"`
-	Nested     int           `bson:"nested" json:"nested"`
+	PostId bson.ObjectId `bson:"post_id" json:"post_id"`
+	UserId bson.ObjectId `bson:"user_id" json:"user_id"`
+	Nested int           `bson:"nested" json:"nested"`
 }
 
 type UserFirebase struct {

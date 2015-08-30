@@ -17,6 +17,7 @@ import (
 	"github.com/mitchellh/goamz/s3"
 	"github.com/olebedev/config"
 	"gopkg.in/mgo.v2/bson"
+	"html"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -25,7 +26,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"html"
 )
 
 type CommentAPI struct {
@@ -188,7 +188,7 @@ func (di *CommentAPI) CommentUpdate(c *gin.Context) {
 	if c.BindWith(&commentForm, binding.JSON) == nil {
 
 		// Get the post using the slug
-		id  := bson.ObjectIdHex(id)
+		id := bson.ObjectIdHex(id)
 		err := database.C("posts").FindId(id).One(&post)
 
 		if err != nil {
@@ -200,7 +200,7 @@ func (di *CommentAPI) CommentUpdate(c *gin.Context) {
 		comment_index, err := strconv.Atoi(index)
 
 		if err != nil || len(post.Comments.Set)-1 < comment_index {
-			
+
 			c.JSON(400, gin.H{"message": "Invalid request, no valid comment index.", "status": "error"})
 			return
 		}

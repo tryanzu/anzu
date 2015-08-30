@@ -91,7 +91,7 @@ func (di *CategoryAPI) CategoriesGet(c *gin.Context) {
 			for category_index, category := range parent_categories {
 
 				if len(category.Child) == 0 {
-					
+
 					parent_categories = append(parent_categories[:category_index], parent_categories[category_index+1:]...)
 				}
 			}

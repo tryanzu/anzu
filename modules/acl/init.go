@@ -2,16 +2,16 @@ package acl
 
 import (
 	"encoding/json"
-	"github.com/mikespook/gorbac"
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
+	"github.com/mikespook/gorbac"
 	"gopkg.in/mgo.v2/bson"
 	"io/ioutil"
 )
 
 type Module struct {
 	Map   *gorbac.Rbac
-	Mongo *mongo.Service     `inject:""`
+	Mongo *mongo.Service `inject:""`
 	Rules map[string]AclRole
 }
 
@@ -56,4 +56,3 @@ func Boot(file string) *Module {
 
 	return module
 }
-
