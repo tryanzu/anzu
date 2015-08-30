@@ -91,7 +91,7 @@ func (di *NotificationsModule) ParseContentMentions(obj MentionParseObject) {
 				}
 
 				// Check if mention has been sent already before for this same entity
-				sent, err := database.C("mentions").Find(bson.M{"post_id": post.Id, "user_id": target_user.Id, "nested": obj.RelatedNested}).Count()
+				sent, err := database.C("mentions").Find(bson.M{"post_id": post.Id, "user_id": target_user.Id, "nested": position}).Count()
 
 				if err != nil || sent > 0 {
 					continue
