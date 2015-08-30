@@ -25,6 +25,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"html"
 )
 
 type CommentAPI struct {
@@ -155,6 +156,94 @@ func (di *CommentAPI) CommentAdd(c *gin.Context) {
 			// Add the gamification contribution
 			go di.Gaming.Related(user_bson_id).Did("comment")
 		}
+
+		c.JSON(200, gin.H{"status": "okay", "message": comment.Content})
+		return
+	}
+
+	c.JSON(401, gin.H{"error": "Not authorized.", "status": 704})
+}
+
+func (di *CommentAPI) CommentUpdate(c *gin.Context) {
+
+	// Get the database interface from the DI
+	database := di.DataService.Database
+
+	id := c.Params.ByName("id")
+	index := c.Params.ByName("index")
+
+	if bson.IsObjectIdHex(id) == false {
+
+		c.JSON(400, gin.H{"error": "Invalid request, no valid params.", "status": 701})
+		return
+	}
+
+	user_id := c.MustGet("user_id")
+	user_bson_id := bson.ObjectIdHex(user_id.(string))
+
+	var commentForm model.CommentForm
+	var post model.Post
+	var assets []string
+
+	if c.BindWith(&commentForm, binding.JSON) == nil {
+
+		// Get the post using the slug
+		id  := bson.ObjectIdHex(id)
+		err := database.C("posts").FindId(id).One(&post)
+
+		if err != nil {
+
+			c.JSON(404, gin.H{"message": "Couldnt find the post", "status": "error"})
+			return
+		}
+
+		comment_index, err := strconv.Atoi(index)
+
+		if err != nil || len(post.Comments.Set)-1 < comment_index {
+			
+			c.JSON(400, gin.H{"message": "Invalid request, no valid comment index.", "status": "error"})
+			return
+		}
+
+		comment := post.Comments.Set[comment_index]
+		content := html.EscapeString(commentForm.Content)
+
+		if user_bson_id != comment.UserId {
+
+			c.JSON(400, gin.H{"message": "Can't edit others comments.", "status": "error"})
+			return
+		}
+
+		// Get assets from the new content
+		urls, _ := regexp.Compile(`http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+`)
+		assets = urls.FindAllString(content, -1)
+
+		for _, asset := range assets {
+
+			// Download the asset on other routine in order not block the API request
+			go di.downloadAssetFromUrl(asset, post.Id)
+		}
+
+		// Database post comment path
+		comment_path := "comments.set." + index + ".content"
+		comment_path_updated := "comments.set." + index + ".updated_at"
+
+		// Update the post and push the comments
+		err = database.C("posts").Update(bson.M{"_id": post.Id}, bson.M{"$set": bson.M{comment_path: content, "updated_at": time.Now(), comment_path_updated: time.Now()}})
+
+		if err != nil {
+			panic(err)
+		}
+
+		// Process the mentions. TODO - Determine race conditions
+		go di.Notifications.ParseContentMentions(notifications.MentionParseObject{
+			Type:          "comment",
+			RelatedNested: index,
+			Content:       comment.Content,
+			Title:         post.Title,
+			Author:        user_bson_id,
+			Post:          post,
+		})
 
 		c.JSON(200, gin.H{"status": "okay", "message": comment.Content})
 		return

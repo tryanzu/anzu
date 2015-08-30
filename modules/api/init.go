@@ -123,6 +123,7 @@ func (module *Module) Run() {
 		{
 			// Comment routes
 			authorized.POST("/post/comment/:id", module.Comments.CommentAdd)
+			authorized.PUT("/post/comment/:id/:index", module.Comments.CommentUpdate)
 
 			// Post routes
 			authorized.POST("/post", module.Posts.PostCreate)

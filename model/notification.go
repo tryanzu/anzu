@@ -49,6 +49,12 @@ type UserFirebaseNotifications struct {
 	List  map[string]UserFirebaseNotification `json:"list,omitempty"`
 }
 
+type MentionModel struct {
+	PostId     bson.ObjectId `bson:"post_id" json:"post_id"`
+	UserId     bson.ObjectId `bson:"user_id" json:"user_id"`
+	Nested     int           `bson:"nested" json:"nested"`
+}
+
 type UserFirebase struct {
 	Online  int    `json:"online"`
 	Viewing string `json:"viewing"`
