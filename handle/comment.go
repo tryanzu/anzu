@@ -239,7 +239,7 @@ func (di *CommentAPI) CommentUpdate(c *gin.Context) {
 		go di.Notifications.ParseContentMentions(notifications.MentionParseObject{
 			Type:          "comment",
 			RelatedNested: index,
-			Content:       comment.Content,
+			Content:       content,
 			Title:         post.Title,
 			Author:        user_bson_id,
 			Post:          post,
