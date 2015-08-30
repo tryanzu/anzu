@@ -543,6 +543,15 @@ func (di *PostAPI) PostsGetOne(c *gin.Context) {
 			}
 		}
 
+		// Remove deleted comments from the set
+		for index := range post.Comments.Set {
+
+			if post.Comments.Set[index].Deleted.IsZero() == false {
+
+				post.Comments.Set = append(post.Comments.Set[:index], post.Comments.Set[index+1:]...)
+			}
+		}
+
 		// Sort by created at
 		sort.Sort(model.ByCommentCreatedAt(post.Comments.Set))
 

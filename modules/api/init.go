@@ -124,6 +124,7 @@ func (module *Module) Run() {
 			// Comment routes
 			authorized.POST("/post/comment/:id", module.Comments.CommentAdd)
 			authorized.PUT("/post/comment/:id/:index", module.Comments.CommentUpdate)
+			authorized.DELETE("/post/comment/:id/:index", module.Comments.CommentDelete)
 
 			// Post routes
 			authorized.POST("/post", module.Posts.PostCreate)

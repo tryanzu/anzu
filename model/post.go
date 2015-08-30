@@ -36,6 +36,7 @@ type Comment struct {
 	Liked    int           `bson:"liked,omitempty" json:"liked,omitempty"`
 	Content  string        `bson:"content" json:"content"`
 	Created  time.Time     `bson:"created_at" json:"created_at"`
+	Deleted  time.Time     `bson:"deleted_at" json:"deleted_at"`
 }
 
 type Components struct {

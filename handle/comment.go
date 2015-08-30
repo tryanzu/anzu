@@ -252,6 +252,62 @@ func (di *CommentAPI) CommentUpdate(c *gin.Context) {
 	c.JSON(401, gin.H{"error": "Not authorized.", "status": 704})
 }
 
+func (di *CommentAPI) CommentDelete(c *gin.Context) {
+
+	// Get the database interface from the DI
+	database := di.DataService.Database
+
+	id := c.Params.ByName("id")
+	index := c.Params.ByName("index")
+
+	if bson.IsObjectIdHex(id) == false {
+
+		c.JSON(400, gin.H{"error": "Invalid request, no valid params.", "status": 701})
+		return
+	}
+
+	user_id := c.MustGet("user_id")
+	user_bson_id := bson.ObjectIdHex(user_id.(string))
+
+	var post model.Post
+
+	// Get the post using the slug
+	bson_id := bson.ObjectIdHex(id)
+	err := database.C("posts").FindId(bson_id).One(&post)
+
+	if err != nil {
+
+		c.JSON(404, gin.H{"message": "Couldnt find the post", "status": "error"})
+		return
+	}
+
+	comment_index, err := strconv.Atoi(index)
+
+	if err != nil || len(post.Comments.Set)-1 < comment_index {
+
+		c.JSON(400, gin.H{"message": "Invalid request, no valid comment index.", "status": "error"})
+		return
+	}
+
+	comment := post.Comments.Set[comment_index]
+
+	if user_bson_id != comment.UserId {
+
+		c.JSON(400, gin.H{"message": "Can't delete others comments.", "status": "error"})
+		return
+	}
+
+	// Database post comment path
+	comment_path := "comments.set." + index + ".deleted_at"
+
+	// Update the post and push the comments
+	err = database.C("posts").Update(bson.M{"_id": post.Id}, bson.M{"$set": bson.M{comment_path: time.Now()}})
+
+	c.JSON(200, gin.H{"status": "okay"})
+	return
+} 
+
+
 func (di *CommentAPI) notifyCommentPostAuth(post model.Post, user_id bson.ObjectId) {
 
 	// Recover from any panic even inside this goroutine
