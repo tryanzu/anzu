@@ -342,7 +342,7 @@ func (di *CommentAPI) notifyCommentPostAuth(post model.Post, user_id bson.Object
 			UserId:       user_id,
 			RelatedId:    post.Id,
 			RelatedExtra: post.Slug,
-			Position:     post.Comments.Count,
+			Position:     len(post.Comments.Set),
 			Title:        title,
 			Text:         message,
 			Related:      "comment",
