@@ -61,16 +61,13 @@ func (di *CommentAPI) CommentAdd(c *gin.Context) {
 		// Get the post using the slug
 		id := bson.ObjectIdHex(id)
 
-		// Posts collection
-		collection := database.C("posts")
-
 		var post model.Post
 
-		err := collection.FindId(id).One(&post)
+		err := database.C("posts").FindId(id).One(&post)
 
 		if err != nil {
 
-			c.JSON(404, gin.H{"error": "Couldnt find the post", "status": 705})
+			c.JSON(404, gin.H{"message": "Couldnt find the post", "status": "error"})
 			return
 		}
 
@@ -108,7 +105,7 @@ func (di *CommentAPI) CommentAdd(c *gin.Context) {
 
 		// Update the post and push the comments
 		change := bson.M{"$push": bson.M{"comments.set": comment}, "$set": bson.M{"updated_at": time.Now()}, "$inc": bson.M{"comments.count": 1}}
-		err = collection.Update(bson.M{"_id": post.Id}, change)
+		err = database.C("posts").Update(bson.M{"_id": post.Id}, change)
 
 		if err != nil {
 			panic(err)
@@ -117,7 +114,7 @@ func (di *CommentAPI) CommentAdd(c *gin.Context) {
 		// Process the mentions. TODO - Determine race conditions
 		go di.Notifications.ParseContentMentions(notifications.MentionParseObject{
 			Type:          "comment",
-			RelatedNested: strconv.Itoa(post.Comments.Count),
+			RelatedNested: strconv.Itoa(len(post.Comments.Set)),
 			Content:       comment.Content,
 			Title:         post.Title,
 			Author:        user_bson_id,
@@ -140,7 +137,7 @@ func (di *CommentAPI) CommentAdd(c *gin.Context) {
 
 			// Add the user to the user list
 			change := bson.M{"$push": bson.M{"users": user_bson_id}}
-			err = collection.Update(bson.M{"_id": post.Id}, change)
+			err = database.C("posts").Update(bson.M{"_id": post.Id}, change)
 
 			if err != nil {
 				panic(err)
@@ -301,7 +298,11 @@ func (di *CommentAPI) CommentDelete(c *gin.Context) {
 	comment_path := "comments.set." + index + ".deleted_at"
 
 	// Update the post and push the comments
-	err = database.C("posts").Update(bson.M{"_id": post.Id}, bson.M{"$set": bson.M{comment_path: time.Now()}})
+	err = database.C("posts").Update(bson.M{"_id": post.Id}, bson.M{"$set": bson.M{comment_path: time.Now()}, "$inc": bson.M{"comments.count": -1}})
+
+	if err != nil {
+		panic(err)
+	}
 
 	c.JSON(200, gin.H{"status": "okay"})
 	return
