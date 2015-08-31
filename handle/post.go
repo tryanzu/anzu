@@ -269,6 +269,9 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 
 	} else {
 
+		// Get all but deleted
+		search["deleted"] = bson.M{"$exists": false}
+
 		// Prepare the database to fetch the feed
 		posts_collection := database.C("posts")
 		get_feed := posts_collection.Find(search).Select(bson.M{"comments.set": 0, "content": 0, "components": 0})
@@ -909,6 +912,49 @@ func (di *PostAPI) PostUploadAttachment(c *gin.Context) {
 	}
 
 	c.JSON(400, gin.H{"status": "error", "message": "Could not detect an image file..."})
+}
+
+func (di *PostAPI) PostDelete(c *gin.Context) {
+
+	var post model.Post
+
+	// Get the database interface from the DI
+	database := di.DataService.Database
+
+	// Get the post using the id
+	id := c.Params.ByName("id")
+
+	if bson.IsObjectIdHex(id) == false {
+
+		c.JSON(400, gin.H{"message": "Invalid request, no valid params.", "status": "error"})
+		return
+	}
+
+	// Get the post using the slug
+	user_id := c.MustGet("user_id")
+	user_bson_id := bson.ObjectIdHex(user_id.(string))
+	bson_id := bson.ObjectIdHex(id)
+	err := database.C("posts").FindId(bson_id).One(&post)
+
+	if err != nil {
+
+		c.JSON(404, gin.H{"message": "Couldnt find the post", "status": "error"})
+		return
+	}
+
+	if user_bson_id != post.UserId {
+
+		c.JSON(400, gin.H{"message": "Can't delete others posts.", "status": "error"})
+		return
+	}	
+
+	err = database.C("posts").Update(bson.M{"_id": post.Id}, bson.M{"$set": bson.M{"deleted": true, "deleted_at": time.Now()}})
+
+	if err != nil {
+		panic(err)
+	}
+
+	c.JSON(200, gin.H{"status": "okay"})
 }
 
 func (di *PostAPI) syncUsersFeed(post *model.Post) {

@@ -86,6 +86,7 @@ type Post struct {
 	Liked      int             `bson:"liked,omitempty" json:"liked,omitempty"`
 	Created    time.Time       `bson:"created_at" json:"created_at"`
 	Updated    time.Time       `bson:"updated_at" json:"updated_at"`
+	Deleted    time.Time       `bson:"deleted_at,omitempty" json:"deleted_at,omitempty"`
 }
 
 type FeedPost struct {

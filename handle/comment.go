@@ -111,10 +111,12 @@ func (di *CommentAPI) CommentAdd(c *gin.Context) {
 			panic(err)
 		}
 
+		position := strconv.Itoa(len(post.Comments.Set))
+
 		// Process the mentions. TODO - Determine race conditions
 		go di.Notifications.ParseContentMentions(notifications.MentionParseObject{
 			Type:          "comment",
-			RelatedNested: strconv.Itoa(len(post.Comments.Set)),
+			RelatedNested: position,
 			Content:       comment.Content,
 			Title:         post.Title,
 			Author:        user_bson_id,
@@ -154,7 +156,7 @@ func (di *CommentAPI) CommentAdd(c *gin.Context) {
 			go di.Gaming.Related(user_bson_id).Did("comment")
 		}
 
-		c.JSON(200, gin.H{"status": "okay", "message": comment.Content})
+		c.JSON(200, gin.H{"status": "okay", "message": comment.Content, "position": position})
 		return
 	}
 
