@@ -466,20 +466,6 @@ func (di *PostAPI) PostsGetOne(c *gin.Context) {
 			// Get the likes given by the current user
 			_ = database.C("votes").Find(bson.M{"type": "comment", "related_id": post.Id, "user_id": user_bson_id}).All(&likes)
 
-			if user_bson_id != post.UserId {
-
-				// Check if following
-				following := model.UserFollowing{}
-
-				err = database.C("followers").Find(bson.M{"follower": user_bson_id, "following": post.UserId}).One(&following)
-
-				// The user is following the author so tell the post struct
-				if err == nil {
-
-					post.Following = true
-				}
-			}
-
 			err = database.C("votes").Find(bson.M{"type": "post", "related_id": post.Id, "user_id": user_bson_id}).One(&liked)
 
 			if err == nil {
@@ -544,13 +530,17 @@ func (di *PostAPI) PostsGetOne(c *gin.Context) {
 		}
 
 		// Remove deleted comments from the set
-		for index := range post.Comments.Set {
+		comments := post.Comments.Set[:0]
 
-			if post.Comments.Set[index].Deleted.IsZero() == false {
+		for _, c := range post.Comments.Set {
 
-				post.Comments.Set = append(post.Comments.Set[:index], post.Comments.Set[index+1:]...)
+			if c.Deleted.IsZero() == true {
+
+				comments = append(comments, c)
 			}
 		}
+		
+		post.Comments.Set = comments
 
 		// Sort by created at
 		sort.Sort(model.ByCommentCreatedAt(post.Comments.Set))
