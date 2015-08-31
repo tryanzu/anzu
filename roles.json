@@ -1,45 +1,41 @@
 {
-	"roles": [
-		{
-			"user": {
-				"permissions": ["publish", "comment", "edit-own-posts", "delete-own-posts", "edit-own-comments", "delete-own-comments"],
-				"parents": false
-			},
+	"user": {
+		"permissions": ["publish", "comment", "edit-own-posts", "delete-own-posts", "edit-own-comments", "delete-own-comments"],
+		"parents": []
+	},
 
-			"spartan-girl": {
-				"permissions": ["block-own-post-comments"],
-				"parents": ["user"]
-			},
+	"spartan-girl": {
+		"permissions": ["block-own-post-comments"],
+		"parents": ["user"]
+	},
 
-			"editor": {
-				"permissions": [],
-				"parents": ["user"]
-			},
+	"editor": {
+		"permissions": [],
+		"parents": ["user"]
+	},
 
-			"child-moderator": {
-				"permissions": ["edit-category-comments", "edit-category-posts", "delete-category-posts", "delete-category-comments"],
-				"parents": ["spartan-girl"]
-			},
+	"child-moderator": {
+		"permissions": ["edit-category-comments", "edit-category-posts", "delete-category-posts", "delete-category-comments"],
+		"parents": ["spartan-girl"]
+	},
 
-			"category-moderator": {
-				"permissions": [],
-				"parents": ["child-moderator"]
-			},
+	"category-moderator": {
+		"permissions": [],
+		"parents": ["child-moderator"]
+	},
 
-			"super-moderator": {
-				"permissions": ["edit-board-comments", "edit-board-posts", "delete-board-comments", "delete-board-posts"],
-				"parents": ["category-moderator"]
-			},
+	"super-moderator": {
+		"permissions": ["edit-board-comments", "edit-board-posts", "delete-board-comments", "delete-board-posts"],
+		"parents": ["category-moderator"]
+	},
 
-			"administrator": {
-				"permissions": ["board-config"],
-				"parents": ["super-moderator"]
-			},
+	"administrator": {
+		"permissions": ["board-config"],
+		"parents": ["super-moderator"]
+	},
 
-			"developer": {
-				"permissions": ["debug", "dev-tools"],
-				"parents": ["administrator"]
-			}
-		}
-	]
+	"developer": {
+		"permissions": ["debug", "dev-tools"],
+		"parents": ["administrator"]
+	}
 }

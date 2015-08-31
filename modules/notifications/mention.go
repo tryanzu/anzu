@@ -5,6 +5,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"gopkg.in/mgo.v2/bson"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -82,13 +83,26 @@ func (di *NotificationsModule) ParseContentMentions(obj MentionParseObject) {
 			message = obj.Title
 
 			if target_user.Id != post.UserId {
-				
+
+				position, err := strconv.Atoi(obj.RelatedNested)
+
+				if err != nil {
+					panic(err)
+				}
+
+				// Check if mention has been sent already before for this same entity
+				sent, err := database.C("mentions").Find(bson.M{"post_id": post.Id, "user_id": target_user.Id, "nested": position}).Count()
+
+				if err != nil || sent > 0 {
+					continue
+				}
+
 				// Compose notification
 				notification := &model.UserFirebaseNotification{
 					UserId:       target_user.Id,
 					RelatedId:    post.Id,
 					RelatedExtra: post.Slug,
-					Position:     post.Comments.Count,
+					Position:     position,
 					Username:     author.UserName,
 					Text:         message,
 					Related:      "mention",
@@ -97,7 +111,16 @@ func (di *NotificationsModule) ParseContentMentions(obj MentionParseObject) {
 					Created:      time.Now(),
 					Updated:      time.Now(),
 				}
-				
+
+				mention := &model.MentionModel{
+					PostId: post.Id,
+					UserId: target_user.Id,
+					Nested: position,
+				}
+
+				// Insert the mention for further uses
+				database.C("mentions").Insert(mention)
+
 				// Send using the broadcaster
 				broadcaster.Send(notification)
 			}

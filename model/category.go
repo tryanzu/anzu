@@ -10,12 +10,17 @@ type Category struct {
 	Description string        `bson:"description" json:"description"`
 	Slug        string        `bson:"slug" json:"slug"`
 	Color       string        `bson:"color" json:"color"`
-	Permissions interface{}   `bson:"permissions" json:"permissions"`
+	Permissions CategoryAcl   `bson:"permissions" json:"permissions"`
 	Parent      bson.ObjectId `bson:"parent,omitempty" json:"parent,omitempty"`
-	Order   	int 		  `bson:"order,omitempty" json:"order,omitempty"`
+	Order       int           `bson:"order,omitempty" json:"order,omitempty"`
 	Count       int           `bson:"count,omitempty" json:"count,omitempty"`
 	Recent      int           `bson:"recent,omitempty" json:"recent,omitempty"`
-	Child		[]Category    `bson:"subcategories,omitempty" json:"subcategories,omitempty"`
+	Child       []Category    `bson:"subcategories,omitempty" json:"subcategories,omitempty"`
+}
+
+type CategoryAcl struct {
+	Read  []string `bson:"read" json:"read"`
+	Write []string `bson:"write" json:"write"`
 }
 
 type CategoryCounters struct {

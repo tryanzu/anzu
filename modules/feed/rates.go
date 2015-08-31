@@ -1,129 +1,129 @@
 package feed
 
 import (
-    "github.com/fernandez14/spartangeek-blacker/model"
-    "gopkg.in/mgo.v2/bson"
-    "strconv"
+	"github.com/fernandez14/spartangeek-blacker/model"
+	"gopkg.in/mgo.v2/bson"
+	"strconv"
 )
 
 func (di *FeedModule) UpdateFeedRates(list []model.FeedPost) {
 
-    // Recover from any panic even inside this isolated process
-    defer di.Errors.Recover()
+	// Recover from any panic even inside this isolated process
+	defer di.Errors.Recover()
 
-    // Services we will need along the runtime
-    redis := di.CacheService
+	// Services we will need along the runtime
+	redis := di.CacheService
 
-    // Sorted list items (redis ZADD)
-    zadd := make(map[string]map[string]float64)
+	// Sorted list items (redis ZADD)
+	zadd := make(map[string]map[string]float64)
 
-    for _, post := range list {
+	for _, post := range list {
 
-        var reached, viewed int
+		var reached, viewed int
 
-        // Get reach and views 
-        reached, viewed = di.getPostReachViews(post.Id)
+		// Get reach and views
+		reached, viewed = di.getPostReachViews(post.Id)
 
-        total := reached + viewed
+		total := reached + viewed
 
-        if total > 101 {
-            
-            // Calculate the rates
-            view_rate    := 100.0 / float64(reached) * float64(viewed)
-            comment_rate := 100.0 / float64(viewed) * float64(post.Comments.Count)
-            final_rate   := (view_rate + comment_rate) / 2.0
-            date := post.Created.Format("2006-01-02")
+		if total > 101 {
 
-            if _, okay := zadd[date]; !okay {
+			// Calculate the rates
+			view_rate := 100.0 / float64(reached) * float64(viewed)
+			comment_rate := 100.0 / float64(viewed) * float64(post.Comments.Count)
+			final_rate := (view_rate + comment_rate) / 2.0
+			date := post.Created.Format("2006-01-02")
 
-                zadd[date] = map[string]float64{}
-            }
+			if _, okay := zadd[date]; !okay {
 
-            zadd[date][post.Id.Hex()] = final_rate
-        }
-    }
+				zadd[date] = map[string]float64{}
+			}
 
-    for date, items := range zadd {
+			zadd[date][post.Id.Hex()] = final_rate
+		}
+	}
 
-        _, err := redis.ZAdd("feed:relevant:" + date, items)
+	for date, items := range zadd {
 
-        if err != nil {
-            panic(err)
-        }
-    }
+		_, err := redis.ZAdd("feed:relevant:"+date, items)
+
+		if err != nil {
+			panic(err)
+		}
+	}
 }
 
 func (di *FeedModule) UpdatePostRate(post model.Post) {
 
-    // Recover from any panic even inside this isolated process
-    defer di.Errors.Recover()
+	// Recover from any panic even inside this isolated process
+	defer di.Errors.Recover()
 
-    // Services we will need along the runtime
-    redis := di.CacheService
+	// Services we will need along the runtime
+	redis := di.CacheService
 
-    // Sorted list items (redis ZADD)
-    zadd := make(map[string]float64)
+	// Sorted list items (redis ZADD)
+	zadd := make(map[string]float64)
 
-    // Get reach and views 
-    reached, viewed := di.getPostReachViews(post.Id)
+	// Get reach and views
+	reached, viewed := di.getPostReachViews(post.Id)
 
-    total := reached + viewed
+	total := reached + viewed
 
-    if total > 101 {
-        
-        // Calculate the rates
-        view_rate    := 100.0 / float64(reached) * float64(viewed)
-        comment_rate := 100.0 / float64(viewed) * float64(post.Comments.Count)
-        final_rate   := (view_rate + comment_rate) / 2.0
-        date := post.Created.Format("2006-01-02")
+	if total > 101 {
 
-        zadd[post.Id.Hex()] = final_rate
-        
-        _, err := redis.ZAdd("feed:relevant:" + date, zadd)
+		// Calculate the rates
+		view_rate := 100.0 / float64(reached) * float64(viewed)
+		comment_rate := 100.0 / float64(viewed) * float64(post.Comments.Count)
+		final_rate := (view_rate + comment_rate) / 2.0
+		date := post.Created.Format("2006-01-02")
 
-        if err != nil {
-            panic(err)
-        }   
-    }
+		zadd[post.Id.Hex()] = final_rate
+
+		_, err := redis.ZAdd("feed:relevant:"+date, zadd)
+
+		if err != nil {
+			panic(err)
+		}
+	}
 }
 
 func (di *FeedModule) getPostReachViews(id bson.ObjectId) (int, int) {
 
-    var reached, viewed int
+	var reached, viewed int
 
-    // Services we will need along the runtime
-    database := di.Mongo.Database
-    redis := di.CacheService
+	// Services we will need along the runtime
+	database := di.Mongo.Database
+	redis := di.CacheService
 
-    list_count, _ := redis.Get("feed:count:list:" + id.Hex())
+	list_count, _ := redis.Get("feed:count:list:" + id.Hex())
 
-    if list_count == nil {
-        
-        reached, _ = database.C("activity").Find(bson.M{"list": id, "event": "feed"}).Count()    
-        err := redis.Set("feed:count:list:" + id.Hex(), strconv.Itoa(reached), 1800, 0, false, false)
+	if list_count == nil {
 
-        if err != nil {
-            panic(err)
-        }  
-    } else {
+		reached, _ = database.C("activity").Find(bson.M{"list": id, "event": "feed"}).Count()
+		err := redis.Set("feed:count:list:"+id.Hex(), strconv.Itoa(reached), 1800, 0, false, false)
 
-        reached, _ = strconv.Atoi(string(list_count))
-    }
+		if err != nil {
+			panic(err)
+		}
+	} else {
 
-    viewed_count, _ := redis.Get("feed:count:post:" + id.Hex())
+		reached, _ = strconv.Atoi(string(list_count))
+	}
 
-    if viewed_count == nil {
+	viewed_count, _ := redis.Get("feed:count:post:" + id.Hex())
 
-        viewed, _ = database.C("activity").Find(bson.M{"related_id": id, "event": "post"}).Count()
-        err := redis.Set("feed:count:post:" + id.Hex(), strconv.Itoa(viewed), 1800, 0, false, false)
+	if viewed_count == nil {
 
-        if err != nil {
-            panic(err)
-        }
-    } else {
+		viewed, _ = database.C("activity").Find(bson.M{"related_id": id, "event": "post"}).Count()
+		err := redis.Set("feed:count:post:"+id.Hex(), strconv.Itoa(viewed), 1800, 0, false, false)
 
-        viewed, _ = strconv.Atoi(string(viewed_count))
-    }
+		if err != nil {
+			panic(err)
+		}
+	} else {
 
-    return reached, viewed
+		viewed, _ = strconv.Atoi(string(viewed_count))
+	}
+
+	return reached, viewed
 }

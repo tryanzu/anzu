@@ -24,9 +24,9 @@ func (di *StatAPI) BoardGet(c *gin.Context) {
 
 	if stats == nil {
 
-		var users int 
+		var users int
 		var posts int
-		var comments model.StatsComments 
+		var comments model.StatsComments
 
 		// Get the posts collection to perform there
 		collection := database.C("posts")
@@ -43,8 +43,8 @@ func (di *StatAPI) BoardGet(c *gin.Context) {
 
 		stat := model.Stats{
 			Comments: comments.Count,
-			Users: users,
-			Posts: posts,
+			Users:    users,
+			Posts:    posts,
 		}
 
 		encoded, err := json.Marshal(stat)

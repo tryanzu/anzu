@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"github.com/cosn/firebase"
 	"github.com/fernandez14/spartangeek-blacker/model"
-	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/notifications"
+	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/ftrvxmtrx/gravatar"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -17,6 +17,7 @@ import (
 	"github.com/mitchellh/goamz/s3"
 	"github.com/olebedev/config"
 	"gopkg.in/mgo.v2/bson"
+	"html"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -28,13 +29,13 @@ import (
 )
 
 type CommentAPI struct {
-	DataService 	*mongo.Service   					`inject:""`
-	Firebase    	*firebase.Client 					`inject:""`
-	ConfigService 	*config.Config 						`inject:""`
-	S3Bucket    	*s3.Bucket       					`inject:""`
-	Notifications  	*notifications.NotificationsModule	`inject:""`
-	Errors      	*exceptions.ExceptionsModule		`inject:""`
-	Gaming      	*GamingAPI       					`inject:""`
+	DataService   *mongo.Service                     `inject:""`
+	Firebase      *firebase.Client                   `inject:""`
+	ConfigService *config.Config                     `inject:""`
+	S3Bucket      *s3.Bucket                         `inject:""`
+	Notifications *notifications.NotificationsModule `inject:""`
+	Errors        *exceptions.ExceptionsModule       `inject:""`
+	Gaming        *GamingAPI                         `inject:""`
 }
 
 func (di *CommentAPI) CommentAdd(c *gin.Context) {
@@ -60,16 +61,13 @@ func (di *CommentAPI) CommentAdd(c *gin.Context) {
 		// Get the post using the slug
 		id := bson.ObjectIdHex(id)
 
-		// Posts collection
-		collection := database.C("posts")
-
 		var post model.Post
 
-		err := collection.FindId(id).One(&post)
+		err := database.C("posts").FindId(id).One(&post)
 
 		if err != nil {
 
-			c.JSON(404, gin.H{"error": "Couldnt find the post", "status": 705})
+			c.JSON(404, gin.H{"message": "Couldnt find the post", "status": "error"})
 			return
 		}
 
@@ -107,20 +105,22 @@ func (di *CommentAPI) CommentAdd(c *gin.Context) {
 
 		// Update the post and push the comments
 		change := bson.M{"$push": bson.M{"comments.set": comment}, "$set": bson.M{"updated_at": time.Now()}, "$inc": bson.M{"comments.count": 1}}
-		err = collection.Update(bson.M{"_id": post.Id}, change)
+		err = database.C("posts").Update(bson.M{"_id": post.Id}, change)
 
 		if err != nil {
 			panic(err)
 		}
 
+		position := strconv.Itoa(len(post.Comments.Set))
+
 		// Process the mentions. TODO - Determine race conditions
 		go di.Notifications.ParseContentMentions(notifications.MentionParseObject{
-			Type: "comment",
-			RelatedNested: strconv.Itoa(post.Comments.Count),
-			Content: comment.Content,
-			Title: post.Title,
-			Author: user_bson_id,
-			Post: post,
+			Type:          "comment",
+			RelatedNested: position,
+			Content:       comment.Content,
+			Title:         post.Title,
+			Author:        user_bson_id,
+			Post:          post,
 		})
 
 		// Check if we need to add participant
@@ -139,7 +139,7 @@ func (di *CommentAPI) CommentAdd(c *gin.Context) {
 
 			// Add the user to the user list
 			change := bson.M{"$push": bson.M{"users": user_bson_id}}
-			err = collection.Update(bson.M{"_id": post.Id}, change)
+			err = database.C("posts").Update(bson.M{"_id": post.Id}, change)
 
 			if err != nil {
 				panic(err)
@@ -156,12 +156,160 @@ func (di *CommentAPI) CommentAdd(c *gin.Context) {
 			go di.Gaming.Related(user_bson_id).Did("comment")
 		}
 
+		c.JSON(200, gin.H{"status": "okay", "message": comment.Content, "position": position})
+		return
+	}
+
+	c.JSON(401, gin.H{"error": "Not authorized.", "status": 704})
+}
+
+func (di *CommentAPI) CommentUpdate(c *gin.Context) {
+
+	// Get the database interface from the DI
+	database := di.DataService.Database
+
+	id := c.Params.ByName("id")
+	index := c.Params.ByName("index")
+
+	if bson.IsObjectIdHex(id) == false {
+
+		c.JSON(400, gin.H{"error": "Invalid request, no valid params.", "status": 701})
+		return
+	}
+
+	user_id := c.MustGet("user_id")
+	user_bson_id := bson.ObjectIdHex(user_id.(string))
+
+	var commentForm model.CommentForm
+	var post model.Post
+	var assets []string
+
+	if c.BindWith(&commentForm, binding.JSON) == nil {
+
+		// Get the post using the slug
+		id := bson.ObjectIdHex(id)
+		err := database.C("posts").FindId(id).One(&post)
+
+		if err != nil {
+
+			c.JSON(404, gin.H{"message": "Couldnt find the post", "status": "error"})
+			return
+		}
+
+		comment_index, err := strconv.Atoi(index)
+
+		if err != nil || len(post.Comments.Set)-1 < comment_index {
+
+			c.JSON(400, gin.H{"message": "Invalid request, no valid comment index.", "status": "error"})
+			return
+		}
+
+		comment := post.Comments.Set[comment_index]
+		content := html.EscapeString(commentForm.Content)
+
+		if user_bson_id != comment.UserId {
+
+			c.JSON(400, gin.H{"message": "Can't edit others comments.", "status": "error"})
+			return
+		}
+
+		// Get assets from the new content
+		urls, _ := regexp.Compile(`http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+`)
+		assets = urls.FindAllString(content, -1)
+
+		for _, asset := range assets {
+
+			// Download the asset on other routine in order not block the API request
+			go di.downloadAssetFromUrl(asset, post.Id)
+		}
+
+		// Database post comment path
+		comment_path := "comments.set." + index + ".content"
+		comment_path_updated := "comments.set." + index + ".updated_at"
+
+		// Update the post and push the comments
+		err = database.C("posts").Update(bson.M{"_id": post.Id}, bson.M{"$set": bson.M{comment_path: content, "updated_at": time.Now(), comment_path_updated: time.Now()}})
+
+		if err != nil {
+			panic(err)
+		}
+
+		// Process the mentions. TODO - Determine race conditions
+		go di.Notifications.ParseContentMentions(notifications.MentionParseObject{
+			Type:          "comment",
+			RelatedNested: index,
+			Content:       content,
+			Title:         post.Title,
+			Author:        user_bson_id,
+			Post:          post,
+		})
+
 		c.JSON(200, gin.H{"status": "okay", "message": comment.Content})
 		return
 	}
 
 	c.JSON(401, gin.H{"error": "Not authorized.", "status": 704})
 }
+
+func (di *CommentAPI) CommentDelete(c *gin.Context) {
+
+	// Get the database interface from the DI
+	database := di.DataService.Database
+
+	id := c.Params.ByName("id")
+	index := c.Params.ByName("index")
+
+	if bson.IsObjectIdHex(id) == false {
+
+		c.JSON(400, gin.H{"error": "Invalid request, no valid params.", "status": 701})
+		return
+	}
+
+	user_id := c.MustGet("user_id")
+	user_bson_id := bson.ObjectIdHex(user_id.(string))
+
+	var post model.Post
+
+	// Get the post using the slug
+	bson_id := bson.ObjectIdHex(id)
+	err := database.C("posts").FindId(bson_id).One(&post)
+
+	if err != nil {
+
+		c.JSON(404, gin.H{"message": "Couldnt find the post", "status": "error"})
+		return
+	}
+
+	comment_index, err := strconv.Atoi(index)
+
+	if err != nil || len(post.Comments.Set)-1 < comment_index {
+
+		c.JSON(400, gin.H{"message": "Invalid request, no valid comment index.", "status": "error"})
+		return
+	}
+
+	comment := post.Comments.Set[comment_index]
+
+	if user_bson_id != comment.UserId {
+
+		c.JSON(400, gin.H{"message": "Can't delete others comments.", "status": "error"})
+		return
+	}
+
+	// Database post comment path
+	comment_path := "comments.set." + index + ".deleted_at"
+
+	// Update the post and push the comments
+	err = database.C("posts").Update(bson.M{"_id": post.Id}, bson.M{"$set": bson.M{comment_path: time.Now()}, "$inc": bson.M{"comments.count": -1}})
+
+	if err != nil {
+		panic(err)
+	}
+
+	c.JSON(200, gin.H{"status": "okay"})
+	return
+} 
+
 
 func (di *CommentAPI) notifyCommentPostAuth(post model.Post, user_id bson.ObjectId) {
 
@@ -194,7 +342,7 @@ func (di *CommentAPI) notifyCommentPostAuth(post model.Post, user_id bson.Object
 			UserId:       user_id,
 			RelatedId:    post.Id,
 			RelatedExtra: post.Slug,
-			Position:     post.Comments.Count,
+			Position:     len(post.Comments.Set),
 			Title:        title,
 			Text:         message,
 			Related:      "comment",
@@ -293,7 +441,7 @@ func (di *CommentAPI) downloadAssetFromUrl(from string, post_id bson.ObjectId) e
 
 					ctc := rem.String()
 
-					content := strings.Replace(comment, from, amazon_url + path, -1)
+					content := strings.Replace(comment, from, amazon_url+path, -1)
 
 					// Update the comment
 					di.DataService.Database.C("posts").Update(bson.M{"_id": post_id}, bson.M{"$set": bson.M{ctc: content}})

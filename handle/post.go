@@ -1,10 +1,15 @@
 package handle
 
 import (
+	"crypto/tls"
+	"errors"
+	"fmt"
+	"github.com/cosn/firebase"
 	"github.com/fernandez14/spartangeek-blacker/model"
-	"github.com/fernandez14/spartangeek-blacker/mongo"
+	"github.com/fernandez14/spartangeek-blacker/modules/acl"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
+	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/kennygrant/sanitize"
@@ -12,33 +17,30 @@ import (
 	"github.com/olebedev/config"
 	"github.com/xuyu/goredis"
 	"gopkg.in/mgo.v2/bson"
-	"github.com/cosn/firebase"
+	"io/ioutil"
 	"math/rand"
-	"reflect"
-	"sort"
-	"strconv"
-	"strings"
-	"regexp"
-	"time"
 	"net/http"
 	"net/url"
 	"path/filepath"
-	"io/ioutil"
-	"errors"
-	"fmt"
-	"crypto/tls"
+	"reflect"
+	"regexp"
+	"sort"
+	"strconv"
+	"strings"
+	"time"
 )
 
 type PostAPI struct {
-	DataService 	*mongo.Service 					`inject:""`
-	CacheService 	*goredis.Redis 					`inject:""`
-	Feed  			*feed.FeedModule				`inject:""`
-	Collector   	CollectorAPI 					`inject:"inline"`
-	Errors      	*exceptions.ExceptionsModule	`inject:""`
-	S3Bucket    	*s3.Bucket 						`inject:""`
-	Firebase    	*firebase.Client 				`inject:""`
-	Gaming      	*GamingAPI       				`inject:""`
-	ConfigService 	*config.Config 					`inject:""`
+	DataService   *mongo.Service               `inject:""`
+	CacheService  *goredis.Redis               `inject:""`
+	Feed          *feed.FeedModule             `inject:""`
+	Collector     CollectorAPI                 `inject:"inline"`
+	Errors        *exceptions.ExceptionsModule `inject:""`
+	S3Bucket      *s3.Bucket                   `inject:""`
+	Firebase      *firebase.Client             `inject:""`
+	Gaming        *GamingAPI                   `inject:""`
+	ConfigService *config.Config               `inject:""`
+	Acl           *acl.Module                  `inject:""`
 }
 
 /**
@@ -65,9 +67,9 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 	f := c.Query("category")
 	relevant := c.Query("relevant")
 	fltr_categories := c.Query("categories")
-	before 			:= c.Query("before")
-	after 			:= c.Query("after")
-	from_author  	:= c.Query("user_id")
+	before := c.Query("before")
+	after := c.Query("after")
+	from_author := c.Query("user_id")
 	user_id, signed_in := c.Get("user_id")
 
 	// Check if offset has been specified
@@ -169,7 +171,7 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 
 			if len(user.Categories) > 0 {
 
-				var category_members []string 
+				var category_members []string
 
 				for _, category_id := range user.Categories {
 
@@ -178,9 +180,9 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 				}
 
 				// Create the set inside redis and move on
-				redis.SAdd("user:categories:" + user_id.(string), category_members...)
+				redis.SAdd("user:categories:"+user_id.(string), category_members...)
 			}
- 
+
 		} else {
 
 			for _, category_id := range user_categories_list {
@@ -193,7 +195,7 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 		}
 
 		if len(user_categories) > 0 {
-			
+
 			search["category"] = bson.M{"$in": user_categories}
 		}
 
@@ -212,7 +214,7 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 		}
 
 		if len(user_categories) > 0 {
-			
+
 			search["category"] = bson.M{"$in": user_categories}
 		}
 	}
@@ -221,11 +223,11 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 
 		// Calculate the offset using the limit
 		list_start := offset
-		list_end   := offset + limit
+		list_end := offset + limit
 
 		relevant_date := relevant
 
-		relevant_list, err := redis.ZRevRange("feed:relevant:" + relevant_date, list_start, list_end, false)
+		relevant_list, err := redis.ZRevRange("feed:relevant:"+relevant_date, list_start, list_end, false)
 
 		if err == nil && len(relevant_list) > 0 {
 
@@ -235,7 +237,7 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 			for _, relevant_id := range relevant_list {
 
 				relevant_ids = append(relevant_ids, bson.ObjectIdHex(relevant_id))
-			} 
+			}
 
 			err := database.C("posts").Find(bson.M{"_id": bson.M{"$in": relevant_ids}}).Select(bson.M{"comments.set": 0, "content": 0, "components": 0}).All(&temp_feed)
 
@@ -266,6 +268,9 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 		}
 
 	} else {
+
+		// Get all but deleted
+		search["deleted"] = bson.M{"$exists": false}
 
 		// Prepare the database to fetch the feed
 		posts_collection := database.C("posts")
@@ -328,7 +333,7 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 
 		for index := range feed {
 
-			post := &feed[index]		
+			post := &feed[index]
 
 			if _, okay := usersMap[post.UserId]; okay {
 
@@ -349,7 +354,7 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 					LastName:  postUser.LastName,
 					Step:      authorLevel,
 					Email:     postUser.Email,
-                    Image:     postUser.Image,
+					Image:     postUser.Image,
 				}
 			}
 		}
@@ -427,7 +432,7 @@ func (di *PostAPI) PostsGetOne(c *gin.Context) {
 		for _, user := range users {
 			description = "Solo otro Spartan Geek más"
 
-			if len(user.Description) > 0  {
+			if len(user.Description) > 0 {
 				description = user.Description
 			}
 
@@ -435,15 +440,15 @@ func (di *PostAPI) PostsGetOne(c *gin.Context) {
 				"id":          user.Id.Hex(),
 				"username":    user.UserName,
 				"description": description,
-                "image":       user.Image,
-                "level":       user.Gaming.Level,
-                "roles":       user.Roles,
+				"image":       user.Image,
+				"level":       user.Gaming.Level,
+				"roles":       user.Roles,
 			}
 
-            if user.Id == post.UserId {
-                // Set the author
-                post.Author = user
-            }
+			if user.Id == post.UserId {
+				// Set the author
+				post.Author = user
+			}
 		}
 
 		// Name of the set to get
@@ -463,20 +468,6 @@ func (di *PostAPI) PostsGetOne(c *gin.Context) {
 
 			// Get the likes given by the current user
 			_ = database.C("votes").Find(bson.M{"type": "comment", "related_id": post.Id, "user_id": user_bson_id}).All(&likes)
-
-			if user_bson_id != post.UserId {
-
-				// Check if following
-				following := model.UserFollowing{}
-
-				err = database.C("followers").Find(bson.M{"follower": user_bson_id, "following": post.UserId}).One(&following)
-
-				// The user is following the author so tell the post struct
-				if err == nil {
-
-					post.Following = true
-				}
-			}
 
 			err = database.C("votes").Find(bson.M{"type": "post", "related_id": post.Id, "user_id": user_bson_id}).One(&liked)
 
@@ -541,10 +532,23 @@ func (di *PostAPI) PostsGetOne(c *gin.Context) {
 			}
 		}
 
+		// Remove deleted comments from the set
+		comments := post.Comments.Set[:0]
+
+		for _, c := range post.Comments.Set {
+
+			if c.Deleted.IsZero() == true {
+
+				comments = append(comments, c)
+			}
+		}
+		
+		post.Comments.Set = comments
+
 		// Sort by created at
 		sort.Sort(model.ByCommentCreatedAt(post.Comments.Set))
 
-        // Get components information if components publication
+		// Get components information if components publication
 		components := reflect.ValueOf(&post.Components).Elem()
 		components_type := reflect.TypeOf(&post.Components).Elem()
 
@@ -624,15 +628,25 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 
 		if bson.IsObjectIdHex(post_category) == false {
 
+			c.JSON(400, gin.H{"status": "error", "message": "Invalid category id"})
+			return
+		}
+
+		var category model.Category
+
+		err := database.C("categories").Find(bson.M{"parent": bson.M{"$exists": true}, "_id": bson.ObjectIdHex(post_category)}).One(&category)
+
+		if err != nil {
+
 			c.JSON(400, gin.H{"status": "error", "message": "Invalid category"})
 			return
 		}
 
-		category, err := database.C("categories").Find(bson.M{"parent": bson.M{"$exists": true}}).Count()
+		user := di.Acl.User(bson_id)
 
-		if err != nil || category < 1 {
+		if user.CanWrite(category) == false {
 
-			c.JSON(400, gin.H{"status": "error", "message": "Invalid category"})
+			c.JSON(400, gin.H{"status": "error", "message": "Not enough permissions."})
 			return
 		}
 
@@ -693,7 +707,7 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 				}
 
 				publish := &model.Post{
-					Id: post_id,
+					Id:         post_id,
 					Title:      post_name,
 					Content:    content,
 					Type:       "recommendations",
@@ -772,7 +786,6 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 				// Sync everyone's feed
 				go di.syncUsersFeed(publish)
 
-
 				// Finished creating the post
 				c.JSON(200, gin.H{"status": "okay", "code": 200})
 				return
@@ -803,7 +816,7 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 			}
 
 			publish := &model.Post{
-				Id: post_id,
+				Id:         post_id,
 				Title:      post.Name,
 				Content:    content,
 				Type:       "category-post",
@@ -901,6 +914,49 @@ func (di *PostAPI) PostUploadAttachment(c *gin.Context) {
 	c.JSON(400, gin.H{"status": "error", "message": "Could not detect an image file..."})
 }
 
+func (di *PostAPI) PostDelete(c *gin.Context) {
+
+	var post model.Post
+
+	// Get the database interface from the DI
+	database := di.DataService.Database
+
+	// Get the post using the id
+	id := c.Params.ByName("id")
+
+	if bson.IsObjectIdHex(id) == false {
+
+		c.JSON(400, gin.H{"message": "Invalid request, no valid params.", "status": "error"})
+		return
+	}
+
+	// Get the post using the slug
+	user_id := c.MustGet("user_id")
+	user_bson_id := bson.ObjectIdHex(user_id.(string))
+	bson_id := bson.ObjectIdHex(id)
+	err := database.C("posts").FindId(bson_id).One(&post)
+
+	if err != nil {
+
+		c.JSON(404, gin.H{"message": "Couldnt find the post", "status": "error"})
+		return
+	}
+
+	if user_bson_id != post.UserId {
+
+		c.JSON(400, gin.H{"message": "Can't delete others posts.", "status": "error"})
+		return
+	}	
+
+	err = database.C("posts").Update(bson.M{"_id": post.Id}, bson.M{"$set": bson.M{"deleted": true, "deleted_at": time.Now()}})
+
+	if err != nil {
+		panic(err)
+	}
+
+	c.JSON(200, gin.H{"status": "okay"})
+}
+
 func (di *PostAPI) syncUsersFeed(post *model.Post) {
 
 	var users map[string]model.UserFirebase
@@ -929,7 +985,7 @@ func (di *PostAPI) syncUsersFeed(post *model.Post) {
 
 		if user.Viewing == "all" {
 
-			subscribed, err := redis.SIsMember("user:categories:" + user_id, category)
+			subscribed, err := redis.SIsMember("user:categories:"+user_id, category)
 
 			// User is actually not subscribed or and error just happened
 			if subscribed == false || err != nil {
@@ -963,7 +1019,6 @@ func (di *PostAPI) downloadAssetFromUrl(from string, post_id bson.ObjectId) erro
 	if err != nil {
 		panic(err)
 	}
-
 
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
@@ -1027,10 +1082,10 @@ func (di *PostAPI) downloadAssetFromUrl(from string, post_id bson.ObjectId) erro
 			// Replace the url on the comment
 			if strings.Contains(post_content, from) {
 
-                content := strings.Replace(post_content, from, amazon_url + path, -1)
+				content := strings.Replace(post_content, from, amazon_url+path, -1)
 
-                // Update the comment
-                di.DataService.Database.C("posts").Update(bson.M{"_id": post_id}, bson.M{"$set": bson.M{"content": content}})
+				// Update the comment
+				di.DataService.Database.C("posts").Update(bson.M{"_id": post_id}, bson.M{"$set": bson.M{"content": content}})
 			}
 
 		}

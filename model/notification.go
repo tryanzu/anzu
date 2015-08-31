@@ -30,18 +30,18 @@ type Notification struct {
 }
 
 type UserFirebaseNotification struct {
-	UserId    bson.ObjectId `json:"user_id"`
-	RelatedId bson.ObjectId `json:"related_id"`
-	RelatedExtra string 	`bson:"related_extra" json:"related_extra"`
-	Position  int           `bson:"position,omitempty" json:"position,omitempty"`
-	Title     string        `json:"title,omitempty"`
-	Username  string        `json:"username,omitempty"`
-	Text      string        `json:"text"`
-	Related   string        `json:"related"`
-	Seen      bool          `json:"seen"`
-	Image     string        `json:"image"`
-	Created   time.Time     `json:"created_at"`
-	Updated   time.Time     `json:"updated_at"`
+	UserId       bson.ObjectId `json:"user_id"`
+	RelatedId    bson.ObjectId `json:"related_id"`
+	RelatedExtra string        `bson:"related_extra" json:"related_extra"`
+	Position     int           `bson:"position,omitempty" json:"position,omitempty"`
+	Title        string        `json:"title,omitempty"`
+	Username     string        `json:"username,omitempty"`
+	Text         string        `json:"text"`
+	Related      string        `json:"related"`
+	Seen         bool          `json:"seen"`
+	Image        string        `json:"image"`
+	Created      time.Time     `json:"created_at"`
+	Updated      time.Time     `json:"updated_at"`
 }
 
 type UserFirebaseNotifications struct {
@@ -49,8 +49,14 @@ type UserFirebaseNotifications struct {
 	List  map[string]UserFirebaseNotification `json:"list,omitempty"`
 }
 
+type MentionModel struct {
+	PostId bson.ObjectId `bson:"post_id" json:"post_id"`
+	UserId bson.ObjectId `bson:"user_id" json:"user_id"`
+	Nested int           `bson:"nested" json:"nested"`
+}
+
 type UserFirebase struct {
-	Online int `json:"online"`
+	Online  int    `json:"online"`
 	Viewing string `json:"viewing"`
-	Pending int `json:"pending"`
+	Pending int    `json:"pending"`
 }
