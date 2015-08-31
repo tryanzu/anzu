@@ -16,7 +16,7 @@ type User struct {
 	Step          int                    `bson:"step,omitempty" json:"step"`
 	Email         string                 `bson:"email" json:"email,omitempty"`
 	Categories    []bson.ObjectId        `bson:"categories,omitempty" json:"categories,omitempty"`
-	Roles         []string               `bson:"roles" json:"roles,omitempty"`
+	Roles         []UserRole             `bson:"roles" json:"roles,omitempty"`
 	Permissions   []string               `bson:"permissions" json:"permissions,omitempty"`
 	Description   string                 `bson:"description" json:"description,omitempty"`
 	Image         string                 `bson:"image" json:"image,omitempty"`
@@ -28,6 +28,11 @@ type User struct {
 	Version       string                 `bson:"version,omitempty" json:"version,omitempty"`
 	Created       time.Time              `bson:"created_at" json:"created_at"`
 	Updated       time.Time              `bson:"updated_at" json:"updated_at"`
+}
+
+type UserRole struct {
+	Name       string `bson:"name" json:"name"`
+	Categories []bson.ObjectId `bson:"categories,omitempty" json:"categories,omitempty"`
 }
 
 type UserStats struct {

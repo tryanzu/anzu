@@ -375,7 +375,7 @@ func (di *UserAPI) UserGetTokenFacebook(c *gin.Context) {
 			UserName:    utils.GenerateSlug(username),
 			Password:    "",
 			Email:       facebook_email,
-			Roles:       make([]string, 0),
+			Roles:       make([]model.UserRole, 0),
 			Permissions: make([]string, 0),
 			NameChanges: 0,
 			Description: "",
@@ -621,7 +621,11 @@ func (di *UserAPI) UserRegisterAction(c *gin.Context) {
 			NameChanges:  1,
 			Password:     hash,
 			Email:        registerAction.Email,
-			Roles:        []string{"registered"},
+			Roles:        []model.UserRole{
+				{
+					Name: "user",
+				},
+			},
 			Permissions:  make([]string, 0),
 			Description:  "",
 			Profile:      profile,
