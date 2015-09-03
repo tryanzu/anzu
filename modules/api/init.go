@@ -129,6 +129,7 @@ func (module *Module) Run() {
 			// Post routes
 			authorized.POST("/post", module.Posts.PostCreate)
 			authorized.POST("/post/image", module.Posts.PostUploadAttachment)
+			authorized.PUT("/posts/:id", module.Posts.PostUpdate)
 			authorized.DELETE("/posts/:id", module.Posts.PostDelete)
 
 			// User routes

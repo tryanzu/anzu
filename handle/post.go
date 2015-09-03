@@ -8,6 +8,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/modules/acl"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
+	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/gin-gonic/gin"
@@ -28,6 +29,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"html"
 )
 
 type PostAPI struct {
@@ -917,6 +919,7 @@ func (di *PostAPI) PostUploadAttachment(c *gin.Context) {
 func (di *PostAPI) PostUpdate(c *gin.Context) {
 
 	var post model.Post
+	var postForm model.PostForm
 
 	// Get the database interface from the DI
 	database := di.DataService.Database
@@ -930,33 +933,84 @@ func (di *PostAPI) PostUpdate(c *gin.Context) {
 		return
 	}
 
-	// Get the post using the slug
-	user_id := c.MustGet("user_id")
-	user_bson_id := bson.ObjectIdHex(user_id.(string))
-	bson_id := bson.ObjectIdHex(id)
-	err := database.C("posts").FindId(bson_id).One(&post)
+	// Get the form otherwise tell it has been an error
+	if c.BindWith(&postForm, binding.JSON) == nil {
 
-	if err != nil {
+		// Get the post using the slug
+		user_id := c.MustGet("user_id")
+		user_bson_id := bson.ObjectIdHex(user_id.(string))
+		bson_id := bson.ObjectIdHex(id)
+		err := database.C("posts").FindId(bson_id).One(&post)
 
-		c.JSON(404, gin.H{"message": "Couldnt find the post", "status": "error"})
+		if err != nil {
+
+			c.JSON(404, gin.H{"message": "Couldnt find the post", "status": "error"})
+			return
+		}
+
+		post_category := postForm.Category
+
+		if bson.IsObjectIdHex(post_category) == false {
+
+			c.JSON(400, gin.H{"status": "error", "message": "Invalid category id"})
+			return
+		}
+
+		var category model.Category
+
+		err = database.C("categories").Find(bson.M{"parent": bson.M{"$exists": true}, "_id": bson.ObjectIdHex(post_category)}).One(&category)
+
+		if err != nil {
+
+			c.JSON(400, gin.H{"status": "error", "message": "Invalid category"})
+			return
+		}
+
+		user := di.Acl.User(user_bson_id)
+
+		if user.CanUpdatePost(post) == false {
+
+			c.JSON(400, gin.H{"message": "Can't update post. Insufficient permissions", "status": "error"})
+			return
+		}	
+
+		if user.CanWrite(category) == false {
+
+			c.JSON(400, gin.H{"status": "error", "message": "Not enough permissions to write this category."})
+			return
+		}
+
+		slug := helpers.StrSlug(postForm.Name)
+		slug_exists, _ := database.C("posts").Find(bson.M{"slug": slug}).Count()
+
+		if slug_exists > 0 {
+
+			slug = helpers.StrSlugRandom(postForm.Name)
+		}
+
+		content := html.EscapeString(postForm.Content)
+		urls, _ := regexp.Compile(`http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+`)
+
+		var assets []string
+		assets = urls.FindAllString(content, -1)
+
+		err = database.C("posts").Update(bson.M{"_id": post.Id}, bson.M{"$set": bson.M{"content": content, "slug": slug, "title": postForm.Name,"updated_at": time.Now()}})
+
+		if err != nil {
+			panic(err)
+		}
+
+		for _, asset := range assets {
+
+			// Download the asset on other routine in order to non block the API request
+			go di.downloadAssetFromUrl(asset, post.Id)
+		}
+
+		c.JSON(200, gin.H{"status": "okay"})
 		return
 	}
 
-	user := di.Acl.User(user_bson_id)
-
-	if user.CanUpdatePost(post) == false {
-
-		c.JSON(400, gin.H{"message": "Can't update post. Insufficient permissions", "status": "error"})
-		return
-	}	
-
-	err = database.C("posts").Update(bson.M{"_id": post.Id}, bson.M{"$set": bson.M{"deleted": true, "deleted_at": time.Now()}})
-
-	if err != nil {
-		panic(err)
-	}
-
-	c.JSON(200, gin.H{"status": "okay"})
+	c.JSON(400, gin.H{"status": "error", "message": "Couldnt update post, missing information..."})
 }
 
 func (di *PostAPI) PostDelete(c *gin.Context) {
