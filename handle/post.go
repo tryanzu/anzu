@@ -994,7 +994,7 @@ func (di *PostAPI) PostUpdate(c *gin.Context) {
 		var assets []string
 		assets = urls.FindAllString(content, -1)
 
-		err = database.C("posts").Update(bson.M{"_id": post.Id}, bson.M{"$set": bson.M{"content": content, "slug": slug, "title": postForm.Name,"updated_at": time.Now()}})
+		err = database.C("posts").Update(bson.M{"_id": post.Id}, bson.M{"$set": bson.M{"content": content, "slug": slug, "title": postForm.Name, "category": bson.ObjectIdHex(post_category), "updated_at": time.Now()}})
 
 		if err != nil {
 			panic(err)
