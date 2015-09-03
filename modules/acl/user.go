@@ -3,6 +3,7 @@ package acl
 import (
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type User struct {
@@ -52,6 +53,81 @@ func (user *User) CanRead(category model.Category) bool {
 			return true
 		}
 	}
+
+	return false
+}
+
+// Check if user can update post
+func (user *User) CanUpdatePost(post model.Post) bool {
+
+	return user.isActionGranted(post.UserId, post.Category, "edit-own-posts", "edit-board-posts", "edit-category-posts")
+}
+
+// Check if user can delete post
+func (user *User) CanDeletePost(post model.Post) bool {
+
+	return user.isActionGranted(post.UserId, post.Category, "edit-own-posts", "edit-board-posts", "edit-category-posts")
+}
+
+// Check if user can update comment
+func (user *User) CanUpdateComment(comment model.Comment, post model.Post) bool {
+
+	return user.isActionGranted(comment.UserId, post.Category, "edit-own-comments", "edit-board-comments", "edit-category-comments")
+}
+
+// Check if user can delete comment
+func (user *User) CanDeleteComment(comment model.Comment, post model.Post) bool {
+
+	return user.isActionGranted(comment.UserId, post.Category, "delete-own-comments", "delete-board-comments", "delete-category-comments")
+}
+
+// Check if user can do action, super_action or category_action
+func (user *User) isActionGranted(entity_owner bson.ObjectId, category bson.ObjectId, action, super_action, category_action string) bool {
+
+	// Post author check
+	if entity_owner == user.data.Id {
+
+		if user.isGranted(action) {
+
+			return true
+		}
+
+	} else if entity_owner != user.data.Id {
+
+		// Super ability to do action
+		if user.isGranted(super_action) {
+
+			return true
+		}
+
+		// Super ability to edit all the parent category posts
+		if user.isGranted(category_action) {
+
+			for _, role := range user.data.Roles {
+
+				// Only allow updating when user has that category
+				if allowed, _ := helpers.InArray(category, role.Categories); allowed {
+
+					return true
+				}
+			}
+		}
+	}
+
+	return false
+}
+
+// Check if permission is granted for all user roles
+func (user *User) isGranted(permission string) bool {
+
+	for _, role := range user.data.Roles {
+
+		if user.acl.Map.IsGranted(role.Name, permission, nil) {
+
+			// User's role is granted to do "permission"
+			return true
+		}
+	}	
 
 	return false
 }

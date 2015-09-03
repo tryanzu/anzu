@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/cosn/firebase"
 	"github.com/fernandez14/spartangeek-blacker/model"
+	"github.com/fernandez14/spartangeek-blacker/modules/acl"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/notifications"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
@@ -36,6 +37,7 @@ type CommentAPI struct {
 	Notifications *notifications.NotificationsModule `inject:""`
 	Errors        *exceptions.ExceptionsModule       `inject:""`
 	Gaming        *GamingAPI                         `inject:""`
+	Acl           *acl.Module                        `inject:""`
 }
 
 func (di *CommentAPI) CommentAdd(c *gin.Context) {
@@ -206,8 +208,9 @@ func (di *CommentAPI) CommentUpdate(c *gin.Context) {
 
 		comment := post.Comments.Set[comment_index]
 		content := html.EscapeString(commentForm.Content)
+		user := di.Acl.User(user_bson_id)
 
-		if user_bson_id != comment.UserId {
+		if user.CanUpdateComment(comment, post) == false {
 
 			c.JSON(400, gin.H{"message": "Can't edit others comments.", "status": "error"})
 			return
@@ -289,10 +292,11 @@ func (di *CommentAPI) CommentDelete(c *gin.Context) {
 	}
 
 	comment := post.Comments.Set[comment_index]
+	user := di.Acl.User(user_bson_id)
 
-	if user_bson_id != comment.UserId {
+	if user.CanDeleteComment(comment, post) == false{
 
-		c.JSON(400, gin.H{"message": "Can't delete others comments.", "status": "error"})
+		c.JSON(400, gin.H{"message": "Can't delete comment. Insufficient permissions.", "status": "error"})
 		return
 	}
 
@@ -309,7 +313,6 @@ func (di *CommentAPI) CommentDelete(c *gin.Context) {
 	c.JSON(200, gin.H{"status": "okay"})
 	return
 } 
-
 
 func (di *CommentAPI) notifyCommentPostAuth(post model.Post, user_id bson.ObjectId) {
 
