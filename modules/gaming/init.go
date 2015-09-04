@@ -76,14 +76,15 @@ func (self *Module) ResetTempStuff() {
 	// Get the database interface from the DI
 	database := self.Mongo.Database
 
-	iter := database.C("users").Find(nil).Select(bson.M{"_id": 1}).Batch(500).Prefetch(0.25).Iter()
+	iter := database.C("users").Find(nil).Select(bson.M{"_id": 1}).Iter()
 
 	log.Println("[job] [ResetTempStuff] Started")
 
 	// Make a pool of workers that would execute the explote
 	jobs := make(chan *user.User)
+	done := make(chan *user.User)
 
-	worker := func(id int, jobs <-chan *user.User) {
+	worker := func(id int, jobs <-chan *user.User, done chan<- *user.User) {
 
 		for j := range jobs {
 
@@ -91,13 +92,15 @@ func (self *Module) ResetTempStuff() {
 
 			// Explore the user level and reset the stuff
 			self.Get(j.Id).SyncToLevel(true)
+
+			done <- j
 		}
 	}
 
 	// Initialize the workers (25 concurrent)
 	for w := 1; w <= 25; w++ {
 
-		go worker(w, jobs)
+		go worker(w, jobs, done)
 	}
 
 	for iter.Next(&usr) {
@@ -110,5 +113,5 @@ func (self *Module) ResetTempStuff() {
 		panic(err)
 	}
 
-	log.Println("[job] [ResetTempStuff] Finished")
+	log.Printf("\n[job] [ResetTempStuff] Finished with %v users", len(done))
 }
