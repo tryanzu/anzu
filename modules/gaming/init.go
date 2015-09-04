@@ -8,11 +8,13 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/olebedev/config"
-	"github.com/jeffail/tunny"
+	"github.com/goinggo/work"
 	"github.com/xuyu/goredis"
 	"gopkg.in/mgo.v2/bson"
 	"io/ioutil"
 	"log"
+	"time"
+	"sync"
 )
 
 func Boot(file string) *Module {
@@ -30,6 +32,10 @@ func Boot(file string) *Module {
 	}
 
 	return module
+}
+
+func logFunc(message string) {
+    log.Println(message)
 }
 
 type Module struct {
@@ -72,38 +78,57 @@ func (self *Module) ResetTempStuff() {
 	// Recover from any panic even inside this goroutine
 	defer self.Errors.Recover()
 
+	w, err := work.New(40, time.Second, logFunc)
+
+	if err != nil {
+        log.Fatalln(err)
+    }
+
+	database := self.Mongo.Database
+	count, _ := database.C("users").Find(nil).Count()
+	iter := database.C("users").Find(nil).Select(bson.M{"_id": 1}).Iter()
+    
+    var wg sync.WaitGroup
+
+    wg.Add(count)
+
 	var usr user.User
 
 	// Get the database interface from the DI
-	database := self.Mongo.Database
-	iter := database.C("users").Find(nil).Select(bson.M{"_id": 1}).Iter()
-
 	log.Println("[job] [ResetTempStuff] Started")
 
-	pool, _ := tunny.CreatePool(20, func(p interface{}) interface{} {
-        
-		j := p.(user.User)
-        selfcopy := self
-
-		log.Printf("[job] [ResetTempStuff] User: %s\n", j.Id.Hex())
-
-		// Explore the user level and reset the stuff
-		selfcopy.Get(j.Id).SyncToLevel(true)
-
-		return true
-
-    }).Open()
-
-    defer pool.Close()
-
 	for iter.Next(&usr) {
+
+		user_sync := UserSync{
+			user: usr,
+			gmf: self.Get(usr.Id),
+		}
 		
-		pool.SendWorkAsync(usr, nil)
+		go func() {
+
+			w.Run(&user_sync)
+			wg.Done()
+		}()
 	}
 
 	if err := iter.Close(); err != nil {
 		panic(err)
 	}
 
+	wg.Wait()
+	w.Shutdown()
+
 	log.Printf("\n[job] [ResetTempStuff] Finished with users")
+}
+
+type UserSync struct {
+	user user.User
+	gmf  *User
+}
+
+func (self *UserSync) Work(id int) {
+
+	log.Printf("\n user %v\n", self.user.Id)
+
+	self.gmf.SyncToLevel(true)
 }
