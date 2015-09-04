@@ -3,6 +3,8 @@ package handle
 import (
 	"bytes"
 	"github.com/fernandez14/spartangeek-blacker/model"
+	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
+	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -13,7 +15,8 @@ import (
 
 type VoteAPI struct {
 	Data   *mongo.Service `inject:""`
-	Gaming *GamingAPI     `inject:""`
+	Gaming *gaming.Module `inject:""`
+	User   *user.Module   `inject:""`
 }
 
 func (di *VoteAPI) VoteComponent(c *gin.Context) {
@@ -228,13 +231,8 @@ func (di *VoteAPI) VoteComment(c *gin.Context) {
 		}
 
 		// Get the author of the vote
-		var user model.User
-		err = database.C("users").FindId(user_bson_id).One(&user)
-
-		if err != nil {
-			panic(err)
-		}
-
+		user := di.User.Get(user_bson_id)
+		user_model := user.Data()
 		index := vote.Comment
 
 		if _, err := strconv.Atoi(index); err == nil {
@@ -293,25 +291,25 @@ func (di *VoteAPI) VoteComment(c *gin.Context) {
 				// Return the gamification points
 				if already_voted.Value == 1 {
 
-					go di.Gaming.Related(user_bson_id).RelatedUser(user).Tribute(1)
+					go di.Gaming.Get(user).Tribute(1)
 
 					if comment_.Votes.Up-1 < 5 {
 
-						go di.Gaming.Related(comment_.UserId).Swords(-1)
+						go di.Gaming.Get(comment_.UserId).Swords(-1)
 					}
 
-					go di.Gaming.Related(comment_.UserId).Coins(-1)
+					go di.Gaming.Get(comment_.UserId).Coins(-1)
 
 				} else if already_voted.Value == -1 {
 
-					go di.Gaming.Related(user_bson_id).RelatedUser(user).Shit(1)
+					go di.Gaming.Get(user).Shit(1)
 
 					if comment_.Votes.Down-1 < 5 {
 
-						go di.Gaming.Related(comment_.UserId).Swords(1)
+						go di.Gaming.Get(comment_.UserId).Swords(1)
 					}
 
-					go di.Gaming.Related(comment_.UserId).Coins(1)
+					go di.Gaming.Get(comment_.UserId).Coins(1)
 				}
 
 				c.JSON(200, gin.H{"status": "okay"})
@@ -319,7 +317,7 @@ func (di *VoteAPI) VoteComment(c *gin.Context) {
 			}
 
 			// Check if has enough tribute or shit to give
-			if (vote.Direction == "up" && user.Gaming.Tribute < 1) || (vote.Direction == "down" && user.Gaming.Shit < 1) {
+			if (vote.Direction == "up" && user_model.Gaming.Tribute < 1) || (vote.Direction == "down" && user_model.Gaming.Shit < 1) {
 
 				c.JSON(400, gin.H{"message": "Dont have enough gaming points to do this.", "status": "error"})
 
@@ -367,27 +365,27 @@ func (di *VoteAPI) VoteComment(c *gin.Context) {
 
 				if vote_value == -1 {
 
-					go di.Gaming.Related(user_bson_id).RelatedUser(user).Shit(-1)
+					go di.Gaming.Get(user).Shit(-1)
 
 					// Remove the swords to the author of the comment
 					if comment_.Votes.Down <= 5 {
 
-						go di.Gaming.Related(comment_.UserId).Swords(-1)
+						go di.Gaming.Get(comment_.UserId).Swords(-1)
 					}
 
-					go di.Gaming.Related(comment_.UserId).Coins(-1)
+					go di.Gaming.Get(comment_.UserId).Coins(-1)
 
 				} else {
 
-					go di.Gaming.Related(user_bson_id).RelatedUser(user).Tribute(-1)
+					go di.Gaming.Get(user).Tribute(-1)
 
 					// Give the swords to the author of the comment
 					if comment_.Votes.Up <= 5 {
 
-						go di.Gaming.Related(comment_.UserId).Swords(1)
+						go di.Gaming.Get(comment_.UserId).Swords(1)
 					}
 
-					go di.Gaming.Related(comment_.UserId).Coins(1)
+					go di.Gaming.Get(comment_.UserId).Coins(1)
 				}
 			}
 
@@ -461,12 +459,8 @@ func (di *VoteAPI) VotePost(c *gin.Context) {
 		}
 
 		// Get the author of the vote
-		var user model.User
-		err = database.C("users").FindId(user_bson_id).One(&user)
-
-		if err != nil {
-			panic(err)
-		}
+		user := di.User.Get(user_bson_id)
+		user_model := user.Data()
 
 		var add bytes.Buffer
 		var already_voted model.Vote
@@ -518,25 +512,25 @@ func (di *VoteAPI) VotePost(c *gin.Context) {
 			// Return the gamification points
 			if already_voted.Value == 1 {
 
-				go di.Gaming.Related(user_bson_id).RelatedUser(user).Tribute(1)
+				go di.Gaming.Get(user).Tribute(1)
 
 				if post.Votes.Up-1 < 10 {
 
-					go di.Gaming.Related(post.UserId).Swords(-1)
+					go di.Gaming.Get(post.UserId).Swords(-1)
 				}
 
-				go di.Gaming.Related(post.UserId).Coins(-2)
+				go di.Gaming.Get(post.UserId).Coins(-2)
 
 			} else if already_voted.Value == -1 {
 
-				go di.Gaming.Related(user_bson_id).RelatedUser(user).Shit(1)
+				go di.Gaming.Get(user).Shit(1)
 
 				if post.Votes.Down-1 < 10 {
 
-					go di.Gaming.Related(post.UserId).Swords(1)
+					go di.Gaming.Get(post.UserId).Swords(1)
 				}
 
-				go di.Gaming.Related(post.UserId).Coins(1)
+				go di.Gaming.Get(post.UserId).Coins(1)
 			}
 
 			c.JSON(200, gin.H{"status": "okay"})
@@ -544,7 +538,7 @@ func (di *VoteAPI) VotePost(c *gin.Context) {
 		}
 
 		// Check if has enough tribute or shit to give
-		if (vote.Direction == "up" && user.Gaming.Tribute < 1) || (vote.Direction == "down" && user.Gaming.Shit < 1) {
+		if (vote.Direction == "up" && user_model.Gaming.Tribute < 1) || (vote.Direction == "down" && user_model.Gaming.Shit < 1) {
 
 			c.JSON(400, gin.H{"message": "Dont have enough gaming points to do this.", "status": "error"})
 
@@ -590,27 +584,27 @@ func (di *VoteAPI) VotePost(c *gin.Context) {
 
 			if vote_value == -1 {
 
-				go di.Gaming.Related(user_bson_id).RelatedUser(user).Shit(-1)
+				go di.Gaming.Get(user).Shit(-1)
 
 				// Remove the swords to the author of the post
 				if post.Votes.Down <= 10 {
 
-					go di.Gaming.Related(post.UserId).Swords(-1)
+					go di.Gaming.Get(post.UserId).Swords(-1)
 				}
 
-				go di.Gaming.Related(post.UserId).Coins(-1)
+				go di.Gaming.Get(post.UserId).Coins(-1)
 
 			} else {
 
-				go di.Gaming.Related(user_bson_id).RelatedUser(user).Tribute(-1)
+				go di.Gaming.Get(user).Tribute(-1)
 
 				// Give the swords to the author of the comment
 				if post.Votes.Up <= 10 {
 
-					go di.Gaming.Related(post.UserId).Swords(1)
+					go di.Gaming.Get(post.UserId).Swords(1)
 				}
 
-				go di.Gaming.Related(post.UserId).Coins(2)
+				go di.Gaming.Get(post.UserId).Coins(2)
 			}
 		}
 

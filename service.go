@@ -5,13 +5,14 @@ import (
 	"github.com/cactus/go-statsd-client/statsd"
 	"github.com/cosn/firebase"
 	"github.com/facebookgo/inject"
-	"github.com/fernandez14/spartangeek-blacker/handle"
 	"github.com/fernandez14/spartangeek-blacker/interfaces"
 	"github.com/fernandez14/spartangeek-blacker/modules/acl"
 	"github.com/fernandez14/spartangeek-blacker/modules/api"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
+	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
 	"github.com/fernandez14/spartangeek-blacker/modules/notifications"
+	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/getsentry/raven-go"
 	"github.com/mitchellh/goamz/aws"
@@ -47,12 +48,13 @@ func main() {
 	// Services for the DI
 	configService, _ := config.ParseJsonFile(envfile)
 	aclService := acl.Boot(string_value(configService.String("application.acl")))
+	gamingService := gaming.Boot(string_value(configService.String("application.gaming")))
+	userService := user.Boot()
 	mongoService := mongo.NewService(string_value(configService.String("database.uri")), string_value(configService.String("database.name")))
 	errorService, _ := raven.NewClient(string_value(configService.String("sentry.dns")), nil)
 	cacheService, _ := goredis.Dial(&goredis.DialConfig{Address: string_value(configService.String("cache.redis"))})
 	firebaseService := new(firebase.Client)
 	firebaseService.Init(string_value(configService.String("firebase.url")), string_value(configService.String("firebase.secret")), nil)
-	gamingService := new(handle.GamingAPI)
 
 	// Amazon services for the DI
 	amazonAuth, err := aws.GetAuth(string_value(configService.String("amazon.access_key")), string_value(configService.String("amazon.secret")))
@@ -86,6 +88,7 @@ func main() {
 		&inject.Object{Value: firebaseService, Complete: true},
 		&inject.Object{Value: statsService, Complete: true},
 		&inject.Object{Value: aclService, Complete: false},
+		&inject.Object{Value: userService, Complete: false},
 		&inject.Object{Value: gamingService, Complete: false},
 		&inject.Object{Value: broadcaster, Complete: true, Name: "Notifications"},
 		&inject.Object{Value: &notificationsModule},
@@ -108,12 +111,6 @@ func main() {
 
 			// Populate dependencies using the already instantiated DI
 			api.Populate(g)
-
-			// After DI populate initializations
-			gamingService.Init()
-
-			// Setup gaming service manually
-			api.Gaming = gamingService
 
 			// Run API module
 			api.Run()

@@ -8,8 +8,9 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/modules/acl"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
-	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
+	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
+	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -18,6 +19,7 @@ import (
 	"github.com/olebedev/config"
 	"github.com/xuyu/goredis"
 	"gopkg.in/mgo.v2/bson"
+	"html"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
@@ -29,7 +31,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"html"
 )
 
 type PostAPI struct {
@@ -40,7 +41,7 @@ type PostAPI struct {
 	Errors        *exceptions.ExceptionsModule `inject:""`
 	S3Bucket      *s3.Bucket                   `inject:""`
 	Firebase      *firebase.Client             `inject:""`
-	Gaming        *GamingAPI                   `inject:""`
+	Gaming        *gaming.Module               `inject:""`
 	ConfigService *config.Config               `inject:""`
 	Acl           *acl.Module                  `inject:""`
 }
@@ -544,7 +545,7 @@ func (di *PostAPI) PostsGetOne(c *gin.Context) {
 				comments = append(comments, c)
 			}
 		}
-		
+
 		post.Comments.Set = comments
 
 		// Sort by created at
@@ -780,7 +781,7 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 				}
 
 				// Add the gamification contribution
-				go di.Gaming.Related(bson_id).Did("publish")
+				go di.Gaming.Get(bson_id).Did("publish")
 
 				// Add a counter for the category
 				di.addUserCategoryCounter("recommendations")
@@ -847,7 +848,7 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 			}
 
 			// Add the gamification contribution
-			go di.Gaming.Related(bson_id).Did("publish")
+			go di.Gaming.Get(bson_id).Did("publish")
 
 			// Add a counter for the category
 			di.addUserCategoryCounter(post.Tag)
@@ -972,7 +973,7 @@ func (di *PostAPI) PostUpdate(c *gin.Context) {
 
 			c.JSON(400, gin.H{"message": "Can't update post. Insufficient permissions", "status": "error"})
 			return
-		}	
+		}
 
 		if user.CanWrite(category) == false {
 
@@ -1047,7 +1048,7 @@ func (di *PostAPI) PostDelete(c *gin.Context) {
 
 		c.JSON(400, gin.H{"message": "Can't delete others posts.", "status": "error"})
 		return
-	}	
+	}
 
 	err = database.C("posts").Update(bson.M{"_id": post.Id}, bson.M{"$set": bson.M{"deleted": true, "deleted_at": time.Now()}})
 

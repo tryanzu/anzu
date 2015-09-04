@@ -22,7 +22,7 @@ type Module struct {
 	Collector   handle.CollectorAPI
 	Sitemap     handle.SitemapAPI
 	Acl         handle.AclAPI
-	Gaming      *handle.GamingAPI
+	Gaming      handle.GamingAPI
 }
 
 func (module *Module) Populate(g inject.Graph) {

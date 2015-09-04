@@ -9,6 +9,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/modules/acl"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
+	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
 	"github.com/fernandez14/spartangeek-blacker/modules/notifications"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/ftrvxmtrx/gravatar"
@@ -36,7 +37,7 @@ type CommentAPI struct {
 	S3Bucket      *s3.Bucket                         `inject:""`
 	Notifications *notifications.NotificationsModule `inject:""`
 	Errors        *exceptions.ExceptionsModule       `inject:""`
-	Gaming        *GamingAPI                         `inject:""`
+	Gaming        *gaming.Module                     `inject:""`
 	Acl           *acl.Module                        `inject:""`
 }
 
@@ -155,7 +156,7 @@ func (di *CommentAPI) CommentAdd(c *gin.Context) {
 			go di.notifyCommentPostAuth(post, user_bson_id)
 
 			// Add the gamification contribution
-			go di.Gaming.Related(user_bson_id).Did("comment")
+			go di.Gaming.Get(user_bson_id).Did("comment")
 		}
 
 		c.JSON(200, gin.H{"status": "okay", "message": comment.Content, "position": position})
@@ -294,7 +295,7 @@ func (di *CommentAPI) CommentDelete(c *gin.Context) {
 	comment := post.Comments.Set[comment_index]
 	user := di.Acl.User(user_bson_id)
 
-	if user.CanDeleteComment(comment, post) == false{
+	if user.CanDeleteComment(comment, post) == false {
 
 		c.JSON(400, gin.H{"message": "Can't delete comment. Insufficient permissions.", "status": "error"})
 		return
@@ -312,7 +313,7 @@ func (di *CommentAPI) CommentDelete(c *gin.Context) {
 
 	c.JSON(200, gin.H{"status": "okay"})
 	return
-} 
+}
 
 func (di *CommentAPI) notifyCommentPostAuth(post model.Post, user_id bson.ObjectId) {
 
