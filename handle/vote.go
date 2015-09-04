@@ -231,8 +231,8 @@ func (di *VoteAPI) VoteComment(c *gin.Context) {
 		}
 
 		// Get the author of the vote
-		user := di.User.Get(user_bson_id)
-		user_model := user.Data()
+		usr := di.User.Get(user_bson_id)
+		user_model := usr.Data()
 		index := vote.Comment
 
 		if _, err := strconv.Atoi(index); err == nil {
@@ -291,25 +291,33 @@ func (di *VoteAPI) VoteComment(c *gin.Context) {
 				// Return the gamification points
 				if already_voted.Value == 1 {
 
-					go di.Gaming.Get(user).Tribute(1)
+					go func(usr *user.One, comment model.Comment) {
 
-					if comment_.Votes.Up-1 < 5 {
+						di.Gaming.Get(usr).Tribute(1)
 
-						go di.Gaming.Get(comment_.UserId).Swords(-1)
-					}
+						author := di.Gaming.Get(comment.UserId)
+						author.Coins(-1)
 
-					go di.Gaming.Get(comment_.UserId).Coins(-1)
+						if comment.Votes.Up-1 < 5{
+							author.Swords(-1)
+						}
+
+					}(usr, comment_)
 
 				} else if already_voted.Value == -1 {
 
-					go di.Gaming.Get(user).Shit(1)
+					go func(usr *user.One, comment model.Comment) {
 
-					if comment_.Votes.Down-1 < 5 {
+						di.Gaming.Get(usr).Shit(1)
 
-						go di.Gaming.Get(comment_.UserId).Swords(1)
-					}
+						author := di.Gaming.Get(comment.UserId)
+						author.Coins(1)
 
-					go di.Gaming.Get(comment_.UserId).Coins(1)
+						if comment.Votes.Down-1 < 5{
+							author.Swords(1)
+						}
+
+					}(usr, comment_)
 				}
 
 				c.JSON(200, gin.H{"status": "okay"})
@@ -365,27 +373,33 @@ func (di *VoteAPI) VoteComment(c *gin.Context) {
 
 				if vote_value == -1 {
 
-					go di.Gaming.Get(user).Shit(-1)
+					go func(usr *user.One, comment model.Comment) {
 
-					// Remove the swords to the author of the comment
-					if comment_.Votes.Down <= 5 {
+						di.Gaming.Get(usr).Shit(-1)
 
-						go di.Gaming.Get(comment_.UserId).Swords(-1)
-					}
+						author := di.Gaming.Get(comment.UserId)
+						author.Coins(-1)
 
-					go di.Gaming.Get(comment_.UserId).Coins(-1)
+						if comment.Votes.Down <= 5{
+							author.Swords(-1)
+						}
+
+					}(usr, comment_)
 
 				} else {
 
-					go di.Gaming.Get(user).Tribute(-1)
+					go func(usr *user.One, comment model.Comment) {
 
-					// Give the swords to the author of the comment
-					if comment_.Votes.Up <= 5 {
+						di.Gaming.Get(usr).Tribute(-1)
 
-						go di.Gaming.Get(comment_.UserId).Swords(1)
-					}
+						author := di.Gaming.Get(comment.UserId)
+						author.Coins(1)
 
-					go di.Gaming.Get(comment_.UserId).Coins(1)
+						if comment.Votes.Up <= 5{
+							author.Swords(1)
+						}
+
+					}(usr, comment_)
 				}
 			}
 
@@ -459,8 +473,8 @@ func (di *VoteAPI) VotePost(c *gin.Context) {
 		}
 
 		// Get the author of the vote
-		user := di.User.Get(user_bson_id)
-		user_model := user.Data()
+		usr := di.User.Get(user_bson_id)
+		user_model := usr.Data()
 
 		var add bytes.Buffer
 		var already_voted model.Vote
@@ -512,25 +526,33 @@ func (di *VoteAPI) VotePost(c *gin.Context) {
 			// Return the gamification points
 			if already_voted.Value == 1 {
 
-				go di.Gaming.Get(user).Tribute(1)
+				go func(usr *user.One, post model.Post) {
 
-				if post.Votes.Up-1 < 10 {
+					di.Gaming.Get(usr).Tribute(1)
 
-					go di.Gaming.Get(post.UserId).Swords(-1)
-				}
+					author := di.Gaming.Get(post.UserId)
+					author.Coins(-2)
 
-				go di.Gaming.Get(post.UserId).Coins(-2)
+					if post.Votes.Up-1 < 10 {
+						author.Swords(-1)
+					}
+
+				}(usr, post)
 
 			} else if already_voted.Value == -1 {
 
-				go di.Gaming.Get(user).Shit(1)
+				go func(usr *user.One, post model.Post) {
 
-				if post.Votes.Down-1 < 10 {
+					di.Gaming.Get(usr).Shit(1)
 
-					go di.Gaming.Get(post.UserId).Swords(1)
-				}
+					author := di.Gaming.Get(post.UserId)
+					author.Coins(1)
 
-				go di.Gaming.Get(post.UserId).Coins(1)
+					if post.Votes.Down-1 < 10 {
+						author.Swords(1)
+					}
+
+				}(usr, post)
 			}
 
 			c.JSON(200, gin.H{"status": "okay"})
@@ -584,27 +606,33 @@ func (di *VoteAPI) VotePost(c *gin.Context) {
 
 			if vote_value == -1 {
 
-				go di.Gaming.Get(user).Shit(-1)
+				go func(usr *user.One, post model.Post) {
 
-				// Remove the swords to the author of the post
-				if post.Votes.Down <= 10 {
+					di.Gaming.Get(usr).Shit(-1)
 
-					go di.Gaming.Get(post.UserId).Swords(-1)
-				}
+					author := di.Gaming.Get(post.UserId)
+					author.Coins(-1)
 
-				go di.Gaming.Get(post.UserId).Coins(-1)
+					if post.Votes.Down <= 10 {
+						author.Swords(-1)
+					}
+
+				}(usr, post)
 
 			} else {
 
-				go di.Gaming.Get(user).Tribute(-1)
+				go func(usr *user.One, post model.Post) {
 
-				// Give the swords to the author of the comment
-				if post.Votes.Up <= 10 {
+					di.Gaming.Get(usr).Tribute(-1)
 
-					go di.Gaming.Get(post.UserId).Swords(1)
-				}
+					author := di.Gaming.Get(post.UserId)
+					author.Coins(2)
 
-				go di.Gaming.Get(post.UserId).Coins(2)
+					if post.Votes.Up <= 10 {
+						author.Swords(1)
+					}
+
+				}(usr, post)
 			}
 		}
 

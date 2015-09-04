@@ -84,6 +84,8 @@ func (self *User) Swords(how_many int) {
 
 	// Runtime update
 	user := self.user.Data()
+
+	
 	user.Gaming.Swords = user.Gaming.Swords + how_many
 	self.user.RUpdate(user)
 

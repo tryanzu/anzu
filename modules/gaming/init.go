@@ -38,7 +38,7 @@ type Module struct {
 	Config   *config.Config               `inject:""`
 	Firebase *firebase.Client             `inject:""`
 	Errors   *exceptions.ExceptionsModule `inject:""`
-	Rules    *model.GamingRules
+	Rules    model.GamingRules
 }
 
 // Get user gaming struct

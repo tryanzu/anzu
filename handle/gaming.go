@@ -11,6 +11,8 @@ type GamingAPI struct {
 
 func (di *GamingAPI) GetRules(c *gin.Context) {
 
+	rules := di.Gaming.Rules
+
 	// Just return the previously loaded rules
-	c.JSON(200, di.Gaming.Rules)
+	c.JSON(200, rules)
 }

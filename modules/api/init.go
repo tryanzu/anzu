@@ -40,6 +40,7 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.Middlewares},
 		&inject.Object{Value: &module.Acl},
 		&inject.Object{Value: &module.Sitemap},
+		&inject.Object{Value: &module.Gaming},
 	)
 
 	if err != nil {
