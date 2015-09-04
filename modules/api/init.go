@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"github.com/brandfolder/gin-gorelic"
 	"github.com/facebookgo/inject"
 	"github.com/fernandez14/spartangeek-blacker/handle"
 	"github.com/gin-gonic/gin"
@@ -58,7 +59,11 @@ func (module *Module) Run() {
 	// Start gin classic middlewares
 	router := gin.Default()
 
+	// Start gorelic
+	gorelic.InitNewrelicAgent("3e8e387fb7b29dedb924db3ba88e2790599bd0fb", "Blacker", false)
+
 	// Middlewares setup
+	router.Use(gorelic.Handler)
 	router.Use(module.Middlewares.ErrorTracking())
 	router.Use(module.Middlewares.CORS())
 	router.Use(module.Middlewares.MongoRefresher())
