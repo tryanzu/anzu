@@ -22,7 +22,7 @@ type Module struct {
 	Collector   handle.CollectorAPI
 	Sitemap     handle.SitemapAPI
 	Acl         handle.AclAPI
-	Gaming      *handle.GamingAPI
+	Gaming      handle.GamingAPI
 }
 
 func (module *Module) Populate(g inject.Graph) {
@@ -40,6 +40,7 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.Middlewares},
 		&inject.Object{Value: &module.Acl},
 		&inject.Object{Value: &module.Sitemap},
+		&inject.Object{Value: &module.Gaming},
 	)
 
 	if err != nil {

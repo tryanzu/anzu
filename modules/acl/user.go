@@ -127,7 +127,7 @@ func (user *User) isGranted(permission string) bool {
 			// User's role is granted to do "permission"
 			return true
 		}
-	}	
+	}
 
 	return false
 }
@@ -137,7 +137,7 @@ func (user *User) checkRolesRecursive(role string, compare string) bool {
 	if role_permissions := user.acl.Map.Get(role); role_permissions != nil {
 
 		parents := role_permissions.Parents()
-		
+
 		if allowed, _ := helpers.InArray(compare, parents); allowed {
 			return true
 		}

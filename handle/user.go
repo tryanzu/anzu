@@ -621,14 +621,14 @@ func (di *UserAPI) UserRegisterAction(c *gin.Context) {
 			NameChanges:  1,
 			Password:     hash,
 			Email:        registerAction.Email,
-			Roles:        []model.UserRole{
+			Roles: []model.UserRole{
 				{
 					Name: "user",
 				},
 			},
-			Permissions:  make([]string, 0),
-			Description:  "",
-			Profile:      profile,
+			Permissions: make([]string, 0),
+			Description: "",
+			Profile:     profile,
 			Stats: model.UserStats{
 				Saw: 0,
 			},
