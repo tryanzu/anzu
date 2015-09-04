@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"strings"
 	"unicode"
+	"math/rand"
 )
 
 var lat = []*unicode.RangeTable{unicode.Letter, unicode.Number}
@@ -54,4 +55,18 @@ func StrSlug(s string) string {
 		buf = buf[:i]
 	}
 	return string(buf)
+}
+
+func StrSlugRandom(s string) string {
+
+	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+	b := make([]rune, 6)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+
+	suffix := string(b)
+
+	return StrSlug(s) + suffix
 }
