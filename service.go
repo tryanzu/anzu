@@ -125,6 +125,12 @@ func main() {
         `,
 		Run: func(cmd *cobra.Command, args []string) {
 
+			// Populate the DI with the instances
+			if err := g.Populate(); err != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+
 			// Start the jobs
 			c := cron.New()
 
@@ -138,8 +144,27 @@ func main() {
 		},
 	}
 
+	var cmdSyncGamification = &cobra.Command{
+		Use:   "sync-gamification",
+		Short: "Sync gamification",
+		Long: `Sync and recalculates gamification facts
+		in proper manner
+        `,
+		Run: func(cmd *cobra.Command, args []string) {
+
+			// Populate the DI with the instances
+			if err := g.Populate(); err != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+	
+			gamingService.ResetTempStuff()
+		},
+	}
+
 	var rootCmd = &cobra.Command{Use: "blacker"}
 	rootCmd.AddCommand(cmdApi)
+	rootCmd.AddCommand(cmdSyncGamification)
 	rootCmd.AddCommand(cmdJobs)
 	rootCmd.Execute()
 
