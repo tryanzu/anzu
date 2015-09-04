@@ -2,10 +2,10 @@ package helpers
 
 import (
 	"golang.org/x/text/unicode/norm"
+	"math/rand"
 	"reflect"
 	"strings"
 	"unicode"
-	"math/rand"
 )
 
 var lat = []*unicode.RangeTable{unicode.Letter, unicode.Number}
