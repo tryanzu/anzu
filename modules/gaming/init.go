@@ -3,7 +3,6 @@ package gaming
 import (
 	"encoding/json"
 	"github.com/cosn/firebase"
-	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
@@ -45,7 +44,7 @@ type Module struct {
 	Config   *config.Config               `inject:""`
 	Firebase *firebase.Client             `inject:""`
 	Errors   *exceptions.ExceptionsModule `inject:""`
-	Rules    model.GamingRules
+	Rules    RulesModel
 }
 
 // Get user gaming struct
@@ -71,6 +70,21 @@ func (self *Module) Get(usr interface{}) *User {
 	default:
 		panic("Unkown argument")
 	}
+}
+
+// Get gamification model with badges
+func (self *Module) GetRules() RulesModel {
+
+	database := self.Mongo.Database
+	rules := self.Rules
+
+	err := database.C("badges").Find(nil).All(&rules.Badges)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return rules
 }
 
 func (self *Module) ResetTempStuff() {

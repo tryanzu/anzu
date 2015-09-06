@@ -45,6 +45,12 @@ type UserGaming struct {
 	Shit    int `bson:"shit" json:"shit"`
 	Coins   int `bson:"coins" json:"coins"`
 	Level   int `bson:"level" json:"level"`
+	Badges  []UserBadge `bson:"badges" json:"badges"`
+}
+
+type UserBadge struct {
+	Id   bson.ObjectId `bson:"id" json:"id"`
+	Date time.Time     `bson:"date" json:"date"`
 }
 
 type UserToken struct {

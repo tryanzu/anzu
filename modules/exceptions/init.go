@@ -27,3 +27,11 @@ func (di *ExceptionsModule) Recover() {
 	// Grab the error and send it to sentry
 	di.ErrorService.Capture(packet, map[string]string{})
 }
+
+type NotFound struct {
+	msg string
+}
+
+func (e NotFound) Error() string {
+	return e.msg
+}
