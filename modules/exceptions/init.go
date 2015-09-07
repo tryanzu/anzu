@@ -29,9 +29,17 @@ func (di *ExceptionsModule) Recover() {
 }
 
 type NotFound struct {
-	msg string
+	Msg string
 }
 
 func (e NotFound) Error() string {
-	return e.msg
+	return e.Msg
+}
+
+type OutOfBounds struct {
+	Msg string
+}
+
+func (e OutOfBounds) Error() string {
+	return e.Msg
 }

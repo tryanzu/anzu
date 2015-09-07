@@ -4,6 +4,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
 	"github.com/gin-gonic/gin"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type GamingAPI struct {
@@ -18,4 +19,32 @@ func (di *GamingAPI) GetRules(c *gin.Context) {
 
 	// Just return the previously loaded rules
 	c.JSON(200, rules)
+}
+
+func (di *GamingAPI) BuyBadge(c *gin.Context) {
+
+	id := c.Params.ByName("id")
+	user_string_id := c.MustGet("user_id")
+	user_id := bson.ObjectIdHex(user_string_id.(string))
+
+	// Check badge id 
+	if bson.IsObjectIdHex(id) == false {
+
+		c.JSON(400, gin.H{"status": "error", "message": "Invalid badge id."})
+		return
+	}
+
+	// Get the user using gaming module
+	user := di.Gaming.Get(user_id)
+
+	// Get the badge we want to adquire
+	err := user.AcquireBadge(bson.ObjectIdHex(id))
+
+	if err != nil {
+
+		c.JSON(400, gin.H{"status": "error", "message": err})
+		return
+	}
+
+	c.JSON(200, gin.H{"status": "okay"})
 }

@@ -142,6 +142,7 @@ func (module *Module) Run() {
 			authorized.POST("/user/my/avatar", module.Users.UserUpdateProfileAvatar)
 			authorized.GET("/user/my", module.Users.UserGetByToken)
 			authorized.PUT("/user/my", module.Users.UserUpdateProfile)
+			authorized.POST("/user/my/badge/:id", module.Gaming.BuyBadge)
 			authorized.PUT("/category/subscription/:id", module.Users.UserCategorySubscribe)
 			authorized.DELETE("/category/subscription/:id", module.Users.UserCategoryUnsubscribe)
 
