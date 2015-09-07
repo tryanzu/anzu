@@ -103,6 +103,14 @@ type UserSubscribeForm struct {
 	Email    string `json:"email" binding:"required"`
 }
 
+
+type CheckinModel struct {
+	Id       bson.ObjectId `bson:"_id,omitempty" json:"id"`
+	UserId   bson.ObjectId `bson:"user_id" json:"user_id"`
+	Address  string        `bson:"client_ip" json:"client_ip"`
+	Date     time.Time     `bson:"date" json:"date"`
+}
+
 type ByCreatedAt []UserActivity
 
 func (a ByCreatedAt) Len() int           { return len(a) }

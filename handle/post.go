@@ -601,14 +601,25 @@ func (di *PostAPI) PostsGetOne(c *gin.Context) {
 	// Save the activity
 	user_id, signed_in := c.Get("user_id")
 
-	if signed_in {
+	go func(post model.Post, user_id string, signed_in bool) {
 
-		// Save the activity in other routine
-		go di.Collector.Activity(model.Activity{UserId: bson.ObjectIdHex(user_id.(string)), Event: "post", RelatedId: post.Id})
-	}
+		defer di.Errors.Recover()
 
-	// Update the post rates for the most important stuff
-	go di.Feed.UpdatePostRate(post)
+		post_module, _ := di.Feed.Post(post)
+
+		if signed_in {
+
+			by := bson.ObjectIdHex(user_id)
+
+			post_module.Viewed(by)
+		}
+
+		post_module.UpdateRate()
+
+		// Trigger gamification events (if needed)
+		di.Gaming.Post(post_module).Review()
+
+	}(post, user_id.(string), signed_in)
 
 	c.JSON(200, post)
 }

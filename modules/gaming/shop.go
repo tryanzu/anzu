@@ -22,6 +22,11 @@ func (self *User) AcquireBadge(id bson.ObjectId) error {
 		return exceptions.NotFound{"Invalid badge id, not found."}
 	}
 
+	if badge.Type != "clothes" && badge.Type != "weapon" && badge.Type != "shield" {
+
+		return exceptions.UnexpectedValue{"Not a valid type of badge to get acquired."}
+	}
+
 	if badge.Price > 0 && usr.Gaming.Coins < badge.Price {
 
 		return exceptions.OutOfBounds{"Not enough coins to buy item."}

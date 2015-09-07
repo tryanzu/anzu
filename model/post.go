@@ -89,6 +89,12 @@ type Post struct {
 	Deleted    time.Time       `bson:"deleted_at,omitempty" json:"deleted_at,omitempty"`
 }
 
+type PostCommentModel struct {
+	Id      bson.ObjectId   `bson:"_id,omitempty" json:"id,omitempty"`
+	Title   string          `bson:"title" json:"title"`
+	Comment Comment         `bson:"comment" json:"comment"`
+}
+
 type FeedPost struct {
 	Id         bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
 	Title      string        `bson:"title" json:"title"`

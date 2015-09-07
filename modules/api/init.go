@@ -98,7 +98,7 @@ func (module *Module) Run() {
 		v1.POST("/user", module.Users.UserRegisterAction)
 		//v1.GET("/user/my/notifications", users.UserNotificationsGet)
 		v1.GET("/users/:id", module.Users.UserGetOne)
-		v1.GET("/user/activity", module.Users.UserInvolvedFeedGet)
+		v1.GET("/users/:id/:kind", module.Users.UserGetActivity)
 		v1.GET("/user/search", module.Users.UserAutocompleteGet)
 		v1.POST("/user/get-token/facebook", module.Users.UserGetTokenFacebook)
 		v1.GET("/user/get-token", module.Users.UserGetToken)
@@ -142,9 +142,11 @@ func (module *Module) Run() {
 			authorized.POST("/user/my/avatar", module.Users.UserUpdateProfileAvatar)
 			authorized.GET("/user/my", module.Users.UserGetByToken)
 			authorized.PUT("/user/my", module.Users.UserUpdateProfile)
-			authorized.POST("/user/my/badge/:id", module.Gaming.BuyBadge)
 			authorized.PUT("/category/subscription/:id", module.Users.UserCategorySubscribe)
 			authorized.DELETE("/category/subscription/:id", module.Users.UserCategoryUnsubscribe)
+			
+			// Gamification routes
+			authorized.POST("/badges/buy/:id", module.Gaming.BuyBadge)
 
 			// // Votes routes
 			authorized.POST("/vote/comment/:id", module.Votes.VoteComment)

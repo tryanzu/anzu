@@ -43,3 +43,11 @@ type OutOfBounds struct {
 func (e OutOfBounds) Error() string {
 	return e.Msg
 }
+
+type UnexpectedValue struct {
+	Msg string
+}
+
+func (e UnexpectedValue) Error() string {
+	return e.Msg
+}

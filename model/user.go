@@ -69,6 +69,7 @@ type UserFollowing struct {
 }
 
 type UserActivity struct {
+	Id        bson.ObjectId     `json:"related_id"`
 	Title     string            `json:"title"`
 	Directive string            `json:"directive"`
 	Content   string            `json:"content"`
