@@ -79,6 +79,7 @@ func (self *Module) Get(usr interface{}) *User {
 	}
 }
 
+// Get post gaming struct
 func (self *Module) Post(post interface{}) *Post {
 
 	module := self
