@@ -104,14 +104,6 @@ func (module *Module) Run() {
 		v1.GET("/user/get-token", module.Users.UserGetToken)
 		v1.GET("/auth/get-token", module.Users.UserGetJwtToken)
 
-		// Messaging routes
-		//v1.GET("/messages", MessagesGet)
-		//v1.POST("/messages", MessagePublish)
-		//v1.GET("/hashtags", HashtagsGet)
-
-		// Playlist routes
-		//v1.GET("/playlist/l/:sections", PlaylistGetList)
-
 		// Categories routes
 		v1.GET("/category", module.Categories.CategoriesGet)
 

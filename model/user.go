@@ -71,6 +71,7 @@ type UserFollowing struct {
 type UserActivity struct {
 	Id        bson.ObjectId     `json:"related_id"`
 	Title     string            `json:"title"`
+	Slug      string            `json:"slug"`
 	Directive string            `json:"directive"`
 	Content   string            `json:"content"`
 	Author    map[string]string `json:"user"`

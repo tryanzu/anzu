@@ -722,8 +722,9 @@ func (di *UserAPI) UserGetActivity(c *gin.Context) {
 	case "comments":
 
 		var commented_posts []model.PostCommentModel
+		var commented_count model.PostCommentCountModel
 
-		pipeline := database.C("posts").Pipe([]bson.M{
+		pipeline_line := []bson.M{
 			{
 				"$match": bson.M{"users": usr.Data().Id},
 			},
@@ -731,7 +732,7 @@ func (di *UserAPI) UserGetActivity(c *gin.Context) {
 				"$unwind": "$comments.set",
 			},
 			{
-				"$project": bson.M{"title": 1, "comment": "$comments.set"},
+				"$project": bson.M{"title": 1, "slug": 1, "comment": "$comments.set"},
 			},
 			{
 				"$match": bson.M{"comment.user_id": usr.Data().Id},
@@ -739,15 +740,34 @@ func (di *UserAPI) UserGetActivity(c *gin.Context) {
 			{
 				"$sort": bson.M{"comment.created_at": -1},
 			},
-			{
-				"$limit": limit,
-			},
-			{
-				"$skip": offset,
-			},
-		})
+		}
+
+		pipeline := database.C("posts").Pipe(append(pipeline_line,
+			[]bson.M{
+				{
+					"$limit": limit,
+				},
+				{
+					"$skip": offset,
+				},
+			}...
+		))
 
 		err := pipeline.All(&commented_posts)
+
+		if err != nil {
+			panic(err)
+		}
+
+		pipeline = database.C("posts").Pipe(append(pipeline_line, 
+			[]bson.M{
+				{
+					"$group": bson.M{"_id": nil, "count": bson.M{"$sum": 1}},
+				},
+			}...
+		))
+
+		err = pipeline.One(&commented_count)
 
 		if err != nil {
 			panic(err)
@@ -758,6 +778,7 @@ func (di *UserAPI) UserGetActivity(c *gin.Context) {
 			activity = append(activity, model.UserActivity{
 				Id:        post.Id,
 				Title:     post.Title,
+				Slug:	   post.Slug,
 				Content:   post.Comment.Content,
 				Created:   post.Comment.Created,
 				Directive: "commented",
@@ -772,7 +793,7 @@ func (di *UserAPI) UserGetActivity(c *gin.Context) {
 		// Sort the full set of posts by the time they happened
 		sort.Sort(model.ByCreatedAt(activity))
 
-		c.JSON(200, gin.H{"activity": activity})
+		c.JSON(200, gin.H{"count": commented_count.Count, "activity": activity})
 
 	default:
 

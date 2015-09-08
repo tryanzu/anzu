@@ -63,7 +63,7 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 
 	var feed []model.FeedPost
 	offset := 0
-	limit := 10
+	limit  := 10
 
 	o := c.Query("offset")
 	l := c.Query("limit")
@@ -141,6 +141,7 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 	}
 
 	user_order := false
+	count := 0
 
 	if from_author != "" && bson.IsObjectIdHex(from_author) {
 
@@ -152,7 +153,7 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 	_, filter_by_category := search["category"]
 
 	// Get the list of categories a user is following when the request is authenticated
-	if signed_in && !filter_by_category {
+	if signed_in && !filter_by_category && !user_order {
 
 		var user_categories []bson.ObjectId
 
@@ -282,6 +283,7 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 		// Add the sort depending on the context
 		if user_order {
 
+			count, _ = get_feed.Count()
 			get_feed = get_feed.Sort("-created_at")
 		} else {
 
@@ -362,7 +364,14 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 			}
 		}
 
-		c.JSON(200, gin.H{"feed": feed, "offset": offset, "limit": limit})
+
+		if count > 0 {
+
+			c.JSON(200, gin.H{"feed": feed, "offset": offset, "limit": limit, "count": count})
+		} else {
+
+			c.JSON(200, gin.H{"feed": feed, "offset": offset, "limit": limit})
+		}
 
 	} else {
 

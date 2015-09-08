@@ -136,6 +136,7 @@ func main() {
 
 			// Reset the user temporal stuff each X
 			c.AddFunc("@midnight", gamingService.ResetTempStuff)
+			c.AddFunc("@every 8h", gamingService.ResetGeneralRanking)
 
 			// Start the jobs
 			c.Start()

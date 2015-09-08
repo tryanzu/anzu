@@ -92,7 +92,13 @@ type Post struct {
 type PostCommentModel struct {
 	Id      bson.ObjectId   `bson:"_id,omitempty" json:"id,omitempty"`
 	Title   string          `bson:"title" json:"title"`
+	Slug    string          `bson:"slug" json:"slug"`
 	Comment Comment         `bson:"comment" json:"comment"`
+}
+
+type PostCommentCountModel struct {
+	Id      bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
+	Count   int           `bson:"count" json:"count"`
 }
 
 type FeedPost struct {
