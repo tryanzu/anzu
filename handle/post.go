@@ -608,7 +608,13 @@ func (di *PostAPI) PostsGetOne(c *gin.Context) {
 	}
 
 	// Save the activity
-	user_id, signed_in := c.Get("user_id")
+	signed_id, signed_in := c.Get("user_id")
+	user_id := ""
+
+	if signed_in {
+
+		user_id = signed_id.(string)
+	}
 
 	go func(post model.Post, user_id string, signed_in bool) {
 
@@ -628,7 +634,7 @@ func (di *PostAPI) PostsGetOne(c *gin.Context) {
 		// Trigger gamification events (if needed)
 		di.Gaming.Post(post_module).Review()
 
-	}(post, user_id.(string), signed_in)
+	}(post, user_id, signed_in)
 
 	c.JSON(200, post)
 }
