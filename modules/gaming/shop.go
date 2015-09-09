@@ -27,7 +27,7 @@ func (self *User) AcquireBadge(id bson.ObjectId) error {
 		return exceptions.UnexpectedValue{"Not a valid type of badge to get acquired."}
 	}
 
-	if badge.Price > 0 && usr.Gaming.Coins < badge.Price {
+	if badge.Coins > 0 && usr.Gaming.Coins < badge.Coins {
 
 		return exceptions.OutOfBounds{"Not enough coins to buy item."}
 	}
@@ -68,10 +68,10 @@ func (self *User) AcquireBadge(id bson.ObjectId) error {
 		panic(err)
 	}
 
-	if badge.Price > 0 {
+	if badge.Coins > 0 {
 
 		// Pay the badge price using user coins
-		go self.Coins(-badge.Price)
+		go self.Coins(-badge.Coins)
 	}
 
 	return nil

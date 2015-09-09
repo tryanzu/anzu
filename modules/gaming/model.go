@@ -24,12 +24,14 @@ type RuleModel struct {
 type BadgeModel struct {
 	Id            bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
 	Type          string        `bson:"type" json:"type"`
+	TypeLabel     string        `bson:"type_label" json:"type_label"`
 	Slug          string        `bson:"slug" json:"slug"`
 	Name          string        `bson:"name" json:"name"`
 	Description   string        `bson:"description" json:"description"`
-	Price         int           `bson:"price,omitempty" json:"price,omitempty"`
+	Coins         int           `bson:"coins,omitempty" json:"coins,omitempty"`
 	RequiredBadge bson.ObjectId `bson:"required_badge,omitempty" json:"required_badge,omitempty"`
 	RequiredLevel int           `bson:"required_level,omitempty" json:"required_level,omitempty"`
+	Avaliable     bool          `bson:"available" json:"available"`
 }
 
 type RankingModel struct {
