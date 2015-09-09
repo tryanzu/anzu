@@ -43,7 +43,7 @@ func (self *Module) ResetGeneralRanking() {
 
 			var before_this RankingModel 
 
-			err := database.C("stats").Find(bson.M{"user_id": usr.Id, "created_at": last_batch.Created}).One(&before_this)
+			err := database.C("stats").Find(bson.M{"user_id": usr.Id}).Sort("-created_at").Limit(1).One(&before_this)
 
 			if err == nil {
 

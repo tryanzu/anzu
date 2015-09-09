@@ -152,7 +152,6 @@ func (di *UserAPI) UserCategoryUnsubscribe(c *gin.Context) {
 
 func (di *UserAPI) UserGetOne(c *gin.Context) {
 
-	database := di.DataService.Database
 	user_id := c.Param("id")
 
 	if bson.IsObjectIdHex(user_id) == false {
@@ -163,12 +162,13 @@ func (di *UserAPI) UserGetOne(c *gin.Context) {
 
 	user_bson_id := bson.ObjectIdHex(user_id)
 
-	// Get the user using the specified id
-	user := model.User{}
-	err := database.C("users").Find(bson.M{"_id": user_bson_id}).One(&user)
+	// Get the user using its id
+	usr, err := di.User.Get(user_bson_id)
 
 	if err != nil {
-		panic(err)
+		
+		c.JSON(400, gin.H{"status": "error", "message": err.Error()})
+		return
 	}
 
 	// Save the activity
@@ -177,10 +177,10 @@ func (di *UserAPI) UserGetOne(c *gin.Context) {
 	if signed_in {
 
 		// Save the activity in other routine
-		go di.Collector.Activity(model.Activity{UserId: bson.ObjectIdHex(user_logged_id.(string)), Event: "user", RelatedId: user.Id})
+		go di.Collector.Activity(model.Activity{UserId: bson.ObjectIdHex(user_logged_id.(string)), Event: "user", RelatedId: usr.Data().Id})
 	}
 
-	c.JSON(200, user)
+	c.JSON(200, usr.Data())
 }
 
 func (di *UserAPI) UserGetByToken(c *gin.Context) {
