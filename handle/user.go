@@ -8,13 +8,13 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
+	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/kennygrant/sanitize"
 	"github.com/mitchellh/goamz/s3"
-	"github.com/mrvdot/golang-utils"
 	"github.com/olebedev/config"
 	"github.com/xuyu/goredis"
 	"gopkg.in/h2non/bimg.v0"
@@ -375,18 +375,19 @@ func (di *UserAPI) UserGetTokenFacebook(c *gin.Context) {
 
 		user := &model.User{
 			Id:          id,
-			FirstName:   facebook_first_name,
-			LastName:    facebook_last_name,
-			UserName:    utils.GenerateSlug(username),
-			Password:    "",
-			Email:       facebook_email,
-			Roles:       make([]model.UserRole, 0),
-			Permissions: make([]string, 0),
-			NameChanges: 0,
-			Description: "",
-			Facebook:    facebook,
-			Created:     time.Now(),
-			Updated:     time.Now(),
+			FirstName:    facebook_first_name,
+			LastName:     facebook_last_name,
+			UserName:     helpers.StrSlug(username),
+			UserNameSlug: helpers.StrSlug(username),
+			Password:     "",
+			Email:        facebook_email,
+			Roles:        make([]model.UserRole, 0),
+			Permissions:  make([]string, 0),
+			NameChanges:  0,
+			Description:  "",
+			Facebook:     facebook,
+			Created:      time.Now(),
+			Updated:      time.Now(),
 		}
 
 		err = database.C("users").Insert(user)
@@ -585,7 +586,7 @@ func (di *UserAPI) UserRegisterAction(c *gin.Context) {
 			return
 		}
 
-		username_slug := sanitize.Path(sanitize.Accents(registerAction.UserName))
+		username_slug := helpers.StrSlug(registerAction.UserName)
 		user_exists, _ := database.C("users").Find(bson.M{"username_slug": username_slug}).Count()
 
 		if user_exists > 0 {

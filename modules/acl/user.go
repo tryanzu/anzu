@@ -57,6 +57,11 @@ func (user *User) CanRead(category model.Category) bool {
 	return false
 }
 
+func (user *User) Can(permission string) bool {
+
+	return user.isGranted(permission)
+}
+
 // Check if user can update post
 func (user *User) CanUpdatePost(post model.Post) bool {
 

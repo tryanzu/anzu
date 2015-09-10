@@ -137,6 +137,7 @@ type PostForm struct {
 	Tag        string                 `json:"tag"`
 	Category   string                 `json:"category"`
 	IsQuestion bool                   `json:"isquestion"`
+	Pinned     bool                   `json:"pinned"`
 	Components map[string]interface{} `json:"components"`
 }
 

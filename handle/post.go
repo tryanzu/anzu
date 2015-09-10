@@ -21,7 +21,6 @@ import (
 	"gopkg.in/mgo.v2/bson"
 	"html"
 	"io/ioutil"
-	"math/rand"
 	"net/http"
 	"net/url"
 	"path/filepath"
@@ -679,6 +678,12 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 			return
 		}
 
+		if post.Pinned == true && user.Can("pin-board-posts") == false {
+
+			c.JSON(400, gin.H{"status": "error", "message": "Not enough permissions to pin."})
+			return
+		}
+		
 		comments := model.Comments{
 			Count: 0,
 			Set:   make([]model.Comment, 0),
@@ -735,12 +740,20 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 					post_name += "'"
 				}
 
+				slug := helpers.StrSlug(post_name)
+				slug_exists, _ := database.C("posts").Find(bson.M{"slug": slug}).Count()
+
+				if slug_exists > 0 {
+
+					slug = helpers.StrSlugRandom(post_name)
+				}
+
 				publish := &model.Post{
 					Id:         post_id,
 					Title:      post_name,
 					Content:    content,
 					Type:       "recommendations",
-					Slug:       strings.Replace(sanitize.Path(sanitize.Accents(post.Name)), "/", "", -1),
+					Slug:       slug,
 					Comments:   comments,
 					UserId:     bson_id,
 					Users:      users,
@@ -748,6 +761,7 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 					Category:   bson.ObjectIdHex(post_category),
 					Votes:      votes,
 					IsQuestion: post.IsQuestion,
+					Pinned:     post.Pinned,
 					Created:    time.Now(),
 					Updated:    time.Now(),
 				}
@@ -822,26 +836,12 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 
 		case "category-post":
 
-			slug_exists, _ := database.C("posts").Find(bson.M{"slug": strings.Replace(sanitize.Path(sanitize.Accents(post.Name)), "/", "", -1)}).Count()
-			slug := ""
+			slug := helpers.StrSlug(post.Name)
+			slug_exists, _ := database.C("posts").Find(bson.M{"slug": slug}).Count()
 
 			if slug_exists > 0 {
 
-				var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-
-				b := make([]rune, 6)
-				for i := range b {
-					b[i] = letters[rand.Intn(len(letters))]
-				}
-				suffix := string(b)
-
-				// Duplicated so suffix it
-				slug = strings.Replace(sanitize.Path(sanitize.Accents(post.Name)), "/", "", -1) + "-" + suffix
-
-			} else {
-
-				// No duplicates
-				slug = strings.Replace(sanitize.Path(sanitize.Accents(post.Name)), "/", "", -1)
+				slug = helpers.StrSlugRandom(post.Name)
 			}
 
 			publish := &model.Post{
