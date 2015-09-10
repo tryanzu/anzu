@@ -683,7 +683,7 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 			c.JSON(400, gin.H{"status": "error", "message": "Not enough permissions to pin."})
 			return
 		}
-		
+
 		comments := model.Comments{
 			Count: 0,
 			Set:   make([]model.Comment, 0),
@@ -857,6 +857,7 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 				Category:   bson.ObjectIdHex(post_category),
 				Votes:      votes,
 				IsQuestion: post.IsQuestion,
+				Pinned:     post.Pinned,
 				Created:    time.Now(),
 				Updated:    time.Now(),
 			}
@@ -1007,6 +1008,12 @@ func (di *PostAPI) PostUpdate(c *gin.Context) {
 			return
 		}
 
+		if postForm.Pinned == true && user.Can("pin-board-posts") == false {
+
+			c.JSON(400, gin.H{"status": "error", "message": "Not enough permissions to pin."})
+			return
+		}
+
 		slug := helpers.StrSlug(postForm.Name)
 		slug_exists, _ := database.C("posts").Find(bson.M{"slug": slug}).Count()
 
@@ -1021,7 +1028,7 @@ func (di *PostAPI) PostUpdate(c *gin.Context) {
 		var assets []string
 		assets = urls.FindAllString(content, -1)
 
-		err = database.C("posts").Update(bson.M{"_id": post.Id}, bson.M{"$set": bson.M{"content": content, "slug": slug, "title": postForm.Name, "category": bson.ObjectIdHex(post_category), "updated_at": time.Now()}})
+		err = database.C("posts").Update(bson.M{"_id": post.Id}, bson.M{"$set": bson.M{"content": content, "slug": slug, "title": postForm.Name, "category": bson.ObjectIdHex(post_category), "pinned": postForm.Pinned, "updated_at": time.Now()}})
 
 		if err != nil {
 			panic(err)

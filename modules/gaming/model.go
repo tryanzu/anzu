@@ -42,6 +42,7 @@ type RankingModel struct {
 	Coins     int           `bson:"coins" json:"coins"`
 	Position  RankingPositionModel `bson:"position" json:"position"`
 	Before    RankingPositionModel `bson:"before" json:"before"`	
+	User      RankingUserModel     `json:"user,omitempty"`
 	Created   time.Time            `bson:"created_at" json:"created_at"`
 }
 
@@ -49,6 +50,12 @@ type RankingPositionModel struct {
 	Wealth int `bson:"wealth" json:"wealth"`
 	Swords int `bson:"swords" json:"swords"`
 	Badges int `bson:"badges" json:"badges"`
+}
+
+type RankingUserModel struct {
+	Id       bson.ObjectId `bson:"_id,omitempty" json:"id"`
+	UserName string `bson:"username" json:"username"`
+	Image    string `bson:"image" json:"image,omitempty"`
 }
 
 type RankBySwords []RankingModel

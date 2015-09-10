@@ -7,6 +7,46 @@ import (
 	"sort"
 )
 
+func (self *Module) GetRankingBy(sort string) []RankingModel {
+	
+	var ranking RankingModel
+	var rankings []RankingModel
+	var users []RankingUserModel
+	var users_id []bson.ObjectId
+
+	database := self.Mongo.Database
+
+	// Get the rankings with the sort parameter
+	iter := database.C("stats").Find(nil).Sort("-position." + sort).Limit(50).Iter()
+
+	for iter.Next(&ranking) {
+
+		rankings = append(rankings, ranking)
+		users_id = append(users_id, ranking.UserId)
+	}
+
+	err := database.C("users").Find(bson.M{"_id": bson.M{"$in": users_id}}).All(&users)
+
+	if err != nil {
+		panic(err)
+	}
+
+	for id, rank := range rankings {
+
+		for _, user := range users {
+
+			if user.Id == rank.UserId {
+
+				rankings[id].User = user
+
+				break
+			}
+		}
+	}
+
+	return rankings
+}
+
 func (self *Module) ResetGeneralRanking() {
 	
 	var usr user.User

@@ -21,6 +21,22 @@ func (di *GamingAPI) GetRules(c *gin.Context) {
 	c.JSON(200, rules)
 }
 
+// Get users ranking
+func (di *GamingAPI) GetRanking(c *gin.Context) {
+
+	sort := c.DefaultQuery("sort", "swords")
+
+	if sort != "swords" || sort != "badges" || sort != "wealth" {
+
+		c.JSON(400, gin.H{"status": "error", "message": "Invalid sort option."})
+		return
+	}
+
+	ranking := di.Gaming.GetRankingBy()
+
+	c.JSON(200, ranking)
+}
+
 func (di *GamingAPI) BuyBadge(c *gin.Context) {
 
 	id := c.Params.ByName("id")
