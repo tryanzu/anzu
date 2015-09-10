@@ -81,6 +81,7 @@ func (module *Module) Run() {
 
 		// Gamification routes
 		v1.GET("/gamification", module.Gaming.GetRules)
+		v1.GET("/stats/ranking", module.Gaming.GetRanking)
 
 		// ACL routes
 		v1.GET("/permissions", module.Acl.GetRules)

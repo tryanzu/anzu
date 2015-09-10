@@ -25,7 +25,7 @@ func (self *Module) GetRankingBy(sort string) []RankingModel {
 		users_id = append(users_id, ranking.UserId)
 	}
 
-	err := database.C("users").Find(bson.M{"_id": bson.M{"$in": users_id}}).All(&users)
+	err := database.C("users").Find(bson.M{"_id": bson.M{"$in": users_id}}).Select(bson.M{"_id": 1, "username": 1, "image": 1}).All(&users)
 
 	if err != nil {
 		panic(err)
