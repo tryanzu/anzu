@@ -26,13 +26,13 @@ func (di *GamingAPI) GetRanking(c *gin.Context) {
 
 	sort := c.DefaultQuery("sort", "swords")
 
-	if sort != "swords" || sort != "badges" || sort != "wealth" {
+	if sort != "swords" && sort != "badges" && sort != "wealth" {
 
 		c.JSON(400, gin.H{"status": "error", "message": "Invalid sort option."})
 		return
 	}
 
-	ranking := di.Gaming.GetRankingBy()
+	ranking := di.Gaming.GetRankingBy(sort)
 
 	c.JSON(200, ranking)
 }
