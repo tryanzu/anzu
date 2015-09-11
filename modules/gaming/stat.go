@@ -58,39 +58,28 @@ func (self *Module) ResetGeneralRanking() {
 	database      := self.Mongo.Database
 	current_batch := time.Now()
 
-	// Get the last batch if any
-	var last_batch RankingModel
-	var last_batch_available bool = false
-
-	err := database.C("stats").Find(nil).Sort("-created_at").One(&last_batch)
-
-	if err == nil {
-
-		last_batch_available = true
-	} 
-
 	iter := database.C("users").Find(nil).Iter()
 
 	for iter.Next(&usr) {
 
-		before := RankingPositionModel{
-			Wealth: 0,
-			Badges: 0,
-			Swords: 0,
-		}
+		var before RankingPositionModel
+		var before_this RankingModel 
 
-		if last_batch_available {
+		err := database.C("stats").Find(bson.M{"user_id": usr.Id}).Sort("-created_at").Limit(1).One(&before_this)
 
-			var before_this RankingModel 
+		if err != nil {
 
-			err := database.C("stats").Find(bson.M{"user_id": usr.Id}).Sort("-created_at").Limit(1).One(&before_this)
-
-			if err == nil {
-
-				before = before_this.Before
+			before = RankingPositionModel{
+				Wealth: 0,
+				Badges: 0,
+				Swords: 0,
 			}
-		}
 
+		} else {
+
+			before = before_this.Before
+		}
+	
 		rankings = append(rankings, RankingModel{
 			UserId: usr.Id,
 			Badges: len(usr.Gaming.Badges),
