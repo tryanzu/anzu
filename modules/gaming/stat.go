@@ -17,7 +17,7 @@ func (self *Module) GetRankingBy(sort string) []RankingModel {
 	database := self.Mongo.Database
 
 	// Get the rankings with the sort parameter
-	iter := database.C("stats").Find(nil).Sort("position." + sort).Limit(50).Iter()
+	iter := database.C("stats").Find(nil).Sort("-created_at", "position." + sort).Limit(50).Iter()
 
 	for iter.Next(&ranking) {
 
