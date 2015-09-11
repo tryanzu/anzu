@@ -77,7 +77,7 @@ func (self *Module) ResetGeneralRanking() {
 
 		} else {
 
-			before = before_this.Before
+			before = before_this.Position
 		}
 	
 		rankings = append(rankings, RankingModel{
