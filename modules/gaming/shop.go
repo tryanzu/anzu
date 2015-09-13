@@ -22,7 +22,7 @@ func (self *User) AcquireBadge(id bson.ObjectId) error {
 		return exceptions.NotFound{"Invalid badge id, not found."}
 	}
 
-	if badge.Type != "clothes" && badge.Type != "weapon" && badge.Type != "shield" {
+	if badge.Type != "clothes" && badge.Type != "weapon" && badge.Type != "power" && badge.Type != "armour" {
 
 		return exceptions.UnexpectedValue{"Not a valid type of badge to get acquired."}
 	}
