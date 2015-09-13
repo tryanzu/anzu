@@ -1028,7 +1028,21 @@ func (di *PostAPI) PostUpdate(c *gin.Context) {
 		var assets []string
 		assets = urls.FindAllString(content, -1)
 
-		err = database.C("posts").Update(bson.M{"_id": post.Id}, bson.M{"$set": bson.M{"content": content, "slug": slug, "title": postForm.Name, "category": bson.ObjectIdHex(post_category), "pinned": postForm.Pinned, "updated_at": time.Now()}})
+		update_directive := bson.M{"$set": bson.M{"content": content, "slug": slug, "title": postForm.Name, "category": bson.ObjectIdHex(post_category), "updated_at": time.Now()}}
+
+		if postForm.Pinned == true {
+
+			// Update the set directive by creating a copy of it and using type assertion
+			set_directive := update_directive["$set"].(map[string]interface{})
+			set_directive["pinned"] = postForm.Pinned
+			update_directive["$set"] = set_directive
+
+		} else {
+
+			update_directive["$unset"] = bson.M{"pinned": ""}
+		}
+
+		err = database.C("posts").Update(bson.M{"_id": post.Id}, update_directive)
 
 		if err != nil {
 			panic(err)
@@ -1083,7 +1097,7 @@ func (di *PostAPI) PostDelete(c *gin.Context) {
 		return
 	}
 
-	err = database.C("posts").Update(bson.M{"_id": post.Id}, bson.M{"$set": bson.M{"deleted": true, "deleted_at": time.Now()}})
+	err = database.C("posts").Update(bson.M{"_id": post.Id}, bson.M{"$set": bson.M{"deleted": true, "deleted_at": time.Now()}, "$unset": bson.M{"pinned": ""}})
 
 	if err != nil {
 		panic(err)

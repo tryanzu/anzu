@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
-	"github.com/mikespook/gorbac"
+	gorbac "github.com/mikespook/gorbac"
 	"gopkg.in/mgo.v2/bson"
 	"io/ioutil"
 )
