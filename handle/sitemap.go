@@ -5,7 +5,6 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/gin-gonic/gin"
 	"github.com/xuyu/goredis"
-	"gopkg.in/mgo.v2/bson"
 	"time"
 )
 
@@ -17,19 +16,15 @@ type SitemapAPI struct {
 func (di *SitemapAPI) GetSitemap(c *gin.Context) {
 
 	var urls []model.SitemapUrl
-	var posts []model.Post
+	var post model.Post
 	var location string
 
 	// Get the database interface from the DI
 	database := di.DataService.Database
 
-	err := database.C("posts").Find(bson.M{}).Sort("-pinned", "-created_at").All(&posts)
+	iter := database.C("posts").Find(nil).Sort("-pinned", "-created_at").Iter()
 
-	if err != nil {
-		panic(err)
-	}
-
-	for _, post := range posts {
+	for iter.Next(&post) {
 
 		// Generate the post url
 		location = "http://www.spartangeek.com/p/" + post.Slug + "/" + post.Id.Hex()
