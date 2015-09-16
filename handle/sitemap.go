@@ -5,7 +5,6 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/gin-gonic/gin"
 	"github.com/xuyu/goredis"
-	"gopkg.in/mgo.v2/bson"
 	"time"
 )
 
@@ -23,7 +22,7 @@ func (di *SitemapAPI) GetSitemap(c *gin.Context) {
 	// Get the database interface from the DI
 	database := di.DataService.Database
 
-	iter := database.C("posts").Find(bson.M{}).Select(bson.M{"slug": 1, "_id": 1}).Sort("-created_at").Iter()
+	iter := database.C("posts").Find(nil).Iter()
 
 	for iter.Next(&post) {
 
