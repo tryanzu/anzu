@@ -28,6 +28,7 @@ func (self *StoreAPI) PlaceOrder(c *gin.Context) {
 			Currency: form.Currency,
 			Games: form.Games,
 			Extra: form.Extra,
+			BuyDelay: form.BuyDelay,
 		}
 
 		self.Store.CreateOrder(order)
@@ -38,9 +39,10 @@ func (self *StoreAPI) PlaceOrder(c *gin.Context) {
 
 type OrderForm struct {
     User     OrderUserForm `json:"user" binding:"required"`
-    Content  string `json:"content" binding:"required"`
-    Budget   int `json:"budget" binding:"required"`
-    Currency string `json:"currency" binding:"required"`
+    Content  string   `json:"content" binding:"required"`
+    Budget   int      `json:"budget" binding:"required"`
+    Currency string   `json:"currency" binding:"required"`
+    BuyDelay int      `json:"buydelay" binding:"required"`
     Games    []string `json:"games"`
     Extra    []string `json:"extra"`
 }
