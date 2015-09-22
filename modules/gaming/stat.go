@@ -5,6 +5,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 	"time"
 	"sort"
+	"log"
 )
 
 func (self *Module) GetRankingBy(sort string) []RankingModel {
@@ -60,7 +61,11 @@ func (self *Module) ResetGeneralRanking() {
 
 	iter := database.C("users").Find(nil).Iter()
 
+	log.Println("[job] [ResetGeneralRanking] Started")
+
 	for iter.Next(&usr) {
+
+		log.Printf("[job] [ResetGeneralRanking] Processing user %v\n", usr.Id.Hex())
 
 		var before RankingPositionModel
 		var before_this RankingModel 

@@ -5,6 +5,7 @@ import (
 	"github.com/brandfolder/gin-gorelic"
 	"github.com/facebookgo/inject"
 	"github.com/fernandez14/spartangeek-blacker/handle"
+	"github.com/fernandez14/spartangeek-blacker/modules/api/controller"
 	"github.com/gin-gonic/gin"
 	"os"
 )
@@ -23,6 +24,7 @@ type Module struct {
 	Sitemap     handle.SitemapAPI
 	Acl         handle.AclAPI
 	Gaming      handle.GamingAPI
+	Store       controller.StoreAPI
 }
 
 func (module *Module) Populate(g inject.Graph) {
@@ -41,6 +43,7 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.Acl},
 		&inject.Object{Value: &module.Sitemap},
 		&inject.Object{Value: &module.Gaming},
+		&inject.Object{Value: &module.Store},
 	)
 
 	if err != nil {
@@ -115,6 +118,11 @@ func (module *Module) Run() {
 
 		// Stats routes
 		v1.GET("/stats/board", module.Stats.BoardGet)
+
+		// Store routes
+		store := v1.Group("/store")
+
+		store.POST("/order", module.Store.PlaceOrder)
 
 		authorized := v1.Group("")
 

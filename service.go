@@ -13,6 +13,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
 	"github.com/fernandez14/spartangeek-blacker/modules/notifications"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
+	"github.com/fernandez14/spartangeek-blacker/modules/store"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/getsentry/raven-go"
 	"github.com/mitchellh/goamz/aws"
@@ -41,6 +42,7 @@ func main() {
 
 	// Resources for the API
 	var api api.Module
+	var storeModule store.Module
 	var notificationsModule notifications.NotificationsModule
 	var feedModule feed.FeedModule
 	var exceptions exceptions.ExceptionsModule
@@ -91,6 +93,7 @@ func main() {
 		&inject.Object{Value: userService, Complete: false},
 		&inject.Object{Value: gamingService, Complete: false},
 		&inject.Object{Value: broadcaster, Complete: true, Name: "Notifications"},
+		&inject.Object{Value: &storeModule},
 		&inject.Object{Value: &notificationsModule},
 		&inject.Object{Value: &feedModule},
 		&inject.Object{Value: &exceptions},
