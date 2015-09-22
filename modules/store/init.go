@@ -21,7 +21,7 @@ func (module *Module) CreateOrder(order OrderModel) {
 	order.Created = time.Now()
 	order.Updated = time.Now()
 
-	err := database.C("stats").Insert(order)
+	err := database.C("orders").Insert(order)
 
 	if err != nil {
 		panic(err)
