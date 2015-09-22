@@ -26,6 +26,7 @@ type User struct {
 	Gaming        UserGaming             `bson:"gaming,omitempty" json:"gaming,omitempty"`
 	Stats         UserStats              `bson:"stats,omitempty" json:"stats,omitempty"`
 	Version       string                 `bson:"version,omitempty" json:"version,omitempty"`
+	ReferralCode  string			     `bson:"ref_code,omitempty" json:"ref_code"`
 	Created       time.Time              `bson:"created_at" json:"created_at"`
 	Updated       time.Time              `bson:"updated_at" json:"updated_at"`
 }
@@ -103,12 +104,20 @@ type UserSubscribeForm struct {
 	Email    string `json:"email" binding:"required"`
 }
 
-
 type CheckinModel struct {
 	Id       bson.ObjectId `bson:"_id,omitempty" json:"id"`
 	UserId   bson.ObjectId `bson:"user_id" json:"user_id"`
 	Address  string        `bson:"client_ip" json:"client_ip"`
 	Date     time.Time     `bson:"date" json:"date"`
+}
+
+type ReferralModel struct {
+	Id       bson.ObjectId `bson:"_id,omitempty" json:"id"`
+	OwnerId  bson.ObjectId `bson:"owner_id" json:"owner_id"`
+	UserId   bson.ObjectId `bson:"user_id" json:"user_id"`
+	Code     string        `bson:"ref_code" json:"ref_code"`
+	Created  time.Time     `bson:"created_at" json:"created_at"`
+	Updated  time.Time     `bson:"updated_at" json:"updated_at"`
 }
 
 type ByCreatedAt []UserActivity

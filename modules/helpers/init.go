@@ -6,6 +6,8 @@ import (
 	"reflect"
 	"strings"
 	"unicode"
+	"crypto/sha256"
+	"encoding/hex"
 )
 
 var lat = []*unicode.RangeTable{unicode.Letter, unicode.Number}
@@ -59,7 +61,7 @@ func StrSlug(s string) string {
 
 func StrSlugRandom(s string) string {
 
-	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+	var letters = []rune("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
 	b := make([]rune, 6)
 	for i := range b {
@@ -69,4 +71,28 @@ func StrSlugRandom(s string) string {
 	suffix := string(b)
 
 	return StrSlug(s) + suffix
+}
+
+func StrRandom(length int) string {
+
+	var letters = []rune("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+	b := make([]rune, length)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+
+	generated := string(b)
+
+	return generated
+}
+
+func Sha256(s string) string {
+
+	password_encrypted := []byte(s)
+	sha256 := sha256.New()
+	sha256.Write(password_encrypted)
+	md := sha256.Sum(nil)
+
+	return hex.EncodeToString(md)
 }

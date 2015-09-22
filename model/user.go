@@ -86,6 +86,7 @@ type UserRegisterForm struct {
 	UserName string `json:"username" binding:"required"`
 	Password string `json:"password" binding:"required"`
 	Email    string `json:"email" binding:"required"`
+	Referral string `json:"ref"`
 }
 
 type UserSubscribe struct {

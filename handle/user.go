@@ -8,7 +8,6 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
-	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/gin-gonic/gin"
@@ -335,83 +334,26 @@ func (di *UserAPI) UserGetTokenFacebook(c *gin.Context) {
 	}
 
 	collection := database.C("users")
-	user := model.User{}
+	usr := user.User{}
 
 	// Try to fetch the user using the facebook id param though
-	err := collection.Find(bson.M{"facebook.id": facebook_id}).One(&user)
+	err := collection.Find(bson.M{"facebook.id": facebook_id}).One(&usr)
 
 	// Create a new user
 	if err != nil {
 
-		var facebook_first_name, facebook_last_name, facebook_email string
-
-		username := facebook["first_name"].(string) + " " + facebook["last_name"].(string)
-		id = bson.NewObjectId()
-
-		// Ensure the facebook data is alright
-		if _, ok := facebook["first_name"]; ok {
-
-			facebook_first_name = facebook["first_name"].(string)
-		} else {
-
-			facebook_first_name = ""
-		}
-
-		if _, ok := facebook["last_name"]; ok {
-
-			facebook_last_name = facebook["last_name"].(string)
-		} else {
-
-			facebook_last_name = ""
-		}
-
-		if _, ok := facebook["email"]; ok {
-
-			facebook_email = facebook["email"].(string)
-		} else {
-
-			facebook_email = ""
-		}
-
-		user := &model.User{
-			Id:          id,
-			FirstName:    facebook_first_name,
-			LastName:     facebook_last_name,
-			UserName:     helpers.StrSlug(username),
-			UserNameSlug: helpers.StrSlug(username),
-			Password:     "",
-			Email:        facebook_email,
-			Roles:        make([]model.UserRole, 0),
-			Permissions:  make([]string, 0),
-			NameChanges:  0,
-			Description:  "",
-			Facebook:     facebook,
-			Created:      time.Now(),
-			Updated:      time.Now(),
-		}
-
-		err = database.C("users").Insert(user)
+		_, err := di.User.SignUpFacebook(facebook)
 
 		if err != nil {
-
-			c.JSON(500, gin.H{"error": "Could create user using facebook oAuth...", "status": 106})
+			
+			c.JSON(400, gin.H{"status": "error", "message": err.Error()})
 			return
 		}
-
-		err = database.C("counters").Insert(model.Counter{
-			UserId: id,
-			Counters: map[string]model.PostCounter{
-				"news": model.PostCounter{
-					Counter: 0,
-					Updated: time.Now(),
-				},
-			},
-		})
 
 	} else {
 
 		// The id for the token would be the same as the facebook user
-		id = user.Id
+		id = usr.Id
 	}
 
 	// Generate JWT with the information about the user
@@ -560,106 +502,21 @@ func (di *UserAPI) UserUpdateProfile(c *gin.Context) {
 
 func (di *UserAPI) UserRegisterAction(c *gin.Context) {
 
-	// Get the database interface from the DI
-	database := di.DataService.Database
+	var form model.UserRegisterForm
 
-	var registerAction model.UserRegisterForm
+	if c.BindWith(&form, binding.JSON) == nil {
 
-	if c.BindWith(&registerAction, binding.JSON) == nil {
-
-		// Check if already registered
-		email_exists, _ := database.C("users").Find(bson.M{"email": registerAction.Email}).Count()
-
-		if email_exists > 0 {
-
-			// Only one account per email
-			c.JSON(400, gin.H{"status": "error", "message": "User already registered", "code": 470})
-			return
-		}
-
-		valid_username, _ := regexp.Compile(`^[0-9a-zA-Z\-]{0,32}$`)
-
-		if valid_username.MatchString(registerAction.UserName) == false {
-
-			// Only some characters in the username
-			c.JSON(400, gin.H{"status": "error", "message": "Username not valid"})
-			return
-		}
-
-		username_slug := helpers.StrSlug(registerAction.UserName)
-		user_exists, _ := database.C("users").Find(bson.M{"username_slug": username_slug}).Count()
-
-		if user_exists > 0 {
-
-			// Username busy
-			c.JSON(400, gin.H{"status": "error", "message": "User already registered", "code": 471})
-			return
-		}
-
-		// Encode password using sha
-		password_encrypted := []byte(registerAction.Password)
-		sha256 := sha256.New()
-		sha256.Write(password_encrypted)
-		md := sha256.Sum(nil)
-		hash := hex.EncodeToString(md)
-
-		// Profile default data
-		profile := gin.H{
-			"step":           0,
-			"ranking":        0,
-			"country":        "México",
-			"posts":          0,
-			"followers":      0,
-			"show_email":     false,
-			"favourite_game": "-",
-			"microsoft":      "-",
-			"bio":            "Just another spartan geek",
-		}
-
-		id := bson.NewObjectId()
-
-		user := &model.User{
-			Id:           id,
-			FirstName:    "",
-			LastName:     "",
-			UserName:     registerAction.UserName,
-			UserNameSlug: username_slug,
-			NameChanges:  1,
-			Password:     hash,
-			Email:        registerAction.Email,
-			Roles: []model.UserRole{
-				{
-					Name: "user",
-				},
-			},
-			Permissions: make([]string, 0),
-			Description: "",
-			Profile:     profile,
-			Stats: model.UserStats{
-				Saw: 0,
-			},
-			Created: time.Now(),
-			Updated: time.Now(),
-		}
-
-		err := database.C("users").Insert(user)
+		// Get the user using its id
+		usr, err := di.User.SignUp(form.Email, form.UserName, form.Password, form.Referral)
 
 		if err != nil {
-			panic(err)
+			
+			c.JSON(400, gin.H{"status": "error", "message": err.Error()})
+			return
 		}
 
-		err = database.C("counters").Insert(model.Counter{
-			UserId: id,
-			Counters: map[string]model.PostCounter{
-				"news": model.PostCounter{
-					Counter: 0,
-					Updated: time.Now(),
-				},
-			},
-		})
-
 		// Generate token if auth is going to perform
-		token, firebase := di.generateUserToken(user.Id)
+		token, firebase := di.generateUserToken(usr.Data().Id)
 
 		// Finished creating the post
 		c.JSON(200, gin.H{"status": "okay", "code": 200, "token": token, "firebase": firebase})
