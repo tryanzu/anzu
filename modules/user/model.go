@@ -45,6 +45,12 @@ type UserGaming struct {
 	Shit    int `bson:"shit" json:"shit"`
 	Coins   int `bson:"coins" json:"coins"`
 	Level   int `bson:"level" json:"level"`
+	Badges  []UserBadge `bson:"badges" json:"badges"`
+}
+
+type UserBadge struct {
+	Id   bson.ObjectId `bson:"id" json:"id"`
+	Date time.Time     `bson:"date" json:"date"`
 }
 
 type UserToken struct {
@@ -95,6 +101,14 @@ type UserSubscribe struct {
 type UserSubscribeForm struct {
 	Category string `json:"category" binding:"required"`
 	Email    string `json:"email" binding:"required"`
+}
+
+
+type CheckinModel struct {
+	Id       bson.ObjectId `bson:"_id,omitempty" json:"id"`
+	UserId   bson.ObjectId `bson:"user_id" json:"user_id"`
+	Address  string        `bson:"client_ip" json:"client_ip"`
+	Date     time.Time     `bson:"date" json:"date"`
 }
 
 type ByCreatedAt []UserActivity

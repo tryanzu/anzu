@@ -6,13 +6,15 @@ import (
 	"encoding/hex"
 	"github.com/CloudCom/fireauth"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/fernandez14/spartangeek-blacker/modules/user"
+	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
+	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/kennygrant/sanitize"
 	"github.com/mitchellh/goamz/s3"
-	"github.com/mrvdot/golang-utils"
 	"github.com/olebedev/config"
 	"github.com/xuyu/goredis"
 	"gopkg.in/h2non/bimg.v0"
@@ -23,6 +25,7 @@ import (
 	"regexp"
 	"sort"
 	"time"
+	"strconv"
 )
 
 type UserAPI struct {
@@ -30,6 +33,8 @@ type UserAPI struct {
 	CacheService  *goredis.Redis `inject:""`
 	ConfigService *config.Config `inject:""`
 	S3Bucket      *s3.Bucket     `inject:""`
+	User          *user.Module   `inject:""`
+	Gaming        *gaming.Module `inject:""`
 	Collector     CollectorAPI   `inject:"inline"`
 }
 
@@ -147,7 +152,6 @@ func (di *UserAPI) UserCategoryUnsubscribe(c *gin.Context) {
 
 func (di *UserAPI) UserGetOne(c *gin.Context) {
 
-	database := di.DataService.Database
 	user_id := c.Param("id")
 
 	if bson.IsObjectIdHex(user_id) == false {
@@ -158,12 +162,13 @@ func (di *UserAPI) UserGetOne(c *gin.Context) {
 
 	user_bson_id := bson.ObjectIdHex(user_id)
 
-	// Get the user using the specified id
-	user := model.User{}
-	err := database.C("users").Find(bson.M{"_id": user_bson_id}).One(&user)
+	// Get the user using its id
+	usr, err := di.User.Get(user_bson_id)
 
 	if err != nil {
-		panic(err)
+		
+		c.JSON(400, gin.H{"status": "error", "message": err.Error()})
+		return
 	}
 
 	// Save the activity
@@ -172,38 +177,38 @@ func (di *UserAPI) UserGetOne(c *gin.Context) {
 	if signed_in {
 
 		// Save the activity in other routine
-		go di.Collector.Activity(model.Activity{UserId: bson.ObjectIdHex(user_logged_id.(string)), Event: "user", RelatedId: user.Id})
+		go di.Collector.Activity(model.Activity{UserId: bson.ObjectIdHex(user_logged_id.(string)), Event: "user", RelatedId: usr.Data().Id})
 	}
 
-	c.JSON(200, user)
+	c.JSON(200, usr.Data())
 }
 
 func (di *UserAPI) UserGetByToken(c *gin.Context) {
 
-	// Get the database interface from the DI
-	database := di.DataService.Database
-	user_id := c.MustGet("user_id")
-	user_bson_id := bson.ObjectIdHex(user_id.(string))
+	id      := c.MustGet("user_id")
+	user_id := bson.ObjectIdHex(id.(string))
 
-	// Get the user using the session
-	user := model.User{}
-	err := database.C("users").Find(bson.M{"_id": user_bson_id}).One(&user)
+	// Get the user using its id
+	usr, err := di.User.Get(user_id)
 
 	if err != nil {
-		panic(err)
+		
+		c.JSON(400, gin.H{"status": "error", "message": err.Error()})
+		return
 	}
 
-	// Get the user notifications
-	notifications, err := database.C("notifications").Find(bson.M{"user_id": user.Id, "seen": false}).Count()
+	go func(usr *user.One) {
 
-	if err != nil {
-		panic(err)
-	}
+		// Track user sign in
+		usr.TrackUserSignin(c.ClientIP())
 
-	user.Notifications = notifications
+		// Does daily login calculations
+		di.Gaming.Get(usr).DailyLogin()
+
+	}(usr)
 
 	// Alright, go back and send the user info
-	c.JSON(200, user)
+	c.JSON(200, usr.Data())
 }
 
 func (di *UserAPI) UserGetToken(c *gin.Context) {
@@ -370,18 +375,19 @@ func (di *UserAPI) UserGetTokenFacebook(c *gin.Context) {
 
 		user := &model.User{
 			Id:          id,
-			FirstName:   facebook_first_name,
-			LastName:    facebook_last_name,
-			UserName:    utils.GenerateSlug(username),
-			Password:    "",
-			Email:       facebook_email,
-			Roles:       make([]model.UserRole, 0),
-			Permissions: make([]string, 0),
-			NameChanges: 0,
-			Description: "",
-			Facebook:    facebook,
-			Created:     time.Now(),
-			Updated:     time.Now(),
+			FirstName:    facebook_first_name,
+			LastName:     facebook_last_name,
+			UserName:     helpers.StrSlug(username),
+			UserNameSlug: helpers.StrSlug(username),
+			Password:     "",
+			Email:        facebook_email,
+			Roles:        make([]model.UserRole, 0),
+			Permissions:  make([]string, 0),
+			NameChanges:  0,
+			Description:  "",
+			Facebook:     facebook,
+			Created:      time.Now(),
+			Updated:      time.Now(),
 		}
 
 		err = database.C("users").Insert(user)
@@ -580,7 +586,7 @@ func (di *UserAPI) UserRegisterAction(c *gin.Context) {
 			return
 		}
 
-		username_slug := sanitize.Path(sanitize.Accents(registerAction.UserName))
+		username_slug := helpers.StrSlug(registerAction.UserName)
 		user_exists, _ := database.C("users").Find(bson.M{"username_slug": username_slug}).Count()
 
 		if user_exists > 0 {
@@ -664,90 +670,135 @@ func (di *UserAPI) UserRegisterAction(c *gin.Context) {
 	c.JSON(400, gin.H{"status": "error", "message": "Missing information to process the request", "code": 400})
 }
 
-func (di *UserAPI) UserInvolvedFeedGet(c *gin.Context) {
+func (di *UserAPI) UserGetActivity(c *gin.Context) {
+
+	var activity = make([]model.UserActivity, 0)
 
 	// Get the database interface from the DI
 	database := di.DataService.Database
+	user_id  := c.Param("id")
+	kind     := c.Param("kind") 
+	offset   := 0
+	limit    := 10
 
-	var user_posts []model.Post
-	var commented_posts []model.Post
-	var activity = make([]model.UserActivity, 0)
+	if bson.IsObjectIdHex(user_id) == false {
 
-	// Check whether auth or not
-	user_token := model.UserToken{}
-	token := c.Request.Header.Get("Auth-Token")
+		c.JSON(400, gin.H{"status": "error", "message": "Invalid user id."})
+		return
+	}
 
-	if token != "" {
+	usr, err := di.User.Get(bson.ObjectIdHex(user_id))
 
-		// Try to fetch the user using token header though
-		err := database.C("tokens").Find(bson.M{"token": token}).One(&user_token)
+	if err != nil {
+
+		c.JSON(400, gin.H{"status": "error", "message": err.Error()})
+		return
+	}
+
+	query_offset := c.Query("offset")
+
+	if query_offset != "" {
+
+		query_offset_parse, err := strconv.Atoi(query_offset)
 
 		if err == nil {
 
-			var user model.User
-
-			// Get the current user
-			err := database.C("users").Find(bson.M{"_id": user_token.UserId}).One(&user)
-
-			if err != nil {
-				panic(err)
-			}
-
-			// Get the user owned posts
-			err = database.C("posts").Find(bson.M{"user_id": user_token.UserId}).All(&user_posts)
-
-			if err != nil {
-				panic(err)
-			}
-
-			// Get the posts where the user commented
-			err = database.C("posts").Find(bson.M{"users": user_token.UserId, "user_id": bson.M{"$ne": user_token.UserId}}).All(&commented_posts)
-
-			if err != nil {
-				panic(err)
-			}
-
-			for _, post := range user_posts {
-
-				activity = append(activity, model.UserActivity{
-					Title:     post.Title,
-					Content:   post.Content,
-					Created:   post.Created,
-					Directive: "owner",
-					Author: map[string]string{
-						"id":    user.Id.Hex(),
-						"name":  user.UserName,
-						"email": user.Email,
-					},
-				})
-			}
-
-			for _, post := range commented_posts {
-
-				for _, comment := range post.Comments.Set {
-
-					if comment.UserId == user.Id {
-
-						activity = append(activity, model.UserActivity{
-							Title:     post.Title,
-							Content:   comment.Content,
-							Created:   comment.Created,
-							Directive: "commented",
-							Author: map[string]string{
-								"id":    user.Id.Hex(),
-								"name":  user.UserName,
-								"email": user.Email,
-							},
-						})
-					}
-				}
-			}
-
-			// Sort the full set of posts by the time they happened
-			sort.Sort(model.ByCreatedAt(activity))
-
-			c.JSON(200, gin.H{"activity": activity})
+			offset = query_offset_parse
 		}
+	}
+
+	query_limit := c.Query("limit")
+
+	if query_limit != "" {
+
+		query_limit_parse, err := strconv.Atoi(query_limit)
+
+		if err == nil {
+
+			limit = query_limit_parse
+		}
+	}
+
+	switch kind {
+	case "comments":
+
+		var commented_posts []model.PostCommentModel
+		var commented_count model.PostCommentCountModel
+
+		pipeline_line := []bson.M{
+			{
+				"$match": bson.M{"users": usr.Data().Id},
+			},
+			{
+				"$unwind": "$comments.set",
+			},
+			{
+				"$project": bson.M{"title": 1, "slug": 1, "comment": "$comments.set"},
+			},
+			{
+				"$match": bson.M{"comment.user_id": usr.Data().Id},
+			},
+			{
+				"$sort": bson.M{"comment.created_at": -1},
+			},
+		}
+
+		pipeline := database.C("posts").Pipe(append(pipeline_line,
+			[]bson.M{
+				{
+					"$limit": limit,
+				},
+				{
+					"$skip": offset,
+				},
+			}...
+		))
+
+		err := pipeline.All(&commented_posts)
+
+		if err != nil {
+			panic(err)
+		}
+
+		pipeline = database.C("posts").Pipe(append(pipeline_line, 
+			[]bson.M{
+				{
+					"$group": bson.M{"_id": nil, "count": bson.M{"$sum": 1}},
+				},
+			}...
+		))
+
+		err = pipeline.One(&commented_count)
+
+		if err != nil {
+			panic(err)
+		}
+
+		for _, post := range commented_posts {
+
+			activity = append(activity, model.UserActivity{
+				Id:        post.Id,
+				Title:     post.Title,
+				Slug:	   post.Slug,
+				Content:   post.Comment.Content,
+				Created:   post.Comment.Created,
+				Directive: "commented",
+				Author: map[string]string{
+					"id":    usr.Data().Id.Hex(),
+					"name":  usr.Data().UserName,
+					"email": usr.Data().Email,
+				},
+			})
+		}
+
+		// Sort the full set of posts by the time they happened
+		sort.Sort(model.ByCreatedAt(activity))
+
+		c.JSON(200, gin.H{"count": commented_count.Count, "activity": activity})
+
+	default:
+
+		c.JSON(400, gin.H{"status": "error", "message": "Invalid request."})
 	}
 }
 

@@ -43,11 +43,15 @@ build:
         name: goconvey
         code: |
             go get github.com/smartystreets/goconvey
+    - script:
+        name: gorbac
+        code: |
+            go get github.com/mikespook/gorbac
             
     - script:
         name: go get
         code: |
-          go get ./...
+          go get ./... -u
 
     # Build the project
     - script:

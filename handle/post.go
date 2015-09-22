@@ -21,7 +21,6 @@ import (
 	"gopkg.in/mgo.v2/bson"
 	"html"
 	"io/ioutil"
-	"math/rand"
 	"net/http"
 	"net/url"
 	"path/filepath"
@@ -63,7 +62,7 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 
 	var feed []model.FeedPost
 	offset := 0
-	limit := 10
+	limit  := 10
 
 	o := c.Query("offset")
 	l := c.Query("limit")
@@ -141,6 +140,7 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 	}
 
 	user_order := false
+	count := 0
 
 	if from_author != "" && bson.IsObjectIdHex(from_author) {
 
@@ -152,7 +152,7 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 	_, filter_by_category := search["category"]
 
 	// Get the list of categories a user is following when the request is authenticated
-	if signed_in && !filter_by_category {
+	if signed_in && !filter_by_category && !user_order {
 
 		var user_categories []bson.ObjectId
 
@@ -282,6 +282,7 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 		// Add the sort depending on the context
 		if user_order {
 
+			count, _ = get_feed.Count()
 			get_feed = get_feed.Sort("-created_at")
 		} else {
 
@@ -362,7 +363,14 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 			}
 		}
 
-		c.JSON(200, gin.H{"feed": feed, "offset": offset, "limit": limit})
+
+		if count > 0 {
+
+			c.JSON(200, gin.H{"feed": feed, "offset": offset, "limit": limit, "count": count})
+		} else {
+
+			c.JSON(200, gin.H{"feed": feed, "offset": offset, "limit": limit})
+		}
 
 	} else {
 
@@ -599,16 +607,33 @@ func (di *PostAPI) PostsGetOne(c *gin.Context) {
 	}
 
 	// Save the activity
-	user_id, signed_in := c.Get("user_id")
+	signed_id, signed_in := c.Get("user_id")
+	user_id := ""
 
 	if signed_in {
 
-		// Save the activity in other routine
-		go di.Collector.Activity(model.Activity{UserId: bson.ObjectIdHex(user_id.(string)), Event: "post", RelatedId: post.Id})
+		user_id = signed_id.(string)
 	}
 
-	// Update the post rates for the most important stuff
-	go di.Feed.UpdatePostRate(post)
+	go func(post model.Post, user_id string, signed_in bool) {
+
+		defer di.Errors.Recover()
+
+		post_module, _ := di.Feed.Post(post)
+
+		if signed_in {
+
+			by := bson.ObjectIdHex(user_id)
+
+			post_module.Viewed(by)
+		}
+
+		post_module.UpdateRate()
+
+		// Trigger gamification events (if needed)
+		di.Gaming.Post(post_module).Review()
+
+	}(post, user_id, signed_in)
 
 	c.JSON(200, post)
 }
@@ -650,6 +675,12 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 		if user.CanWrite(category) == false {
 
 			c.JSON(400, gin.H{"status": "error", "message": "Not enough permissions."})
+			return
+		}
+
+		if post.Pinned == true && user.Can("pin-board-posts") == false {
+
+			c.JSON(400, gin.H{"status": "error", "message": "Not enough permissions to pin."})
 			return
 		}
 
@@ -709,12 +740,20 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 					post_name += "'"
 				}
 
+				slug := helpers.StrSlug(post_name)
+				slug_exists, _ := database.C("posts").Find(bson.M{"slug": slug}).Count()
+
+				if slug_exists > 0 {
+
+					slug = helpers.StrSlugRandom(post_name)
+				}
+
 				publish := &model.Post{
 					Id:         post_id,
 					Title:      post_name,
 					Content:    content,
 					Type:       "recommendations",
-					Slug:       strings.Replace(sanitize.Path(sanitize.Accents(post.Name)), "/", "", -1),
+					Slug:       slug,
 					Comments:   comments,
 					UserId:     bson_id,
 					Users:      users,
@@ -722,6 +761,7 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 					Category:   bson.ObjectIdHex(post_category),
 					Votes:      votes,
 					IsQuestion: post.IsQuestion,
+					Pinned:     post.Pinned,
 					Created:    time.Now(),
 					Updated:    time.Now(),
 				}
@@ -796,26 +836,12 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 
 		case "category-post":
 
-			slug_exists, _ := database.C("posts").Find(bson.M{"slug": strings.Replace(sanitize.Path(sanitize.Accents(post.Name)), "/", "", -1)}).Count()
-			slug := ""
+			slug := helpers.StrSlug(post.Name)
+			slug_exists, _ := database.C("posts").Find(bson.M{"slug": slug}).Count()
 
 			if slug_exists > 0 {
 
-				var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-
-				b := make([]rune, 6)
-				for i := range b {
-					b[i] = letters[rand.Intn(len(letters))]
-				}
-				suffix := string(b)
-
-				// Duplicated so suffix it
-				slug = strings.Replace(sanitize.Path(sanitize.Accents(post.Name)), "/", "", -1) + "-" + suffix
-
-			} else {
-
-				// No duplicates
-				slug = strings.Replace(sanitize.Path(sanitize.Accents(post.Name)), "/", "", -1)
+				slug = helpers.StrSlugRandom(post.Name)
 			}
 
 			publish := &model.Post{
@@ -831,6 +857,7 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 				Category:   bson.ObjectIdHex(post_category),
 				Votes:      votes,
 				IsQuestion: post.IsQuestion,
+				Pinned:     post.Pinned,
 				Created:    time.Now(),
 				Updated:    time.Now(),
 			}
@@ -981,6 +1008,12 @@ func (di *PostAPI) PostUpdate(c *gin.Context) {
 			return
 		}
 
+		if postForm.Pinned == true && user.Can("pin-board-posts") == false {
+
+			c.JSON(400, gin.H{"status": "error", "message": "Not enough permissions to pin."})
+			return
+		}
+
 		slug := helpers.StrSlug(postForm.Name)
 		slug_exists, _ := database.C("posts").Find(bson.M{"slug": slug}).Count()
 
@@ -995,7 +1028,21 @@ func (di *PostAPI) PostUpdate(c *gin.Context) {
 		var assets []string
 		assets = urls.FindAllString(content, -1)
 
-		err = database.C("posts").Update(bson.M{"_id": post.Id}, bson.M{"$set": bson.M{"content": content, "slug": slug, "title": postForm.Name, "category": bson.ObjectIdHex(post_category), "updated_at": time.Now()}})
+		update_directive := bson.M{"$set": bson.M{"content": content, "slug": slug, "title": postForm.Name, "category": bson.ObjectIdHex(post_category), "updated_at": time.Now()}}
+
+		if postForm.Pinned == true {
+
+			// Update the set directive by creating a copy of it and using type assertion
+			set_directive := update_directive["$set"].(map[string]interface{})
+			set_directive["pinned"] = postForm.Pinned
+			update_directive["$set"] = set_directive
+
+		} else {
+
+			update_directive["$unset"] = bson.M{"pinned": ""}
+		}
+
+		err = database.C("posts").Update(bson.M{"_id": post.Id}, update_directive)
 
 		if err != nil {
 			panic(err)
@@ -1050,7 +1097,7 @@ func (di *PostAPI) PostDelete(c *gin.Context) {
 		return
 	}
 
-	err = database.C("posts").Update(bson.M{"_id": post.Id}, bson.M{"$set": bson.M{"deleted": true, "deleted_at": time.Now()}})
+	err = database.C("posts").Update(bson.M{"_id": post.Id}, bson.M{"$set": bson.M{"deleted": true, "deleted_at": time.Now()}, "$unset": bson.M{"pinned": ""}})
 
 	if err != nil {
 		panic(err)

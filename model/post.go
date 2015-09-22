@@ -89,6 +89,18 @@ type Post struct {
 	Deleted    time.Time       `bson:"deleted_at,omitempty" json:"deleted_at,omitempty"`
 }
 
+type PostCommentModel struct {
+	Id      bson.ObjectId   `bson:"_id,omitempty" json:"id,omitempty"`
+	Title   string          `bson:"title" json:"title"`
+	Slug    string          `bson:"slug" json:"slug"`
+	Comment Comment         `bson:"comment" json:"comment"`
+}
+
+type PostCommentCountModel struct {
+	Id      bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
+	Count   int           `bson:"count" json:"count"`
+}
+
 type FeedPost struct {
 	Id         bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
 	Title      string        `bson:"title" json:"title"`
@@ -125,6 +137,7 @@ type PostForm struct {
 	Tag        string                 `json:"tag"`
 	Category   string                 `json:"category"`
 	IsQuestion bool                   `json:"isquestion"`
+	Pinned     bool                   `json:"pinned"`
 	Components map[string]interface{} `json:"components"`
 }
 

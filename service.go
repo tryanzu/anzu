@@ -136,6 +136,7 @@ func main() {
 
 			// Reset the user temporal stuff each X
 			c.AddFunc("@midnight", gamingService.ResetTempStuff)
+			c.AddFunc("@every 8h", gamingService.ResetGeneralRanking)
 
 			// Start the jobs
 			c.Start()
@@ -162,9 +163,29 @@ func main() {
 		},
 	}
 
+
+	var cmdSyncRanking = &cobra.Command{
+		Use:   "sync-ranking",
+		Short: "Sync ranking",
+		Long: `Sync and recalculates ranking facts
+		in proper manner
+        `,
+		Run: func(cmd *cobra.Command, args []string) {
+
+			// Populate the DI with the instances
+			if err := g.Populate(); err != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+	
+			gamingService.ResetGeneralRanking()
+		},
+	}
+
 	var rootCmd = &cobra.Command{Use: "blacker"}
 	rootCmd.AddCommand(cmdApi)
 	rootCmd.AddCommand(cmdSyncGamification)
+	rootCmd.AddCommand(cmdSyncRanking)
 	rootCmd.AddCommand(cmdJobs)
 	rootCmd.Execute()
 

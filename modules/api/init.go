@@ -81,6 +81,7 @@ func (module *Module) Run() {
 
 		// Gamification routes
 		v1.GET("/gamification", module.Gaming.GetRules)
+		v1.GET("/stats/ranking", module.Gaming.GetRanking)
 
 		// ACL routes
 		v1.GET("/permissions", module.Acl.GetRules)
@@ -98,19 +99,11 @@ func (module *Module) Run() {
 		v1.POST("/user", module.Users.UserRegisterAction)
 		//v1.GET("/user/my/notifications", users.UserNotificationsGet)
 		v1.GET("/users/:id", module.Users.UserGetOne)
-		v1.GET("/user/activity", module.Users.UserInvolvedFeedGet)
+		v1.GET("/users/:id/:kind", module.Users.UserGetActivity)
 		v1.GET("/user/search", module.Users.UserAutocompleteGet)
 		v1.POST("/user/get-token/facebook", module.Users.UserGetTokenFacebook)
 		v1.GET("/user/get-token", module.Users.UserGetToken)
 		v1.GET("/auth/get-token", module.Users.UserGetJwtToken)
-
-		// Messaging routes
-		//v1.GET("/messages", MessagesGet)
-		//v1.POST("/messages", MessagePublish)
-		//v1.GET("/hashtags", HashtagsGet)
-
-		// Playlist routes
-		//v1.GET("/playlist/l/:sections", PlaylistGetList)
 
 		// Categories routes
 		v1.GET("/category", module.Categories.CategoriesGet)
@@ -144,6 +137,9 @@ func (module *Module) Run() {
 			authorized.PUT("/user/my", module.Users.UserUpdateProfile)
 			authorized.PUT("/category/subscription/:id", module.Users.UserCategorySubscribe)
 			authorized.DELETE("/category/subscription/:id", module.Users.UserCategoryUnsubscribe)
+			
+			// Gamification routes
+			authorized.POST("/badges/buy/:id", module.Gaming.BuyBadge)
 
 			// // Votes routes
 			authorized.POST("/vote/comment/:id", module.Votes.VoteComment)

@@ -3,9 +3,9 @@ package gaming
 import (
 	"encoding/json"
 	"github.com/cosn/firebase"
-	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
+	"github.com/fernandez14/spartangeek-blacker/modules/feed"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/olebedev/config"
 	"github.com/goinggo/work"
@@ -41,11 +41,12 @@ func logFunc(message string) {
 type Module struct {
 	Mongo    *mongo.Service               `inject:""`
 	User     *user.Module                 `inject:""`
+	Feed     *feed.FeedModule             `inject:""`
 	Redis    *goredis.Redis               `inject:""`
 	Config   *config.Config               `inject:""`
 	Firebase *firebase.Client             `inject:""`
 	Errors   *exceptions.ExceptionsModule `inject:""`
-	Rules    model.GamingRules
+	Rules    RulesModel
 }
 
 // Get user gaming struct
@@ -57,7 +58,12 @@ func (self *Module) Get(usr interface{}) *User {
 	case bson.ObjectId:
 
 		// Use user module reference to get the user and then create the user gaming instance
-		user_obj := self.User.Get(usr.(bson.ObjectId))
+		user_obj, err := self.User.Get(usr.(bson.ObjectId))
+
+		if err != nil {
+			panic(err)
+		}
+
 		user_gaming := &User{user: user_obj, di: module}
 
 		return user_gaming
@@ -73,6 +79,52 @@ func (self *Module) Get(usr interface{}) *User {
 	}
 }
 
+// Get post gaming struct
+func (self *Module) Post(post interface{}) *Post {
+
+	module := self
+
+	switch post.(type) {
+	case bson.ObjectId:
+
+		// Use user module reference to get the user and then create the user gaming instance
+		post_object, err := self.Feed.Post(post.(bson.ObjectId))
+
+		if err != nil {
+			panic(err)
+		}
+
+		post_gaming := &Post{post: post_object, di: module}
+
+		return post_gaming
+
+	case *feed.Post:
+
+		post_gaming := &Post{post: post.(*feed.Post), di: module}
+
+		return post_gaming
+
+	default:
+		panic("Unkown argument")
+	}
+}
+
+// Get gamification model with badges
+func (self *Module) GetRules() RulesModel {
+
+	database := self.Mongo.Database
+	rules := self.Rules
+
+	err := database.C("badges").Find(nil).All(&rules.Badges)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return rules
+}
+
+// Reset daily user stats
 func (self *Module) ResetTempStuff() {
 
 	// Recover from any panic even inside this goroutine

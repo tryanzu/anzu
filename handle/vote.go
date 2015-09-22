@@ -231,7 +231,14 @@ func (di *VoteAPI) VoteComment(c *gin.Context) {
 		}
 
 		// Get the author of the vote
-		usr := di.User.Get(user_bson_id)
+		usr, err := di.User.Get(user_bson_id)
+
+		if err != nil {
+
+			c.JSON(400, gin.H{"status": "error", "message": err.Error()})
+			return
+		}
+
 		user_model := usr.Data()
 		index := vote.Comment
 
@@ -473,7 +480,14 @@ func (di *VoteAPI) VotePost(c *gin.Context) {
 		}
 
 		// Get the author of the vote
-		usr := di.User.Get(user_bson_id)
+		usr, err := di.User.Get(user_bson_id)
+
+		if err != nil {
+
+			c.JSON(400, gin.H{"status": "error", "message": err.Error()})
+			return
+		}
+
 		user_model := usr.Data()
 
 		var add bytes.Buffer

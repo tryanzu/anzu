@@ -25,7 +25,7 @@
 	},
 
 	"super-moderator": {
-		"permissions": ["edit-board-comments", "edit-board-posts", "delete-board-comments", "delete-board-posts"],
+		"permissions": ["edit-board-comments", "edit-board-posts", "delete-board-comments", "delete-board-posts", "pin-board-posts"],
 		"parents": ["category-moderator"]
 	},
 
