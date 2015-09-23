@@ -305,7 +305,7 @@ func (di *VoteAPI) VoteComment(c *gin.Context) {
 						author := di.Gaming.Get(comment.UserId)
 						author.Coins(-1)
 
-						if comment.Votes.Up-1 < 5{
+						if comment.Votes.Up-1 < 5 {
 							author.Swords(-1)
 						}
 
@@ -320,7 +320,7 @@ func (di *VoteAPI) VoteComment(c *gin.Context) {
 						author := di.Gaming.Get(comment.UserId)
 						author.Coins(1)
 
-						if comment.Votes.Down-1 < 5{
+						if comment.Votes.Down-1 < 5 {
 							author.Swords(1)
 						}
 
@@ -387,7 +387,7 @@ func (di *VoteAPI) VoteComment(c *gin.Context) {
 						author := di.Gaming.Get(comment.UserId)
 						author.Coins(-1)
 
-						if comment.Votes.Down <= 5{
+						if comment.Votes.Down <= 5 {
 							author.Swords(-1)
 						}
 
@@ -402,7 +402,7 @@ func (di *VoteAPI) VoteComment(c *gin.Context) {
 						author := di.Gaming.Get(comment.UserId)
 						author.Coins(1)
 
-						if comment.Votes.Up <= 5{
+						if comment.Votes.Up <= 5 {
 							author.Swords(1)
 						}
 

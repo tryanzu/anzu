@@ -1,13 +1,13 @@
 package helpers
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"golang.org/x/text/unicode/norm"
 	"math/rand"
 	"reflect"
 	"strings"
 	"unicode"
-	"crypto/sha256"
-	"encoding/hex"
 )
 
 var lat = []*unicode.RangeTable{unicode.Letter, unicode.Number}

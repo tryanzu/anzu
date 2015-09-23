@@ -54,7 +54,7 @@ var avaliable_components = []string{
 	"cpu", "motherboard", "ram", "cabinet", "screen", "storage", "cooler", "power", "videocard",
 }
 
-func (di *PostAPI) FeedGet(c *gin.Context) {
+func (di PostAPI) FeedGet(c *gin.Context) {
 
 	// Get the database interface from the DI
 	database := di.DataService.Database
@@ -62,7 +62,7 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 
 	var feed []model.FeedPost
 	offset := 0
-	limit  := 10
+	limit := 10
 
 	o := c.Query("offset")
 	l := c.Query("limit")
@@ -363,7 +363,6 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 			}
 		}
 
-
 		if count > 0 {
 
 			c.JSON(200, gin.H{"feed": feed, "offset": offset, "limit": limit, "count": count})
@@ -378,7 +377,7 @@ func (di *PostAPI) FeedGet(c *gin.Context) {
 	}
 }
 
-func (di *PostAPI) PostsGetOne(c *gin.Context) {
+func (di PostAPI) PostsGetOne(c *gin.Context) {
 
 	var legalSlug = regexp.MustCompile(`^([a-zA-Z0-9\-\.|/]+)$`)
 	var err error
@@ -638,7 +637,7 @@ func (di *PostAPI) PostsGetOne(c *gin.Context) {
 	c.JSON(200, post)
 }
 
-func (di *PostAPI) PostCreate(c *gin.Context) {
+func (di PostAPI) PostCreate(c *gin.Context) {
 
 	// Get the database interface from the DI
 	database := di.DataService.Database
@@ -892,7 +891,7 @@ func (di *PostAPI) PostCreate(c *gin.Context) {
 	c.JSON(400, gin.H{"status": "error", "message": "Couldnt create post, missing information...", "code": 205})
 }
 
-func (di *PostAPI) PostUploadAttachment(c *gin.Context) {
+func (di PostAPI) PostUploadAttachment(c *gin.Context) {
 
 	// Check the file inside the request
 	file, header, err := c.Request.FormFile("file")
@@ -944,7 +943,7 @@ func (di *PostAPI) PostUploadAttachment(c *gin.Context) {
 	c.JSON(400, gin.H{"status": "error", "message": "Could not detect an image file..."})
 }
 
-func (di *PostAPI) PostUpdate(c *gin.Context) {
+func (di PostAPI) PostUpdate(c *gin.Context) {
 
 	var post model.Post
 	var postForm model.PostForm
@@ -1061,7 +1060,7 @@ func (di *PostAPI) PostUpdate(c *gin.Context) {
 	c.JSON(400, gin.H{"status": "error", "message": "Couldnt update post, missing information..."})
 }
 
-func (di *PostAPI) PostDelete(c *gin.Context) {
+func (di PostAPI) PostDelete(c *gin.Context) {
 
 	var post model.Post
 
@@ -1106,7 +1105,7 @@ func (di *PostAPI) PostDelete(c *gin.Context) {
 	c.JSON(200, gin.H{"status": "okay"})
 }
 
-func (di *PostAPI) syncUsersFeed(post *model.Post) {
+func (di PostAPI) syncUsersFeed(post *model.Post) {
 
 	var users map[string]model.UserFirebase
 
@@ -1156,7 +1155,7 @@ func (di *PostAPI) syncUsersFeed(post *model.Post) {
 	}
 }
 
-func (di *PostAPI) downloadAssetFromUrl(from string, post_id bson.ObjectId) error {
+func (di PostAPI) downloadAssetFromUrl(from string, post_id bson.ObjectId) error {
 
 	// Recover from any panic even inside this goroutine
 	defer di.Errors.Recover()
@@ -1245,7 +1244,7 @@ func (di *PostAPI) downloadAssetFromUrl(from string, post_id bson.ObjectId) erro
 	return nil
 }
 
-func (di *PostAPI) resetUserCategoryCounter(category string, user_id bson.ObjectId) {
+func (di PostAPI) resetUserCategoryCounter(category string, user_id bson.ObjectId) {
 
 	// Recover from any panic even inside this goroutine
 	defer di.Errors.Recover()
@@ -1265,7 +1264,7 @@ func (di *PostAPI) resetUserCategoryCounter(category string, user_id bson.Object
 	return
 }
 
-func (di *PostAPI) addUserCategoryCounter(category string) {
+func (di PostAPI) addUserCategoryCounter(category string) {
 
 	// Recover from any panic even inside this goroutine
 	defer di.Errors.Recover()

@@ -6,9 +6,9 @@ import (
 	"encoding/hex"
 	"github.com/CloudCom/fireauth"
 	"github.com/dgrijalva/jwt-go"
-	"github.com/fernandez14/spartangeek-blacker/modules/user"
-	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
 	"github.com/fernandez14/spartangeek-blacker/model"
+	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
+	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -23,8 +23,8 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
-	"time"
 	"strconv"
+	"time"
 )
 
 type UserAPI struct {
@@ -165,7 +165,7 @@ func (di *UserAPI) UserGetOne(c *gin.Context) {
 	usr, err := di.User.Get(user_bson_id)
 
 	if err != nil {
-		
+
 		c.JSON(400, gin.H{"status": "error", "message": err.Error()})
 		return
 	}
@@ -184,14 +184,14 @@ func (di *UserAPI) UserGetOne(c *gin.Context) {
 
 func (di *UserAPI) UserGetByToken(c *gin.Context) {
 
-	id      := c.MustGet("user_id")
+	id := c.MustGet("user_id")
 	user_id := bson.ObjectIdHex(id.(string))
 
 	// Get the user using its id
 	usr, err := di.User.Get(user_id)
 
 	if err != nil {
-		
+
 		c.JSON(400, gin.H{"status": "error", "message": err.Error()})
 		return
 	}
@@ -345,7 +345,7 @@ func (di *UserAPI) UserGetTokenFacebook(c *gin.Context) {
 		_, err := di.User.SignUpFacebook(facebook)
 
 		if err != nil {
-			
+
 			c.JSON(400, gin.H{"status": "error", "message": err.Error()})
 			return
 		}
@@ -510,7 +510,7 @@ func (di *UserAPI) UserRegisterAction(c *gin.Context) {
 		usr, err := di.User.SignUp(form.Email, form.UserName, form.Password, form.Referral)
 
 		if err != nil {
-			
+
 			c.JSON(400, gin.H{"status": "error", "message": err.Error()})
 			return
 		}
@@ -533,10 +533,10 @@ func (di *UserAPI) UserGetActivity(c *gin.Context) {
 
 	// Get the database interface from the DI
 	database := di.DataService.Database
-	user_id  := c.Param("id")
-	kind     := c.Param("kind") 
-	offset   := 0
-	limit    := 10
+	user_id := c.Param("id")
+	kind := c.Param("kind")
+	offset := 0
+	limit := 10
 
 	if bson.IsObjectIdHex(user_id) == false {
 
@@ -608,7 +608,7 @@ func (di *UserAPI) UserGetActivity(c *gin.Context) {
 				{
 					"$skip": offset,
 				},
-			}...
+			}...,
 		))
 
 		err := pipeline.All(&commented_posts)
@@ -617,12 +617,12 @@ func (di *UserAPI) UserGetActivity(c *gin.Context) {
 			panic(err)
 		}
 
-		pipeline = database.C("posts").Pipe(append(pipeline_line, 
+		pipeline = database.C("posts").Pipe(append(pipeline_line,
 			[]bson.M{
 				{
 					"$group": bson.M{"_id": nil, "count": bson.M{"$sum": 1}},
 				},
-			}...
+			}...,
 		))
 
 		err = pipeline.One(&commented_count)
@@ -636,7 +636,7 @@ func (di *UserAPI) UserGetActivity(c *gin.Context) {
 			activity = append(activity, model.UserActivity{
 				Id:        post.Id,
 				Title:     post.Title,
-				Slug:	   post.Slug,
+				Slug:      post.Slug,
 				Content:   post.Comment.Content,
 				Created:   post.Comment.Created,
 				Directive: "commented",

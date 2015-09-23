@@ -1,9 +1,9 @@
 package feed
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
-	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/xuyu/goredis"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -28,7 +28,7 @@ func (self *FeedModule) Post(post interface{}) (*Post, error) {
 		err := database.C("posts").FindId(post.(bson.ObjectId)).One(&this)
 
 		if err != nil {
-			
+
 			return nil, exceptions.NotFound{"Invalid post id. Not found."}
 		}
 

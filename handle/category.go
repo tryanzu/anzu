@@ -82,8 +82,8 @@ func (di *CategoryAPI) CategoriesGet(c *gin.Context) {
 
 					if user.CanWrite(child) == false {
 
-						if len(parent_categories[category_index].Child) > child_index + 1 {
-							
+						if len(parent_categories[category_index].Child) > child_index+1 {
+
 							parent_categories[category_index].Child = append(parent_categories[category_index].Child[:child_index], parent_categories[category_index].Child[child_index+1:]...)
 						} else {
 
@@ -92,7 +92,7 @@ func (di *CategoryAPI) CategoriesGet(c *gin.Context) {
 					}
 				}
 			}
-			
+
 			// Clean up parent categories with no subcategories
 			for category_index, category := range parent_categories {
 
@@ -100,8 +100,8 @@ func (di *CategoryAPI) CategoriesGet(c *gin.Context) {
 
 				if len(category.Child) == 0 {
 
-					if len(parent_categories) > category_index + 1 {
-						
+					if len(parent_categories) > category_index+1 {
+
 						parent_categories = append(parent_categories[:category_index], parent_categories[category_index+1:]...)
 					} else {
 

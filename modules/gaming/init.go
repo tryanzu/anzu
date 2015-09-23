@@ -4,17 +4,17 @@ import (
 	"encoding/json"
 	"github.com/cosn/firebase"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
-	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
+	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
-	"github.com/olebedev/config"
 	"github.com/goinggo/work"
+	"github.com/olebedev/config"
 	"github.com/xuyu/goredis"
 	"gopkg.in/mgo.v2/bson"
 	"io/ioutil"
 	"log"
-	"time"
 	"sync"
+	"time"
 )
 
 func Boot(file string) *Module {
@@ -35,7 +35,7 @@ func Boot(file string) *Module {
 }
 
 func logFunc(message string) {
-    log.Println(message)
+	log.Println(message)
 }
 
 type Module struct {
@@ -133,16 +133,16 @@ func (self *Module) ResetTempStuff() {
 	w, err := work.New(40, time.Second, logFunc)
 
 	if err != nil {
-        log.Fatalln(err)
-    }
+		log.Fatalln(err)
+	}
 
 	database := self.Mongo.Database
 	count, _ := database.C("users").Find(nil).Count()
 	iter := database.C("users").Find(nil).Select(bson.M{"_id": 1}).Iter()
-    
-    var wg sync.WaitGroup
 
-    wg.Add(count)
+	var wg sync.WaitGroup
+
+	wg.Add(count)
 
 	var usr user.User
 
@@ -153,9 +153,9 @@ func (self *Module) ResetTempStuff() {
 
 		user_sync := UserSync{
 			user: usr,
-			gmf: self.Get(usr.Id),
+			gmf:  self.Get(usr.Id),
 		}
-		
+
 		go func() {
 
 			w.Run(&user_sync)

@@ -21,14 +21,14 @@ func (self *One) RUpdate(data *User) {
 
 // Helper method to track a signin from the user
 func (self *One) TrackUserSignin(client_address string) {
-	
+
 	di := self.di
 	database := di.Mongo.Database
 
 	record := &CheckinModel{
-		UserId: self.data.Id,
+		UserId:  self.data.Id,
 		Address: client_address,
-		Date: time.Now(),
+		Date:    time.Now(),
 	}
 
 	err := database.C("checkins").Insert(record)
@@ -36,4 +36,8 @@ func (self *One) TrackUserSignin(client_address string) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func (self *One) MarkAsValidated() {
+	
 }

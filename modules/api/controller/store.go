@@ -1,14 +1,14 @@
-package controller 
+package controller
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/fernandez14/spartangeek-blacker/modules/store"
+	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/gin-gonic/gin"
 )
 
 type StoreAPI struct {
-	Mongo  *mongo.Service `inject:""`
-	Store  *store.Module `inject:""`
+	Mongo *mongo.Service `inject:""`
+	Store *store.Module  `inject:""`
 }
 
 func (self *StoreAPI) PlaceOrder(c *gin.Context) {
@@ -19,15 +19,15 @@ func (self *StoreAPI) PlaceOrder(c *gin.Context) {
 
 		order := store.OrderModel{
 			User: store.OrderUserModel{
-				Name: form.User.Name,
+				Name:  form.User.Name,
 				Email: form.User.Email,
 				Phone: form.User.Phone,
 			},
-			Content: form.Content,
-			Budget: form.Budget,
+			Content:  form.Content,
+			Budget:   form.Budget,
 			Currency: form.Currency,
-			Games: form.Games,
-			Extra: form.Extra,
+			Games:    form.Games,
+			Extra:    form.Extra,
 			BuyDelay: form.BuyDelay,
 		}
 
@@ -38,17 +38,17 @@ func (self *StoreAPI) PlaceOrder(c *gin.Context) {
 }
 
 type OrderForm struct {
-    User     OrderUserForm `json:"user" binding:"required"`
-    Content  string   `json:"content" binding:"required"`
-    Budget   int      `json:"budget" binding:"required"`
-    Currency string   `json:"currency" binding:"required"`
-    BuyDelay int      `json:"buydelay" binding:"required"`
-    Games    []string `json:"games"`
-    Extra    []string `json:"extra"`
+	User     OrderUserForm `json:"user" binding:"required"`
+	Content  string        `json:"content" binding:"required"`
+	Budget   int           `json:"budget" binding:"required"`
+	Currency string        `json:"currency" binding:"required"`
+	BuyDelay int           `json:"buydelay" binding:"required"`
+	Games    []string      `json:"games"`
+	Extra    []string      `json:"extra"`
 }
 
 type OrderUserForm struct {
-	Name string `json:"name" binding:"required"` 
-	Email string `json:"email" binding:"required"` 
-	Phone string `json:"phone" binding:"required"` 
+	Name  string `json:"name" binding:"required"`
+	Email string `json:"email" binding:"required"`
+	Phone string `json:"phone" binding:"required"`
 }

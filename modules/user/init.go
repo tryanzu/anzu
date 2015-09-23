@@ -17,7 +17,7 @@ func Boot() *Module {
 }
 
 type Module struct {
-	Mongo  *mongo.Service `inject:""`
+	Mongo *mongo.Service `inject:""`
 }
 
 // Gets an instance of a user
@@ -31,7 +31,7 @@ func (module *Module) Get(id bson.ObjectId) (*One, error) {
 	err := database.C("users").FindId(id).One(&model)
 
 	if err != nil {
-		
+
 		return nil, exceptions.NotFound{"Invalid user id. Not found."}
 	}
 
@@ -45,7 +45,7 @@ func (module *Module) SignUp(email, username, password, referral string) (*One, 
 
 	context := module
 	database := module.Mongo.Database
-	slug     := helpers.StrSlug(username)
+	slug := helpers.StrSlug(username)
 	valid_name, _ := regexp.Compile(`^[0-9a-zA-Z\-]{0,32}$`)
 	hash := helpers.Sha256(password)
 	id := bson.NewObjectId()
@@ -75,8 +75,8 @@ func (module *Module) SignUp(email, username, password, referral string) (*One, 
 
 			track := &ReferralModel{
 				OwnerId: reference.Id,
-				UserId: id,
-				Code: referral,
+				UserId:  id,
+				Code:    referral,
 				Created: time.Now(),
 				Updated: time.Now(),
 			}
@@ -96,23 +96,25 @@ func (module *Module) SignUp(email, username, password, referral string) (*One, 
 	}
 
 	usr := &User{
-		Id:           id,
-		UserName:     username,
-		UserNameSlug: slug,
-		NameChanges:  1,
-		Password:     hash,
-		Email:        email,
+		Id:               id,
+		UserName:         username,
+		UserNameSlug:     slug,
+		NameChanges:      1,
+		Password:     	  hash,
+		Email:            email,
+		Permissions:      make([]string, 0),
+		Description:      "",
+		Profile:          profile,
+		ReferralCode:     helpers.StrRandom(6),
+		VerificationCode: helpers.StrRandom(12),
+		Validated: 	      false,
+		Created:          time.Now(),
+		Updated:          time.Now(),
 		Roles: []UserRole{
 			{
 				Name: "user",
 			},
 		},
-		Permissions: make([]string, 0),
-		Description: "",
-		Profile:     profile,
-		ReferralCode: helpers.StrRandom(6),
-		Created: time.Now(),
-		Updated: time.Now(),
 	}
 
 	err := database.C("users").Insert(usr)
@@ -126,7 +128,7 @@ func (module *Module) SignUp(email, username, password, referral string) (*One, 
 	return user, nil
 }
 
-func (module *Module) SignUpFacebook(facebook map[string]interface{}) (*One, error){
+func (module *Module) SignUpFacebook(facebook map[string]interface{}) (*One, error) {
 
 	context := module
 	database := module.Mongo.Database
@@ -145,8 +147,8 @@ func (module *Module) SignUpFacebook(facebook map[string]interface{}) (*One, err
 
 			track := &ReferralModel{
 				OwnerId: reference.Id,
-				UserId: id,
-				Code: referral,
+				UserId:  id,
+				Code:    referral,
 				Created: time.Now(),
 				Updated: time.Now(),
 			}
@@ -173,27 +175,29 @@ func (module *Module) SignUpFacebook(facebook map[string]interface{}) (*One, err
 	}
 
 	username := facebook["first_name"].(string) + " " + facebook["last_name"].(string)
-	username  = helpers.StrSlug(username)
+	username = helpers.StrSlug(username)
 
 	usr := &User{
-		Id:           id,
-		UserName:     username,
-		UserNameSlug: username,
-		NameChanges:  0,
-		Password:     "",
-		Email:        email,
+		Id:               id,
+		UserName:         username,
+		UserNameSlug:     username,
+		NameChanges:      0,
+		Password:         "",
+		Email:            email,
+		Permissions:      make([]string, 0),
+		Description:      "",
+		Profile:          profile,
+		Facebook:         facebook,
+		ReferralCode:     helpers.StrRandom(6),
+		VerificationCode: helpers.StrRandom(12),
+		Validated: 	      true,
+		Created:      time.Now(),
+		Updated:      time.Now(),
 		Roles: []UserRole{
 			{
 				Name: "user",
 			},
 		},
-		Permissions: make([]string, 0),
-		Description: "",
-		Profile:     profile,
-		Facebook: 	 facebook,
-		ReferralCode: helpers.StrRandom(6),
-		Created: time.Now(),
-		Updated: time.Now(),
 	}
 
 	err := database.C("users").Insert(usr)

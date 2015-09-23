@@ -15,5 +15,4 @@ func (self *Post) Review() {
 	//data := self.post.Data()
 	//reached, viewed := self.post.GetReachViews()
 
-
 }

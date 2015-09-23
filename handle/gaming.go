@@ -1,8 +1,8 @@
 package handle
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
+	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -43,7 +43,7 @@ func (di *GamingAPI) BuyBadge(c *gin.Context) {
 	user_string_id := c.MustGet("user_id")
 	user_id := bson.ObjectIdHex(user_string_id.(string))
 
-	// Check badge id 
+	// Check badge id
 	if bson.IsObjectIdHex(id) == false {
 
 		c.JSON(400, gin.H{"status": "error", "message": "Invalid badge id."})

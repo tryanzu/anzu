@@ -33,7 +33,7 @@ func (self *User) AcquireBadge(id bson.ObjectId) error {
 	}
 
 	if badge.RequiredLevel > 0 && usr.Gaming.Level < badge.RequiredLevel {
-		
+
 		return exceptions.OutOfBounds{"Not enough level."}
 	}
 
@@ -51,14 +51,14 @@ func (self *User) AcquireBadge(id bson.ObjectId) error {
 			}
 		}
 
-		if ! user_valid {
+		if !user_valid {
 
 			return exceptions.OutOfBounds{"Don't have required badge."}
 		}
 	}
 
 	badge_push := user.UserBadge{
-		Id: id,
+		Id:   id,
 		Date: time.Now(),
 	}
 

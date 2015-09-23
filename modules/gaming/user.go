@@ -74,8 +74,8 @@ func (self *User) SyncToLevel(reset bool) {
 func (self *User) DailyLogin() {
 
 	database := self.di.Mongo.Database
-	rules    := self.di.Rules.Rules
-	usr     := self.user.Data()
+	rules := self.di.Rules.Rules
+	usr := self.user.Data()
 
 	// Dates and stuff
 	date := time.Now().Truncate(24 * time.Hour)
@@ -118,7 +118,6 @@ func (self *User) Swords(how_many int) {
 	// Runtime update
 	user := self.user.Data()
 
-	
 	user.Gaming.Swords = user.Gaming.Swords + how_many
 	self.user.RUpdate(user)
 

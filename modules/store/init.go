@@ -1,16 +1,16 @@
-package store 
+package store
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
+	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/xuyu/goredis"
 	"time"
 )
 
 type Module struct {
-	Mongo   *mongo.Service               `inject:""`
-	Errors  *exceptions.ExceptionsModule `inject:""`
-	Redis   *goredis.Redis               `inject:""`
+	Mongo  *mongo.Service               `inject:""`
+	Errors *exceptions.ExceptionsModule `inject:""`
+	Redis  *goredis.Redis               `inject:""`
 }
 
 func (module *Module) CreateOrder(order OrderModel) {

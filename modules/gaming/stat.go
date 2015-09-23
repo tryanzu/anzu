@@ -3,13 +3,13 @@ package gaming
 import (
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"gopkg.in/mgo.v2/bson"
-	"time"
-	"sort"
 	"log"
+	"sort"
+	"time"
 )
 
 func (self *Module) GetRankingBy(sort string) []RankingModel {
-	
+
 	var ranking RankingModel
 	var rankings []RankingModel
 	var users []RankingUserModel
@@ -18,7 +18,7 @@ func (self *Module) GetRankingBy(sort string) []RankingModel {
 	database := self.Mongo.Database
 
 	// Get the rankings with the sort parameter
-	iter := database.C("stats").Find(nil).Sort("-created_at", "position." + sort).Limit(50).Iter()
+	iter := database.C("stats").Find(nil).Sort("-created_at", "position."+sort).Limit(50).Iter()
 
 	for iter.Next(&ranking) {
 
@@ -49,14 +49,14 @@ func (self *Module) GetRankingBy(sort string) []RankingModel {
 }
 
 func (self *Module) ResetGeneralRanking() {
-	
+
 	var usr user.User
 	var rankings []RankingModel
 
 	// Recover from any panic even inside this goroutine
 	defer self.Errors.Recover()
 
-	database      := self.Mongo.Database
+	database := self.Mongo.Database
 	current_batch := time.Now()
 
 	iter := database.C("users").Find(nil).Iter()
@@ -68,7 +68,7 @@ func (self *Module) ResetGeneralRanking() {
 		log.Printf("[job] [ResetGeneralRanking] Processing user %v\n", usr.Id.Hex())
 
 		var before RankingPositionModel
-		var before_this RankingModel 
+		var before_this RankingModel
 
 		err := database.C("stats").Find(bson.M{"user_id": usr.Id}).Sort("-created_at").Limit(1).One(&before_this)
 
@@ -84,7 +84,7 @@ func (self *Module) ResetGeneralRanking() {
 
 			before = before_this.Position
 		}
-	
+
 		rankings = append(rankings, RankingModel{
 			UserId: usr.Id,
 			Badges: len(usr.Gaming.Badges),
@@ -95,7 +95,7 @@ func (self *Module) ResetGeneralRanking() {
 				Badges: 0,
 				Swords: 0,
 			},
-			Before: before,
+			Before:  before,
 			Created: current_batch,
 		})
 	}
@@ -104,21 +104,21 @@ func (self *Module) ResetGeneralRanking() {
 
 	for i, _ := range rankings {
 
-		rankings[i].Position.Swords = i+1
+		rankings[i].Position.Swords = i + 1
 	}
 
 	sort.Sort(RankByCoins(rankings))
 
 	for i, _ := range rankings {
 
-		rankings[i].Position.Wealth = i+1
+		rankings[i].Position.Wealth = i + 1
 	}
 
 	sort.Sort(RankByBadges(rankings))
 
 	for i, _ := range rankings {
 
-		rankings[i].Position.Badges = i+1
+		rankings[i].Position.Badges = i + 1
 
 		err := database.C("stats").Insert(rankings[i])
 

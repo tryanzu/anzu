@@ -3,8 +3,8 @@ package feed
 import (
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"gopkg.in/mgo.v2/bson"
-	"time"
 	"strconv"
+	"time"
 )
 
 type Post struct {
@@ -19,10 +19,10 @@ func (self *Post) Viewed(user_id bson.ObjectId) {
 	redis := self.di.CacheService
 
 	activity := model.Activity{
-		UserId: user_id, 
-		Event: "post", 
+		UserId:    user_id,
+		Event:     "post",
 		RelatedId: self.data.Id,
-		Created: time.Now(),
+		Created:   time.Now(),
 	}
 
 	err := database.C("activity").Insert(activity)
@@ -84,7 +84,7 @@ func (self *Post) Data() model.Post {
 	return self.data
 }
 
-// Internal method to get the post reach and views 
+// Internal method to get the post reach and views
 func (self *Post) GetReachViews(id bson.ObjectId) (int, int) {
 
 	var reached, viewed int

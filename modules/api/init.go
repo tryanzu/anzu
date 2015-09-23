@@ -145,7 +145,7 @@ func (module *Module) Run() {
 			authorized.PUT("/user/my", module.Users.UserUpdateProfile)
 			authorized.PUT("/category/subscription/:id", module.Users.UserCategorySubscribe)
 			authorized.DELETE("/category/subscription/:id", module.Users.UserCategoryUnsubscribe)
-			
+
 			// Gamification routes
 			authorized.POST("/badges/buy/:id", module.Gaming.BuyBadge)
 

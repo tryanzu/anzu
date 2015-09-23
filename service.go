@@ -12,8 +12,9 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
 	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
 	"github.com/fernandez14/spartangeek-blacker/modules/notifications"
-	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/fernandez14/spartangeek-blacker/modules/store"
+	"github.com/fernandez14/spartangeek-blacker/modules/user"
+	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/getsentry/raven-go"
 	"github.com/mitchellh/goamz/aws"
@@ -57,6 +58,14 @@ func main() {
 	cacheService, _ := goredis.Dial(&goredis.DialConfig{Address: string_value(configService.String("cache.redis"))})
 	firebaseService := new(firebase.Client)
 	firebaseService.Init(string_value(configService.String("firebase.url")), string_value(configService.String("firebase.secret")), nil)
+	
+	mailConfig, err := configService.Get("mail")
+
+	if err != nil {
+		panic(err)
+	}
+	
+	mailService := mail.Boot(string_value(configService.String("mail.api_key")), mailConfig, true)
 
 	// Amazon services for the DI
 	amazonAuth, err := aws.GetAuth(string_value(configService.String("amazon.access_key")), string_value(configService.String("amazon.secret")))
@@ -92,6 +101,7 @@ func main() {
 		&inject.Object{Value: aclService, Complete: false},
 		&inject.Object{Value: userService, Complete: false},
 		&inject.Object{Value: gamingService, Complete: false},
+		&inject.Object{Value: mailService, Complete: false},
 		&inject.Object{Value: broadcaster, Complete: true, Name: "Notifications"},
 		&inject.Object{Value: &storeModule},
 		&inject.Object{Value: &notificationsModule},
@@ -161,11 +171,10 @@ func main() {
 				fmt.Fprintln(os.Stderr, err)
 				os.Exit(1)
 			}
-	
+
 			gamingService.ResetTempStuff()
 		},
 	}
-
 
 	var cmdSyncRanking = &cobra.Command{
 		Use:   "sync-ranking",
@@ -180,7 +189,7 @@ func main() {
 				fmt.Fprintln(os.Stderr, err)
 				os.Exit(1)
 			}
-	
+
 			gamingService.ResetGeneralRanking()
 		},
 	}

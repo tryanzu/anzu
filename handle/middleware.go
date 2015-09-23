@@ -9,10 +9,10 @@ import (
 	"github.com/getsentry/raven-go"
 	"github.com/gin-gonic/gin"
 	"github.com/olebedev/config"
+	"log"
 	"os"
 	"strings"
 	"time"
-	"log"
 )
 
 type MiddlewareAPI struct {
@@ -185,14 +185,14 @@ func (di *MiddlewareAPI) ErrorTracking() gin.HandlerFunc {
 				return
 			case error:
 				packet = raven.NewPacket(rval.Error(), raven.NewException(rval, raven.NewStacktrace(2, 3, nil)))
-				
+
 				// Show the error
 				log.Printf("[error] %v\n", rval)
 
 			default:
 				rvalStr := fmt.Sprint(rval)
 				packet = raven.NewPacket(rvalStr, raven.NewException(errors.New(rvalStr), raven.NewStacktrace(2, 3, nil)))
-				
+
 				// Show the error
 				log.Printf("[error] %v\n", rval)
 			}

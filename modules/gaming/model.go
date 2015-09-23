@@ -35,15 +35,15 @@ type BadgeModel struct {
 }
 
 type RankingModel struct {
-	Id        bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
-	UserId    bson.ObjectId `bson:"user_id" json:"user_id"`
-	Badges    int           `bson:"badges" json:"badges"`
-	Swords    int           `bson:"swords" json:"swords"`
-	Coins     int           `bson:"coins" json:"coins"`
-	Position  RankingPositionModel `bson:"position" json:"position"`
-	Before    RankingPositionModel `bson:"before" json:"before"`	
-	User      RankingUserModel     `json:"user,omitempty"`
-	Created   time.Time            `bson:"created_at" json:"created_at"`
+	Id       bson.ObjectId        `bson:"_id,omitempty" json:"id,omitempty"`
+	UserId   bson.ObjectId        `bson:"user_id" json:"user_id"`
+	Badges   int                  `bson:"badges" json:"badges"`
+	Swords   int                  `bson:"swords" json:"swords"`
+	Coins    int                  `bson:"coins" json:"coins"`
+	Position RankingPositionModel `bson:"position" json:"position"`
+	Before   RankingPositionModel `bson:"before" json:"before"`
+	User     RankingUserModel     `json:"user,omitempty"`
+	Created  time.Time            `bson:"created_at" json:"created_at"`
 }
 
 type RankingPositionModel struct {
@@ -53,9 +53,9 @@ type RankingPositionModel struct {
 }
 
 type RankingUserModel struct {
-	Id       bson.ObjectId `bson:"_id,omitempty" json:"id"`
-	UserName string `bson:"username" json:"username"`
-	Image    string `bson:"image" json:"image,omitempty"`
+	Id       bson.ObjectId          `bson:"_id,omitempty" json:"id"`
+	UserName string                 `bson:"username" json:"username"`
+	Image    string                 `bson:"image" json:"image,omitempty"`
 	Gaming   map[string]interface{} `bson:"gaming" json:"gaming,omitempty"`
 }
 
