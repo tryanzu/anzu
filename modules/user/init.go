@@ -3,6 +3,7 @@ package user
 import (
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
+	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"gopkg.in/mgo.v2/bson"
 	"regexp"
@@ -18,25 +19,47 @@ func Boot() *Module {
 
 type Module struct {
 	Mongo *mongo.Service `inject:""`
+	Mail  *mail.Module   `inject:""`
 }
 
 // Gets an instance of a user
-func (module *Module) Get(id bson.ObjectId) (*One, error) {
+func (module *Module) Get(usr interface{}) (*One, error) {
 
 	var model *User
 	context := module
 	database := module.Mongo.Database
 
-	// Get the user using it's id
-	err := database.C("users").FindId(id).One(&model)
+	switch usr.(type) {
+	case bson.ObjectId:
 
-	if err != nil {
+		// Get the user using it's id
+		err := database.C("users").FindId(usr.(bson.ObjectId)).One(&model)
 
-		return nil, exceptions.NotFound{"Invalid user id. Not found."}
+		if err != nil {
+
+			return nil, exceptions.NotFound{"Invalid user id. Not found."}
+		}
+
+	case bson.M: 
+
+		// Get the user using it's id
+		err := database.C("users").Find(usr.(bson.M)).One(&model)
+
+		if err != nil {
+
+			return nil, exceptions.NotFound{"Invalid user id. Not found."}
+		}
+
+	case *User:
+
+		model = usr.(*User)
+
+	default:
+		panic("Unkown argument")
 	}
 
 	user := &One{data: model, di: context}
-
+	
 	return user, nil
 }
 
@@ -77,6 +100,7 @@ func (module *Module) SignUp(email, username, password, referral string) (*One, 
 				OwnerId: reference.Id,
 				UserId:  id,
 				Code:    referral,
+				Confirmed: false,
 				Created: time.Now(),
 				Updated: time.Now(),
 			}
@@ -125,6 +149,9 @@ func (module *Module) SignUp(email, username, password, referral string) (*One, 
 
 	user := &One{data: usr, di: context}
 
+	// Send the confirmation email in other thread
+	go user.SendConfirmationEmail()
+
 	return user, nil
 }
 
@@ -149,6 +176,7 @@ func (module *Module) SignUpFacebook(facebook map[string]interface{}) (*One, err
 				OwnerId: reference.Id,
 				UserId:  id,
 				Code:    referral,
+				Confirmed: true,
 				Created: time.Now(),
 				Updated: time.Now(),
 			}

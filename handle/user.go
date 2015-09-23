@@ -500,6 +500,24 @@ func (di *UserAPI) UserUpdateProfile(c *gin.Context) {
 	c.JSON(400, gin.H{"status": "error", "message": "Invalid auth request."})
 }
 
+func (di *UserAPI) UserValidateEmail(c *gin.Context) {
+
+	code := c.Param("code")
+
+	// Attempt to get the user by the confirmation code
+	usr, err := di.User.Get(bson.M{"ver_code": code})
+
+	if err != nil {
+
+		c.JSON(400, gin.H{"status": "error", "message": err.Error()})
+		return
+	}
+
+	usr.MarkAsValidated()
+
+	c.JSON(200, gin.H{"status": "okay"})
+}
+
 func (di *UserAPI) UserRegisterAction(c *gin.Context) {
 
 	var form model.UserRegisterForm

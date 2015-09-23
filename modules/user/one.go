@@ -1,6 +1,8 @@
 package user
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/modules/mail"
+	"gopkg.in/mgo.v2/bson"
 	"time"
 )
 
@@ -38,6 +40,49 @@ func (self *One) TrackUserSignin(client_address string) {
 	}
 }
 
+func (self *One) SendConfirmationEmail() {
+
+	mailing := self.di.Mail
+
+	compose := mail.Mail{
+		Subject: "Último paso para tu registro",
+		Template: "signup",
+		Recipient: []mail.MailRecipient{
+			{
+				Name: self.data.UserName,
+				Email: self.data.Email,
+			},
+		},
+		Variables: map[string]string{
+			"confirm_url": "http://spartangeek.com/signup/confirm/" + self.data.VerificationCode,
+		},
+	}
+
+	mailing.Send(compose)
+}
+
 func (self *One) MarkAsValidated() {
-	
+
+	di := self.di
+	database := di.Mongo.Database
+
+	err := database.C("users").Update(bson.M{"_id": self.data.Id}, bson.M{"$set": bson.M{"validated": true}})
+
+	if err != nil {
+		panic(err)
+	}
+
+	self.data.Validated = true
+
+	// Confirm the referral in case it exists
+	self.followReferral()
+}
+
+func (self *One) followReferral() {
+
+	di := self.di
+	database := di.Mongo.Database
+
+	// Just update blindly
+	database.C("referrals").Update(bson.M{"user_id": self.data.Id}, bson.M{"$set": bson.M{"confirmed": true}})
 }

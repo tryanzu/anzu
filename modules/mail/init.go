@@ -36,8 +36,11 @@ func (module Module) Send(mail Mail) {
 
 	message.Subject = mail.Subject
 
+	// Merge tags
+	message.GlobalMergeVars = mandrill.MapToVars(mail.Variables)
+
 	// Send the email using mandrill's API abstraction
-	_, err := module.Client.MessagesSendTemplate(message, mail.Template, mail.Variables)
+	_, err := module.Client.MessagesSendTemplate(message, mail.Template, map[string]string{})
 
 	if err != nil {
 		panic(err)
@@ -67,7 +70,7 @@ func Boot(key string, config *config.Config, debug bool) *Module {
 		panic(err)
 	}
 
-	recipients := make([]string, len(list))
+	recipients := make([]string, len(list)-1)
 
 	for _, recipient := range list {
 

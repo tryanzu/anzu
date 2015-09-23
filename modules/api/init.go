@@ -107,6 +107,7 @@ func (module *Module) Run() {
 		v1.POST("/user/get-token/facebook", module.Users.UserGetTokenFacebook)
 		v1.GET("/user/get-token", module.Users.UserGetToken)
 		v1.GET("/auth/get-token", module.Users.UserGetJwtToken)
+		v1.GET("/user/confirm/:code", module.Users.UserValidateEmail)
 
 		// Categories routes
 		v1.GET("/category", module.Categories.CategoriesGet)
