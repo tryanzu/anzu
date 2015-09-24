@@ -179,7 +179,7 @@ func (di *UserAPI) UserGetOne(c *gin.Context) {
 		go di.Collector.Activity(model.Activity{UserId: bson.ObjectIdHex(user_logged_id.(string)), Event: "user", RelatedId: usr.Data().Id})
 	}
 
-	c.JSON(200, usr.Data())
+	c.JSON(200, usr.Load("referrals").Data())
 }
 
 func (di *UserAPI) UserGetByToken(c *gin.Context) {

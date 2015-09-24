@@ -21,6 +21,47 @@ func (self *One) RUpdate(data *User) {
 	self.data = data
 }
 
+// Load data helper
+func (self *One) Load(section string) *One {
+
+	switch section {
+	case "referrals":
+
+		var users_id []bson.ObjectId
+		var referrals []ReferralModel
+		var users []UserLightModel
+
+		di := self.di
+		database := di.Mongo.Database
+
+		count, err := database.C("referrals").Find(bson.M{"owner_id": self.data.Id, "confirmed": true}).Count()
+
+		if err != nil {
+			panic(err)
+		}
+
+		err = database.C("referrals").Find(bson.M{"owner_id": self.data.Id, "confirmed": true}).Limit(10).Sort("-created_at").All(&referrals)
+
+		if err != nil {
+			panic(err)
+		}
+
+		for _, referral := range referrals {
+
+			users_id = append(users_id, referral.UserId)
+		}
+
+		err = database.C("users").Find(bson.M{"_id": bson.M{"$in": users_id}}).Select(bson.M{"_id": 1, "username": 1, "email": 1, "image": 1}).All(&users)
+
+		self.data.Referrals = ReferralsModel{
+			Count: count,
+			List: users,
+		}
+	}
+
+	return self
+}
+
 // Helper method to track a signin from the user
 func (self *One) TrackUserSignin(client_address string) {
 

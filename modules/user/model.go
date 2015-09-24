@@ -31,6 +31,9 @@ type User struct {
 	Validated        bool                   `bson:"validated" json:"validated"`
 	Created          time.Time              `bson:"created_at" json:"created_at"`
 	Updated          time.Time              `bson:"updated_at" json:"updated_at"`
+
+	// Runtime generated and not persisted in database
+	Referrals        ReferralsModel         `json:"referrals,omitempty"`
 }
 
 type UserRole struct {
@@ -85,6 +88,13 @@ type UserActivity struct {
 	Created   time.Time         `json:"created_at"`
 }
 
+type UserLightModel struct {
+	Id       bson.ObjectId `bson:"_id,omitempty" json:"id"`
+	Username string        `bson:"username" json:"username"`
+	Email    string        `bson:"email" json:"email"`
+	Image    string        `bson:"image" json:"image"`
+}
+
 type UserProfileForm struct {
 	UserName string `json:"username,omitempty"`
 }
@@ -121,6 +131,11 @@ type ReferralModel struct {
 	Confirmed bool `bson:"confirmed" json:"confirmed"`
 	Created time.Time     `bson:"created_at" json:"created_at"`
 	Updated time.Time     `bson:"updated_at" json:"updated_at"`
+}
+
+type ReferralsModel struct {
+	Count  int  `json:"count"`
+	List   []UserLightModel `json:"users"`
 }
 
 type ByCreatedAt []UserActivity
