@@ -8,6 +8,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/interfaces"
 	"github.com/fernandez14/spartangeek-blacker/modules/acl"
 	"github.com/fernandez14/spartangeek-blacker/modules/api"
+	"github.com/fernandez14/spartangeek-blacker/modules/cli"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
 	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
@@ -43,6 +44,7 @@ func main() {
 
 	// Resources for the API
 	var api api.Module
+	var cliModule cli.Module
 	var storeModule store.Module
 	var notificationsModule notifications.NotificationsModule
 	var feedModule feed.FeedModule
@@ -103,6 +105,7 @@ func main() {
 		&inject.Object{Value: gamingService, Complete: false},
 		&inject.Object{Value: mailService, Complete: false},
 		&inject.Object{Value: broadcaster, Complete: true, Name: "Notifications"},
+		&inject.Object{Value: &cliModule},
 		&inject.Object{Value: &storeModule},
 		&inject.Object{Value: &notificationsModule},
 		&inject.Object{Value: &feedModule},
@@ -176,6 +179,23 @@ func main() {
 		},
 	}
 
+	var cmdRunRoutine = &cobra.Command{
+		Use:   "run [routine]",
+		Short: "Run cli routine",
+		Long: `Run specified routine 
+		from cli module`,
+		Run: func(cmd *cobra.Command, args []string) {
+
+			// Populate the DI with the instances
+			if err := g.Populate(); err != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+
+			cliModule.Run(args[0])
+		},
+	}
+
 	var cmdSyncRanking = &cobra.Command{
 		Use:   "sync-ranking",
 		Short: "Sync ranking",
@@ -199,6 +219,7 @@ func main() {
 	rootCmd.AddCommand(cmdSyncGamification)
 	rootCmd.AddCommand(cmdSyncRanking)
 	rootCmd.AddCommand(cmdJobs)
+	rootCmd.AddCommand(cmdRunRoutine)
 	rootCmd.Execute()
 
 	return

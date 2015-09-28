@@ -79,13 +79,11 @@ func (module *Module) SignUp(email, username, password, referral string) (*One, 
 	hash := helpers.Sha256(password)
 	id := bson.NewObjectId()
 
-	// Match the username first before any further move
 	if valid_name.MatchString(username) == false || strings.Count(username, "") < 3 || strings.Count(username, "") > 21 {
 
 		return nil, exceptions.OutOfBounds{"Invalid username. Must have only alphanumeric characters."}
 	}
 
-	// Validate the email
 	if helpers.IsEmail(email) == false {
 
 		return nil, exceptions.OutOfBounds{"Invalid email. Provide a real one."}
