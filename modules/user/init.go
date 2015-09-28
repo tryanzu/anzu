@@ -8,6 +8,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 	"regexp"
 	"time"
+	"strings"
 )
 
 func Boot() *Module {
@@ -69,9 +70,26 @@ func (module *Module) SignUp(email, username, password, referral string) (*One, 
 	context := module
 	database := module.Mongo.Database
 	slug := helpers.StrSlug(username)
-	valid_name, _ := regexp.Compile(`^[0-9a-zA-Z\-]{0,32}$`)
+	valid_name, err := regexp.Compile(`^[a-zA-Z][a-zA-Z0-9]*[._-]?[a-zA-Z0-9]+$`)
+
+	if err != nil {
+		panic(err)
+	}
+
 	hash := helpers.Sha256(password)
 	id := bson.NewObjectId()
+
+	// Match the username first before any further move
+	if valid_name.MatchString(username) == false || strings.Count(username, "") < 3 || strings.Count(username, "") > 21 {
+
+		return nil, exceptions.OutOfBounds{"Invalid username. Must have only alphanumeric characters."}
+	}
+
+	// Validate the email
+	if helpers.IsEmail(email) == false {
+
+		return nil, exceptions.OutOfBounds{"Invalid email. Provide a real one."}
+	}
 
 	// Check if user already exists using that email
 	unique, _ := database.C("users").Find(bson.M{"$or": []bson.M{{"email": email}, {"username_slug": slug}}}).Count()
@@ -79,11 +97,6 @@ func (module *Module) SignUp(email, username, password, referral string) (*One, 
 	if unique > 0 {
 
 		return nil, exceptions.OutOfBounds{"User already exists."}
-	}
-
-	if valid_name.MatchString(username) == false {
-
-		return nil, exceptions.OutOfBounds{"Invalid username. Must have only alphanumeric characters."}
 	}
 
 	// Track the referral if we have to
@@ -141,7 +154,7 @@ func (module *Module) SignUp(email, username, password, referral string) (*One, 
 		},
 	}
 
-	err := database.C("users").Insert(usr)
+	err = database.C("users").Insert(usr)
 
 	if err != nil {
 		panic(err)

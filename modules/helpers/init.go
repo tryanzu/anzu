@@ -8,10 +8,12 @@ import (
 	"reflect"
 	"strings"
 	"unicode"
+	"regexp"
 )
 
 var lat = []*unicode.RangeTable{unicode.Letter, unicode.Number}
 var nop = []*unicode.RangeTable{unicode.Mark, unicode.Sk, unicode.Lm}
+var email_exp = regexp.MustCompile(`^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$`)
 
 func InArray(val interface{}, array interface{}) (exists bool, index int) {
 	exists = false
@@ -95,4 +97,9 @@ func Sha256(s string) string {
 	md := sha256.Sum(nil)
 
 	return hex.EncodeToString(md)
+}
+
+func IsEmail(s string) bool {
+
+	return email_exp.MatchString(s)
 }
