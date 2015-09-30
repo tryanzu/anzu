@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/algolia/algoliasearch-client-go/algoliasearch"
 	"github.com/cactus/go-statsd-client/statsd"
 	"github.com/cosn/firebase"
 	"github.com/facebookgo/inject"
@@ -60,14 +61,16 @@ func main() {
 	cacheService, _ := goredis.Dial(&goredis.DialConfig{Address: string_value(configService.String("cache.redis"))})
 	firebaseService := new(firebase.Client)
 	firebaseService.Init(string_value(configService.String("firebase.url")), string_value(configService.String("firebase.secret")), nil)
-	
+	algolia := algoliasearch.NewClient(string_value(configService.String("algolia.application")), string_value(configService.String("algolia.api_key")))
+	algoliaIndex := algolia.InitIndex(string_value(configService.String("algolia.index")))
+
 	mailConfig, err := configService.Get("mail")
 
 	if err != nil {
 		panic(err)
 	}
 	
-	mailService := mail.Boot(string_value(configService.String("mail.api_key")), mailConfig, true)
+	mailService := mail.Boot(string_value(configService.String("mail.api_key")), mailConfig, false)
 
 	// Amazon services for the DI
 	amazonAuth, err := aws.GetAuth(string_value(configService.String("amazon.access_key")), string_value(configService.String("amazon.secret")))
@@ -100,6 +103,7 @@ func main() {
 		&inject.Object{Value: s3BucketService, Complete: true},
 		&inject.Object{Value: firebaseService, Complete: true},
 		&inject.Object{Value: statsService, Complete: true},
+		&inject.Object{Value: algoliaIndex, Complete: true},
 		&inject.Object{Value: aclService, Complete: false},
 		&inject.Object{Value: userService, Complete: false},
 		&inject.Object{Value: gamingService, Complete: false},

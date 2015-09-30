@@ -14,7 +14,6 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
-	"github.com/kennygrant/sanitize"
 	"github.com/mitchellh/goamz/s3"
 	"github.com/olebedev/config"
 	"github.com/xuyu/goredis"
@@ -694,7 +693,7 @@ func (di PostAPI) PostCreate(c *gin.Context) {
 			Rating: 0,
 		}
 
-		content := sanitize.HTML(post.Content)
+		content := html.EscapeString(post.Content)
 		urls, _ := regexp.Compile(`http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+`)
 		post_id := bson.NewObjectId()
 
