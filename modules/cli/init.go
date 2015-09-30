@@ -158,7 +158,7 @@ func (module Module) IndexAlgolia() {
 
 	// Prepare batch variables
 	batch_count := 0
-	batch_store := make([]PostModel, 1000)
+	batch_store := make([]PostModel, 10)
 
 	for iter.Next(&post) {
 
@@ -199,6 +199,16 @@ func (module Module) IndexAlgolia() {
 
 			if total > 101 {
 
+				if reached == 0 {
+
+					reached = 1
+				}
+
+				if viewed == 0 {
+
+					viewed = 1
+				}
+
 				view_rate := 100.0 / float64(reached) * float64(viewed)
 				comment_rate := 100.0 / float64(viewed) * float64(post.Comments.Count)
 				final_rate = (view_rate + comment_rate) / 2.0
@@ -229,25 +239,31 @@ func (module Module) IndexAlgolia() {
 			batch_count++
 			batch_store = append(batch_store, item)
 
-			if batch_count >= 1000 {
+			if batch_count >= 10 {
 
 				var json_objects []interface{}
-				json_data, _ := json.Marshal(batch_store)
+				json_data, err := json.Marshal(batch_store)
+
+				if err != nil {
+
+					fmt.Printf("\n%v\n", batch_store)
+
+					panic(err)
+				}
+
 				err = json.Unmarshal(json_data, &json_objects)
 
 				if err != nil {
 					panic(err)
 				}
 
-				res, err := index.AddObjects(json_objects)
+				_, err = index.AddObjects(json_objects)
 
 				if err != nil {
 					panic(err)
-				}
+				}			
 
-				fmt.Printf("\n%v\n", res)
-
-				batch_store = make([]PostModel, 1000)
+				batch_store = make([]PostModel, 10)
 				batch_count = 0
 			}
 
