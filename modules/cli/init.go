@@ -155,7 +155,7 @@ func (module Module) IndexAlgolia() {
 	}
 
 	// Get an iterator to work with the posts in an efficient way
-	iter := database.C("posts").Find(nil).Iter()
+	iter := database.C("posts").Find(bson.M{"deleted": bson.M{"$exists": false}}).Sort("-pinned", "-created_at").Iter()
 
 	// Prepare batch variables
 	batch_count := 0
@@ -300,29 +300,26 @@ func (module Module) IndexAlgolia() {
 		}
 
 		// Process the last incomplete batch
-		if batch_count > 0 {
+		var json_objects []interface{}
+		json_data, err := json.Marshal(batch_store)
 
-			var json_objects []interface{}
-			json_data, err := json.Marshal(batch_store)
+		if err != nil {
 
-			if err != nil {
+			fmt.Printf("\n%v\n", batch_store)
 
-				fmt.Printf("\n%v\n", batch_store)
+			panic(err)
+		}
 
-				panic(err)
-			}
+		err = json.Unmarshal(json_data, &json_objects)
 
-			err = json.Unmarshal(json_data, &json_objects)
+		if err != nil {
+			panic(err)
+		}
 
-			if err != nil {
-				panic(err)
-			}
+		_, err = index.UpdateObjects(json_objects)
 
-			_, err = index.UpdateObjects(json_objects)
-
-			if err != nil {
-				panic(err)
-			}
+		if err != nil {
+			panic(err)
 		}
 
 		fmt.Printf("*")
