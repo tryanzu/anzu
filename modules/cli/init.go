@@ -159,7 +159,7 @@ func (module Module) IndexAlgolia() {
 
 	// Prepare batch variables
 	batch_count := 0
-	batch_store := make([]PostModel, 1000)
+	batch_store := make([]PostModel, 0)
 
 	for iter.Next(&post) {
 
@@ -292,11 +292,37 @@ func (module Module) IndexAlgolia() {
 					panic(err)
 				}			
 
-				batch_store = make([]PostModel, 1000)
+				batch_store = make([]PostModel, 0)
 				batch_count = 0
 			}
 
 			continue
+		}
+
+		// Process the last incomplete batch
+		if batch_count > 0 {
+
+			var json_objects []interface{}
+			json_data, err := json.Marshal(batch_store)
+
+			if err != nil {
+
+				fmt.Printf("\n%v\n", batch_store)
+
+				panic(err)
+			}
+
+			err = json.Unmarshal(json_data, &json_objects)
+
+			if err != nil {
+				panic(err)
+			}
+
+			_, err = index.UpdateObjects(json_objects)
+
+			if err != nil {
+				panic(err)
+			}
 		}
 
 		fmt.Printf("*")
