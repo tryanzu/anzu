@@ -7,8 +7,8 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"gopkg.in/mgo.v2/bson"
 	"regexp"
-	"time"
 	"strings"
+	"time"
 )
 
 func Boot() *Module {
@@ -41,7 +41,7 @@ func (module *Module) Get(usr interface{}) (*One, error) {
 			return nil, exceptions.NotFound{"Invalid user id. Not found."}
 		}
 
-	case bson.M: 
+	case bson.M:
 
 		// Get the user using it's id
 		err := database.C("users").Find(usr.(bson.M)).One(&model)
@@ -60,7 +60,7 @@ func (module *Module) Get(usr interface{}) (*One, error) {
 	}
 
 	user := &One{data: model, di: context}
-	
+
 	return user, nil
 }
 
@@ -108,12 +108,12 @@ func (module *Module) SignUp(email, username, password, referral string) (*One, 
 		if err == nil {
 
 			track := &ReferralModel{
-				OwnerId: reference.Id,
-				UserId:  id,
-				Code:    referral,
+				OwnerId:   reference.Id,
+				UserId:    id,
+				Code:      referral,
 				Confirmed: false,
-				Created: time.Now(),
-				Updated: time.Now(),
+				Created:   time.Now(),
+				Updated:   time.Now(),
 			}
 
 			err := database.C("referrals").Insert(track)
@@ -135,14 +135,14 @@ func (module *Module) SignUp(email, username, password, referral string) (*One, 
 		UserName:         username,
 		UserNameSlug:     slug,
 		NameChanges:      1,
-		Password:     	  hash,
+		Password:         hash,
 		Email:            email,
 		Permissions:      make([]string, 0),
 		Description:      "",
 		Profile:          profile,
 		ReferralCode:     helpers.StrRandom(6),
 		VerificationCode: helpers.StrRandom(12),
-		Validated: 	      false,
+		Validated:        false,
 		Created:          time.Now(),
 		Updated:          time.Now(),
 		Roles: []UserRole{
@@ -184,12 +184,12 @@ func (module *Module) SignUpFacebook(facebook map[string]interface{}) (*One, err
 		if err == nil {
 
 			track := &ReferralModel{
-				OwnerId: reference.Id,
-				UserId:  id,
-				Code:    referral,
+				OwnerId:   reference.Id,
+				UserId:    id,
+				Code:      referral,
 				Confirmed: true,
-				Created: time.Now(),
-				Updated: time.Now(),
+				Created:   time.Now(),
+				Updated:   time.Now(),
 			}
 
 			err := database.C("referrals").Insert(track)
@@ -229,9 +229,9 @@ func (module *Module) SignUpFacebook(facebook map[string]interface{}) (*One, err
 		Facebook:         facebook,
 		ReferralCode:     helpers.StrRandom(6),
 		VerificationCode: helpers.StrRandom(12),
-		Validated: 	      true,
-		Created:      time.Now(),
-		Updated:      time.Now(),
+		Validated:        true,
+		Created:          time.Now(),
+		Updated:          time.Now(),
 		Roles: []UserRole{
 			{
 				Name: "user",

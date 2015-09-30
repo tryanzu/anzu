@@ -13,10 +13,10 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
 	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
+	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/fernandez14/spartangeek-blacker/modules/notifications"
 	"github.com/fernandez14/spartangeek-blacker/modules/store"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
-	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/getsentry/raven-go"
 	"github.com/mitchellh/goamz/aws"
@@ -69,7 +69,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	
+
 	mailService := mail.Boot(string_value(configService.String("mail.api_key")), mailConfig, false)
 
 	// Amazon services for the DI

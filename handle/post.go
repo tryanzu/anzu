@@ -827,6 +827,19 @@ func (di PostAPI) PostCreate(c *gin.Context) {
 				// Sync everyone's feed
 				go di.syncUsersFeed(publish)
 
+				go func(id bson.ObjectId, module *feed.FeedModule) {
+
+					post, err := module.Post(id)
+
+					if err != nil {
+						panic(err)
+					}
+
+					// Index the brand new post
+					post.Index()
+
+				}(post_id, di.Feed)
+
 				// Finished creating the post
 				c.JSON(200, gin.H{"status": "okay", "code": 200})
 				return
@@ -880,6 +893,19 @@ func (di PostAPI) PostCreate(c *gin.Context) {
 
 			// Sync everyone's feed
 			go di.syncUsersFeed(publish)
+
+			go func(id bson.ObjectId, module *feed.FeedModule) {
+
+				post, err := module.Post(id)
+
+				if err != nil {
+					panic(err)
+				}
+
+				// Index the brand new post
+				post.Index()
+
+			}(post_id, di.Feed)
 
 			// Finished creating the post
 			c.JSON(200, gin.H{"status": "okay", "code": 200})

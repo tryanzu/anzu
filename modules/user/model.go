@@ -33,7 +33,7 @@ type User struct {
 	Updated          time.Time              `bson:"updated_at" json:"updated_at"`
 
 	// Runtime generated and not persisted in database
-	Referrals        ReferralsModel         `json:"referrals,omitempty"`
+	Referrals ReferralsModel `json:"referrals,omitempty"`
 }
 
 type UserRole struct {
@@ -124,18 +124,18 @@ type CheckinModel struct {
 }
 
 type ReferralModel struct {
-	Id      bson.ObjectId `bson:"_id,omitempty" json:"id"`
-	OwnerId bson.ObjectId `bson:"owner_id" json:"owner_id"`
-	UserId  bson.ObjectId `bson:"user_id" json:"user_id"`
-	Code    string        `bson:"ref_code" json:"ref_code"`
-	Confirmed bool `bson:"confirmed" json:"confirmed"`
-	Created time.Time     `bson:"created_at" json:"created_at"`
-	Updated time.Time     `bson:"updated_at" json:"updated_at"`
+	Id        bson.ObjectId `bson:"_id,omitempty" json:"id"`
+	OwnerId   bson.ObjectId `bson:"owner_id" json:"owner_id"`
+	UserId    bson.ObjectId `bson:"user_id" json:"user_id"`
+	Code      string        `bson:"ref_code" json:"ref_code"`
+	Confirmed bool          `bson:"confirmed" json:"confirmed"`
+	Created   time.Time     `bson:"created_at" json:"created_at"`
+	Updated   time.Time     `bson:"updated_at" json:"updated_at"`
 }
 
 type ReferralsModel struct {
-	Count  int  `json:"count"`
-	List   []UserLightModel `json:"users"`
+	Count int              `json:"count"`
+	List  []UserLightModel `json:"users"`
 }
 
 type ByCreatedAt []UserActivity

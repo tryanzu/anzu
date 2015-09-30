@@ -7,8 +7,8 @@ import (
 
 func TestEmailValidation(t *testing.T) {
 
-	var tests = []struct{
-		in string
+	var tests = []struct {
+		in  string
 		out bool
 	}{
 		{"fernandez14@outlook.com", true},

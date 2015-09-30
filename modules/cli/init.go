@@ -1,19 +1,19 @@
 package cli
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/algolia/algoliasearch-client-go/algoliasearch"
+	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
-	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
+	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
-	"github.com/fernandez14/spartangeek-blacker/model"
 	"gopkg.in/mgo.v2/bson"
 	"log"
-	"fmt"
-	"regexp"
 	"reflect"
-	"encoding/json"
+	"regexp"
 )
 
 type Module struct {
@@ -28,9 +28,9 @@ type fn func()
 
 func (module Module) Run(name string) {
 
-	commands := map[string]fn {
-		"slug-fix": module.SlugFix,
-		"codes-fix": module.Codes,
+	commands := map[string]fn{
+		"slug-fix":    module.SlugFix,
+		"codes-fix":   module.Codes,
 		"index-posts": module.IndexAlgolia,
 	}
 
@@ -38,7 +38,7 @@ func (module Module) Run(name string) {
 
 		handler()
 		return
-	} 
+	}
 
 	// If reachs this point then panic
 	log.Panic("No such handler for cli")
@@ -66,8 +66,7 @@ func (module Module) SlugFix() {
 				panic(err)
 			}
 
-				
-			log.Printf("\n%v --> %v\n", usr.UserName, slug)		
+			log.Printf("\n%v --> %v\n", usr.UserName, slug)
 			continue
 
 		} else {
@@ -82,7 +81,7 @@ func (module Module) SlugFix() {
 				}
 
 				fmt.Printf("-")
-				log.Printf("\n%v -slug-> %v\n", usr.UserNameSlug, slug)		
+				log.Printf("\n%v -slug-> %v\n", usr.UserNameSlug, slug)
 				continue
 			}
 		}
@@ -139,7 +138,6 @@ func (module Module) IndexAlgolia() {
 
 	database := module.Mongo.Database
 	index := module.Algolia
-	feed := module.Feed
 	ocategories := make(map[string]model.Category)
 
 	// Get categories
@@ -159,11 +157,11 @@ func (module Module) IndexAlgolia() {
 
 	// Prepare batch variables
 	batch_count := 0
-	batch_store := make([]PostModel, 0)
+	batch_store := make([]feed.AlgoliaPostModel, 0)
 
 	for iter.Next(&post) {
 
-		// Unefficent in some ways but DRY 
+		// Unefficent in some ways but DRY
 		user, err := module.User.Get(post.UserId)
 
 		if err != nil {
@@ -187,7 +185,7 @@ func (module Module) IndexAlgolia() {
 			final_rate := 0.0
 
 			// Calculate feed rate at given time
-			post_obj, err := feed.Post(post)
+			post_obj, err := module.Feed.Post(post)
 
 			if err != nil {
 
@@ -242,23 +240,23 @@ func (module Module) IndexAlgolia() {
 				}
 			}
 
-			item := PostModel{
-				Id: post.Id.Hex(),
-				Title: post.Title,
-				Content: post.Content,
+			item := feed.AlgoliaPostModel{
+				Id:       post.Id.Hex(),
+				Title:    post.Title,
+				Content:  post.Content,
 				Comments: post.Comments.Count,
-				User: UserModel{
-					Id: user_data.Id.Hex(),
+				User: feed.AlgoliaUserModel{
+					Id:       user_data.Id.Hex(),
 					Username: user_data.UserName,
-					Image: user_data.Image,
-					Email: user_data.Email,
+					Image:    user_data.Image,
+					Email:    user_data.Email,
 				},
-				Category: CategoryModel{
-					Id: post.Category.Hex(),
+				Category: feed.AlgoliaCategoryModel{
+					Id:   post.Category.Hex(),
 					Name: post_category.Name,
 				},
 				Popularity: final_rate,
-				Created: post.Created.Unix(),
+				Created:    post.Created.Unix(),
 				Components: components,
 			}
 
@@ -290,9 +288,9 @@ func (module Module) IndexAlgolia() {
 
 				if err != nil {
 					panic(err)
-				}			
+				}
 
-				batch_store = make([]PostModel, 0)
+				batch_store = make([]feed.AlgoliaPostModel, 0)
 				batch_count = 0
 			}
 
@@ -323,5 +321,5 @@ func (module Module) IndexAlgolia() {
 		}
 
 		fmt.Printf("*")
-	}	
+	}
 }

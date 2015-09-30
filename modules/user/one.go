@@ -55,7 +55,7 @@ func (self *One) Load(section string) *One {
 
 		self.data.Referrals = ReferralsModel{
 			Count: count,
-			List: users,
+			List:  users,
 		}
 	}
 
@@ -86,11 +86,11 @@ func (self *One) SendConfirmationEmail() {
 	mailing := self.di.Mail
 
 	compose := mail.Mail{
-		Subject: "Último paso para tu registro",
+		Subject:  "Último paso para tu registro",
 		Template: "signup",
 		Recipient: []mail.MailRecipient{
 			{
-				Name: self.data.UserName,
+				Name:  self.data.UserName,
 				Email: self.data.Email,
 			},
 		},

@@ -6,9 +6,9 @@ import (
 )
 
 type Module struct {
-	Client     *mandrill.Client
-	config     ModuleConfig
-	debug      bool	
+	Client *mandrill.Client
+	config ModuleConfig
+	debug  bool
 }
 
 func (module Module) Send(mail Mail) {
@@ -78,8 +78,8 @@ func Boot(key string, config *config.Config, debug bool) *Module {
 	}
 
 	module_config := ModuleConfig{
-		From: email,
-		FromName: name, 
+		From:       email,
+		FromName:   name,
 		Recipients: recipients,
 	}
 
