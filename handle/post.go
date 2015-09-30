@@ -1057,7 +1057,7 @@ func (di PostAPI) PostUpdate(c *gin.Context) {
 		if postForm.Pinned == true {
 
 			// Update the set directive by creating a copy of it and using type assertion
-			set_directive := update_directive["$set"].(map[string]interface{})
+			set_directive := update_directive["$set"].(bson.M)
 			set_directive["pinned"] = postForm.Pinned
 			update_directive["$set"] = set_directive
 
@@ -1067,6 +1067,20 @@ func (di PostAPI) PostUpdate(c *gin.Context) {
 		}
 
 		err = database.C("posts").Update(bson.M{"_id": post.Id}, update_directive)
+
+
+		go func(id bson.ObjectId, module *feed.FeedModule) {
+
+			post, err := module.Post(id)
+
+			if err != nil {
+				panic(err)
+			}
+
+			// Index the brand new post
+			post.Index()
+
+		}(post.Id, di.Feed)
 
 		if err != nil {
 			panic(err)
