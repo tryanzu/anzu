@@ -12,6 +12,7 @@ import (
 	"log"
 	"fmt"
 	"regexp"
+	"reflect"
 	"encoding/json"
 )
 
@@ -214,6 +215,33 @@ func (module Module) IndexAlgolia() {
 				final_rate = (view_rate + comment_rate) / 2.0
 			}
 
+			components := make([]string, 0)
+
+			// If the post is a recommendations post then reflect to get the components
+			if post.Type == "recommendations" {
+
+				bindable := reflect.ValueOf(&post.Components).Elem()
+
+				for i := 0; i < bindable.NumField(); i++ {
+
+					field := bindable.Field(i).Interface()
+
+					switch field.(type) {
+					case model.Component:
+
+						component := field.(model.Component)
+
+						if component.Content != "" {
+
+							components = append(components, component.Content)
+						}
+
+					default:
+						continue
+					}
+				}
+			}
+
 			item := PostModel{
 				Id: post.Id.Hex(),
 				Title: post.Title,
@@ -231,6 +259,7 @@ func (module Module) IndexAlgolia() {
 				},
 				Popularity: final_rate,
 				Created: post.Created.Unix(),
+				Components: components,
 			}
 
 			fmt.Printf("+")
@@ -257,7 +286,7 @@ func (module Module) IndexAlgolia() {
 					panic(err)
 				}
 
-				_, err = index.AddObjects(json_objects)
+				_, err = index.UpdateObjects(json_objects)
 
 				if err != nil {
 					panic(err)

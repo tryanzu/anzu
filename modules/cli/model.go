@@ -10,6 +10,7 @@ type PostModel struct {
 	Shit int `json:"shit_count"`
 	Category CategoryModel `json:"category"`
 	Popularity float64 `json:"popularity"` 
+	Components []string `json:"components,omitempty"`
 	Created int64 `json:"created"` 
 }
 
