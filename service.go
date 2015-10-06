@@ -46,10 +46,11 @@ func main() {
 	// Resources for the API
 	var api api.Module
 	var cliModule cli.Module
-	var storeModule store.Module
 	var notificationsModule notifications.NotificationsModule
 	var feedModule feed.FeedModule
 	var exceptions exceptions.ExceptionsModule
+
+	storeService := store.Boot()
 
 	// Services for the DI
 	configService, _ := config.ParseJsonFile(envfile)
@@ -105,12 +106,12 @@ func main() {
 		&inject.Object{Value: statsService, Complete: true},
 		&inject.Object{Value: algoliaIndex, Complete: true},
 		&inject.Object{Value: aclService, Complete: false},
+		&inject.Object{Value: storeService, Complete: false},
 		&inject.Object{Value: userService, Complete: false},
 		&inject.Object{Value: gamingService, Complete: false},
 		&inject.Object{Value: mailService, Complete: false},
 		&inject.Object{Value: broadcaster, Complete: true, Name: "Notifications"},
 		&inject.Object{Value: &cliModule},
-		&inject.Object{Value: &storeModule},
 		&inject.Object{Value: &notificationsModule},
 		&inject.Object{Value: &feedModule},
 		&inject.Object{Value: &exceptions},

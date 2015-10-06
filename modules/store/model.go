@@ -23,3 +23,11 @@ type OrderUserModel struct {
 	Email string `bson:"email" json:"email"`
 	Phone string `bson:"phone" json:"phone"`
 }
+
+type MessageModel struct {
+	Type      string        `bson:"type" json:"type"`
+	Content   string        `bson:"content" json:"content"`
+	RelatedId bson.ObjectId `bson:"related_id,omitempty" json:"related_id,omitempty"`
+	Created   time.Time     `bson:"created_at" json:"created_at"`
+	Updated   time.Time     `bson:"updated_at" json:"updated_at"`
+}
