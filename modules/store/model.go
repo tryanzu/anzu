@@ -33,6 +33,12 @@ type MessageModel struct {
 	Updated   time.Time     `bson:"updated_at" json:"updated_at"`
 }
 
+type BuildResponseModel struct {
+	Id      bson.ObjectId  `bson:"_id,omitempty" json:"id,omitempty"`
+	Title   string         `bson:"title" json:"title"`
+	Content string         `bson:"content" json:"content"`
+}
+
 type ByCreatedAt []MessageModel
 
 func (a ByCreatedAt) Len() int           { return len(a) }
