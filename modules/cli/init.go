@@ -32,6 +32,7 @@ func (module Module) Run(name string) {
 		"slug-fix":    module.SlugFix,
 		"codes-fix":   module.Codes,
 		"index-posts": module.IndexAlgolia,
+		"send-confirmations": module.ConfirmationEmails,
 	}
 
 	if handler, exists := commands[name]; exists {
@@ -130,6 +131,24 @@ func (module Module) Codes() {
 		}
 	}
 }
+
+func (module Module) ConfirmationEmails() {
+
+	var usr user.User
+	database := module.Mongo.Database
+
+	// Get all users
+	iter := database.C("users").Find(bson.M{"validated": false}).Iter()
+
+	for iter.Next(&usr) {
+
+		usr_obj := module.User.Get(usr)
+		
+		// Send the confirmation email
+		usr_obj.SendConfirmationEmail()
+	}
+}
+
 
 func (module Module) IndexAlgolia() {
 
@@ -245,6 +264,7 @@ func (module Module) IndexAlgolia() {
 				Title:    post.Title,
 				Content:  post.Content,
 				Comments: post.Comments.Count,
+				Slug:     post.Slug,
 				User: feed.AlgoliaUserModel{
 					Id:       user_data.Id.Hex(),
 					Username: user_data.UserName,
