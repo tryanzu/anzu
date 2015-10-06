@@ -142,10 +142,14 @@ func (module Module) ConfirmationEmails() {
 
 	for iter.Next(&usr) {
 
-		usr_obj := module.User.Get(usr)
-		
-		// Send the confirmation email
-		usr_obj.SendConfirmationEmail()
+		usr_copy := &usr
+		usr_obj, err := module.User.Get(usr_copy)
+			
+		if err == nil {
+
+			// Send the confirmation email
+			usr_obj.SendConfirmationEmail()
+		}
 	}
 }
 
