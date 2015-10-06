@@ -7,29 +7,37 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/handle"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller"
 	"github.com/gin-gonic/gin"
+	"github.com/olebedev/config"
 	"os"
 )
 
 type Module struct {
-	Posts       handle.PostAPI
-	Votes       handle.VoteAPI
-	Users       handle.UserAPI
-	Categories  handle.CategoryAPI
-	Elections   handle.ElectionAPI
-	Comments    handle.CommentAPI
-	Parts       handle.PartAPI
-	Stats       handle.StatAPI
-	Middlewares handle.MiddlewareAPI
-	Collector   handle.CollectorAPI
-	Sitemap     handle.SitemapAPI
-	Acl         handle.AclAPI
-	Gaming      handle.GamingAPI
-	Store       controller.StoreAPI
+	Dependencies ModuleDI
+	Posts        handle.PostAPI
+	Votes        handle.VoteAPI
+	Users        handle.UserAPI
+	Categories   handle.CategoryAPI
+	Elections    handle.ElectionAPI
+	Comments     handle.CommentAPI
+	Parts        handle.PartAPI
+	Stats        handle.StatAPI
+	Middlewares  handle.MiddlewareAPI
+	Collector    handle.CollectorAPI
+	Sitemap      handle.SitemapAPI
+	Acl          handle.AclAPI
+	Gaming       handle.GamingAPI
+	Store        controller.StoreAPI
+	Mail         controller.MailAPI
+}
+
+type ModuleDI struct {
+	Config *config.Config `inject:""`
 }
 
 func (module *Module) Populate(g inject.Graph) {
 
 	err := g.Provide(
+		&inject.Object{Value: &module.Dependencies},
 		&inject.Object{Value: &module.Collector},
 		&inject.Object{Value: &module.Posts},
 		&inject.Object{Value: &module.Votes},
@@ -44,6 +52,7 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.Sitemap},
 		&inject.Object{Value: &module.Gaming},
 		&inject.Object{Value: &module.Store},
+		&inject.Object{Value: &module.Mail},
 	)
 
 	if err != nil {
@@ -60,6 +69,19 @@ func (module *Module) Populate(g inject.Graph) {
 
 func (module *Module) Run() {
 
+	var debug bool = true
+
+	environment, err := module.Dependencies.Config.String("environment")
+
+	if err != nil {
+		panic(err)
+	}
+
+	// If development turn debug on
+	if environment != "development" {
+		debug = false
+	}
+
 	// Start gin classic middlewares
 	router := gin.Default()
 
@@ -68,7 +90,7 @@ func (module *Module) Run() {
 
 	// Middlewares setup
 	router.Use(gorelic.Handler)
-	router.Use(module.Middlewares.ErrorTracking())
+	router.Use(module.Middlewares.ErrorTracking(debug))
 	router.Use(module.Middlewares.CORS())
 	router.Use(module.Middlewares.MongoRefresher())
 	router.Use(module.Middlewares.StatsdTiming())
@@ -154,6 +176,21 @@ func (module *Module) Run() {
 			authorized.POST("/vote/comment/:id", module.Votes.VoteComment)
 			authorized.POST("/vote/component/:id", module.Votes.VoteComponent)
 			authorized.POST("/vote/post/:id", module.Votes.VotePost)
+
+			// Backoffice routes
+			backoffice := authorized.Group("backoffice")
+
+			backoffice.Use(module.Middlewares.NeedAclAuthorization())
+			{
+				backoffice.GET("/order", module.Store.Orders)
+				backoffice.POST("/order/:id", module.Store.Answer)
+			}
+		}
+
+		mail := v1.Group("/mail")
+		{
+			mail.HEAD("/inbound/:address", func(c *gin.Context) { c.String(200, ":)") })
+			mail.POST("/inbound/:address", module.Mail.Inbound)
 		}
 	}
 
