@@ -15,9 +15,17 @@ func (module Module) Send(mail Mail) {
 
 	message := &mandrill.Message{}
 
-	// Setup mail message
-	message.FromEmail = module.config.From
-	message.FromName = module.config.FromName
+	if mail.FromName == "" && mail.FromEmail == "" {
+
+		// Setup mail message
+		message.FromEmail = module.config.From
+		message.FromName = module.config.FromName
+		
+	} else {
+
+		message.FromEmail = mail.FromEmail
+		message.FromName = mail.FromName
+	}
 
 	if module.debug {
 

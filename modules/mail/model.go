@@ -5,6 +5,8 @@ type Mail struct {
 	Template  string
 	Recipient []MailRecipient
 	Variables map[string]string
+	FromName  string
+	FromEmail string
 }
 
 type MailRecipient struct {
