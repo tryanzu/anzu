@@ -1068,7 +1068,6 @@ func (di PostAPI) PostUpdate(c *gin.Context) {
 
 		err = database.C("posts").Update(bson.M{"_id": post.Id}, update_directive)
 
-
 		go func(id bson.ObjectId, module *feed.FeedModule) {
 
 			post, err := module.Post(id)
