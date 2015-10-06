@@ -1,12 +1,12 @@
 package feed
 
 import (
+	"encoding/json"
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"gopkg.in/mgo.v2/bson"
 	"reflect"
 	"strconv"
 	"time"
-	"encoding/json"
 )
 
 type Post struct {
@@ -221,6 +221,7 @@ func (self *Post) Index() {
 			Id:       post.Id.Hex(),
 			Title:    post.Title,
 			Content:  post.Content,
+			Slug:     post.Slug,
 			Comments: post.Comments.Count,
 			User: AlgoliaUserModel{
 				Id:       user_data.Id.Hex(),

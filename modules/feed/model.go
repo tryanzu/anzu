@@ -4,6 +4,7 @@ type AlgoliaPostModel struct {
 	Id         string               `json:"objectID"`
 	Title      string               `json:"title"`
 	Content    string               `json:"content"`
+	Slug       string               `json:"slug"`
 	Comments   int                  `json:"comments_count"`
 	User       AlgoliaUserModel     `json:"user"`
 	Tribute    int                  `json:"tribute_count"`
