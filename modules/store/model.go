@@ -14,6 +14,7 @@ type OrderModel struct {
 	Games    []string       `bson:"games" json:"games"`
 	Extra    []string       `bson:"extras" json:"extra"`
 	BuyDelay int            `bson:"buydelay" json:"buydelay"`
+	Messages []MessageModel `bson:"messages,omitempty" json:"messages"`
 	Created  time.Time      `bson:"created_at" json:"created_at"`
 	Updated  time.Time      `bson:"updated_at" json:"updated_at"`
 }
@@ -31,3 +32,9 @@ type MessageModel struct {
 	Created   time.Time     `bson:"created_at" json:"created_at"`
 	Updated   time.Time     `bson:"updated_at" json:"updated_at"`
 }
+
+type ByCreatedAt []MessageModel
+
+func (a ByCreatedAt) Len() int           { return len(a) }
+func (a ByCreatedAt) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByCreatedAt) Less(i, j int) bool { return !a[i].Created.Before(a[j].Created) }
