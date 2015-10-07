@@ -18,6 +18,21 @@ func (module *Module) GetNotes() []BuildResponseModel {
 	return list
 }
 
+func (module *Module) GetNote(id bson.ObjectId) (*BuildResponseModel, error) {
+	
+	var one *BuildResponseModel
+
+	database := module.Mongo.Database
+	err := database.C("builds_responses").FindId(id).One(&one)
+
+	if err != nil {
+		
+		return nil, err
+	}
+
+	return one, nil
+}
+
 func (module *Module) CreateNote(title, content string) error {
 
 	note := &BuildResponseModel{
@@ -35,6 +50,14 @@ func (module *Module) UpdateNote(id bson.ObjectId, title, content string) error 
 
 	database := module.Mongo.Database
 	err := database.C("builds_responses").Update(bson.M{"_id": id}, bson.M{"$set": bson.M{"title": title, "content": content}})
+
+	return err
+}
+
+func (module *Module) DeleteNote(id bson.ObjectId) error {
+
+	database := module.Mongo.Database
+	err := database.C("builds_responses").RemoveId(id)
 
 	return err
 }
