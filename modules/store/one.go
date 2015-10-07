@@ -4,6 +4,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"gopkg.in/mgo.v2/bson"
 	"time"
+	"strings"
 )
 
 type One struct {
@@ -11,13 +12,23 @@ type One struct {
 	data *OrderModel
 }
 
-func (self *One) PushAnswer(text string) {
+func (self *One) Data() *OrderModel {
+
+	return self.data
+}
+
+func (self *One) PushAnswer(text, kind string) {
+
+	if kind != "text" && kind != "note" {
+
+		return
+	}
 
 	database := self.di.Mongo.Database
 
 	message := MessageModel{
 		Content: text,
-		Type:    "text",
+		Type:    kind,
 		Created: time.Now(),
 		Updated: time.Now(),
 	}
@@ -28,29 +39,33 @@ func (self *One) PushAnswer(text string) {
 		panic(err)
 	}
 
-	// Send an email async
-	go func() {
+	if kind == "text" {
 
-		mailing := self.di.Mail
+		// Send an email async
+		go func() {
 
-		compose := mail.Mail{
-			Subject:  "PC Spartana",
-			Template: "simple",
-			Recipient: []mail.MailRecipient{
-				{
-					Name:  self.data.User.Name,
-					Email: self.data.User.Email,
+			mailing := self.di.Mail
+			text = strings.Replace(text, "\n", "<br>", -1)
+			
+			compose := mail.Mail{
+				Subject:  "PC Spartana",
+				Template: "simple",
+				Recipient: []mail.MailRecipient{
+					{
+						Name:  self.data.User.Name,
+						Email: self.data.User.Email,
+					},
 				},
-			},
-			FromEmail: "pc@pedidos.spartangeek.com",
-			FromName: "Drak Spartan",
-			Variables: map[string]string{
-				"content": text,
-			},
-		}
+				FromEmail: "pc@pedidos.spartangeek.com",
+				FromName: "Drak Spartan",
+				Variables: map[string]string{
+					"content": text,
+				},
+			}
 
-		mailing.Send(compose)
-	}()
+			mailing.Send(compose)
+		}()
+	}
 }
 
 func (self *One) PushInboundAnswer(text string, mail bson.ObjectId) {

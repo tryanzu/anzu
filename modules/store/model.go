@@ -11,6 +11,7 @@ type OrderModel struct {
 	Content  string         `bson:"content" json:"content"`
 	Budget   int            `bson:"budget" json:"budget"`
 	Currency string         `bson:"currency" json:"currency"`
+	State    string         `bson:"state" json:"state"`
 	Games    []string       `bson:"games" json:"games"`
 	Extra    []string       `bson:"extras" json:"extra"`
 	BuyDelay int            `bson:"buydelay" json:"buydelay"`
@@ -37,6 +38,7 @@ type BuildResponseModel struct {
 	Id      bson.ObjectId  `bson:"_id,omitempty" json:"id,omitempty"`
 	Title   string         `bson:"title" json:"title"`
 	Content string         `bson:"content" json:"content"`
+	Price   int            `bson:"price,omitempty" json:"price,omitempty"`
 }
 
 type ByCreatedAt []MessageModel

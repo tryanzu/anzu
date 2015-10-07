@@ -26,7 +26,8 @@ func (self StoreAPI) PlaceOrder(c *gin.Context) {
 			},
 			Content:  form.Content,
 			Budget:   form.Budget,
-			Currency: form.Currency,
+			Currency: "MXN",
+			State:    form.State,
 			Games:    form.Games,
 			Extra:    form.Extra,
 			BuyDelay: form.BuyDelay,
@@ -59,6 +60,28 @@ func (self StoreAPI) Orders(c *gin.Context) {
 	c.JSON(200, orders)
 }
 
+// REST handler for getting one order
+func (self StoreAPI) One(c *gin.Context) {
+
+	id := c.Param("id")
+
+	if bson.IsObjectIdHex(id) == false {
+
+		c.JSON(400, gin.H{"status": "error", "message": "Can't perform action. Invalid id."})
+		return
+	}
+
+	order, err := self.Store.Order(bson.ObjectIdHex(id))
+
+	if err != nil {
+
+		c.JSON(404, gin.H{"status": "error", "message": "Order not found."})
+		return
+	}
+
+	c.JSON(200, order.Data())
+}
+
 // Use one of the predefined answers to answer an order
 func (self StoreAPI) FastAnswer(c *gin.Context) {
 
@@ -85,7 +108,7 @@ func (self *StoreAPI) Answer(c *gin.Context) {
 
 		if err == nil {
 
-			order.PushAnswer(form.Content)
+			order.PushAnswer(form.Content, form.Type)
 
 			c.JSON(200, gin.H{"status": "okay"})
 		} else {
@@ -99,8 +122,8 @@ type OrderForm struct {
 	User     OrderUserForm `json:"user" binding:"required"`
 	Content  string        `json:"content" binding:"required"`
 	Budget   int           `json:"budget" binding:"required"`
-	Currency string        `json:"currency" binding:"required"`
 	BuyDelay int           `json:"buydelay" binding:"required"`
+	State    string        `json:"estado" binding:"required"`
 	Games    []string      `json:"games"`
 	Extra    []string      `json:"extra"`
 }
@@ -113,4 +136,5 @@ type OrderUserForm struct {
 
 type OrderAnswerForm struct {
 	Content string `json:"content" binding:"required"`
+	Type    string `json:"type" binding:"required"`
 }

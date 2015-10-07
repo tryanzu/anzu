@@ -173,8 +173,6 @@ func (di *MiddlewareAPI) NeedAclAuthorization() gin.HandlerFunc {
 func (di *MiddlewareAPI) ErrorTracking(debug bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		log.Printf("DEBUG IS %v\n", debug)
-
 		if debug == false {
 
 			envfile := os.Getenv("ENV_FILE")

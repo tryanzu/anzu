@@ -4,7 +4,6 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/store"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
-	"strconv"
 )
 
 type BuildNotesAPI struct {
@@ -29,7 +28,7 @@ func (self BuildNotesAPI) One(c *gin.Context) {
 		return
 	}
 
-	note, err := self.Store.GetNote(id)
+	note, err := self.Store.GetNote(bson.ObjectIdHex(id))
 
 	if err != nil {
 

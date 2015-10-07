@@ -27,6 +27,7 @@ type Module struct {
 	Acl          handle.AclAPI
 	Gaming       handle.GamingAPI
 	Store        controller.StoreAPI
+	BuildNotes   controller.BuildNotesAPI
 	Mail         controller.MailAPI
 }
 
@@ -52,6 +53,7 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.Sitemap},
 		&inject.Object{Value: &module.Gaming},
 		&inject.Object{Value: &module.Store},
+		&inject.Object{Value: &module.BuildNotes},
 		&inject.Object{Value: &module.Mail},
 	)
 
@@ -183,7 +185,15 @@ func (module *Module) Run() {
 			backoffice.Use(module.Middlewares.NeedAclAuthorization())
 			{
 				backoffice.GET("/order", module.Store.Orders)
+				backoffice.GET("/order/:id", module.Store.One)
 				backoffice.POST("/order/:id", module.Store.Answer)
+
+				// Build notes routes
+				backoffice.GET("/notes", module.BuildNotes.All)
+				backoffice.POST("/notes", module.BuildNotes.Create)
+				backoffice.GET("/notes/:id", module.BuildNotes.One)
+				backoffice.PUT("/notes/:id", module.BuildNotes.Update)
+				backoffice.DELETE("/notes/:id", module.BuildNotes.Delete)
 			}
 		}
 
