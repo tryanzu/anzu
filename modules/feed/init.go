@@ -51,3 +51,14 @@ func (self *FeedModule) Post(post interface{}) (*Post, error) {
 		panic("Unkown argument")
 	}
 }
+
+func (module *FeedModule) Posts(limit, offset int) List {
+
+	list := List{
+		module: module,
+		limit: limit,
+		offset: offset,
+	}
+
+	return list
+}

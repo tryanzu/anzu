@@ -151,16 +151,17 @@ func (self *Module) ResetTempStuff() {
 
 	for iter.Next(&usr) {
 
+		usr_copy := usr
 		user_sync := UserSync{
-			user: usr,
-			gmf:  self.Get(usr.Id),
+			user: usr_copy,
+			gmf:  self.Get(usr_copy.Id),
 		}
 
-		go func() {
+		go func(user_sync UserSync) {
 
 			w.Run(&user_sync)
 			wg.Done()
-		}()
+		}(user_sync)
 	}
 
 	if err := iter.Close(); err != nil {
