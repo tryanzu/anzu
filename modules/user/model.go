@@ -116,6 +116,10 @@ type UserSubscribeForm struct {
 	Email    string `json:"email" binding:"required"`
 }
 
+type UserId struct {
+	Id   bson.ObjectId `bson:"_id,omitempty" json:"id"`
+}
+
 type CheckinModel struct {
 	Id      bson.ObjectId `bson:"_id,omitempty" json:"id"`
 	UserId  bson.ObjectId `bson:"user_id" json:"user_id"`

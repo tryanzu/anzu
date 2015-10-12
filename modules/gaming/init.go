@@ -130,6 +130,8 @@ func (self *Module) ResetTempStuff() {
 	// Recover from any panic even inside this goroutine
 	defer self.Errors.Recover()
 
+	var list []user.UserId
+
 	w, err := work.New(5, time.Second, logFunc)
 
 	if err != nil {
@@ -138,18 +140,20 @@ func (self *Module) ResetTempStuff() {
 
 	database := self.Mongo.Database
 	count, _ := database.C("users").Find(nil).Count()
-	iter := database.C("users").Find(nil).Select(bson.M{"_id": 1}).Iter()
+	err = database.C("users").Find(nil).Select(bson.M{"_id": 1}).All(&list)
+
+	if err != nil {
+		panic(err)
+	}
 
 	var wg sync.WaitGroup
 
 	wg.Add(count)
 
-	var usr user.User
-
 	// Get the database interface from the DI
 	log.Println("[job] [ResetTempStuff] Started")
 
-	for iter.Next(&usr) {
+	for _, usr := range list {
 
 		usr_copy := usr
 		user_sync := UserSync{
@@ -157,15 +161,8 @@ func (self *Module) ResetTempStuff() {
 			gmf:  self.Get(usr_copy.Id),
 		}
 
-		go func(user_sync UserSync) {
-
-			w.Run(&user_sync)
-			wg.Done()
-		}(user_sync)
-	}
-
-	if err := iter.Close(); err != nil {
-		panic(err)
+		w.Run(&user_sync)
+		wg.Done()
 	}
 
 	wg.Wait()
@@ -175,7 +172,7 @@ func (self *Module) ResetTempStuff() {
 }
 
 type UserSync struct {
-	user user.User
+	user user.UserId
 	gmf  *User
 }
 
