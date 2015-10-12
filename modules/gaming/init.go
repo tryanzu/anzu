@@ -130,7 +130,7 @@ func (self *Module) ResetTempStuff() {
 	// Recover from any panic even inside this goroutine
 	defer self.Errors.Recover()
 
-	w, err := work.New(40, time.Second, logFunc)
+	w, err := work.New(5, time.Second, logFunc)
 
 	if err != nil {
 		log.Fatalln(err)
