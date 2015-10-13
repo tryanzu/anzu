@@ -13,6 +13,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
 	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
+	"github.com/fernandez14/spartangeek-blacker/modules/queue"
 	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/fernandez14/spartangeek-blacker/modules/notifications"
 	"github.com/fernandez14/spartangeek-blacker/modules/store"
@@ -46,6 +47,7 @@ func main() {
 	// Resources for the API
 	var api api.Module
 	var cliModule cli.Module
+	var queueModule queue.Module
 	var notificationsModule notifications.NotificationsModule
 	var feedModule feed.FeedModule
 	var exceptions exceptions.ExceptionsModule
@@ -112,6 +114,7 @@ func main() {
 		&inject.Object{Value: mailService, Complete: false},
 		&inject.Object{Value: broadcaster, Complete: true, Name: "Notifications"},
 		&inject.Object{Value: &cliModule},
+		&inject.Object{Value: &queueModule},
 		&inject.Object{Value: &notificationsModule},
 		&inject.Object{Value: &feedModule},
 		&inject.Object{Value: &exceptions},
@@ -201,6 +204,20 @@ func main() {
 		},
 	}
 
+	var cmdWorkerRoutine = &cobra.Command{
+		Use:   "worker [queue]",
+		Short: "Starts worker for certain queue",
+		Long: `Starts a worker daemon to 
+		proccess jobs from certain IronMQ queue`,
+		Run: func(cmd *cobra.Command, args []string) {
+
+			// Populate dependencies using the already instantiated DI
+			queueModule.Populate(g)
+
+			queueModule.Listen(args[0])
+		},
+	}	
+
 	var cmdSyncRanking = &cobra.Command{
 		Use:   "sync-ranking",
 		Short: "Sync ranking",
@@ -223,6 +240,7 @@ func main() {
 	rootCmd.AddCommand(cmdApi)
 	rootCmd.AddCommand(cmdSyncGamification)
 	rootCmd.AddCommand(cmdSyncRanking)
+	rootCmd.AddCommand(cmdWorkerRoutine)
 	rootCmd.AddCommand(cmdJobs)
 	rootCmd.AddCommand(cmdRunRoutine)
 	rootCmd.Execute()
