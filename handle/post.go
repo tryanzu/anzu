@@ -1066,6 +1066,14 @@ func (di PostAPI) PostUpdate(c *gin.Context) {
 			update_directive["$unset"] = bson.M{"pinned": ""}
 		}
 
+		if postForm.IsQuestion != post.IsQuestion {
+
+			set_directive := update_directive["$set"].(bson.M)
+			set_directive["is_question"] = postForm.IsQuestion
+
+			update_directive["$set"] = set_directive
+		}
+
 		err = database.C("posts").Update(bson.M{"_id": post.Id}, update_directive)
 
 		go func(id bson.ObjectId, module *feed.FeedModule) {
