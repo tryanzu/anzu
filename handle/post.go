@@ -1032,7 +1032,7 @@ func (di PostAPI) PostUpdate(c *gin.Context) {
 			return
 		}
 
-		if postForm.Pinned == true && user.Can("pin-board-posts") == false {
+		if postForm.Pinned == true && postForm.Pinned != post.Pinned && user.Can("pin-board-posts") == false {
 
 			c.JSON(400, gin.H{"status": "error", "message": "Not enough permissions to pin."})
 			return
