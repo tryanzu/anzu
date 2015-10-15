@@ -61,7 +61,7 @@ func (module *FeedModule) LightPost(post interface{}) (*LightPost, error) {
 		database := module.Mongo.Database
 
 		// Use light post model 
-		err := database.C("posts").FindId(post.(bson.ObjectId)).Select(bson.M{"_id": 1, "title": 1, "slug": 1, "category": 1, "user_id": 1, "pinned": 1, "created_at": 1, "updated_at": 1}).One(&scope)
+		err := database.C("posts").FindId(post.(bson.ObjectId)).Select(bson.M{"_id": 1, "title": 1, "slug": 1, "category": 1, "user_id": 1, "pinned": 1, "created_at": 1, "updated_at": 1, "type": 1, "content": 1}).One(&scope)
 
 		if err != nil {
 
