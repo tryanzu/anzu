@@ -376,10 +376,7 @@ func (di PostAPI) FeedGet(c *gin.Context) {
 	}
 }
 
-func (di PostAPI) GetLight(c *gin.Context) {
-
-	// Get the database interface from the DI
-	database := di.DataService.Database
+func (di PostAPI) GetLightweight(c *gin.Context) {
 
 	// Get the post ID
 	id := c.Params.ByName("id")

@@ -1,5 +1,10 @@
 package feed
 
+import (
+	"gopkg.in/mgo.v2/bson"
+	"time"
+)
+
 type AlgoliaPostModel struct {
 	Id         string               `json:"objectID"`
 	Title      string               `json:"title"`
@@ -31,6 +36,7 @@ type LightPostModel struct {
 	Id         bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
 	Title      string        `bson:"title" json:"title"`
 	Slug       string        `bson:"slug" json:"slug"`
+	Content    string        `bson:"content" json:"content"`
 	Type       string        `bson:"type" json:"type"`
 	Category   bson.ObjectId `bson:"category" json:"category"`
 	UserId     bson.ObjectId `bson:"user_id,omitempty" json:"user_id,omitempty"`
