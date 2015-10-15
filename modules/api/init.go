@@ -117,6 +117,7 @@ func (module *Module) Run() {
 		v1.GET("/feed", module.Posts.FeedGet)
 		v1.GET("/post", module.Posts.FeedGet)
 		v1.GET("/posts/:id", module.Posts.PostsGetOne)
+		v1.GET("/posts/:id/light", module.Posts.GetLight)
 		v1.GET("/post/s/:id", module.Posts.PostsGetOne)
 
 		// // Election routes

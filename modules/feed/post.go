@@ -82,6 +82,7 @@ func (self *Post) UpdateRate() {
 	}
 }
 
+// Get post data structure
 func (self *Post) Data() model.Post {
 	return self.data
 }

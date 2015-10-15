@@ -52,6 +52,31 @@ func (self *FeedModule) Post(post interface{}) (*Post, error) {
 	}
 }
 
+func (module *FeedModule) LightPost(post interface{}) (*LightPost, error) {
+
+	switch post.(type) {
+	case bson.ObjectId:
+
+		scope := LightPostModel{}
+		database := self.Mongo.Database
+
+		// Use light post model 
+		err := database.C("posts").Select(bson.M{"_id": 1, "title": 1, "slug": 1, "category": 1, "user_id": 1, "pinned": 1, "created_at": 1, "updated_at": 1}).FindId(post.(bson.ObjectId)).One(&scope)
+
+		if err != nil {
+
+			return nil, exceptions.NotFound{"Invalid post id. Not found."}
+		}
+
+		post_object := &LightPost{data: this, di: module}
+
+		return post_object, nil
+
+	default:
+		panic("Unkown argument")
+	}
+}
+
 func (module *FeedModule) Posts(limit, offset int) List {
 
 	list := List{
