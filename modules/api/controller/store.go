@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
 	"strconv"
+	"time"
 )
 
 type StoreAPI struct {
@@ -118,6 +119,107 @@ func (self *StoreAPI) Answer(c *gin.Context) {
 	}
 }
 
+// Push tag to an order
+func (self *StoreAPI) Tag(c *gin.Context) {
+
+	var form OrderTagForm
+
+	order_id := c.Param("id")
+
+	if bson.IsObjectIdHex(order_id) == false {
+
+		c.JSON(400, gin.H{"message": "Invalid request, id not valid.", "status": "error"})
+		return
+	}
+
+	id := bson.ObjectIdHex(order_id)
+
+	if c.BindJSON(&form) == nil {
+
+		order, err := self.Store.Order(id)
+
+		if err == nil {
+
+			order.PushTag(form.Name)
+
+			c.JSON(200, gin.H{"status": "okay"})
+		} else {
+
+			c.JSON(400, gin.H{"status": "error", "message": err.Error()})
+		}
+	}
+}
+
+// Update order stage
+func (self *StoreAPI) Stage(c *gin.Context) {
+
+	var form OrderStageForm
+
+	order_id := c.Param("id")
+
+	if bson.IsObjectIdHex(order_id) == false {
+
+		c.JSON(400, gin.H{"message": "Invalid request, id not valid.", "status": "error"})
+		return
+	}
+
+	id := bson.ObjectIdHex(order_id)
+
+	if c.BindJSON(&form) == nil {
+
+		order, err := self.Store.Order(id)
+
+		if err == nil {
+
+			order.PushTag(form.Name)
+
+			c.JSON(200, gin.H{"status": "okay"})
+		} else {
+
+			c.JSON(400, gin.H{"status": "error", "message": err.Error()})
+		}
+	}
+}
+
+// Push activity for the order
+func (self *StoreAPI) Activity(c *gin.Context) {
+
+	var form OrderActivityForm
+
+	order_id := c.Param("id")
+
+	if bson.IsObjectIdHex(order_id) == false {
+
+		c.JSON(400, gin.H{"message": "Invalid request, id not valid.", "status": "error"})
+		return
+	}
+
+	id := bson.ObjectIdHex(order_id)
+
+	if c.BindJSON(&form) == nil {
+
+		due_at, err := time.Parse(time.RFC3339, form.Due)
+
+		if err != nil {
+
+			c.JSON(400, gin.H{"status": "error", "message": err.Error()})
+		} else {
+
+			order, err := self.Store.Order(id)
+
+			if err == nil {
+
+				order.PushActivity(form.Name, form.Description, due_at)
+
+				c.JSON(200, gin.H{"status": "okay"})
+			} else {
+
+				c.JSON(400, gin.H{"status": "error", "message": err.Error()})
+			}
+		}
+	}
+}
+
 type OrderForm struct {
 	User     OrderUserForm `json:"user" binding:"required"`
 	Content  string        `json:"content" binding:"required"`
@@ -132,6 +234,26 @@ type OrderUserForm struct {
 	Name  string `json:"name" binding:"required"`
 	Email string `json:"email" binding:"required"`
 	Phone string `json:"phone" binding:"required"`
+}
+
+type OrderTagForm struct {
+	Name  string `json:"name" binding:"required"`
+}
+
+type OrderStageForm struct {
+	Name  string `json:"name" binding:"required"`
+}
+
+type OrderTagForm struct {
+	Name  string `json:"name" binding:"required"`
+	Email string `json:"email" binding:"required"`
+	Phone string `json:"phone" binding:"required"`
+}
+
+type OrderActivityForm struct {
+	Name         string `json:"name" binding:"required"`
+	Description  string `json:"description"`
+	Due          string `json:"due_at" binding:"required"`
 }
 
 type OrderAnswerForm struct {

@@ -6,24 +6,28 @@ import (
 )
 
 type OrderModel struct {
-	Id       bson.ObjectId  `bson:"_id,omitempty" json:"id,omitempty"`
-	User     OrderUserModel `bson:"user" json:"user"`
-	Content  string         `bson:"content" json:"content"`
-	Budget   int            `bson:"budget" json:"budget"`
-	Currency string         `bson:"currency" json:"currency"`
-	State    string         `bson:"state" json:"state"`
-	Games    []string       `bson:"games" json:"games"`
-	Extra    []string       `bson:"extras" json:"extra"`
-	BuyDelay int            `bson:"buydelay" json:"buydelay"`
-	Messages []MessageModel `bson:"messages,omitempty" json:"messages"`
-	Created  time.Time      `bson:"created_at" json:"created_at"`
-	Updated  time.Time      `bson:"updated_at" json:"updated_at"`
+	Id         bson.ObjectId   `bson:"_id,omitempty" json:"id,omitempty"`
+	User       OrderUserModel  `bson:"user" json:"user"`
+	Content    string          `bson:"content" json:"content"`
+	Budget     int             `bson:"budget" json:"budget"`
+	Currency   string          `bson:"currency" json:"currency"`
+	State      string          `bson:"state" json:"state"`
+	Games      []string        `bson:"games" json:"games"`
+	Extra      []string        `bson:"extras" json:"extra"`
+	BuyDelay   int             `bson:"buydelay" json:"buydelay"`
+	Messages   []MessageModel  `bson:"messages,omitempty" json:"messages"`
+	Tags       []TagModel      `bson:"tags,omitempty" json:"tags"`
+	Activities []ActivityModel `bson:"activities,omitempty" json:"activities"`
+	Pipeline   PipelineModel   `bson:"pipeline,omitempty" json:"pipeline"`
+	Created    time.Time       `bson:"created_at" json:"created_at"`
+	Updated   time.Time        `bson:"updated_at" json:"updated_at"`
 }
 
 type OrderUserModel struct {
 	Name  string `bson:"name" json:"name"`
 	Email string `bson:"email" json:"email"`
 	Phone string `bson:"phone" json:"phone"`
+	Ip    string `bson:"ip" json:"ip"`
 }
 
 type MessageModel struct {
@@ -32,6 +36,32 @@ type MessageModel struct {
 	RelatedId bson.ObjectId `bson:"related_id,omitempty" json:"related_id,omitempty"`
 	Created   time.Time     `bson:"created_at" json:"created_at"`
 	Updated   time.Time     `bson:"updated_at" json:"updated_at"`
+}
+
+type ActivityModel struct {
+	Name        string    `bson:"name" json:"name"`
+	Description string    `bson:"description" json:"description"`
+	Done        bool      `bson:"done" json:"done"`
+	Due         time.Time `bson:"due_at" json:"due_at"`
+	Created     time.Time `bson:"created_at" json:"created_at"`
+	Updated     time.Time `bson:"updated_at" json:"updated_at"`
+}
+
+type TagModel struct {
+	Name    string        `bson:"name" json:"name"`
+	Created time.Time     `bson:"created_at" json:"created_at"`
+}
+
+type PipelineModel struct {
+	Current string                `bson:"current" json:"current"`
+	Updated time.Time             `bson:"updated_at" json:"updated_at"`
+	Changes []PipelineChangeModel `bson:"changes" json:"changes"`
+}
+
+type PipelineChangeModel struct {
+	Name    string    `bson:"name" json:"name"`
+	Diff    int       `bson:"diff" json:"diff"`
+	Updated time.Time `bson:"updated_at" json:"updated_at"`
 }
 
 type BuildResponseModel struct {

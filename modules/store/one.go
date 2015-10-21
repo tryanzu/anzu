@@ -68,6 +68,40 @@ func (self *One) PushAnswer(text, kind string) {
 	}
 }
 
+func (self *One) PushTag(tag string) {
+
+	database := self.di.Mongo.Database
+	item := TagModel{
+		Name: tag,
+		Created: time.Now(),
+	}
+
+	err := database.C("orders").Update(bson.M{"_id": self.data.Id}, bson.M{"$push": bson.M{"tags": item}})
+
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (self *One) PushActivity(name, description string, due_at time.Time) {
+
+	database := self.di.Mongo.Database
+	activity := ActivityModel{
+		Name: name,
+		Description: description,
+		Done: false,
+		Due: due_at,
+		Created: time.Now(),
+		Updated: time.Now(),
+	}
+
+	err := database.C("orders").Update(bson.M{"_id": self.data.Id}, bson.M{"$push": bson.M{"activities": activity}})
+
+	if err != nil {
+		panic(err)
+	}
+}
+
 func (self *One) PushInboundAnswer(text string, mail bson.ObjectId) {
 
 	database := self.di.Mongo.Database
