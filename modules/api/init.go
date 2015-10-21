@@ -188,6 +188,9 @@ func (module *Module) Run() {
 				backoffice.GET("/order", module.Store.Orders)
 				backoffice.GET("/order/:id", module.Store.One)
 				backoffice.POST("/order/:id", module.Store.Answer)
+				backoffice.POST("/order/:id/tag", module.Store.Tag)
+				backoffice.POST("/order/:id/activity", module.Store.Activity)
+				backoffice.POST("/order/:id/stage", module.Store.Stage)
 
 				// Build notes routes
 				backoffice.GET("/notes", module.BuildNotes.All)

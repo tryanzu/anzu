@@ -54,6 +54,7 @@ type TagModel struct {
 
 type PipelineModel struct {
 	Current string                `bson:"current" json:"current"`
+	Step    int                   `bson:"step" json:"step"`
 	Updated time.Time             `bson:"updated_at" json:"updated_at"`
 	Changes []PipelineChangeModel `bson:"changes" json:"changes"`
 }

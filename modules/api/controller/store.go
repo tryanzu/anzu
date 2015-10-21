@@ -244,12 +244,6 @@ type OrderStageForm struct {
 	Name  string `json:"name" binding:"required"`
 }
 
-type OrderTagForm struct {
-	Name  string `json:"name" binding:"required"`
-	Email string `json:"email" binding:"required"`
-	Phone string `json:"phone" binding:"required"`
-}
-
 type OrderActivityForm struct {
 	Name         string `json:"name" binding:"required"`
 	Description  string `json:"description"`
