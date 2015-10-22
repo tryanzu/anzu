@@ -2,6 +2,7 @@ package feed
 
 import (
 	"encoding/json"
+	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"gopkg.in/mgo.v2/bson"
 	"reflect"
@@ -87,6 +88,10 @@ func (self *Post) Data() model.Post {
 	return self.data
 }
 
+func (self *Post) DI() *FeedModule {
+	return self.di
+}
+
 // Internal method to get the post reach and views
 func (self *Post) GetReachViews(id bson.ObjectId) (int, int) {
 
@@ -142,6 +147,23 @@ func (self *Post) Category() model.Category {
 	}
 
 	return category
+}
+
+// Get comment object
+func (self *Post) Comment(index int) (*Comment, error) {
+	
+	if len(self.data.Comments.Set) < index {
+
+		return nil, exceptions.OutOfBounds{"Invalid comment index"}
+	}
+
+	comment := &Comment{
+		post: self,
+		comment: self.data.Comments.Set[index],
+		index: index,
+	}
+
+	return comment, nil
 }
 
 // Use algolia to index the post
