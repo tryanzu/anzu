@@ -22,7 +22,7 @@ func (self Comment) MarkAsAnswer() {
 	position := "comments.set." + strconv.Itoa(self.index) + ".chosen"
 
 	// Update straight forward
-	err := database.C("posts").Update(bson.M{"_id": id}, bson.M{position: true})
+	err := database.C("posts").Update(bson.M{"_id": id}, bson.M{"$set": bson.M{position: true}})
 
 	if err != nil {
 		panic(err)

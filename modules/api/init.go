@@ -29,6 +29,7 @@ type Module struct {
 	Store        controller.StoreAPI
 	BuildNotes   controller.BuildNotesAPI
 	Mail         controller.MailAPI
+	PostsFactory controller.PostAPI
 }
 
 type ModuleDI struct {
@@ -41,6 +42,7 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.Dependencies},
 		&inject.Object{Value: &module.Collector},
 		&inject.Object{Value: &module.Posts},
+		&inject.Object{Value: &module.PostsFactory},
 		&inject.Object{Value: &module.Votes},
 		&inject.Object{Value: &module.Users},
 		&inject.Object{Value: &module.Categories},
@@ -164,6 +166,7 @@ func (module *Module) Run() {
 			authorized.POST("/post/image", module.Posts.PostUploadAttachment)
 			authorized.PUT("/posts/:id", module.Posts.PostUpdate)
 			authorized.DELETE("/posts/:id", module.Posts.PostDelete)
+			authorized.POST("/posts/:id/answer/:comment", module.PostsFactory.MarkCommentAsAnswer)
 
 			// User routes
 			authorized.POST("/user/my/avatar", module.Users.UserUpdateProfileAvatar)
