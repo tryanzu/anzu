@@ -83,6 +83,7 @@ type Post struct {
 	Pinned     bool            `bson:"pinned,omitempty" json:"pinned,omitempty"`
 	NoComments bool            `bson:"comments_blocked" json:"comments_blocked"`
 	IsQuestion bool            `bson:"is_question" json:"is_question"`
+	Solved     bool            `bson:"solved,omitempty" json:"solved,omitempty"`
 	Liked      int             `bson:"liked,omitempty" json:"liked,omitempty"`
 	Created    time.Time       `bson:"created_at" json:"created_at"`
 	Updated    time.Time       `bson:"updated_at" json:"updated_at"`
@@ -113,6 +114,7 @@ type FeedPost struct {
 	UserId     bson.ObjectId `bson:"user_id,omitempty" json:"user_id,omitempty"`
 	Votes      Votes         `bson:"votes" json:"votes"`
 	Pinned     bool          `bson:"pinned,omitempty" json:"pinned,omitempty"`
+	Solved     bool          `bson:"solved,omitempty" json:"solved,omitempty"`
 	Stats      FeedPostStat  `bson:"stats,omitempty" json:"stats"`
 	Created    time.Time     `bson:"created_at" json:"created_at"`
 	Updated    time.Time     `bson:"updated_at" json:"updated_at"`

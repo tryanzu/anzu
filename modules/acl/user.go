@@ -68,6 +68,12 @@ func (user *User) CanUpdatePost(post model.Post) bool {
 	return user.isActionGranted(post.UserId, post.Category, "edit-own-posts", "edit-board-posts", "edit-category-posts")
 }
 
+// Check if user can solve post
+func (user *User) CanSolvePost(post model.Post) bool {
+
+	return user.isActionGranted(post.UserId, post.Category, "solve-own-posts", "solve-board-posts", "solve-category-posts")
+}
+
 // Check if user can delete post
 func (user *User) CanDeletePost(post model.Post) bool {
 
