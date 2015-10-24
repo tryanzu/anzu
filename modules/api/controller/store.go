@@ -198,7 +198,7 @@ func (self *StoreAPI) Activity(c *gin.Context) {
 
 	if c.BindJSON(&form) == nil {
 
-		due_at, err := time.Parse(time.RFC3339, form.Due)
+		due_at, err := time.Parse("2006-01-02 15:04", form.Due)
 
 		if err != nil {
 
