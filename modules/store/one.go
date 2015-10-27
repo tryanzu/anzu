@@ -125,7 +125,6 @@ func (self *One) Stage(name string) {
 
 	// Temp way to validate the name of the stage
 	if name != "estimate" && name != "negotiation" && name != "accepted" && name != "awaiting" && name != "closed" {
-		panic("Not allowed")
 		return
 	}
 
