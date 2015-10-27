@@ -114,7 +114,54 @@ func (self *One) PushInboundAnswer(text string, mail bson.ObjectId) {
 		Updated: time.Now(),
 	}
 
-	err := database.C("orders").Update(bson.M{"_id": self.data.Id}, bson.M{"$push": bson.M{"messages": message}, "$set": bson.M{"updated_at": time.Now()}})
+	err := database.C("orders").Update(bson.M{"_id": self.data.Id}, bson.M{"$push": bson.M{"messages": message}, "$set": bson.M{"unreaded": true, "updated_at": time.Now()}})
+
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (self *One) Stage(name string) {
+
+	// Temp way to validate the name of the stage
+	if name != "estimate" && name != "negotiation" && name != "accepted" && name != "awaiting" && name != "closed" {
+		panic("Not allowed")
+		return
+	}
+
+	database := self.di.Mongo.Database
+
+	// Define steps in order
+	steps := []string{"estimate", "negotiation", "accepted", "awaiting", "closed"}
+	current := self.data.Pipeline.Step
+
+	if current > 0 {
+		current = current-1
+	}
+
+	target := 0
+
+	for index, step := range steps {
+
+		if step == name {
+
+			target = index
+		}
+	}
+
+	named := steps[target]
+	err := database.C("orders").Update(bson.M{"_id": self.data.Id}, bson.M{"$set": bson.M{"pipeline.step": target+1, "pipeline.current": named, "pipeline.updated_at": time.Now(), "updated_at": time.Now()}})
+
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (self *One) Touch() {
+
+	database := self.di.Mongo.Database
+	
+	err := database.C("orders").Update(bson.M{"_id": self.data.Id}, bson.M{"$set": bson.M{"unreaded": false}})
 
 	if err != nil {
 		panic(err)

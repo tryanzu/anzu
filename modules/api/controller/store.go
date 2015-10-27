@@ -31,6 +31,7 @@ func (self StoreAPI) PlaceOrder(c *gin.Context) {
 			State:    form.State,
 			Games:    form.Games,
 			Extra:    form.Extra,
+			Unreaded: true,
 			BuyDelay: form.BuyDelay,
 		}
 
@@ -79,6 +80,9 @@ func (self StoreAPI) One(c *gin.Context) {
 		c.JSON(404, gin.H{"status": "error", "message": "Order not found."})
 		return
 	}
+
+	// Mark as readed
+	order.Touch()
 
 	c.JSON(200, order.Data())
 }
@@ -171,7 +175,7 @@ func (self *StoreAPI) Stage(c *gin.Context) {
 
 		if err == nil {
 
-			order.PushTag(form.Name)
+			order.Stage(form.Name)
 
 			c.JSON(200, gin.H{"status": "okay"})
 		} else {
