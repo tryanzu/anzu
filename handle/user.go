@@ -336,14 +336,6 @@ func (di UserAPI) UserGetTokenFacebook(c *gin.Context) {
 	var facebook map[string]interface{}
 	var id bson.ObjectId
 
-	trusted := di.Security.TrustIP(c.ClientIP())
-
-	if !trusted {
-
-		c.JSON(403, gin.H{"status": "error", "message": "Not trusted."})
-		return
-	}
-
 	// Bind to strings map
 	c.BindWith(&facebook, binding.JSON)
 
@@ -362,6 +354,14 @@ func (di UserAPI) UserGetTokenFacebook(c *gin.Context) {
 
 	// Create a new user
 	if err != nil {
+
+		trusted := di.Security.TrustIP(c.ClientIP())
+
+		if !trusted {
+
+			c.JSON(403, gin.H{"status": "error", "message": "Not trusted."})
+			return
+		}
 
 		_, err := di.User.SignUpFacebook(facebook)
 
