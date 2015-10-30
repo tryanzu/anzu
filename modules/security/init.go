@@ -1,8 +1,10 @@
 package security
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/xuyu/goredis"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type Module struct {
@@ -35,6 +37,24 @@ func (module Module) TrustUserIP(address string, usr *user.One) bool {
 		}
 
 		return user_data.Banned
+	}
+
+	if ip.Banned == true {
+		return false
+	}
+
+	return true
+}
+
+func (module Module) TrustIP(address string) bool {
+
+	var ip IpAddress
+
+	database := module.Mongo.Database
+	err := database.C("trusted_addresses").Find(bson.M{"address": address}).One(&ip)
+
+	if err != nil {
+		return true
 	}
 
 	if ip.Banned == true {

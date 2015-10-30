@@ -9,6 +9,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
+	"github.com/fernandez14/spartangeek-blacker/modules/security"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -28,13 +29,14 @@ import (
 )
 
 type UserAPI struct {
-	DataService   *mongo.Service `inject:""`
-	CacheService  *goredis.Redis `inject:""`
-	ConfigService *config.Config `inject:""`
-	S3Bucket      *s3.Bucket     `inject:""`
-	User          *user.Module   `inject:""`
-	Gaming        *gaming.Module `inject:""`
-	Collector     CollectorAPI   `inject:"inline"`
+	DataService   *mongo.Service   `inject:""`
+	CacheService  *goredis.Redis   `inject:""`
+	ConfigService *config.Config   `inject:""`
+	S3Bucket      *s3.Bucket       `inject:""`
+	User          *user.Module     `inject:""`
+	Gaming        *gaming.Module   `inject:""`
+	Security      *security.Module `inject:""`
+	Collector     CollectorAPI     `inject:"inline"`
 }
 
 func (di *UserAPI) UserSubscribe(c *gin.Context) {
@@ -196,6 +198,14 @@ func (di *UserAPI) UserGetByToken(c *gin.Context) {
 		return
 	}
 
+	trusted := di.Security.TrustUserIP(c.ClientIP(), usr)
+
+	if !trusted {
+
+		c.JSON(403, gin.H{"status": "error", "message": "Not trusted."})
+		return
+	}
+
 	go func(usr *user.One) {
 
 		// Track user sign in
@@ -267,6 +277,14 @@ func (di *UserAPI) UserGetJwtToken(c *gin.Context) {
 	// Get the database interface from the DI
 	database := di.DataService.Database
 
+	trusted := di.Security.TrustIP(c.ClientIP())
+
+	if !trusted {
+
+		c.JSON(403, gin.H{"status": "error", "message": "Not trusted."})
+		return
+	}
+
 	// Get the query parameters
 	qs := c.Request.URL.Query()
 
@@ -315,6 +333,14 @@ func (di *UserAPI) UserGetTokenFacebook(c *gin.Context) {
 
 	var facebook map[string]interface{}
 	var id bson.ObjectId
+
+	trusted := di.Security.TrustIP(c.ClientIP())
+
+	if !trusted {
+
+		c.JSON(403, gin.H{"status": "error", "message": "Not trusted."})
+		return
+	}
 
 	// Get the database interface from the DI
 	database := di.DataService.Database
@@ -523,6 +549,7 @@ func (di *UserAPI) UserRegisterAction(c *gin.Context) {
 	var form model.UserRegisterForm
 
 	if c.BindWith(&form, binding.JSON) == nil {
+
 
 		// Get the user using its id
 		usr, err := di.User.SignUp(form.Email, form.UserName, form.Password, form.Referral)
