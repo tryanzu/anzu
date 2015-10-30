@@ -3,6 +3,7 @@ package gaming
 import (
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"gopkg.in/mgo.v2/bson"
+	"time"
 )
 
 type User struct {
@@ -69,6 +70,38 @@ func (self *User) SyncToLevel(reset bool) {
 	self.SyncRealtimeFirebase(user.Gaming)
 }
 
+// Does the daily login logic for the user
+func (self *User) DailyLogin() {
+
+	database := self.di.Mongo.Database
+	rules := self.di.Rules.Rules
+	usr := self.user.Data()
+
+	// Dates and stuff
+	date := time.Now().Truncate(24 * time.Hour)
+	tomorrow := date.AddDate(0, 0, 1)
+
+	// Count the checkins for today
+	count, err := database.C("checkins").Find(bson.M{"user_id": usr.Id, "date": bson.M{"$gte": date, "$lt": tomorrow}}).Count()
+
+	if err != nil {
+		panic(err)
+	}
+
+	if count == 1 {
+
+		for _, rule := range rules {
+
+			if rule.Level == usr.Gaming.Level {
+
+				self.Coins(rule.Coins)
+				break
+			}
+		}
+	}
+}
+
+// Increases or decreases user swords
 func (self *User) Swords(how_many int) {
 
 	// Recover from any panic even inside this goroutine
@@ -85,7 +118,6 @@ func (self *User) Swords(how_many int) {
 	// Runtime update
 	user := self.user.Data()
 
-	
 	user.Gaming.Swords = user.Gaming.Swords + how_many
 	self.user.RUpdate(user)
 
@@ -93,6 +125,7 @@ func (self *User) Swords(how_many int) {
 	self.SyncToLevel(false)
 }
 
+// Increases or decreases user coins
 func (self *User) Coins(how_many int) {
 
 	// Recover from any panic even inside this goroutine
@@ -117,6 +150,7 @@ func (self *User) Coins(how_many int) {
 	self.SyncToLevel(false)
 }
 
+// Increases or decreases user tribute
 func (self *User) Tribute(how_many int) {
 
 	// Recover from any panic even inside this goroutine
@@ -139,6 +173,7 @@ func (self *User) Tribute(how_many int) {
 	self.SyncToLevel(false)
 }
 
+// Increases or decreases user shit
 func (self *User) Shit(how_many int) {
 
 	// Recover from any panic even inside this goroutine
