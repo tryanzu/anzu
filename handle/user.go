@@ -9,6 +9,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
+	"github.com/fernandez14/spartangeek-blacker/modules/security"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -28,13 +29,14 @@ import (
 )
 
 type UserAPI struct {
-	DataService   *mongo.Service `inject:""`
-	CacheService  *goredis.Redis `inject:""`
-	ConfigService *config.Config `inject:""`
-	S3Bucket      *s3.Bucket     `inject:""`
-	User          *user.Module   `inject:""`
-	Gaming        *gaming.Module `inject:""`
-	Collector     CollectorAPI   `inject:"inline"`
+	DataService   *mongo.Service   `inject:""`
+	CacheService  *goredis.Redis   `inject:""`
+	ConfigService *config.Config   `inject:""`
+	S3Bucket      *s3.Bucket       `inject:""`
+	User          *user.Module     `inject:""`
+	Gaming        *gaming.Module   `inject:""`
+	Security      *security.Module `inject:""`
+	Collector     CollectorAPI     `inject:"inline"`
 }
 
 func (di *UserAPI) UserSubscribe(c *gin.Context) {
@@ -196,6 +198,14 @@ func (di *UserAPI) UserGetByToken(c *gin.Context) {
 		return
 	}
 
+	trusted := di.Security.TrustUserIP(c.ClientIP(), usr)
+
+	if !trusted {
+
+		c.JSON(403, gin.H{"status": "error", "message": "Not trusted."})
+		return
+	}
+
 	go func(usr *user.One) {
 
 		// Track user sign in
@@ -262,25 +272,25 @@ func (di *UserAPI) UserGetToken(c *gin.Context) {
 	c.JSON(200, token)
 }
 
-func (di *UserAPI) UserGetJwtToken(c *gin.Context) {
+func (di UserAPI) UserGetJwtToken(c *gin.Context) {
 
-	// Get the database interface from the DI
-	database := di.DataService.Database
+	trusted := di.Security.TrustIP(c.ClientIP())
 
-	// Get the query parameters
+	if !trusted {
+
+		c.JSON(403, gin.H{"status": "error", "message": "Not trusted."})
+		return
+	}
+
 	qs := c.Request.URL.Query()
 
 	// Get the email or the username or the id and its password
 	email, password := qs.Get("email"), qs.Get("password")
-	collection := database.C("users")
-	user := model.User{}
-
-	// Try to fetch the user using email param though
-	err := collection.Find(bson.M{"email": email}).One(&user)
+	usr, err := di.User.Get(bson.M{"email": email})
 
 	if err != nil {
 
-		c.JSON(400, gin.H{"status": "error", "message": "Couldnt found user with that email", "code": 400})
+		c.JSON(400, gin.H{"status": "error", "message": "Couldnt get user."})
 		return
 	}
 
@@ -291,13 +301,23 @@ func (di *UserAPI) UserGetJwtToken(c *gin.Context) {
 	md := sha256.Sum(nil)
 	hash := hex.EncodeToString(md)
 
-	if user.Password != hash {
+	if usr.Data().Password != hash {
+
 		c.JSON(400, gin.H{"status": "error", "message": "Credentials are not correct", "code": 400})
 		return
 	}
 
+	trusted_user := di.Security.TrustUserIP(c.ClientIP(), usr)
+
+	if !trusted_user {
+
+		c.JSON(403, gin.H{"status": "error", "message": "Not trusted."})
+		return
+	}
+
+
 	// Generate JWT with the information about the user
-	token, firebase := di.generateUserToken(user.Id)
+	token, firebase := di.generateUserToken(usr.Data().Id)
 
 	// Save the activity
 	user_id, signed_in := c.Get("user_id")
@@ -305,19 +325,16 @@ func (di *UserAPI) UserGetJwtToken(c *gin.Context) {
 	if signed_in {
 
 		// Save the activity in other routine
-		go di.Collector.Activity(model.Activity{UserId: bson.ObjectIdHex(user_id.(string)), Event: "user-view", RelatedId: user.Id})
+		go di.Collector.Activity(model.Activity{UserId: bson.ObjectIdHex(user_id.(string)), Event: "user-view", RelatedId: usr.Data().Id})
 	}
 
 	c.JSON(200, gin.H{"status": "okay", "token": token, "firebase": firebase})
 }
 
-func (di *UserAPI) UserGetTokenFacebook(c *gin.Context) {
+func (di UserAPI) UserGetTokenFacebook(c *gin.Context) {
 
 	var facebook map[string]interface{}
 	var id bson.ObjectId
-
-	// Get the database interface from the DI
-	database := di.DataService.Database
 
 	// Bind to strings map
 	c.BindWith(&facebook, binding.JSON)
@@ -333,14 +350,18 @@ func (di *UserAPI) UserGetTokenFacebook(c *gin.Context) {
 		facebook_id = facebook["id"]
 	}
 
-	collection := database.C("users")
-	usr := user.User{}
-
-	// Try to fetch the user using the facebook id param though
-	err := collection.Find(bson.M{"facebook.id": facebook_id}).One(&usr)
+	usr, err := di.User.Get(bson.M{"facebook.id": facebook_id})
 
 	// Create a new user
 	if err != nil {
+
+		trusted := di.Security.TrustIP(c.ClientIP())
+
+		if !trusted {
+
+			c.JSON(403, gin.H{"status": "error", "message": "Not trusted."})
+			return
+		}
 
 		_, err := di.User.SignUpFacebook(facebook)
 
@@ -353,7 +374,15 @@ func (di *UserAPI) UserGetTokenFacebook(c *gin.Context) {
 	} else {
 
 		// The id for the token would be the same as the facebook user
-		id = usr.Id
+		id = usr.Data().Id
+
+		trusted_user := di.Security.TrustUserIP(c.ClientIP(), usr)
+
+		if !trusted_user {
+
+			c.JSON(403, gin.H{"status": "error", "message": "Not trusted."})
+			return
+		}
 	}
 
 	// Generate JWT with the information about the user
@@ -523,6 +552,7 @@ func (di *UserAPI) UserRegisterAction(c *gin.Context) {
 	var form model.UserRegisterForm
 
 	if c.BindWith(&form, binding.JSON) == nil {
+
 
 		// Get the user using its id
 		usr, err := di.User.SignUp(form.Email, form.UserName, form.Password, form.Referral)

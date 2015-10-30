@@ -29,6 +29,7 @@ type User struct {
 	ReferralCode     string                 `bson:"ref_code,omitempty" json:"ref_code"`
 	VerificationCode string                 `bson:"ver_code,omitempty" json:"ver_code"`
 	Validated        bool                   `bson:"validated" json:"validated"`
+	Banned           bool                   `bson:"banned" json:"banned"`
 	Created          time.Time              `bson:"created_at" json:"created_at"`
 	Updated          time.Time              `bson:"updated_at" json:"updated_at"`
 

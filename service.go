@@ -18,6 +18,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/notifications"
 	"github.com/fernandez14/spartangeek-blacker/modules/store"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
+	"github.com/fernandez14/spartangeek-blacker/modules/security"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/getsentry/raven-go"
 	"github.com/mitchellh/goamz/aws"
@@ -48,6 +49,7 @@ func main() {
 	var api api.Module
 	var cliModule cli.Module
 	var queueModule queue.Module
+	var securityModule security.Module
 	var notificationsModule notifications.NotificationsModule
 	var feedModule feed.FeedModule
 	var exceptions exceptions.ExceptionsModule
@@ -115,6 +117,7 @@ func main() {
 		&inject.Object{Value: broadcaster, Complete: true, Name: "Notifications"},
 		&inject.Object{Value: &cliModule},
 		&inject.Object{Value: &queueModule},
+		&inject.Object{Value: &securityModule},
 		&inject.Object{Value: &notificationsModule},
 		&inject.Object{Value: &feedModule},
 		&inject.Object{Value: &exceptions},
