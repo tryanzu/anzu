@@ -36,7 +36,7 @@ func (module Module) TrustUserIP(address string, usr *user.One) bool {
 			return false
 		}
 
-		return user_data.Banned
+		return !user_data.Banned
 	}
 
 	if ip.Banned == true && usr.Data().Banned == true {
