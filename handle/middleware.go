@@ -9,6 +9,7 @@ import (
 	"github.com/getsentry/raven-go"
 	"github.com/gin-gonic/gin"
 	"github.com/olebedev/config"
+	"log"
 	"os"
 	"strings"
 	"time"
@@ -161,40 +162,79 @@ func (di *MiddlewareAPI) NeedAuthorization() gin.HandlerFunc {
 	}
 }
 
-func (di *MiddlewareAPI) ErrorTracking() gin.HandlerFunc {
+func (di *MiddlewareAPI) NeedAclAuthorization() gin.HandlerFunc {
+
 	return func(c *gin.Context) {
 
-		envfile := os.Getenv("ENV_FILE")
+		c.Next()
+	}
+}
 
-		if envfile == "" {
+func (di *MiddlewareAPI) ErrorTracking(debug bool) gin.HandlerFunc {
+	return func(c *gin.Context) {
 
-			envfile = "./env.json"
-		}
+		if debug == false {
 
-		tags := map[string]string{
-			"config_file": envfile,
-		}
+			envfile := os.Getenv("ENV_FILE")
 
-		defer func() {
+			if envfile == "" {
 
-			var packet *raven.Packet
-
-			switch rval := recover().(type) {
-			case nil:
-				return
-			case error:
-				packet = raven.NewPacket(rval.Error(), raven.NewException(rval, raven.NewStacktrace(2, 3, nil)))
-			default:
-				rvalStr := fmt.Sprint(rval)
-				packet = raven.NewPacket(rvalStr, raven.NewException(errors.New(rvalStr), raven.NewStacktrace(2, 3, nil)))
+				envfile = "./env.json"
 			}
 
-			// Grab the error and send it to sentry
-			di.ErrorService.Capture(packet, tags)
+			tags := map[string]string{
+				"config_file": envfile,
+			}
 
-			// Also abort the request with 500
-			c.AbortWithStatus(500)
-		}()
+			defer func() {
+
+				var packet *raven.Packet
+
+				switch rval := recover().(type) {
+				case nil:
+					return
+				case error:
+					packet = raven.NewPacket(rval.Error(), raven.NewException(rval, raven.NewStacktrace(2, 3, nil)))
+
+					// Show the error
+					log.Printf("[error] %v\n", rval)
+
+				default:
+					rvalStr := fmt.Sprint(rval)
+					packet = raven.NewPacket(rvalStr, raven.NewException(errors.New(rvalStr), raven.NewStacktrace(2, 3, nil)))
+
+					// Show the error
+					log.Printf("[error] %v\n", rval)
+				}
+
+				// Grab the error and send it to sentry
+				di.ErrorService.Capture(packet, tags)
+
+				// Also abort the request with 500
+				c.AbortWithStatus(500)
+			}()
+		} else {
+
+			defer func() {
+
+				switch rval := recover().(type) {
+				case nil:
+					return
+				case error:
+
+					// Show the error
+					log.Panic(rval)
+
+				default:
+
+					// Show the error
+					log.Panic(rval)
+				}
+
+				// Also abort the request with 500
+				c.AbortWithStatus(500)
+			}()
+		}
 
 		c.Next()
 	}

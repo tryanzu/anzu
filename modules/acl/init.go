@@ -10,7 +10,7 @@ import (
 )
 
 type Module struct {
-	Map   *gorbac.Rbac
+	Map   *gorbac.RBAC
 	Mongo *mongo.Service `inject:""`
 	Rules map[string]AclRole
 }

@@ -2,17 +2,23 @@ package main
 
 import (
 	"fmt"
+	"github.com/algolia/algoliasearch-client-go/algoliasearch"
 	"github.com/cactus/go-statsd-client/statsd"
 	"github.com/cosn/firebase"
 	"github.com/facebookgo/inject"
 	"github.com/fernandez14/spartangeek-blacker/interfaces"
 	"github.com/fernandez14/spartangeek-blacker/modules/acl"
 	"github.com/fernandez14/spartangeek-blacker/modules/api"
+	"github.com/fernandez14/spartangeek-blacker/modules/cli"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
 	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
+	"github.com/fernandez14/spartangeek-blacker/modules/queue"
+	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/fernandez14/spartangeek-blacker/modules/notifications"
+	"github.com/fernandez14/spartangeek-blacker/modules/store"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
+	"github.com/fernandez14/spartangeek-blacker/modules/security"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/getsentry/raven-go"
 	"github.com/mitchellh/goamz/aws"
@@ -41,9 +47,14 @@ func main() {
 
 	// Resources for the API
 	var api api.Module
+	var cliModule cli.Module
+	var queueModule queue.Module
+	var securityModule security.Module
 	var notificationsModule notifications.NotificationsModule
 	var feedModule feed.FeedModule
 	var exceptions exceptions.ExceptionsModule
+
+	storeService := store.Boot()
 
 	// Services for the DI
 	configService, _ := config.ParseJsonFile(envfile)
@@ -55,6 +66,16 @@ func main() {
 	cacheService, _ := goredis.Dial(&goredis.DialConfig{Address: string_value(configService.String("cache.redis"))})
 	firebaseService := new(firebase.Client)
 	firebaseService.Init(string_value(configService.String("firebase.url")), string_value(configService.String("firebase.secret")), nil)
+	algolia := algoliasearch.NewClient(string_value(configService.String("algolia.application")), string_value(configService.String("algolia.api_key")))
+	algoliaIndex := algolia.InitIndex(string_value(configService.String("algolia.index")))
+
+	mailConfig, err := configService.Get("mail")
+
+	if err != nil {
+		panic(err)
+	}
+
+	mailService := mail.Boot(string_value(configService.String("mail.api_key")), mailConfig, false)
 
 	// Amazon services for the DI
 	amazonAuth, err := aws.GetAuth(string_value(configService.String("amazon.access_key")), string_value(configService.String("amazon.secret")))
@@ -87,10 +108,16 @@ func main() {
 		&inject.Object{Value: s3BucketService, Complete: true},
 		&inject.Object{Value: firebaseService, Complete: true},
 		&inject.Object{Value: statsService, Complete: true},
+		&inject.Object{Value: algoliaIndex, Complete: true},
 		&inject.Object{Value: aclService, Complete: false},
+		&inject.Object{Value: storeService, Complete: false},
 		&inject.Object{Value: userService, Complete: false},
 		&inject.Object{Value: gamingService, Complete: false},
+		&inject.Object{Value: mailService, Complete: false},
 		&inject.Object{Value: broadcaster, Complete: true, Name: "Notifications"},
+		&inject.Object{Value: &cliModule},
+		&inject.Object{Value: &queueModule},
+		&inject.Object{Value: &securityModule},
 		&inject.Object{Value: &notificationsModule},
 		&inject.Object{Value: &feedModule},
 		&inject.Object{Value: &exceptions},
@@ -136,6 +163,7 @@ func main() {
 
 			// Reset the user temporal stuff each X
 			c.AddFunc("@midnight", gamingService.ResetTempStuff)
+			c.AddFunc("@every 8h", gamingService.ResetGeneralRanking)
 
 			// Start the jobs
 			c.Start()
@@ -157,15 +185,67 @@ func main() {
 				fmt.Fprintln(os.Stderr, err)
 				os.Exit(1)
 			}
-	
+
 			gamingService.ResetTempStuff()
+		},
+	}
+
+	var cmdRunRoutine = &cobra.Command{
+		Use:   "run [routine]",
+		Short: "Run cli routine",
+		Long: `Run specified routine 
+		from cli module`,
+		Run: func(cmd *cobra.Command, args []string) {
+
+			// Populate the DI with the instances
+			if err := g.Populate(); err != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+
+			cliModule.Run(args[0])
+		},
+	}
+
+	var cmdWorkerRoutine = &cobra.Command{
+		Use:   "worker [queue]",
+		Short: "Starts worker for certain queue",
+		Long: `Starts a worker daemon to 
+		proccess jobs from certain IronMQ queue`,
+		Run: func(cmd *cobra.Command, args []string) {
+
+			// Populate dependencies using the already instantiated DI
+			queueModule.Populate(g)
+
+			queueModule.Listen(args[0])
+		},
+	}	
+
+	var cmdSyncRanking = &cobra.Command{
+		Use:   "sync-ranking",
+		Short: "Sync ranking",
+		Long: `Sync and recalculates ranking facts
+		in proper manner
+        `,
+		Run: func(cmd *cobra.Command, args []string) {
+
+			// Populate the DI with the instances
+			if err := g.Populate(); err != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+
+			gamingService.ResetGeneralRanking()
 		},
 	}
 
 	var rootCmd = &cobra.Command{Use: "blacker"}
 	rootCmd.AddCommand(cmdApi)
 	rootCmd.AddCommand(cmdSyncGamification)
+	rootCmd.AddCommand(cmdSyncRanking)
+	rootCmd.AddCommand(cmdWorkerRoutine)
 	rootCmd.AddCommand(cmdJobs)
+	rootCmd.AddCommand(cmdRunRoutine)
 	rootCmd.Execute()
 
 	return

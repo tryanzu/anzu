@@ -1,15 +1,19 @@
 package helpers
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"golang.org/x/text/unicode/norm"
 	"math/rand"
 	"reflect"
+	"regexp"
 	"strings"
 	"unicode"
 )
 
 var lat = []*unicode.RangeTable{unicode.Letter, unicode.Number}
 var nop = []*unicode.RangeTable{unicode.Mark, unicode.Sk, unicode.Lm}
+var email_exp = regexp.MustCompile(`^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$`)
 
 func InArray(val interface{}, array interface{}) (exists bool, index int) {
 	exists = false
@@ -59,7 +63,7 @@ func StrSlug(s string) string {
 
 func StrSlugRandom(s string) string {
 
-	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+	var letters = []rune("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
 	b := make([]rune, 6)
 	for i := range b {
@@ -69,4 +73,33 @@ func StrSlugRandom(s string) string {
 	suffix := string(b)
 
 	return StrSlug(s) + suffix
+}
+
+func StrRandom(length int) string {
+
+	var letters = []rune("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+	b := make([]rune, length)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+
+	generated := string(b)
+
+	return generated
+}
+
+func Sha256(s string) string {
+
+	password_encrypted := []byte(s)
+	sha256 := sha256.New()
+	sha256.Write(password_encrypted)
+	md := sha256.Sum(nil)
+
+	return hex.EncodeToString(md)
+}
+
+func IsEmail(s string) bool {
+
+	return email_exp.MatchString(s)
 }

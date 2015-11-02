@@ -231,7 +231,14 @@ func (di *VoteAPI) VoteComment(c *gin.Context) {
 		}
 
 		// Get the author of the vote
-		usr := di.User.Get(user_bson_id)
+		usr, err := di.User.Get(user_bson_id)
+
+		if err != nil {
+
+			c.JSON(400, gin.H{"status": "error", "message": err.Error()})
+			return
+		}
+
 		user_model := usr.Data()
 		index := vote.Comment
 
@@ -298,7 +305,7 @@ func (di *VoteAPI) VoteComment(c *gin.Context) {
 						author := di.Gaming.Get(comment.UserId)
 						author.Coins(-1)
 
-						if comment.Votes.Up-1 < 5{
+						if comment.Votes.Up-1 < 5 {
 							author.Swords(-1)
 						}
 
@@ -313,7 +320,7 @@ func (di *VoteAPI) VoteComment(c *gin.Context) {
 						author := di.Gaming.Get(comment.UserId)
 						author.Coins(1)
 
-						if comment.Votes.Down-1 < 5{
+						if comment.Votes.Down-1 < 5 {
 							author.Swords(1)
 						}
 
@@ -380,7 +387,7 @@ func (di *VoteAPI) VoteComment(c *gin.Context) {
 						author := di.Gaming.Get(comment.UserId)
 						author.Coins(-1)
 
-						if comment.Votes.Down <= 5{
+						if comment.Votes.Down <= 5 {
 							author.Swords(-1)
 						}
 
@@ -395,7 +402,7 @@ func (di *VoteAPI) VoteComment(c *gin.Context) {
 						author := di.Gaming.Get(comment.UserId)
 						author.Coins(1)
 
-						if comment.Votes.Up <= 5{
+						if comment.Votes.Up <= 5 {
 							author.Swords(1)
 						}
 
@@ -473,7 +480,14 @@ func (di *VoteAPI) VotePost(c *gin.Context) {
 		}
 
 		// Get the author of the vote
-		usr := di.User.Get(user_bson_id)
+		usr, err := di.User.Get(user_bson_id)
+
+		if err != nil {
+
+			c.JSON(400, gin.H{"status": "error", "message": err.Error()})
+			return
+		}
+
 		user_model := usr.Data()
 
 		var add bytes.Buffer

@@ -3,15 +3,18 @@ package gaming
 import (
 	"encoding/json"
 	"github.com/cosn/firebase"
-	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
+	"github.com/fernandez14/spartangeek-blacker/modules/feed"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
+	"github.com/goinggo/work"
 	"github.com/olebedev/config"
 	"github.com/xuyu/goredis"
 	"gopkg.in/mgo.v2/bson"
 	"io/ioutil"
 	"log"
+	"sync"
+	"time"
 )
 
 func Boot(file string) *Module {
@@ -31,14 +34,19 @@ func Boot(file string) *Module {
 	return module
 }
 
+func logFunc(message string) {
+	log.Println(message)
+}
+
 type Module struct {
 	Mongo    *mongo.Service               `inject:""`
 	User     *user.Module                 `inject:""`
+	Feed     *feed.FeedModule             `inject:""`
 	Redis    *goredis.Redis               `inject:""`
 	Config   *config.Config               `inject:""`
 	Firebase *firebase.Client             `inject:""`
 	Errors   *exceptions.ExceptionsModule `inject:""`
-	Rules    model.GamingRules
+	Rules    RulesModel
 }
 
 // Get user gaming struct
@@ -50,7 +58,12 @@ func (self *Module) Get(usr interface{}) *User {
 	case bson.ObjectId:
 
 		// Use user module reference to get the user and then create the user gaming instance
-		user_obj := self.User.Get(usr.(bson.ObjectId))
+		user_obj, err := self.User.Get(usr.(bson.ObjectId))
+
+		if err != nil {
+			panic(err)
+		}
+
 		user_gaming := &User{user: user_obj, di: module}
 
 		return user_gaming
@@ -66,52 +79,106 @@ func (self *Module) Get(usr interface{}) *User {
 	}
 }
 
+// Get post gaming struct
+func (self *Module) Post(post interface{}) *Post {
+
+	module := self
+
+	switch post.(type) {
+	case bson.ObjectId:
+
+		// Use user module reference to get the user and then create the user gaming instance
+		post_object, err := self.Feed.Post(post.(bson.ObjectId))
+
+		if err != nil {
+			panic(err)
+		}
+
+		post_gaming := &Post{post: post_object, di: module}
+
+		return post_gaming
+
+	case *feed.Post:
+
+		post_gaming := &Post{post: post.(*feed.Post), di: module}
+
+		return post_gaming
+
+	default:
+		panic("Unkown argument")
+	}
+}
+
+// Get gamification model with badges
+func (self *Module) GetRules() RulesModel {
+
+	database := self.Mongo.Database
+	rules := self.Rules
+
+	err := database.C("badges").Find(nil).All(&rules.Badges)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return rules
+}
+
+// Reset daily user stats
 func (self *Module) ResetTempStuff() {
 
 	// Recover from any panic even inside this goroutine
 	defer self.Errors.Recover()
 
-	var usr *user.User
+	var list []user.UserId
 
-	// Get the database interface from the DI
+	w, err := work.New(5, time.Second, logFunc)
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
 	database := self.Mongo.Database
+	count, _ := database.C("users").Find(nil).Count()
+	err = database.C("users").Find(nil).Select(bson.M{"_id": 1}).All(&list)
 
-	iter := database.C("users").Find(nil).Select(bson.M{"_id": 1}).Iter()
-
-	log.Println("[job] [ResetTempStuff] Started")
-
-	// Make a pool of workers that would execute the explote
-	jobs := make(chan *user.User)
-	done := make(chan *user.User)
-
-	worker := func(id int, jobs <-chan *user.User, done chan<- *user.User) {
-
-		for j := range jobs {
-
-			log.Printf("[job] [ResetTempStuff] [worker %v] User: %s\n", id, j.Id.Hex())
-
-			// Explore the user level and reset the stuff
-			self.Get(j.Id).SyncToLevel(true)
-
-			done <- j
-		}
-	}
-
-	// Initialize the workers (25 concurrent)
-	for w := 1; w <= 25; w++ {
-
-		go worker(w, jobs, done)
-	}
-
-	for iter.Next(&usr) {
-		jobs <- usr
-	}
-
-	close(jobs)
-
-	if err := iter.Close(); err != nil {
+	if err != nil {
 		panic(err)
 	}
 
-	log.Printf("\n[job] [ResetTempStuff] Finished with %v users", len(done))
+	var wg sync.WaitGroup
+
+	wg.Add(count)
+
+	// Get the database interface from the DI
+	log.Println("[job] [ResetTempStuff] Started")
+
+	for _, usr := range list {
+
+		usr_copy := usr
+		user_sync := UserSync{
+			user: usr_copy,
+			gmf:  self.Get(usr_copy.Id),
+		}
+
+		w.Run(&user_sync)
+		wg.Done()
+	}
+
+	wg.Wait()
+	w.Shutdown()
+
+	log.Printf("\n[job] [ResetTempStuff] Finished with users")
+}
+
+type UserSync struct {
+	user user.UserId
+	gmf  *User
+}
+
+func (self *UserSync) Work(id int) {
+
+	log.Printf("\n user %v\n", self.user.Id)
+
+	self.gmf.SyncToLevel(true)
 }
