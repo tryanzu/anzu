@@ -47,17 +47,30 @@ func (self *User) SyncToLevel(reset bool) {
 			// The user level just changed
 			if user_level != rule.Level || reset {
 
-				// Update the user gamification facts
-				err := database.C("users").Update(bson.M{"_id": user.Id}, bson.M{"$set": bson.M{"gaming.level": rule.Level, "gaming.shit": rule.Shit, "gaming.tribute": rule.Tribute}})
+				fact_set := make(bson.M)
 
-				if err != nil {
-					panic(err)
+				fact_set["gaming.level"] = rule.Level
+				user.Gaming.Level = rule.Level
+
+				// Only reset when truly needed
+				if rule.Shit >= user.Gaming.Shit {
+
+					fact_set["gaming.shit"] = rule.Shit
+					user.Gaming.Shit = rule.Shit
 				}
 
-				// Allows the inmediate syncing
-				user.Gaming.Level = rule.Level
-				user.Gaming.Shit = rule.Shit
-				user.Gaming.Tribute = rule.Tribute
+				if rule.Tribute >= user.Gaming.Tribute {
+
+					fact_set["gaming.tribute"] = rule.Tribute
+					user.Gaming.Tribute = rule.Tribute
+				}
+				
+				// Update the user gamification facts
+				err := database.C("users").Update(bson.M{"_id": user.Id}, bson.M{"$set": fact_set})
+ 		 
+ 				if err != nil {	
+ 					panic(err)
+ 				}		 				
 
 				// Runtime update
 				self.user.RUpdate(user)
