@@ -41,6 +41,7 @@ type LightPostModel struct {
 	Category   bson.ObjectId `bson:"category" json:"category"`
 	UserId     bson.ObjectId `bson:"user_id,omitempty" json:"user_id,omitempty"`
 	Pinned     bool          `bson:"pinned,omitempty" json:"pinned,omitempty"`
+	IsQuestion bool          `bson:"is_question,omitempty" json:"is_question,omitempty"`
 	Created    time.Time     `bson:"created_at" json:"created_at"`
 	Updated    time.Time     `bson:"updated_at" json:"updated_at"`
 }

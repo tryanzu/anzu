@@ -95,6 +95,7 @@ func (self *User) DailyLogin() {
 			if rule.Level == usr.Gaming.Level {
 
 				self.Coins(rule.Coins)
+				self.SyncToLevel(true)
 				break
 			}
 		}
