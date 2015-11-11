@@ -14,6 +14,8 @@ import (
 	"log"
 	"reflect"
 	"regexp"
+	"strconv"
+	"strings"
 )
 
 type Module struct {
@@ -32,7 +34,8 @@ func (module Module) Run(name string) {
 		"slug-fix":    module.SlugFix,
 		"codes-fix":   module.Codes,
 		"index-posts": module.IndexAlgolia,
-		"send-confirmations": module.ConfirmationEmails,
+		"send-confirmations": module.ConfirmationEmails,	
+		"replace-url": module.ReplaceURL,
 	}
 
 	if handler, exists := commands[name]; exists {
@@ -43,6 +46,66 @@ func (module Module) Run(name string) {
 
 	// If reachs this point then panic
 	log.Panic("No such handler for cli")
+}
+
+func (module Module) ReplaceURL() {
+
+	var usr user.User
+	var post model.Post
+
+	database := module.Mongo.Database
+
+	// Get all users
+	iter := database.C("users").Find(nil).Select(bson.M{"_id": 1, "image": 1}).Iter()
+
+	for iter.Next(&usr) {
+
+		if strings.Contains(usr.Image, "http://s3-us-west-1.amazonaws.com/spartan-board") {
+
+			image := strings.Replace(usr.Image, "http://s3-us-west-1.amazonaws.com/spartan-board", "https://assets.spartangeek.com", -1)
+			err := database.C("users").Update(bson.M{"_id": usr.Id}, bson.M{"$set": bson.M{"image": image}})
+
+			if err != nil {
+				panic(err)
+			}
+
+			fmt.Printf(".")
+		}
+	}
+
+	// Get all posts
+	iter = database.C("posts").Find(nil).Iter()
+
+	for iter.Next(&post) {
+
+		updates := bson.M{}
+
+		if strings.Contains(post.Content, "http://s3-us-west-1.amazonaws.com/spartan-board") {
+
+			content := strings.Replace(post.Content, "http://s3-us-west-1.amazonaws.com/spartan-board", "https://assets.spartangeek.com", -1)
+			updates["content"] = content
+		}
+
+		for index, comment := range post.Comments.Set {
+
+			if strings.Contains(comment.Content, "http://s3-us-west-1.amazonaws.com/spartan-board") {
+
+				comment_index := strconv.Itoa(index)
+				content := strings.Replace(comment.Content, "http://s3-us-west-1.amazonaws.com/spartan-board", "https://assets.spartangeek.com", -1)
+
+				updates["comments.set." + comment_index + ".content"] = content
+			}
+		}
+
+		err := database.C("posts").Update(bson.M{"_id": post.Id}, bson.M{"$set": updates})
+
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Printf("$")
+	}
+
 }
 
 func (module Module) SlugFix() {
