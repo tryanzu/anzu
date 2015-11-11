@@ -97,13 +97,16 @@ func (module Module) ReplaceURL() {
 			}
 		}
 
-		err := database.C("posts").Update(bson.M{"_id": post.Id}, bson.M{"$set": updates})
+		if (len(updates) > 0) {
 
-		if err != nil {
-			panic(err)
+			err := database.C("posts").Update(bson.M{"_id": post.Id}, bson.M{"$set": updates})
+
+			if err != nil {
+				panic(err)
+			}
+
+			fmt.Printf("$")
 		}
-
-		fmt.Printf("$")
 	}
 
 }
