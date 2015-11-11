@@ -80,18 +80,18 @@ func (module Module) ReplaceURL() {
 
 		updates := bson.M{}
 
-		if strings.Contains(post.Content, "http://s3-us-west-1.amazonaws.com/spartan-board") {
+		if strings.Contains(post.Content, "http://assets.spartangeek.com") {
 
-			content := strings.Replace(post.Content, "http://s3-us-west-1.amazonaws.com/spartan-board", "https://assets.spartangeek.com", -1)
+			content := strings.Replace(post.Content, "http://assets.spartangeek.com", "https://assets.spartangeek.com", -1)
 			updates["content"] = content
 		}
 
 		for index, comment := range post.Comments.Set {
 
-			if strings.Contains(comment.Content, "http://s3-us-west-1.amazonaws.com/spartan-board") {
+			if strings.Contains(comment.Content, "http://assets.spartangeek.com") {
 
 				comment_index := strconv.Itoa(index)
-				content := strings.Replace(comment.Content, "http://s3-us-west-1.amazonaws.com/spartan-board", "https://assets.spartangeek.com", -1)
+				content := strings.Replace(comment.Content, "http://assets.spartangeek.com", "https://assets.spartangeek.com", -1)
 
 				updates["comments.set." + comment_index + ".content"] = content
 			}
