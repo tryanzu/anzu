@@ -60,17 +60,16 @@ func (module Module) ReplaceURL() {
 
 	for iter.Next(&usr) {
 
-		if strings.Contains(usr.Image, "http://s3-us-west-1.amazonaws.com/spartan-board") {
+		image := strings.Replace(usr.Image, "http://s3-us-west-1.amazonaws.com/spartan-board", "https://s3-us-west-1.amazonaws.com/spartan-board", -1)
+		image  = strings.Replace(usr.Image, "http://assets.spartangeek.com", "https://s3-us-west-1.amazonaws.com/spartan-board", -1)
+		image  = strings.Replace(usr.Image, "https://assets.spartangeek.com", "https://s3-us-west-1.amazonaws.com/spartan-board", -1)
+		err := database.C("users").Update(bson.M{"_id": usr.Id}, bson.M{"$set": bson.M{"image": image}})
 
-			image := strings.Replace(usr.Image, "http://s3-us-west-1.amazonaws.com/spartan-board", "https://assets.spartangeek.com", -1)
-			err := database.C("users").Update(bson.M{"_id": usr.Id}, bson.M{"$set": bson.M{"image": image}})
-
-			if err != nil {
-				panic(err)
-			}
-
-			fmt.Printf(".")
+		if err != nil {
+			panic(err)
 		}
+
+		fmt.Printf(".")
 	}
 
 	// Get all posts
@@ -80,24 +79,25 @@ func (module Module) ReplaceURL() {
 
 		updates := bson.M{}
 
-		if strings.Contains(post.Content, "http://assets.spartangeek.com") {
-
-			content := strings.Replace(post.Content, "http://assets.spartangeek.com", "https://assets.spartangeek.com", -1)
-			updates["content"] = content
-		}
+		content := strings.Replace(post.Content, "https://assets.spartangeek.com", "https://s3-us-west-1.amazonaws.com/spartan-board", -1)
+		content  = strings.Replace(post.Content, "http://assets.spartangeek.com", "https://s3-us-west-1.amazonaws.com/spartan-board", -1)
+		content  = strings.Replace(post.Content, "http://s3-us-west-1.amazonaws.com/spartan-board", "https://s3-us-west-1.amazonaws.com/spartan-board", -1)
+		updates["content"] = content
+		
 
 		for index, comment := range post.Comments.Set {
 
-			if strings.Contains(comment.Content, "http://assets.spartangeek.com") {
+			comment_index := strconv.Itoa(index)
 
-				comment_index := strconv.Itoa(index)
-				content := strings.Replace(comment.Content, "http://assets.spartangeek.com", "https://assets.spartangeek.com", -1)
+			content := strings.Replace(comment.Content, "https://assets.spartangeek.com", "https://s3-us-west-1.amazonaws.com/spartan-board", -1)
+			content  = strings.Replace(comment.Content, "http://assets.spartangeek.com", "https://s3-us-west-1.amazonaws.com/spartan-board", -1)
+			content  = strings.Replace(comment.Content, "http://s3-us-west-1.amazonaws.com/spartan-board", "https://s3-us-west-1.amazonaws.com/spartan-board", -1)
+		
 
-				updates["comments.set." + comment_index + ".content"] = content
-			}
+			updates["comments.set." + comment_index + ".content"] = content
 		}
 
-		if (len(updates) > 0) {
+		if len(updates) > 0 {
 
 			err := database.C("posts").Update(bson.M{"_id": post.Id}, bson.M{"$set": updates})
 
