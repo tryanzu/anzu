@@ -457,7 +457,7 @@ func (di *UserAPI) UserUpdateProfileAvatar(c *gin.Context) {
 			panic(err)
 		}
 
-		s3_url := "https://assets.spartangeek.com/" + path
+		s3_url := "https://s3-us-west-1.amazonaws.com/spartan-board/" + path
 
 		// Update the user image as well
 		di.DataService.Database.C("users").Update(bson.M{"_id": user_bson_id}, bson.M{"$set": bson.M{"image": s3_url}})

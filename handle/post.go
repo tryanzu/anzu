@@ -983,7 +983,7 @@ func (di PostAPI) PostUploadAttachment(c *gin.Context) {
 			panic(err)
 		}
 
-		s3_url := "https://assets.spartangeek.com/" + path
+		s3_url := "https://s3-us-west-1.amazonaws.com/spartan-board/" + path
 
 		// Done
 		c.JSON(200, gin.H{"status": "okay", "url": s3_url})
