@@ -66,7 +66,7 @@ func (module Module) ReplaceURL() {
 		err := database.C("users").Update(bson.M{"_id": usr.Id}, bson.M{"$set": bson.M{"image": image}})
 
 		if err != nil {
-			panic(err)
+			continue
 		}
 
 		fmt.Printf(".")
@@ -102,7 +102,7 @@ func (module Module) ReplaceURL() {
 			err := database.C("posts").Update(bson.M{"_id": post.Id}, bson.M{"$set": updates})
 
 			if err != nil {
-				panic(err)
+				continue
 			}
 
 			fmt.Printf("$")
