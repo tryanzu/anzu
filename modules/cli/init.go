@@ -56,7 +56,7 @@ func (module Module) ReplaceURL() {
 	database := module.Mongo.Database
 
 	// Get all users
-	iter := database.C("users").Find(nil).Select(bson.M{"_id": 1, "image": 1}).Iter()
+	iter := database.C("users").Find(nil).Iter()
 
 	for iter.Next(&usr) {
 
