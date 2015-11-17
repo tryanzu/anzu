@@ -227,7 +227,7 @@ func (self *StoreAPI) Activity(c *gin.Context) {
 
 type OrderForm struct {
 	User     OrderUserForm `json:"user" binding:"required"`
-	Content  string        `json:"content" binding:"required"`
+	Content  string        `json:"content"`
 	Budget   int           `json:"budget" binding:"required"`
 	BuyDelay int           `json:"buydelay" binding:"required"`
 	State    string        `json:"estado" binding:"required"`
