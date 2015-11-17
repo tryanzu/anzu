@@ -48,7 +48,7 @@ func Boot(module_config *config.Config) *Module {
 	for _, index := range config_indices {
 
 		// Type asset the index data
-		index_data := index.(map[string]string)
+		index_data := index.(map[string]interface{})
 		index_name, index_name_exists := index_data["name"]
 		index_target, index_target_exists := index_data["index"]
 
@@ -56,7 +56,7 @@ func Boot(module_config *config.Config) *Module {
 			panic("Invalid search module configuration.")
 		}
 
-		indices[index_name] = client.InitIndex(index_target)
+		indices[index_name.(string)] = client.InitIndex(index_target.(string))
 	}
 
 	module := &Module{client, indices}

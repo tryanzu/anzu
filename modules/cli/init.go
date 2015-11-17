@@ -466,12 +466,14 @@ func (module Module) IndexComponentsAlgolia() {
 				full_name = name
 			}
 
-			images := component["images"].([]map[string]string)
+			images := component["images"].([]interface{})
 			image := ""
 
 			if len(images) > 0 {
 
-				image = images[0]["path"]
+				image_data := images[0].(map[string]interface{})
+
+				image = image_data["path"].(string)
 				image = strings.Replace(image, "full/", "", -1)
 
 			} else {
@@ -480,25 +482,28 @@ func (module Module) IndexComponentsAlgolia() {
 			}
 
 			id := component["_id"].(bson.ObjectId)
-			part_number := component["part_number"].(string)
-			slug := component["slug"].(string)
 
-			item := components.AlgoliaComponentModel{
-				Id: id.Hex(),
-				Name: name.(string),
-				FullName: full_name.(string),
-				Part: part_number,
-				Slug: slug,
-				Image: image,
+			if part_number, exists := component["part_number"]; exists {
+
+				slug := component["slug"].(string)
+
+				item := components.AlgoliaComponentModel{
+					Id: id.Hex(),
+					Name: name.(string),
+					FullName: full_name.(string),
+					Part: part_number.(string),
+					Slug: slug,
+					Image: image,
+				}
+
+				fmt.Printf("+")
+
+				// Append to the current batch
+				batch_count++
+				batch_store = append(batch_store, item)
+
+				batch_check(false)
 			}
-
-			fmt.Printf("+")
-
-			// Append to the current batch
-			batch_count++
-			batch_store = append(batch_store, item)
-
-			batch_check(false)
 		}
 	}
 
