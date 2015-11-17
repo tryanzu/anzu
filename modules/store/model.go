@@ -12,6 +12,7 @@ type OrderModel struct {
 	Budget     int             `bson:"budget" json:"budget"`
 	Currency   string          `bson:"currency" json:"currency"`
 	State      string          `bson:"state" json:"state"`
+	Usage      string          `bson:"usage" json:"usage"`
 	Games      []string        `bson:"games" json:"games"`
 	Extra      []string        `bson:"extras" json:"extra"`
 	BuyDelay   int             `bson:"buydelay" json:"buydelay"`
