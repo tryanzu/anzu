@@ -31,6 +31,7 @@ func (self StoreAPI) PlaceOrder(c *gin.Context) {
 			State:    form.State,
 			Games:    form.Games,
 			Extra:    form.Extra,
+			Usage:    form.Usage,
 			Unreaded: true,
 			BuyDelay: form.BuyDelay,
 		}
@@ -230,6 +231,7 @@ type OrderForm struct {
 	Budget   int           `json:"budget" binding:"required"`
 	BuyDelay int           `json:"buydelay" binding:"required"`
 	State    string        `json:"estado" binding:"required"`
+	Usage    string		   `json:"usage"`
 	Games    []string      `json:"games"`
 	Extra    []string      `json:"extra"`
 }
