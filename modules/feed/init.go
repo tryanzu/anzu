@@ -1,10 +1,10 @@
 package feed
 
 import (
-	"github.com/algolia/algoliasearch-client-go/algoliasearch"
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
+	"github.com/fernandez14/spartangeek-blacker/modules/search"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/xuyu/goredis"
 	"gopkg.in/mgo.v2/bson"
@@ -14,7 +14,7 @@ type FeedModule struct {
 	Mongo        *mongo.Service               `inject:""`
 	Errors       *exceptions.ExceptionsModule `inject:""`
 	CacheService *goredis.Redis               `inject:""`
-	Algolia      *algoliasearch.Index         `inject:""`
+	Search       *search.Module               `inject:""`
 	User         *user.Module                 `inject:""`
 }
 

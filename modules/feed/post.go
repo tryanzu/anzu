@@ -173,7 +173,7 @@ func (self *Post) Index() {
 
 	if post.Category.Hex() != "" {
 
-		index := self.di.Algolia
+		index := self.di.Search.Get("board")
 		category := self.Category()
 		user, err := self.di.User.Get(post.UserId)
 
