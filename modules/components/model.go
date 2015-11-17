@@ -7,4 +7,5 @@ type AlgoliaComponentModel struct {
 	Part     string `json:"part_number"`
 	Slug     string `json:"slug"`
 	Image    string `json:"image"`
+	Type     string `json:"type"`
 }
