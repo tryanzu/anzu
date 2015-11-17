@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/algolia/algoliasearch-client-go/algoliasearch"
 	"github.com/cactus/go-statsd-client/statsd"
 	"github.com/cosn/firebase"
 	"github.com/facebookgo/inject"
@@ -19,6 +18,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/store"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/fernandez14/spartangeek-blacker/modules/security"
+	"github.com/fernandez14/spartangeek-blacker/modules/search"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/getsentry/raven-go"
 	"github.com/mitchellh/goamz/aws"
@@ -66,8 +66,6 @@ func main() {
 	cacheService, _ := goredis.Dial(&goredis.DialConfig{Address: string_value(configService.String("cache.redis"))})
 	firebaseService := new(firebase.Client)
 	firebaseService.Init(string_value(configService.String("firebase.url")), string_value(configService.String("firebase.secret")), nil)
-	algolia := algoliasearch.NewClient(string_value(configService.String("algolia.application")), string_value(configService.String("algolia.api_key")))
-	algoliaIndex := algolia.InitIndex(string_value(configService.String("algolia.index")))
 
 	mailConfig, err := configService.Get("mail")
 
@@ -75,6 +73,13 @@ func main() {
 		panic(err)
 	}
 
+	searchConfig, err := configService.Get("algolia")
+
+	if err != nil {
+		panic(err)
+	}
+
+	searchService := search.Boot(searchConfig)
 	mailService := mail.Boot(string_value(configService.String("mail.api_key")), mailConfig, false)
 
 	// Amazon services for the DI
@@ -108,7 +113,7 @@ func main() {
 		&inject.Object{Value: s3BucketService, Complete: true},
 		&inject.Object{Value: firebaseService, Complete: true},
 		&inject.Object{Value: statsService, Complete: true},
-		&inject.Object{Value: algoliaIndex, Complete: true},
+		&inject.Object{Value: searchService, Complete: true},
 		&inject.Object{Value: aclService, Complete: false},
 		&inject.Object{Value: storeService, Complete: false},
 		&inject.Object{Value: userService, Complete: false},

@@ -3,12 +3,13 @@ package cli
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/algolia/algoliasearch-client-go/algoliasearch"
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
+	"github.com/fernandez14/spartangeek-blacker/modules/components"
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
+	"github.com/fernandez14/spartangeek-blacker/modules/search"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"gopkg.in/mgo.v2/bson"
 	"log"
@@ -20,7 +21,7 @@ import (
 
 type Module struct {
 	Mongo   *mongo.Service               `inject:""`
-	Algolia *algoliasearch.Index         `inject:""`
+	Search  *search.Module               `inject:""`
 	Errors  *exceptions.ExceptionsModule `inject:""`
 	User    *user.Module                 `inject:""`
 	Feed    *feed.FeedModule             `inject:""`
@@ -34,6 +35,7 @@ func (module Module) Run(name string) {
 		"slug-fix":    module.SlugFix,
 		"codes-fix":   module.Codes,
 		"index-posts": module.IndexAlgolia,
+		"index-components": module.IndexComponentsAlgolia,
 		"send-confirmations": module.ConfirmationEmails,	
 		"replace-url": module.ReplaceURL,
 	}
@@ -108,7 +110,6 @@ func (module Module) ReplaceURL() {
 			fmt.Printf("$")
 		}
 	}
-
 }
 
 func (module Module) SlugFix() {
@@ -219,14 +220,13 @@ func (module Module) ConfirmationEmails() {
 	}
 }
 
-
 func (module Module) IndexAlgolia() {
 
 	var post model.Post
 	var categories []model.Category
 
 	database := module.Mongo.Database
-	index := module.Algolia
+	index := module.Search.Get("board")
 	ocategories := make(map[string]model.Category)
 
 	// Get categories
@@ -412,4 +412,98 @@ func (module Module) IndexAlgolia() {
 
 		fmt.Printf("*")
 	}
+}
+
+func (module Module) IndexComponentsAlgolia() {
+
+	var component map[string]interface{}
+
+	database := module.Mongo.Database
+	index := module.Search.Get("components")
+
+	// Get an iterator to work with the posts in an efficient way
+	iter := database.C("components").Find(nil).Iter()
+
+	// Prepare batch variables
+	batch_count := 0
+	batch_store := make([]components.AlgoliaComponentModel, 0)
+	batch_check := func(last_check bool) {
+
+		if last_check || batch_count >= 1000 {
+
+			var json_objects []interface{}
+			json_data, err := json.Marshal(batch_store)
+
+			if err != nil {
+				panic(err)
+			}
+
+			err = json.Unmarshal(json_data, &json_objects)
+
+			if err != nil {
+				panic(err)
+			}
+
+			_, err = index.UpdateObjects(json_objects)
+
+			if err != nil {
+				panic(err)
+			}
+
+			batch_store = make([]components.AlgoliaComponentModel, 0)
+			batch_count = 0
+		}
+	}
+
+	for iter.Next(&component) {
+
+		if name, name_exists := component["name"]; name_exists {
+
+			full_name, full_name_exists := component["full_name"]
+
+			if ! full_name_exists {
+
+				full_name = name
+			}
+
+			images := component["images"].([]map[string]string)
+			image := ""
+
+			if len(images) > 0 {
+
+				image = images[0]["path"]
+				image = strings.Replace(image, "full/", "", -1)
+
+			} else {
+
+				image = ""
+			}
+
+			id := component["_id"].(bson.ObjectId)
+			part_number := component["part_number"].(string)
+			slug := component["slug"].(string)
+
+			item := components.AlgoliaComponentModel{
+				Id: id.Hex(),
+				Name: name.(string),
+				FullName: full_name.(string),
+				Part: part_number,
+				Slug: slug,
+				Image: image,
+			}
+
+			fmt.Printf("+")
+
+			// Append to the current batch
+			batch_count++
+			batch_store = append(batch_store, item)
+
+			batch_check(false)
+		}
+	}
+
+	// Upload last batch even if incomplete
+	batch_check(true)
+
+	fmt.Printf("*")
 }
