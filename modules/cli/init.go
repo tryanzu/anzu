@@ -494,6 +494,7 @@ func (module Module) IndexComponentsAlgolia() {
 					Part: part_number.(string),
 					Slug: slug,
 					Image: image,
+					Type: component["type"].(string),
 				}
 
 				fmt.Printf("+")
