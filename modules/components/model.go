@@ -1,5 +1,66 @@
 package components
 
+import (
+	"gopkg.in/mgo.v2/bson"
+)
+
+type ComponentModel struct {
+	Id           bson.ObjectId         `bson:"_id,omitempty" json:"id"`
+	Name         string                `bson:"name" json:"name"`
+	FullName     string                `bson:"full_name" json:"full_name"`
+	Slug         string                `bson:"slug" json:"slug"`
+	Source       string                `bson:"source" json:"source"`
+	Price        float64               `bson:"price" json:"price"`
+	External     float64               `bson:"external" json:"external"`
+	Type         string                `bson:"type" json:"type"`
+	PartNumber   string                `bson:"part_number" json:"part_number"`
+	Manufacturer string                `bson:"manufacturer" json:"manufacturer"`
+	Images       []ComponentImageModel `bson:"images" json:"images"`
+	ImageUrls    []string              `bson:"image_urls" json:"image_urls"`
+}
+
+type ComponentImageModel struct {
+	Url      string `bson:"url" json:"url"`
+	Path     string `bson:"path" json:"path"`
+	Checksum string `bson:"checksum" json:"checksum"`
+}
+
+type ComponentMotherboardModel struct {
+	ComponentModel
+}
+
+type ComponentCaseModel struct {
+	ComponentModel
+}
+
+type ComponentMemoryModel struct {
+	ComponentModel
+}
+
+type ComponentMonitorModel struct {
+	ComponentModel
+}
+
+type ComponentPowerSupplyModel struct {
+	ComponentModel
+}
+
+type ComponentVideoCardModel struct {
+	ComponentModel
+}
+
+type ComponentCpuCoolerModel struct {
+	ComponentModel
+}
+
+type ComponentCpuModel struct {
+	ComponentModel
+}
+
+type ComponentStorageModel struct {
+	ComponentModel
+}
+
 type AlgoliaComponentModel struct {
 	Id       string `json:"objectID"`
 	Name     string `json:"name"`
