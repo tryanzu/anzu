@@ -27,40 +27,42 @@ func (component *ComponentModel) UpdatePrice(prices map[string]float64) {
 		panic(err)
 	}
 
-	go func(component *ComponentModel) {
+	component.UpdateAlgolia()
+}
 
-		index := component.di.Search.Get("components")
+func (component *ComponentModel) UpdateAlgolia() {
 
-		// Compose algolia item
-		full_name := component.FullName 
+	index := component.di.Search.Get("components")
 
-		if full_name == "" {
-			full_name = component.Name
-		}
+	// Compose algolia item
+	full_name := component.FullName 
 
-		var image string
+	if full_name == "" {
+		full_name = component.Name
+	}
 
-		if len(component.Images) > 0 {
+	var image string
 
-			image = component.Images[0].Path
-			image = strings.Replace(image, "full/", "", -1)
-		}
+	if len(component.Images) > 0 {
 
-		item := AlgoliaComponentModel{
-			Id: component.Id.Hex(),
-			Name: component.Name,
-			FullName: full_name,
-			Part: component.PartNumber,
-			Slug: component.Slug,
-			Image: image,
-			Type: component.Type,
-			Activated: true,
-		}
+		image = component.Images[0].Path
+		image = strings.Replace(image, "full/", "", -1)
+	}
 
-		_, err := index.UpdateObject(item)
+	item := AlgoliaComponentModel{
+		Id: component.Id.Hex(),
+		Name: component.Name,
+		FullName: full_name,
+		Part: component.PartNumber,
+		Slug: component.Slug,
+		Image: image,
+		Type: component.Type,
+		Activated: true,
+	}
 
-		if err != nil {
-			panic(err)
-		}
-	}(component)
+	_, err := index.UpdateObject(item)
+
+	if err != nil {
+		panic(err)
+	}	
 }
