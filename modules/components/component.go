@@ -27,7 +27,7 @@ func (component *ComponentModel) UpdatePrice(prices map[string]float64) {
 		panic(err)
 	}
 
-	component.UpdateAlgolia()
+	go component.UpdateAlgolia()
 }
 
 func (component *ComponentModel) UpdateAlgolia() {
@@ -49,18 +49,17 @@ func (component *ComponentModel) UpdateAlgolia() {
 		image = strings.Replace(image, "full/", "", -1)
 	}
 
-	item := AlgoliaComponentModel{
-		Id: component.Id.Hex(),
-		Name: component.Name,
-		FullName: full_name,
-		Part: component.PartNumber,
-		Slug: component.Slug,
-		Image: image,
-		Type: component.Type,
-		Activated: true,
-	}
+	object := make(map[string]interface{})
+	object["objectID"] = component.Id.Hex()
+	object["name"] = component.Name
+	object["full_name"] = full_name
+	object["part_number"] = component.PartNumber
+	object["slug"] = component.Slug
+	object["image"] = image
+	object["type"] = component.Type
+	object["activated"] = true
 
-	_, err := index.UpdateObject(item)
+	_, err := index.UpdateObject(object)
 
 	if err != nil {
 		panic(err)
