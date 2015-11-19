@@ -57,7 +57,10 @@ func (component *ComponentModel) UpdatePrice(prices map[string]float64) {
 			Activated: true,
 		}
 
-		index.UpdateObject(item)
+		_, err := index.UpdateObject(item)
 
+		if err != nil {
+			panic(err)
+		}
 	}(component)
 }
