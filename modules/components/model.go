@@ -2,6 +2,7 @@ package components
 
 import (
 	"gopkg.in/mgo.v2/bson"
+	"time"
 )
 
 type ComponentModel struct {
@@ -17,12 +18,21 @@ type ComponentModel struct {
 	Manufacturer string                `bson:"manufacturer" json:"manufacturer"`
 	Images       []ComponentImageModel `bson:"images" json:"images"`
 	ImageUrls    []string              `bson:"image_urls" json:"image_urls"`
+	Activated    bool `bson:"activated" json:"activated"`
+	Store        ComponentStoreModel   `bson:"store,omitempty" json:"store,omitempty"`
+	di           *Module
 }
 
 type ComponentImageModel struct {
 	Url      string `bson:"url" json:"url"`
 	Path     string `bson:"path" json:"path"`
 	Checksum string `bson:"checksum" json:"checksum"`
+}
+
+type ComponentStoreModel struct {
+	Prices  map[string]float64 `bson:"prices" json:"prices"`
+	Stock   int 			   `bson:"stock" json:"stock"`
+	Updated time.Time 		   `bson:"updated_at" json:"updated_at"`
 }
 
 type ComponentMotherboardModel struct {

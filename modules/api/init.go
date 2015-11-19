@@ -30,6 +30,7 @@ type Module struct {
 	BuildNotes   controller.BuildNotesAPI
 	Mail         controller.MailAPI
 	PostsFactory controller.PostAPI
+	Components   controller.ComponentAPI
 }
 
 type ModuleDI struct {
@@ -57,6 +58,7 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.Store},
 		&inject.Object{Value: &module.BuildNotes},
 		&inject.Object{Value: &module.Mail},
+		&inject.Object{Value: &module.Components},
 	)
 
 	if err != nil {
@@ -201,6 +203,9 @@ func (module *Module) Run() {
 				backoffice.GET("/notes/:id", module.BuildNotes.One)
 				backoffice.PUT("/notes/:id", module.BuildNotes.Update)
 				backoffice.DELETE("/notes/:id", module.BuildNotes.Delete)
+
+				// Components routes
+				backoffice.PUT("/component/:slug/price", module.Components.UpdatePrice)
 			}
 		}
 

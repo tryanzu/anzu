@@ -3,6 +3,7 @@ package components
 import (
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
+	"gopkg.in/mgo.v2/bson"
 )
 
 func Boot() *Module {
@@ -16,42 +17,54 @@ type Module struct {
 	Mongo *mongo.Service `inject:""`
 }
 
-func (module Module) Get(find interface{}) (*Component, error) {
+func (module *Module) Get(find interface{}) (*ComponentModel, error) {
 
-	var model *User
+	var model interface{}
+
 	context := module
 	database := module.Mongo.Database
 
-	switch usr.(type) {
+	switch find.(type) {
 	case bson.ObjectId:
 
 		// Get the user using it's id
-		err := database.C("users").FindId(usr.(bson.ObjectId)).One(&model)
+		err := database.C("components").FindId(find.(bson.ObjectId)).One(&model)
 
 		if err != nil {
 
-			return nil, exceptions.NotFound{"Invalid user id. Not found."}
+			return nil, exceptions.NotFound{"Invalid component id. Not found."}
 		}
 
 	case bson.M:
 
 		// Get the user using it's id
-		err := database.C("users").Find(usr.(bson.M)).One(&model)
+		err := database.C("components").Find(find.(bson.M)).One(&model)
 
 		if err != nil {
 
-			return nil, exceptions.NotFound{"Invalid user id. Not found."}
+			return nil, exceptions.NotFound{"Invalid component finder. Not found."}
 		}
-
-	case *User:
-
-		model = usr.(*User)
 
 	default:
 		panic("Unkown argument")
 	}
 
-	user := &One{data: model, di: context}
+	// Marshal the data inside the generic model
+	encoded, err := bson.Marshal(model)
 
-	return user, nil
+	if err != nil {
+		panic(err)
+	}
+
+	var component *ComponentModel
+
+	err = bson.Unmarshal(encoded, &component)
+
+	if err != nil {
+		panic(err)
+	}
+
+	component.SetDI(context)
+
+	return component, nil
 }
