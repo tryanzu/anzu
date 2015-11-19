@@ -2,6 +2,7 @@ package components
 
 import (
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
+	"github.com/fernandez14/spartangeek-blacker/modules/search"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -14,7 +15,8 @@ func Boot() *Module {
 }
 
 type Module struct {
-	Mongo *mongo.Service `inject:""`
+	Mongo   *mongo.Service `inject:""`
+	Search  *search.Module `inject:""`
 }
 
 func (module *Module) Get(find interface{}) (*ComponentModel, error) {
