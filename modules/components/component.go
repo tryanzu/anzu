@@ -32,6 +32,24 @@ func (component *ComponentModel) GetData() map[string]interface{} {
 func (component *ComponentModel) UpdatePrice(prices map[string]float64) {
 
 	database := component.di.Mongo.Database
+
+	// Record price history
+	if len(component.Store.Prices) > 0 {
+
+		historic := &ComponentHistoricModel{
+			ComponentId: component.Id,
+			Store: component.Store,
+			Created: time.Now(),
+		}
+
+		err := database.C("components_historic").Insert(historic)
+
+		if err != nil {
+			panic(err)
+		}
+	}
+
+
 	set := bson.M{"store.updated_at": time.Now(), "activated": true}
 
 	for key, price := range prices {
