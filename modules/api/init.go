@@ -170,6 +170,7 @@ func (module *Module) Run() {
 			authorized.PUT("/posts/:id", module.Posts.PostUpdate)
 			authorized.DELETE("/posts/:id", module.Posts.PostDelete)
 			authorized.POST("/posts/:id/answer/:comment", module.PostsFactory.MarkCommentAsAnswer)
+			authorized.POST("/posts/:id/relate/:related_id", module.PostsFactory.Relate)
 
 			// User routes
 			authorized.POST("/user/my/avatar", module.Users.UserUpdateProfileAvatar)
