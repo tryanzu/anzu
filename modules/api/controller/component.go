@@ -10,6 +10,25 @@ type ComponentAPI struct {
 	Components *components.Module `inject:""`
 }
 
+func (this ComponentAPI) Get(c *gin.Context) {
+
+	slug := c.Param("slug")
+
+	if len(slug) < 1 {
+		c.JSON(400, gin.H{"message": "Invalid request, need component slug.", "status": "error"})
+		return
+	}
+
+	component, err := this.Components.Get(bson.M{"slug": slug})
+
+	if err != nil {
+		c.JSON(404, gin.H{"message": "Invalid request, component not found.", "status": "error"})
+		return
+	}
+
+	c.JSON(200, component.GetData())
+}
+
 func (this ComponentAPI) UpdatePrice(c *gin.Context) {
 	
 	var form ComponentPriceUpdateForm

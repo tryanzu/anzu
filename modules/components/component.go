@@ -11,6 +11,24 @@ func (component *ComponentModel) SetDI(di *Module) {
 	component.di = di
 }
 
+func (component *ComponentModel) SetGeneric(data []byte) {
+
+	component.generic = data
+}
+
+func (component *ComponentModel) GetData() map[string]interface{} {
+
+	var data map[string]interface{}
+
+	err := bson.Unmarshal(component.generic, &data)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return data
+}
+
 func (component *ComponentModel) UpdatePrice(prices map[string]float64) {
 
 	database := component.di.Mongo.Database

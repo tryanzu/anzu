@@ -21,6 +21,7 @@ type ComponentModel struct {
 	Activated    bool `bson:"activated" json:"activated"`
 	Store        ComponentStoreModel   `bson:"store,omitempty" json:"store,omitempty"`
 	di           *Module
+	generic      []byte
 }
 
 type ComponentImageModel struct {

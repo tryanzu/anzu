@@ -56,7 +56,7 @@ func (module *Module) Get(find interface{}) (*ComponentModel, error) {
 
 	if err != nil {
 		panic(err)
-	}
+	}a
 
 	var component *ComponentModel
 
@@ -67,6 +67,7 @@ func (module *Module) Get(find interface{}) (*ComponentModel, error) {
 	}
 
 	component.SetDI(context)
+	component.SetGeneric(encoded)
 
 	return component, nil
 }
