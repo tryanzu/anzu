@@ -30,6 +30,7 @@ type Module struct {
 	BuildNotes   controller.BuildNotesAPI
 	Mail         controller.MailAPI
 	PostsFactory controller.PostAPI
+	Components   controller.ComponentAPI
 }
 
 type ModuleDI struct {
@@ -57,6 +58,7 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.Store},
 		&inject.Object{Value: &module.BuildNotes},
 		&inject.Object{Value: &module.Mail},
+		&inject.Object{Value: &module.Components},
 	)
 
 	if err != nil {
@@ -143,6 +145,8 @@ func (module *Module) Run() {
 		v1.GET("/part", module.Parts.GetPartTypes)
 		v1.GET("/part/:type/manufacturers", module.Parts.GetPartManufacturers)
 		v1.GET("/part/:type/models", module.Parts.GetPartManufacturerModels)
+		v1.GET("/component/:id", module.Components.Get)
+		v1.GET("/component/:id/posts", module.Components.GetPosts)
 
 		// Stats routes
 		v1.GET("/stats/board", module.Stats.BoardGet)
@@ -167,6 +171,7 @@ func (module *Module) Run() {
 			authorized.PUT("/posts/:id", module.Posts.PostUpdate)
 			authorized.DELETE("/posts/:id", module.Posts.PostDelete)
 			authorized.POST("/posts/:id/answer/:comment", module.PostsFactory.MarkCommentAsAnswer)
+			authorized.POST("/posts/:id/relate/:related_id", module.PostsFactory.Relate)
 
 			// User routes
 			authorized.POST("/user/my/avatar", module.Users.UserUpdateProfileAvatar)
@@ -201,6 +206,9 @@ func (module *Module) Run() {
 				backoffice.GET("/notes/:id", module.BuildNotes.One)
 				backoffice.PUT("/notes/:id", module.BuildNotes.Update)
 				backoffice.DELETE("/notes/:id", module.BuildNotes.Delete)
+
+				// Components routes
+				backoffice.PUT("/component/:slug/price", module.Components.UpdatePrice)
 			}
 		}
 

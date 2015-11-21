@@ -3,6 +3,8 @@ package feed
 import (
 	"encoding/json"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
+	"github.com/fernandez14/spartangeek-blacker/modules/components"
+	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"gopkg.in/mgo.v2/bson"
 	"reflect"
@@ -164,6 +166,34 @@ func (self *Post) Comment(index int) (*Comment, error) {
 	}
 
 	return comment, nil
+}
+
+// Attach related entity to post
+func (self *Post) Attach(entity interface{}) {
+
+	database := self.di.Mongo.Database
+
+	switch entity.(type) {
+	case *components.ComponentModel:
+
+		component := entity.(*components.ComponentModel)
+		id := component.Id
+
+		// Check if we need to relate the component
+		exists, _ := helpers.InArray(id, self.data.RelatedComponents)
+
+		if !exists {
+
+			err := database.C("posts").Update(bson.M{"_id": self.data.Id}, bson.M{"$push": bson.M{"related_components": id}})
+
+			if err != nil {
+				panic(err)
+			}
+		}
+
+	default:
+		panic("Unkown argument")
+	}
 }
 
 // Use algolia to index the post
