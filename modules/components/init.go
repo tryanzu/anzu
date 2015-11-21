@@ -56,7 +56,7 @@ func (module *Module) Get(find interface{}) (*ComponentModel, error) {
 
 	if err != nil {
 		panic(err)
-	}a
+	}
 
 	var component *ComponentModel
 
