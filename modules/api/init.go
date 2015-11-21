@@ -145,7 +145,8 @@ func (module *Module) Run() {
 		v1.GET("/part", module.Parts.GetPartTypes)
 		v1.GET("/part/:type/manufacturers", module.Parts.GetPartManufacturers)
 		v1.GET("/part/:type/models", module.Parts.GetPartManufacturerModels)
-		v1.GET("/component/:slug", module.Components.Get)
+		v1.GET("/component/:id", module.Components.Get)
+		v1.GET("/component/:id/posts", module.Components.GetPosts)
 
 		// Stats routes
 		v1.GET("/stats/board", module.Stats.BoardGet)

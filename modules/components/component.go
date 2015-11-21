@@ -6,16 +6,19 @@ import (
 	"time"
 )
 
+// Set DI instance
 func (component *ComponentModel) SetDI(di *Module) {
 
 	component.di = di
 }
 
+// Set generic data for the component model
 func (component *ComponentModel) SetGeneric(data []byte) {
 
 	component.generic = data
 }
 
+// Get generic data
 func (component *ComponentModel) GetData() map[string]interface{} {
 
 	var data map[string]interface{}
@@ -29,6 +32,7 @@ func (component *ComponentModel) GetData() map[string]interface{} {
 	return data
 }
 
+// Update component's price 
 func (component *ComponentModel) UpdatePrice(prices map[string]float64) {
 
 	database := component.di.Mongo.Database
@@ -66,6 +70,7 @@ func (component *ComponentModel) UpdatePrice(prices map[string]float64) {
 	go component.UpdateAlgolia()
 }
 
+// Perform component's algolia's record sync
 func (component *ComponentModel) UpdateAlgolia() {
 
 	index := component.di.Search.Get("components")
