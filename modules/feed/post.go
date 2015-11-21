@@ -172,7 +172,7 @@ func (self *Post) Comment(index int) (*Comment, error) {
 func (self *Post) Attach(entity interface{}) {
 
 	database := self.di.Mongo.Database
-	
+
 	switch entity.(type) {
 	case *components.ComponentModel:
 
@@ -180,9 +180,9 @@ func (self *Post) Attach(entity interface{}) {
 		id := component.Id
 
 		// Check if we need to relate the component
-		add, _ := helpers.InArray(id, self.data.RelatedComponents)
+		exists, _ := helpers.InArray(id, self.data.RelatedComponents)
 
-		if add {
+		if !exists {
 
 			err := database.C("posts").Update(bson.M{"_id": self.data.Id}, bson.M{"$push": bson.M{"related_components": id}})
 
