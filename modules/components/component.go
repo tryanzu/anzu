@@ -6,14 +6,54 @@ import (
 	"time"
 )
 
+// Set DI instance
 func (component *ComponentModel) SetDI(di *Module) {
 
 	component.di = di
 }
 
+// Set generic data for the component model
+func (component *ComponentModel) SetGeneric(data []byte) {
+
+	component.generic = data
+}
+
+// Get generic data
+func (component *ComponentModel) GetData() map[string]interface{} {
+
+	var data map[string]interface{}
+
+	err := bson.Unmarshal(component.generic, &data)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return data
+}
+
+// Update component's price 
 func (component *ComponentModel) UpdatePrice(prices map[string]float64) {
 
 	database := component.di.Mongo.Database
+
+	// Record price history
+	if len(component.Store.Prices) > 0 {
+
+		historic := &ComponentHistoricModel{
+			ComponentId: component.Id,
+			Store: component.Store,
+			Created: time.Now(),
+		}
+
+		err := database.C("components_historic").Insert(historic)
+
+		if err != nil {
+			panic(err)
+		}
+	}
+
+
 	set := bson.M{"store.updated_at": time.Now(), "activated": true}
 
 	for key, price := range prices {
@@ -30,6 +70,7 @@ func (component *ComponentModel) UpdatePrice(prices map[string]float64) {
 	go component.UpdateAlgolia()
 }
 
+// Perform component's algolia's record sync
 func (component *ComponentModel) UpdateAlgolia() {
 
 	index := component.di.Search.Get("components")

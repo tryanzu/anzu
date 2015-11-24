@@ -145,6 +145,8 @@ func (module *Module) Run() {
 		v1.GET("/part", module.Parts.GetPartTypes)
 		v1.GET("/part/:type/manufacturers", module.Parts.GetPartManufacturers)
 		v1.GET("/part/:type/models", module.Parts.GetPartManufacturerModels)
+		v1.GET("/component/:id", module.Components.Get)
+		v1.GET("/component/:id/posts", module.Components.GetPosts)
 
 		// Stats routes
 		v1.GET("/stats/board", module.Stats.BoardGet)
@@ -169,6 +171,7 @@ func (module *Module) Run() {
 			authorized.PUT("/posts/:id", module.Posts.PostUpdate)
 			authorized.DELETE("/posts/:id", module.Posts.PostDelete)
 			authorized.POST("/posts/:id/answer/:comment", module.PostsFactory.MarkCommentAsAnswer)
+			authorized.POST("/posts/:id/relate/:related_id", module.PostsFactory.Relate)
 
 			// User routes
 			authorized.POST("/user/my/avatar", module.Users.UserUpdateProfileAvatar)

@@ -15,8 +15,8 @@ func Boot() *Module {
 }
 
 type Module struct {
-	Mongo   *mongo.Service `inject:""`
-	Search  *search.Module `inject:""`
+	Mongo   *mongo.Service   `inject:""`
+	Search  *search.Module   `inject:""`
 }
 
 func (module *Module) Get(find interface{}) (*ComponentModel, error) {
@@ -67,6 +67,7 @@ func (module *Module) Get(find interface{}) (*ComponentModel, error) {
 	}
 
 	component.SetDI(context)
+	component.SetGeneric(encoded)
 
 	return component, nil
 }

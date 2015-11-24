@@ -21,6 +21,7 @@ type ComponentModel struct {
 	Activated    bool `bson:"activated" json:"activated"`
 	Store        ComponentStoreModel   `bson:"store,omitempty" json:"store,omitempty"`
 	di           *Module
+	generic      []byte
 }
 
 type ComponentImageModel struct {
@@ -33,6 +34,13 @@ type ComponentStoreModel struct {
 	Prices  map[string]float64 `bson:"prices" json:"prices"`
 	Stock   int 			   `bson:"stock" json:"stock"`
 	Updated time.Time 		   `bson:"updated_at" json:"updated_at"`
+}
+
+type ComponentHistoricModel struct {
+	Id bson.ObjectId  `bson:"_id,omitempty" json:"id"`
+	ComponentId bson.ObjectId  `bson:"component_id" json:"component_id"`
+	Store ComponentStoreModel   `bson:"store" json:"store"`
+	Created time.Time 		   `bson:"created_at" json:"created_at"`
 }
 
 type ComponentMotherboardModel struct {
