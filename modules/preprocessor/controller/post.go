@@ -1,73 +1,91 @@
 package controller
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/modules/acl"
-	"github.com/fernandez14/spartangeek-blacker/modules/components"
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
-	"strconv"
+	"strings"
+	"net/http"
+	"regexp"
 )
 
 type PostAPI struct {
 	Feed *feed.FeedModule `inject:""`
-	Acl  *acl.Module      `inject:""`
-	Components *components.Module `inject:""`
+	Page string
 }
 
-func (this PostAPI) MarkCommentAsAnswer(c *gin.Context) {
+func (this *PostAPI) Get(c *gin.Context) {
 	
 	post_id := c.Param("id")
-	comment_pos := c.Param("comment")
+	slug := c.Param("slug")
 
 	if bson.IsObjectIdHex(post_id) == false {
 
-		c.JSON(400, gin.H{"message": "Invalid request, id not valid.", "status": "error"})
+		// Invalid post id, url hacked
+		c.Redirect(http.StatusMovedPermanently, "/")
 		return
 	}
 
 	id := bson.ObjectIdHex(post_id)
-	comment_index, err := strconv.Atoi(comment_pos)
-
-	if err != nil {
-
-		c.JSON(400, gin.H{"message": "Invalid request, comment index not valid.", "status": "error"})
-		return
-	}
-
-	user_str_id := c.MustGet("user_id")
-	user_id := bson.ObjectIdHex(user_str_id.(string))
-	user := this.Acl.User(user_id)
-
 	post, err := this.Feed.Post(id)
 
 	if err != nil {
 
-		c.JSON(404, gin.H{"status": "error", "message": "Post not found."})
+		// Post not found, url hacked
+		c.Redirect(http.StatusMovedPermanently, "/")
 		return
 	}
 
-	if user.CanSolvePost(post.Data()) == false {
-		
-		c.JSON(400, gin.H{"message": "Can't update post. Insufficient permissions", "status": "error"})
+	post_data := post.Data()
+
+	if slug != post_data.Slug {
+
+		// Invalid slug, redirect to correct one permanently
+		c.Redirect(http.StatusMovedPermanently, "/p/" + post_data.Slug + "/" + post_data.Id.Hex())
 		return
 	}
 
-	if post.Data().Solved == true {
+	var description string = truncate(post_data.Content, 155) + "..."
+	var page string = this.Page
 
-		c.JSON(400, gin.H{"status": "error", "message": "Already solved."})
-		return
-	} 
+	page = strings.Replace(page, "SpartanGeek.com | Comunidad de tecnología, geeks y más", "SpartanGeek.com | " + post_data.Title, 1)
+	page = strings.Replace(page, "{{ page.title }}", post_data.Title, 1)
+	page = strings.Replace(page, "{{ page.description }}", description, 2)
 
-	comment, err := post.Comment(comment_index)
+	// Replace post image
+	urls, _ := regexp.Compile(`http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+`)
 
-	if err != nil {
+	var assets []string
+	assets = urls.FindAllString(post_data.Content, -1)
 
-		c.JSON(400, gin.H{"message": "Invalid request, comment index not valid.", "status": "error"})
-		return
+	if len(assets) > 0 {
+
+		// First post image
+		page = strings.Replace(page, "{{ page.image }}", assets[0], 1)
+
+	} else {
+
+		// Fallback to default image
+		page = strings.Replace(page, "{{ page.image }}", "http://spartangeek.com/images/default-post.jpg", 1)
 	}
 
-	comment.MarkAsAnswer()
+	c.Header("Content-Type", "text/html; charset=utf-8")
+	c.String(200, page)
+}
 
-	c.JSON(200, gin.H{"status": "okay"})
+func (this *PostAPI) ByPass(c *gin.Context) {
+
+	c.Header("Content-Type", "text/html; charset=utf-8")
+	c.String(200, this.Page)
+}
+
+func truncate(s string, length int) string {
+	var numRunes = 0
+	for index, _ := range s {
+	 numRunes++
+	 if numRunes > length {
+	      return s[:index]
+	 }
+	}
+	return s
 }

@@ -2,9 +2,13 @@ package preprocessor
 
 import (
 	"github.com/fernandez14/spartangeek-blacker/handle"
+	"github.com/facebookgo/inject"
+	"github.com/fernandez14/spartangeek-blacker/modules/preprocessor/controller"
 	"github.com/gin-gonic/gin"
 	"github.com/olebedev/config"
 	"os"
+	"fmt"
+	"io/ioutil"
 )
 
 type Module struct {
@@ -52,6 +56,18 @@ func (module *Module) Run() {
 		debug = false
 	}
 
+	page, err := module.Dependencies.Config.String("application.page")
+
+	if err != nil {
+		panic(err)
+	}
+
+	data, err := ioutil.ReadFile(page)
+	base := string(data)
+
+	// Share base html page to the controllers
+	module.Posts.Page = base
+
 	// Start gin classic middlewares
 	router := gin.Default()
 
@@ -60,6 +76,7 @@ func (module *Module) Run() {
 	router.Use(module.Middlewares.MongoRefresher())
 
 	router.GET("/p/:slug/:id", module.Posts.Get)
+	router.GET("/", module.Posts.ByPass)
 
 	// Run over the 3014 port
 	port := os.Getenv("RUN_OVER")

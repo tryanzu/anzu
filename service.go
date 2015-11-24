@@ -17,6 +17,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/fernandez14/spartangeek-blacker/modules/notifications"
 	"github.com/fernandez14/spartangeek-blacker/modules/store"
+	"github.com/fernandez14/spartangeek-blacker/modules/preprocessor"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/fernandez14/spartangeek-blacker/modules/security"
 	"github.com/fernandez14/spartangeek-blacker/modules/search"
@@ -48,6 +49,7 @@ func main() {
 
 	// Resources for the API
 	var api api.Module
+	var preprocessor preprocessor.Module
 	var cliModule cli.Module
 	var queueModule queue.Module
 	var securityModule security.Module
@@ -149,6 +151,22 @@ func main() {
 
 			// Run API module
 			api.Run()
+		},
+	}
+
+	var cmdPreprocessor = &cobra.Command{
+		Use:   "pre-processor",
+		Short: "Starts Pre-Processor",
+		Long: `Starts API web server listening
+        in the specified env port
+        `,
+		Run: func(cmd *cobra.Command, args []string) {
+
+			// Populate dependencies using the already instantiated DI
+			preprocessor.Populate(g)
+
+			// Run preprocessor module
+			preprocessor.Run()
 		},
 	}
 
@@ -254,6 +272,7 @@ func main() {
 	rootCmd.AddCommand(cmdWorkerRoutine)
 	rootCmd.AddCommand(cmdJobs)
 	rootCmd.AddCommand(cmdRunRoutine)
+	rootCmd.AddCommand(cmdPreprocessor)
 	rootCmd.Execute()
 
 	return
