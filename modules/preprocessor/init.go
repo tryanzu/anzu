@@ -76,6 +76,7 @@ func (module *Module) Run() {
 	router.Use(module.Middlewares.MongoRefresher())
 
 	router.GET("/p/:slug/:id", module.Posts.Get)
+	router.GET("/p/:slug/:id/:comment", module.Posts.Get)
 	router.GET("/", module.Posts.ByPass)
 
 	// Run over the 3014 port
