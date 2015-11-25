@@ -7,7 +7,7 @@ type Cart struct {
 type mutator func(*CartItem) 
 
 // A Cart will have many items on it and this will write to it.
-func (module *Cart) Add(id, name string, price float, q int, attrs map[string]interface{}) *CartItem {
+func (module *Cart) Add(id, name string, price float64, q int, attrs map[string]interface{}) *CartItem {
 
 	module.items[id] = &CartItem{
 		Id: id,
@@ -35,12 +35,15 @@ func (module *Cart) Remove(id string) bool {
 // IsEmpty checks if no items in cart object.
 func (module *Cart) IsEmpty() bool {
 
-	return len(module.items) > 0 ? false : true
+	if len(module.items) > 0 {
+		return false
+	} else {
+		return true
+	}
 }
 
 // Get Cart contents for mutator approaches.
 func (module *Cart) GetContent() map[string]*CartItem {
-
 	return module.items
 }
 

@@ -4,12 +4,11 @@ import (
 	"gopkg.in/mgo.v2/bson"
 	"github.com/gin-gonic/gin"
 	"github.com/fernandez14/spartangeek-blacker/modules/components"
-	"github.com/fernandez14/spartangeek-blacker/modules/cart"
+	"github.com/gin-gonic/contrib/sessions"
 )
 
 type CartAPI struct {
 	Components *components.Module `inject:""`
-	Cart       *cart.Cart         `inject:""`
 }
 
 // Add Cart item from component id
@@ -23,15 +22,16 @@ func (this CartAPI) Add(c *gin.Context) {
 		return
 	}
 
-	component_id := bson.ObjectIdHex(id)
-	component, err := this.Components.Get(component_id)
-
-	if err != nil {
-		c.JSON(404, gin.H{"message": "Invalid request, component not found.", "status": "error"})
-		return
-	}
-
-
-
-	c.JSON(200, component.GetData())
+	session := sessions.Default(c)
+	var count int
+    v := session.Get("count")
+    if v == nil {
+      count = 0
+    } else {
+      count = v.(int)
+      count += 1
+    }
+    session.Set("count", count)
+    session.Save()
+    c.JSON(200, gin.H{"count": count})
 }
