@@ -182,7 +182,7 @@ func (module *Module) Run() {
 
 			// Cart routes
 			store.GET("/cart", module.Cart.Get)
-			store.GET("/cart/:id", module.Cart.Add)
+			store.POST("/cart", module.Cart.Add)
 		}
 
 		authorized := v1.Group("")
