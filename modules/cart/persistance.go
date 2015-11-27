@@ -3,9 +3,9 @@ package cart
 type CartBucket interface {
 
 	// Restore the cart at runtime.
-	Restore() error
+	Restore() (map[string]*CartItem, error)
 
 	// Save the cart struct for persistance.
-	Save() error
+	Save(map[string]*CartItem) error
 }
 

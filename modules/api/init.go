@@ -181,6 +181,7 @@ func (module *Module) Run() {
 			store.POST("/order", module.Store.PlaceOrder)
 
 			// Cart routes
+			store.GET("/cart", module.Cart.Get)
 			store.GET("/cart/:id", module.Cart.Add)
 		}
 

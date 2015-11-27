@@ -4,12 +4,23 @@ import (
 	"gopkg.in/mgo.v2/bson"
 	"github.com/gin-gonic/gin"
 	"github.com/fernandez14/spartangeek-blacker/modules/components"
+	"github.com/fernandez14/spartangeek-blacker/modules/cart"
 	"github.com/gin-gonic/contrib/sessions"
 )
 
 type CartAPI struct {
 	Components *components.Module `inject:""`
 }
+
+
+func (this CartAPI) Get(c *gin.Context) {
+
+	// Initialize cart library
+	container := this.getCart(c)
+
+	c.JSON(200, container.GetContent())
+}
+
 
 // Add Cart item from component id
 func (this CartAPI) Add(c *gin.Context) {
@@ -22,16 +33,31 @@ func (this CartAPI) Add(c *gin.Context) {
 		return
 	}
 
-	session := sessions.Default(c)
-	var count int
-    v := session.Get("count")
-    if v == nil {
-      count = 0
-    } else {
-      count = v.(int)
-      count += 1
-    }
-    session.Set("count", count)
-    session.Save()
-    c.JSON(200, gin.H{"count": count})
+	// Get the component and its data
+	component_id := bson.ObjectIdHex(id)
+	component, err := this.Components.Get(component_id)
+
+	if err != nil {
+		c.JSON(404, gin.H{"message": "Invalid request, component not found.", "status": "error"})
+		return
+	}
+
+	// Initialize cart library
+	container := this.getCart(c)
+	{
+		container.Add(component.Id.Hex(), component.Name, component.Price, 1, map[string]interface{}{})
+	}
+
+	c.JSON(200, gin.H{"status": "okay"})
+}
+
+func (this CartAPI) getCart(c *gin.Context) *cart.Cart {
+
+	obj, err := cart.Boot(cart.GinGonicSession{sessions.Default(c)})
+
+	if err != nil {
+		panic(err)
+	}
+
+	return obj
 }
