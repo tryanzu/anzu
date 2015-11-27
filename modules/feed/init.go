@@ -10,7 +10,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-var lightPostFields bson.M = bson.M{"_id": 1, "title": 1, "slug": 1, "category": 1, "user_id": 1, "pinned": 1, "created_at": 1, "updated_at": 1, "type": 1, "content": 1, "comments.set": bson.M{"$elemMatch": bson.M{"chosen": true}}}
+var lightPostFields bson.M = bson.M{"_id": 1, "title": 1, "slug": 1, "solved": 1, "category": 1, "user_id": 1, "pinned": 1, "created_at": 1, "updated_at": 1, "type": 1, "content": 1}
 
 type FeedModule struct {
 	Mongo        *mongo.Service               `inject:""`
@@ -63,7 +63,7 @@ func (module *FeedModule) LightPost(post interface{}) (*LightPost, error) {
 		database := module.Mongo.Database
 
 		// Use light post model 
-		err := database.C("posts").FindId(post.(bson.ObjectId)).Select(lightPostFields).One(&scope)
+		err := database.C("posts").FindId(post.(bson.ObjectId)).Select(bson.M{"_id": 1, "title": 1, "slug": 1, "category": 1, "user_id": 1, "pinned": 1, "created_at": 1, "updated_at": 1, "type": 1, "content": 1}).One(&scope)
 
 		if err != nil {
 
@@ -108,7 +108,6 @@ func (module *FeedModule) LightPosts(posts interface{}) ([]LightPostModel, error
 		err := database.C("posts").Find(posts.(bson.M)).Select(lightPostFields).All(&list)
 
 		if err != nil {
-
 			return nil, exceptions.NotFound{"Invalid posts criteria. Not found."}
 		}
 
@@ -117,6 +116,57 @@ func (module *FeedModule) LightPosts(posts interface{}) ([]LightPostModel, error
 	default:
 		panic("Unkown argument")
 	}
+}
+
+func (module *FeedModule) FulfillBestAnswer(list []LightPostModel) []LightPostModel {
+
+	var ids []bson.ObjectId
+	var comments []PostCommentModel
+
+	for _, post := range list {
+
+		// Generate the list of post id's
+		ids = append(ids, post.Id)
+	}
+
+	database := module.Mongo.Database
+	pipeline_line := []bson.M{
+		{
+			"$match": bson.M{"_id": bson.M{"$in": ids}, "solved": true},
+		},
+		{
+			"$unwind": "$comments.set",
+		},
+		{
+			"$match": bson.M{"comments.set.chosen": true},
+		},
+		{
+			"$project": bson.M{"comment": "$comments.set"},
+		},
+	}
+
+	pipeline := database.C("posts").Pipe(pipeline_line)
+	err := pipeline.All(&comments)
+
+	if err != nil {
+		panic(err)
+	}
+
+	assoc := map[bson.ObjectId]PostCommentModel{}
+
+	for _, comment := range comments {
+		assoc[comment.Id] = comment
+	}
+
+	for index, post := range list {
+
+		if comment, exists := assoc[post.Id]; exists {
+
+			list[index].BestAnswer = &comment.Comment
+		}
+	}
+
+	return list
 }
 
 func (module *FeedModule) Posts(limit, offset int) List {
