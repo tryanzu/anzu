@@ -867,7 +867,7 @@ func (di PostAPI) PostCreate(c *gin.Context) {
 				}(post_id, di.Feed)
 
 				// Finished creating the post
-				c.JSON(200, gin.H{"status": "okay", "code": 200})
+				c.JSON(200, gin.H{"status": "okay", "code": 200, "post": gin.H{"id": post_id, "slug": slug}})
 				return
 			}
 
@@ -934,7 +934,7 @@ func (di PostAPI) PostCreate(c *gin.Context) {
 			}(post_id, di.Feed)
 
 			// Finished creating the post
-			c.JSON(200, gin.H{"status": "okay", "code": 200})
+			c.JSON(200, gin.H{"status": "okay", "code": 200, "post": gin.H{"id": post_id, "slug": slug}})
 			return
 		}
 	}
