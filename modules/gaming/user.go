@@ -91,17 +91,9 @@ func (self *User) DailyLogin() {
 	usr := self.user.Data()
 
 	// Dates and stuff
-	date := time.Now().Truncate(24 * time.Hour)
-	tomorrow := date.AddDate(0, 0, 1)
+	duration := time.Since(usr.Gamificated)
 
-	// Count the checkins for today
-	count, err := database.C("checkins").Find(bson.M{"user_id": usr.Id, "date": bson.M{"$gte": date, "$lt": tomorrow}}).Count()
-
-	if err != nil {
-		panic(err)
-	}
-
-	if count == 1 {
+	if duration.Hours() >= 24 {
 
 		for _, rule := range rules {
 
@@ -111,6 +103,13 @@ func (self *User) DailyLogin() {
 				self.SyncToLevel(true)
 				break
 			}
+		}
+
+		// Update gamificated at
+		err := database.C("users").Update(bson.M{"_id": usr.Id}, bson.M{"$set": bson.M{"gamificated_at": time.Now()}})
+
+		if err != nil {
+			panic(err)
 		}
 	}
 }
