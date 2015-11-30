@@ -26,12 +26,18 @@ func Boot(storage CartBucket) (*Cart, error) {
 // A Cart will have many items on it and this will write to it.
 func (module *Cart) Add(id, name string, price float64, q int, attrs map[string]interface{}) *CartItem {
 
-	module.items[id] = &CartItem{
-		Id: id,
-		Name: name,
-		Price: price,
-		Quantity: q,
-		Attributes: attrs,
+	if _, exists := module.items[id]; exists {
+
+		module.items[id] = &CartItem{
+			Id: id,
+			Name: name,
+			Price: price,
+			Quantity: q,
+			Attributes: attrs,
+		}
+	} else {
+		
+		module.items[id].Quantity = module.items[id].Quantity + q
 	}
 
 	module.storage.Save(module.items)
