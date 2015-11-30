@@ -32,6 +32,7 @@ type User struct {
 	Banned           bool                   `bson:"banned" json:"banned"`
 	Created          time.Time              `bson:"created_at" json:"created_at"`
 	Updated          time.Time              `bson:"updated_at" json:"updated_at"`
+	Gamificated      time.Time              `bson:"gamificated_at" json:"gamificated_at"`
 
 	// Runtime generated and not persisted in database
 	Referrals ReferralsModel `json:"referrals,omitempty"`

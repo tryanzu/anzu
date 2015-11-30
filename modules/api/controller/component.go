@@ -59,6 +59,8 @@ func (this ComponentAPI) GetPosts(c *gin.Context) {
 		return
 	}
 
+	posts = this.Feed.FulfillBestAnswer(posts)
+
 	c.JSON(200, posts)
 }
 

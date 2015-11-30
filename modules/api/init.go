@@ -7,6 +7,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/handle"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/contrib/sessions"
 	"github.com/olebedev/config"
 	"os"
 )
@@ -31,6 +32,7 @@ type Module struct {
 	Mail         controller.MailAPI
 	PostsFactory controller.PostAPI
 	Components   controller.ComponentAPI
+	Cart         controller.CartAPI
 }
 
 type ModuleDI struct {
@@ -59,6 +61,7 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.BuildNotes},
 		&inject.Object{Value: &module.Mail},
 		&inject.Object{Value: &module.Components},
+		&inject.Object{Value: &module.Cart},
 	)
 
 	if err != nil {
@@ -88,6 +91,25 @@ func (module *Module) Run() {
 		debug = false
 	}
 
+	// Session storage
+	secret, err := module.Dependencies.Config.String("application.secret")
+
+	if err != nil {
+		panic(err)
+	}
+
+	redis_server, err := module.Dependencies.Config.String("cache.redis")
+
+	if err != nil {
+		panic(err)
+	}
+
+	store, err := sessions.NewRedisStore(10, "tcp", redis_server, "", []byte(secret))
+	
+	if err != nil {
+		panic(err)
+	}
+
 	// Start gin classic middlewares
 	router := gin.Default()
 
@@ -95,6 +117,7 @@ func (module *Module) Run() {
 	gorelic.InitNewrelicAgent("3e8e387fb7b29dedb924db3ba88e2790599bd0fb", "Blacker", false)
 
 	// Middlewares setup
+	router.Use(sessions.Sessions("session", store))
 	router.Use(gorelic.Handler)
 	router.Use(module.Middlewares.ErrorTracking(debug))
 	router.Use(module.Middlewares.CORS())
@@ -152,9 +175,15 @@ func (module *Module) Run() {
 		v1.GET("/stats/board", module.Stats.BoardGet)
 
 		// Store routes
-		store := v1.Group("/store")
+		store := v1.Group("/store") 
+		{
 
-		store.POST("/order", module.Store.PlaceOrder)
+			store.POST("/order", module.Store.PlaceOrder)
+
+			// Cart routes
+			store.GET("/cart", module.Cart.Get)
+			store.POST("/cart", module.Cart.Add)
+		}
 
 		authorized := v1.Group("")
 
