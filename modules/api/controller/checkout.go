@@ -74,6 +74,18 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 			return
 		}
 
+		for id, item := range items {
+
+			meta := map[string]interface{}{
+				"related": "components",
+				"related_id": bson.ObjectIdHex(id),
+				"cart": item.Attributes, 
+			}
+
+			order.Add(item.Name, item.Description, "", item.Price, item.Quantity, meta)
+		}
+
+
 		c.JSON(200, gin.H{"status": "okay"})
 		return
 	}

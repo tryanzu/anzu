@@ -56,7 +56,7 @@ func (this *Customer) NewOrder(gateway_name string, address Address, meta map[st
 		Updated: time.Now(),
 	}
 
-	order.SetDI(this.di)
+	order.SetDI(this.di) 
 
 	return order, nil
 }
