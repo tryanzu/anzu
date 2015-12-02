@@ -1,10 +1,13 @@
 package controller
 
 import (
+	"gopkg.in/mgo.v2/bson"
 	"github.com/fernandez14/spartangeek-blacker/modules/store"
 	"github.com/fernandez14/spartangeek-blacker/modules/components"
+	"github.com/fernandez14/spartangeek-blacker/modules/cart"
 	"github.com/fernandez14/spartangeek-blacker/modules/gcommerce"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/contrib/sessions"
 )
 
 type CheckoutAPI struct {
@@ -15,11 +18,11 @@ type CheckoutAPI struct {
 
 func (this CheckoutAPI) Place(c *gin.Context) {
 
-	var form OrderForm
+	var form CheckoutForm
 
 	cartContainer := this.getCartObject(c)
 	user := c.MustGet("user_id")
-	userId := bson.ObjectIdHex(user)
+	userId := bson.ObjectIdHex(user.(string))
 
 	if c.Bind(&form) == nil {
 
@@ -70,7 +73,7 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 		order, err := customer.NewOrder(form.Gateway, address, form.Meta)
 
 		if err != nil {
-			c.JSON(400, gin.H{"message": err.Message(), "key": err.Message(), "status": "error"})
+			c.JSON(400, gin.H{"message": err.Error(), "key": err.Error(), "status": "error"})
 			return
 		}
 
@@ -82,7 +85,7 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 				"cart": item.Attributes, 
 			}
 
-			order.Add(item.Name, item.Description, "", item.Price, item.Quantity, meta)
+			order.Add(item.Name, "", "", item.Price, item.Quantity, meta)
 		}
 
 
@@ -91,18 +94,6 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 	}
 
 	c.JSON(400, gin.H{"message": "Invalid request, check order struct.", "status": "error"})
-	
-	//var form OrderForm
-	stripe.Key = "sk_test_81pQu0m3my2V2ERPW0MMAOml"
-
-	chargeParams := &stripe.ChargeParams{
-	  Amount: 400,
-	  Currency: "mxn",
-	  Desc: "Charge for test@example.com",
-	}
-
-	chargeParams.SetSource("tok_17CXDqKinZpZZUA2KjAW5KIy")
-	ch, err := charge.New(chargeParams)
 }
 
 func (this CheckoutAPI) getCartObject(c *gin.Context) *cart.Cart {
@@ -116,7 +107,7 @@ func (this CheckoutAPI) getCartObject(c *gin.Context) *cart.Cart {
 	return obj
 }
 
-type OrderForm struct {
+type CheckoutForm struct {
 	Gateway  string       `json:"gateway" binding:"required"`
 	Delivery DeliveryForm `json:"delivery" binding:"required"`	
 	Meta     map[string]interface{} `json:"meta"`

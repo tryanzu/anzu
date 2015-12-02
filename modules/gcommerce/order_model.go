@@ -29,6 +29,7 @@ type Order struct {
 	Updated   time.Time              `bson:"updated_at" json:"updated_at"`
 
 	di        *Module
+	gateway   Gateway
 }
 
 type Item struct {

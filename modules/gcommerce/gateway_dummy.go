@@ -1,4 +1,4 @@
-type gcommerce 
+package gcommerce 
 
 type GatewayDummy struct {
 	di *Module

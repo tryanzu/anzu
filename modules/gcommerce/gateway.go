@@ -18,12 +18,12 @@ func getGateway(name string) (Gateway, error) {
 
 	case "offline":
 
-		return Gateway(GatewayOffline{}), nil
+		return Gateway(&GatewayOffline{}), nil
 	case "stripe":
 
-		return Gateway(GatewayStripe{}), nil
+		return Gateway(&GatewayStripe{}), nil
 	default:
 
-		return Gateway(GatewayDummy{}), errors.New("Invalid gateway id.")
+		return Gateway(&GatewayDummy{}), errors.New("Invalid gateway id.")
 	}
 }

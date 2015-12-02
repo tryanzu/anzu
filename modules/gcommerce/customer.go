@@ -48,7 +48,7 @@ func (this *Customer) NewOrder(gateway_name string, address Address, meta map[st
 		Status: ORDER_AWAITING,
 		Statuses: make([]Status, 0),
 		UserId: this.Id,
-		Items: make([]Items, 0),
+		Items: make([]Item, 0),
 		Total: 0,
 		Gateway: gateway_name,
 		Meta: meta,

@@ -5,6 +5,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/xuyu/goredis"
+	"github.com/olebedev/config"
 	"gopkg.in/mgo.v2/bson"
 	"time"
 )
@@ -20,6 +21,7 @@ type Module struct {
 	Mongo  *mongo.Service               `inject:""`
 	Errors *exceptions.ExceptionsModule `inject:""`
 	Redis  *goredis.Redis               `inject:""`
+	Config *config.Config               `inject:""`
 	Mail   *mail.Module                 `inject:""`
 }
 
