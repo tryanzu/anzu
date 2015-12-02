@@ -25,13 +25,13 @@ func (this *Customer) Address(country, state, city, postal_code, line1, line2, e
 	}
 
 	for _, a := range this.Addresses {
-		
+
 		if reflect.DeepEqual(a, address) {
 			return a
 		}
 	}
 
-	database := this.Mongo.Database
+	database := this.di.Mongo.Database
 	err := database.C("customers").Update(bson.M{"_id": this.Id}, bson.M{"$push": bson.M{"addresses": address}, "$set": bson.M{"updated_at": time.Now()}})
 
 	if err != nil {
@@ -41,6 +41,22 @@ func (this *Customer) Address(country, state, city, postal_code, line1, line2, e
 	return address
 }
 
-func (this *Customer) NewOrder(gateway string, address Address, meta map[string]interface{}) {
-	
+func (this *Customer) NewOrder(gateway_name string, address Address, meta map[string]interface{}) (*Order, error) {
+
+	order := &Order{
+		Id: bson.NewObjectId(),
+		Status: ORDER_AWAITING,
+		Statuses: make([]Status, 0),
+		UserId: this.Id,
+		Items: make([]Items, 0),
+		Total: 0,
+		Gateway: gateway_name,
+		Meta: meta,
+		Created: time.Now(),
+		Updated: time.Now(),
+	}
+
+	order.SetDI(this.di)
+
+	return order, nil
 }

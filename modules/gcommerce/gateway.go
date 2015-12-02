@@ -6,7 +6,7 @@ import (
 
 type Gateway interface {
 	
-	SettlePay()
+	Charge()
 
 	// Set the Dependency injection module
 	SetDI(*Module)

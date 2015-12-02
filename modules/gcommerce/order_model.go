@@ -36,6 +36,7 @@ type Item struct {
 	Image       string  `bson:"image" json:"image"`
 	Description string  `bson:"description" json:"description"`
 	Price       float64 `bson:"price" json:"price"`
+	Quantity    int `bson:"quantity" json:"quantity"`
 	Meta        map[string]interface{} `bson:"meta" json:"meta"`
 }
 
