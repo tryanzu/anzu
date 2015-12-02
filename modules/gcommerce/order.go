@@ -18,6 +18,7 @@ func (this *Order) SetDI(di *Module) {
 
 	this.gateway = gateway
 	this.gateway.SetDI(this.di)
+	this.gateway.SetOrder(this)
 }
 
 func (this *Order) Add(name, description, image string, price float64, q int, meta map[string]interface{}) {
@@ -41,11 +42,16 @@ func (this *Order) Ship(price float64, name string, address Address) {
 func (this *Order) Checkout() error {
 
 	database := this.di.Mongo.Database
+
+	// Perform the save of the order once we've got here
 	err := database.C("gcommerce_orders").Insert(this)
 
 	if err != nil {
 		return errors.New("internal-error")
 	}
+
+	// Charge the user
+	err = this.gateway.Charge(this.Total)
 
 	return nil
 }

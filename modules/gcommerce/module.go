@@ -10,9 +10,9 @@ import (
 	"time"
 )
 
-func Boot() *Module {
+func Boot(key string) *Module {
 
-	module := &Module{}
+	module := &Module{StripeKey: key}
 
 	return module
 }
@@ -23,6 +23,7 @@ type Module struct {
 	Redis  *goredis.Redis               `inject:""`
 	Config *config.Config               `inject:""`
 	Mail   *mail.Module                 `inject:""`
+	StripeKey string
 }
 
 func (module *Module) GetCustomerFromUser(user_id bson.ObjectId) Customer {

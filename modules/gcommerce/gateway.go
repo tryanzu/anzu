@@ -6,13 +6,15 @@ import (
 
 type Gateway interface {
 	
-	Charge()
+	// Charge money logic
+	Charge(float64) error
 
 	// Price mutator
 	ModifyPrice(float64) float64
 
 	// Set the Dependency injection module
 	SetDI(*Module)
+	SetOrder(*Order)
 }
 
 func getGateway(name string) (Gateway, error) {

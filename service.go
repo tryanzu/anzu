@@ -57,7 +57,6 @@ func main() {
 	var exceptions exceptions.ExceptionsModule
 
 	storeService := store.Boot()
-	gcommerceService := gcommerce.Boot()
 
 	// Services for the DI
 	configService, _ := config.ParseJsonFile(envfile)
@@ -77,6 +76,7 @@ func main() {
 		panic(err)
 	}
 
+	gcommerceService := gcommerce.Boot(string_value(configService.String("ecommerce.stripe.secret")))
 	searchConfig, err := configService.Get("algolia")
 
 	if err != nil {
