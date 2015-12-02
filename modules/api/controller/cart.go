@@ -65,6 +65,23 @@ func (this CartAPI) Add(c *gin.Context) {
 	}
 }
 
+// Delete Item from cart
+func (this CartAPI) Delete(c *gin.Context) {
+
+	id := c.Param("id")
+
+	if !bson.IsObjectIdHex(id) {
+		c.JSON(400, gin.H{"message": "Invalid request, check id format.", "status": "error"})
+		return
+	}
+
+	shopping_cart := this.getCart(c)
+	{
+		exists := shopping_cart.Remove(id)
+
+		c.JSON(200, gin.H{"status": "okay", "removed": exists})
+	}
+}
 
 func (this CartAPI) getCart(c *gin.Context) *cart.Cart {
 

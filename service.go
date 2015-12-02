@@ -19,6 +19,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/store"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/fernandez14/spartangeek-blacker/modules/security"
+	"github.com/fernandez14/spartangeek-blacker/modules/gcommerce"
 	"github.com/fernandez14/spartangeek-blacker/modules/search"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/getsentry/raven-go"
@@ -56,6 +57,7 @@ func main() {
 	var exceptions exceptions.ExceptionsModule
 
 	storeService := store.Boot()
+	gcommerceService := gcommerce.Boot()
 
 	// Services for the DI
 	configService, _ := config.ParseJsonFile(envfile)
@@ -118,6 +120,7 @@ func main() {
 		&inject.Object{Value: searchService, Complete: true},
 		&inject.Object{Value: aclService, Complete: false},
 		&inject.Object{Value: storeService, Complete: false},
+		&inject.Object{Value: gcommerceService, Complete: false},
 		&inject.Object{Value: userService, Complete: false},
 		&inject.Object{Value: componentsService, Complete: false},
 		&inject.Object{Value: gamingService, Complete: false},

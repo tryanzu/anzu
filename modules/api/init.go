@@ -33,6 +33,7 @@ type Module struct {
 	PostsFactory controller.PostAPI
 	Components   controller.ComponentAPI
 	Cart         controller.CartAPI
+	Checkout     controller.CheckoutAPI
 }
 
 type ModuleDI struct {
@@ -62,6 +63,7 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.Mail},
 		&inject.Object{Value: &module.Components},
 		&inject.Object{Value: &module.Cart},
+		&inject.Object{Value: &module.Checkout},
 	)
 
 	if err != nil {
@@ -183,6 +185,10 @@ func (module *Module) Run() {
 			// Cart routes
 			store.GET("/cart", module.Cart.Get)
 			store.POST("/cart", module.Cart.Add)
+			store.DELETE("/cart/:id", module.Cart.Delete)
+
+			// Checkout routes
+			store.POST("/checkout", module.Checkout.Place)
 		}
 
 		authorized := v1.Group("")

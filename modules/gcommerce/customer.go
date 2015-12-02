@@ -41,7 +41,7 @@ func (this *Customer) Address(country, state, city, postal_code, line1, line2, e
 	return address
 }
 
-func (this *Customer) NewOrder(gateway_name string, address Address, meta map[string]interface{}) (*Order, error) {
+func (this *Customer) NewOrder(gateway_name string, meta map[string]interface{}) (*Order, error) {
 
 	order := &Order{
 		Id: bson.NewObjectId(),

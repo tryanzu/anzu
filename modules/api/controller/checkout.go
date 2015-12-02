@@ -70,7 +70,7 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 		address := customer.Address("mx", form.Delivery.State, form.Delivery.City, form.Delivery.Zipcode, form.Delivery.AddressLine1, form.Delivery.AddressLine2, form.Delivery.Extra)
 
 		// Get a reference for the customer's new order
-		order, err := customer.NewOrder(form.Gateway, address, form.Meta)
+		order, err := customer.NewOrder(form.Gateway, form.Meta)
 
 		if err != nil {
 			c.JSON(400, gin.H{"message": err.Error(), "key": err.Error(), "status": "error"})
@@ -88,12 +88,21 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 			order.Add(item.Name, "", "", item.Price, item.Quantity, meta)
 		}
 
+		// Setup shipping information
+		order.Ship(120, "generic", address)
+
+		err = order.Checkout()
+
+		if err != nil {
+			c.JSON(400, gin.H{"message": err.Error(), "key": err.Error(), "status": "error"})
+			return
+		}
 
 		c.JSON(200, gin.H{"status": "okay"})
 		return
 	}
 
-	c.JSON(400, gin.H{"message": "Invalid request, check order struct.", "status": "error"})
+	c.JSON(400, gin.H{"message": "Invalid request, check order docs.", "status": "error"})
 }
 
 func (this CheckoutAPI) getCartObject(c *gin.Context) *cart.Cart {
@@ -118,6 +127,6 @@ type DeliveryForm struct {
 	City    string `json:"city" binding:"required"`
 	Zipcode string `json:"zipcode" binding:"required"`
 	AddressLine1 string `json:"address_line1" binding:"required"`
-	AddressLine2 string `json:"address_line2" binding:"required"`
-	Extra        string `json:"extra" binding:"extra"`
+	AddressLine2 string `json:"address_line2"`
+	Extra        string `json:"extra"`
 }

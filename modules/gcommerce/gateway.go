@@ -8,6 +8,9 @@ type Gateway interface {
 	
 	Charge()
 
+	// Price mutator
+	ModifyPrice(float64) float64
+
 	// Set the Dependency injection module
 	SetDI(*Module)
 }
