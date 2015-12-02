@@ -31,7 +31,7 @@ func (module *Module) GetCustomerFromUser(user_id bson.ObjectId) Customer {
 	err := database.C("customers").Find(bson.M{"user_id": user_id}).One(&customer)
 
 	if err != nil {
-		
+
 		customer = Customer{
 			Id: bson.NewObjectId(),
 			UserId: user_id,
@@ -46,5 +46,7 @@ func (module *Module) GetCustomerFromUser(user_id bson.ObjectId) Customer {
 		}
 	} 
 
+	customer.SetDI(module)
+	
 	return customer
 }

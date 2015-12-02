@@ -5,6 +5,8 @@ import (
 	"time"
 )
 
+const ORDER_AWAITING string = "awaiting"
+
 type Order struct {
 	Id        bson.ObjectId          `bson:"_id,omitempty" json:"id,omitempty"`
 	
@@ -25,6 +27,8 @@ type Order struct {
 	Meta      map[string]interface{} `bson:"meta" json:"meta"`
 	Created   time.Time              `bson:"created_at" json:"created_at"`
 	Updated   time.Time              `bson:"updated_at" json:"updated_at"`
+
+	di        *Module
 }
 
 type Item struct {
@@ -42,6 +46,7 @@ type Status struct {
 }
 
 type Shipping struct {
+	Type    string  `bson:"type" json:"type"`
 	Price   float64 `bson:"price" json:"price"`
 	Meta    map[string]interface{} `bson:"meta" json:"meta"`
 	Address Address `bson:"address" json:"address"`
