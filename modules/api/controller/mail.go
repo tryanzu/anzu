@@ -186,7 +186,7 @@ type MailFullInbound struct {
 
 type MailAttachmentInbound struct {
 	Name    string `json:"Name"`
-	Content string `json:"Content"`
+	Content string `json:"Content" bson:"-"`
 	ContentType string `json:"ContentType"`
 	ContentLength int `json:"ContentLength"`
 	ContentID string `json:"ContentID"`
