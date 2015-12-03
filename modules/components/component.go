@@ -1,20 +1,20 @@
 package components
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"gopkg.in/mgo.v2/bson"
 	"strings"
 	"time"
+	"math"
 )
 
 // Set DI instance
 func (component *ComponentModel) SetDI(di *Module) {
-
 	component.di = di
 }
 
 // Set generic data for the component model
 func (component *ComponentModel) SetGeneric(data []byte) {
-
 	component.generic = data
 }
 
@@ -30,6 +30,17 @@ func (component *ComponentModel) GetData() map[string]interface{} {
 	}
 
 	return data
+}
+
+// Get Store price for vendor
+func (component *ComponentModel) GetVendorPrice(vendor string) (float64, error) {
+
+	if price, exists := component.Store.Prices[vendor]; exists {
+
+		return price, nil
+	}
+
+	return float64(math.NaN()), exceptions.NotFound{"Invalid vendor. Not found."}
 }
 
 // Update component's price 

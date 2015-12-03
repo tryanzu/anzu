@@ -35,6 +35,7 @@ type Comment struct {
 	Position int           `bson:"position,omitempty" json:"position"`
 	Liked    int           `bson:"liked,omitempty" json:"liked,omitempty"`
 	Content  string        `bson:"content" json:"content"`
+	Chosen   bool          `bson:"chosen,omitempty" json:"chosen,omitempty"`
 	Created  time.Time     `bson:"created_at" json:"created_at"`
 	Deleted  time.Time     `bson:"deleted_at" json:"deleted_at"`
 }

@@ -48,17 +48,16 @@ func (self *One) PushAnswer(text, kind string) {
 			text = strings.Replace(text, "\n", "<br>", -1)
 			
 			compose := mail.Mail{
-				Subject:  "PC Spartana",
-				Template: "simple",
+				Template: 250241,
 				Recipient: []mail.MailRecipient{
 					{
 						Name:  self.data.User.Name,
 						Email: self.data.User.Email,
 					},
 				},
-				FromEmail: "pc@pedidos.spartangeek.com",
+				FromEmail: "pc@spartangeek.com",
 				FromName: "Drak Spartan",
-				Variables: map[string]string{
+				Variables: map[string]interface{}{
 					"content": text,
 				},
 			}
