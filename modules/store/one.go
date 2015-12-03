@@ -55,7 +55,7 @@ func (self *One) PushAnswer(text, kind string) {
 						Email: self.data.User.Email,
 					},
 				},
-				FromEmail: "pc@pedidos.spartangeek.com",
+				FromEmail: "pc@spartangeek.com",
 				FromName: "Drak Spartan",
 				Variables: map[string]interface{}{
 					"content": text,

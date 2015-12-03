@@ -10,6 +10,7 @@ import (
 
 	"io/ioutil"
 	"encoding/json"
+	"time"
 )
 
 type MailAPI struct {
@@ -70,6 +71,9 @@ func (self MailAPI) Inbound(c *gin.Context) {
 				}
 			}
 		}
+
+		// Save the time
+		form.Created = time.Now()
 
 		err = database.C("inbound_mails").Insert(form)		
 
@@ -171,6 +175,7 @@ type MailInbound struct {
 	StrippedTextReply string `json:"StrippedTextReply"`
 
 	Attachments  []MailAttachmentInbound `bson:"-" json:"Attachments"`
+	Created time.Time `bson:"created_at,omitempty" json:"created_at,omitempty"`
 }
 
 type MailFullInbound struct {
