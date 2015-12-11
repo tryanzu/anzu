@@ -21,6 +21,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/preprocessor"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/fernandez14/spartangeek-blacker/modules/security"
+	"github.com/fernandez14/spartangeek-blacker/modules/gcommerce"
 	"github.com/fernandez14/spartangeek-blacker/modules/search"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/getsentry/raven-go"
@@ -78,6 +79,7 @@ func main() {
 		panic(err)
 	}
 
+	gcommerceService := gcommerce.Boot(string_value(configService.String("ecommerce.stripe.secret")))
 	searchConfig, err := configService.Get("algolia")
 
 	if err != nil {
@@ -122,6 +124,7 @@ func main() {
 		&inject.Object{Value: searchService, Complete: true},
 		&inject.Object{Value: aclService, Complete: false},
 		&inject.Object{Value: storeService, Complete: false},
+		&inject.Object{Value: gcommerceService, Complete: false},
 		&inject.Object{Value: assetsService, Complete: false},
 		&inject.Object{Value: userService, Complete: false},
 		&inject.Object{Value: componentsService, Complete: false},
