@@ -86,15 +86,14 @@ func (self *One) SendConfirmationEmail() {
 	mailing := self.di.Mail
 
 	compose := mail.Mail{
-		Subject:  "Último paso para tu registro",
-		Template: "signup",
+		Template: 250222,
 		Recipient: []mail.MailRecipient{
 			{
 				Name:  self.data.UserName,
 				Email: self.data.Email,
 			},
 		},
-		Variables: map[string]string{
+		Variables: map[string]interface{}{
 			"confirm_url": "http://spartangeek.com/signup/confirm/" + self.data.VerificationCode,
 		},
 	}

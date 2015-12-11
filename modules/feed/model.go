@@ -42,6 +42,28 @@ type LightPostModel struct {
 	UserId     bson.ObjectId `bson:"user_id,omitempty" json:"user_id,omitempty"`
 	Pinned     bool          `bson:"pinned,omitempty" json:"pinned,omitempty"`
 	IsQuestion bool          `bson:"is_question,omitempty" json:"is_question,omitempty"`
+	Solved     bool          `bson:"solved,omitempty" json:"solved,omitempty"`
+	BestAnswer *CommentModel  `json:"best_answer,omitempty"`
 	Created    time.Time     `bson:"created_at" json:"created_at"`
 	Updated    time.Time     `bson:"updated_at" json:"updated_at"`
+}
+
+type CommentModel struct {
+	UserId   bson.ObjectId `bson:"user_id" json:"user_id"`
+	Votes    VotesModel    `bson:"votes" json:"votes"`
+	Content  string        `bson:"content" json:"content"`
+	Chosen   bool          `bson:"chosen,omitempty" json:"chosen,omitempty"`
+	Created  time.Time     `bson:"created_at" json:"created_at"`
+	Deleted  time.Time     `bson:"deleted_at" json:"deleted_at"`
+}
+
+type PostCommentModel struct {
+	Id       bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
+	Comment  CommentModel  `bson:"comment" json:"comment,omitempty"`
+}
+
+type VotesModel struct {
+	Up     int `bson:"up" json:"up"`
+	Down   int `bson:"down" json:"down"`
+	Rating int `bson:"rating,omitempty" json:"rating,omitempty"`
 }
