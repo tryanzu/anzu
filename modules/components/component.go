@@ -111,6 +111,13 @@ func (component *ComponentModel) UpdateAlgolia() {
 	object["type"] = component.Type
 	object["activated"] = true
 
+	price, with_price := component.GetVendorPrice("spartangeek")
+
+	if with_price == nil {
+
+		object["price"] = price
+	}
+
 	_, err := index.UpdateObject(object)
 
 	if err != nil {
