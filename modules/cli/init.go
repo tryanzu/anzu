@@ -466,17 +466,9 @@ func (module Module) IndexComponentsAlgolia() {
 				full_name = name
 			}
 
-			images := component["images"].([]interface{})
-			image := ""
+			image, image_exists := component["image"]
 
-			if len(images) > 0 {
-
-				image_data := images[0].(map[string]interface{})
-
-				image = image_data["path"].(string)
-				image = strings.Replace(image, "full/", "", -1)
-
-			} else {
+			if ! image_exists {
 
 				image = ""
 			}
@@ -493,7 +485,7 @@ func (module Module) IndexComponentsAlgolia() {
 					FullName: full_name.(string),
 					Part: part_number.(string),
 					Slug: slug,
-					Image: image,
+					Image: image.(string),
 					Type: component["type"].(string),
 				}
 
