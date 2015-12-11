@@ -2,9 +2,9 @@ package mail
 
 type Mail struct {
 	Subject   string
-	Template  string
+	Template  int
 	Recipient []MailRecipient
-	Variables map[string]string
+	Variables map[string]interface{}
 	FromName  string
 	FromEmail string
 }

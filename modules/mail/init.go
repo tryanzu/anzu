@@ -1,64 +1,81 @@
 package mail
 
 import (
-	"github.com/keighl/mandrill"
 	"github.com/olebedev/config"
+	"github.com/hjr265/postmark.go/postmark"
+	"net/mail"
+	"log"
 )
 
 type Module struct {
-	Client *mandrill.Client
+	Client *postmark.Client
 	config ModuleConfig
 	debug  bool
 }
 
-func (module Module) Send(mail Mail) {
+func (module Module) Send(m Mail) {
 
-	message := &mandrill.Message{}
+	message := &postmark.Message{}
 
-	if mail.FromName == "" && mail.FromEmail == "" {
+	if m.FromName == "" && m.FromEmail == "" {
 
-		// Setup mail message
-		message.FromEmail = module.config.From
-		message.FromName = module.config.FromName
+		message.From = &mail.Address{
+	        Name:    module.config.FromName,
+	        Address: module.config.From,
+	    }
 		
 	} else {
 
-		message.FromEmail = mail.FromEmail
-		message.FromName = mail.FromName
+		message.From = &mail.Address{
+	        Name:    m.FromName,
+	        Address: m.FromEmail,
+	    }
 	}
+
+	var recipients []*mail.Address
 
 	if module.debug {
 
 		for _, recipient := range module.config.Recipients {
 
-			message.AddRecipient(recipient, recipient, "to")
+			recipients = append(recipients, &mail.Address{
+				Name:    recipient,
+				Address: recipient,
+			})
 		}
 
 	} else {
 
-		for _, recipient := range mail.Recipient {
+		for _, recipient := range m.Recipient {
 
-			message.AddRecipient(recipient.Email, recipient.Name, "to")
+			recipients = append(recipients, &mail.Address{
+				Name:    recipient.Name,
+				Address: recipient.Email,
+			})
 		}
 	}
 
-	message.Subject = mail.Subject
-
-	// Merge tags
-	message.GlobalMergeVars = mandrill.MapToVars(mail.Variables)
+	message.To = recipients
+	message.TemplateModel = m.Variables
+	message.TemplateId = m.Template
 
 	// Send the email using mandrill's API abstraction
-	_, err := module.Client.MessagesSendTemplate(message, mail.Template, map[string]string{})
+	res, err := module.Client.Send(message)
 
 	if err != nil {
 		panic(err)
 	}
+
+	log.Println(res)
 }
 
 func Boot(key string, config *config.Config, debug bool) *Module {
 
 	// Initialize mandrill client
-	client := mandrill.ClientWithKey(key)
+	client := &postmark.Client{
+	    ApiKey: key,
+	    Secure: true,
+	}
 
 	name, err := config.String("from.name")
 

@@ -7,6 +7,7 @@ import (
 	"github.com/facebookgo/inject"
 	"github.com/fernandez14/spartangeek-blacker/interfaces"
 	"github.com/fernandez14/spartangeek-blacker/modules/acl"
+	"github.com/fernandez14/spartangeek-blacker/modules/assets"
 	"github.com/fernandez14/spartangeek-blacker/modules/api"
 	"github.com/fernandez14/spartangeek-blacker/modules/cli"
 	"github.com/fernandez14/spartangeek-blacker/modules/components"
@@ -17,6 +18,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/fernandez14/spartangeek-blacker/modules/notifications"
 	"github.com/fernandez14/spartangeek-blacker/modules/store"
+	"github.com/fernandez14/spartangeek-blacker/modules/preprocessor"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/fernandez14/spartangeek-blacker/modules/security"
 	"github.com/fernandez14/spartangeek-blacker/modules/gcommerce"
@@ -49,6 +51,7 @@ func main() {
 
 	// Resources for the API
 	var api api.Module
+	var preprocessor preprocessor.Module
 	var cliModule cli.Module
 	var queueModule queue.Module
 	var securityModule security.Module
@@ -84,6 +87,7 @@ func main() {
 	}
 
 	searchService := search.Boot(searchConfig)
+	assetsService := assets.Boot()
 	mailService := mail.Boot(string_value(configService.String("mail.api_key")), mailConfig, false)
 
 	// Amazon services for the DI
@@ -121,6 +125,7 @@ func main() {
 		&inject.Object{Value: aclService, Complete: false},
 		&inject.Object{Value: storeService, Complete: false},
 		&inject.Object{Value: gcommerceService, Complete: false},
+		&inject.Object{Value: assetsService, Complete: false},
 		&inject.Object{Value: userService, Complete: false},
 		&inject.Object{Value: componentsService, Complete: false},
 		&inject.Object{Value: gamingService, Complete: false},
@@ -152,6 +157,22 @@ func main() {
 
 			// Run API module
 			api.Run()
+		},
+	}
+
+	var cmdPreprocessor = &cobra.Command{
+		Use:   "pre-processor",
+		Short: "Starts Pre-Processor",
+		Long: `Starts API web server listening
+        in the specified env port
+        `,
+		Run: func(cmd *cobra.Command, args []string) {
+
+			// Populate dependencies using the already instantiated DI
+			preprocessor.Populate(g)
+
+			// Run preprocessor module
+			preprocessor.Run()
 		},
 	}
 
@@ -257,6 +278,7 @@ func main() {
 	rootCmd.AddCommand(cmdWorkerRoutine)
 	rootCmd.AddCommand(cmdJobs)
 	rootCmd.AddCommand(cmdRunRoutine)
+	rootCmd.AddCommand(cmdPreprocessor)
 	rootCmd.Execute()
 
 	return
