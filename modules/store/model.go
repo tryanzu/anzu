@@ -23,6 +23,9 @@ type OrderModel struct {
 	Pipeline   PipelineModel   `bson:"pipeline,omitempty" json:"pipeline"`
 	Created    time.Time       `bson:"created_at" json:"created_at"`
 	Updated   time.Time        `bson:"updated_at" json:"updated_at"`
+
+	// Runtime generated and not persisted in database
+	RelatedUsers interface{} `bson:"-" json:"related_users,omitempty"`
 }
 
 type OrderUserModel struct {

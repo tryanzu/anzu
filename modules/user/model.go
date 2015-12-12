@@ -38,6 +38,19 @@ type User struct {
 	Referrals ReferralsModel `json:"referrals,omitempty"`
 }
 
+type UserBasic struct {
+	Id               bson.ObjectId          `bson:"_id,omitempty" json:"id"`
+	UserName         string                 `bson:"username" json:"username"`
+	UserNameSlug     string                 `bson:"username_slug" json:"username_slug"`
+	Email            string                 `bson:"email" json:"email,omitempty"`
+	Facebook         interface{}            `bson:"facebook,omitempty" json:"facebook,omitempty"`
+	Gaming           UserGaming             `bson:"gaming,omitempty" json:"gaming,omitempty"`
+	Validated        bool                   `bson:"validated" json:"validated"`
+	Banned           bool                   `bson:"banned" json:"banned"`
+	Created          time.Time              `bson:"created_at" json:"created_at"`
+	Updated          time.Time              `bson:"updated_at" json:"updated_at"`
+}
+
 type UserRole struct {
 	Name       string          `bson:"name" json:"name"`
 	Categories []bson.ObjectId `bson:"categories,omitempty" json:"categories,omitempty"`

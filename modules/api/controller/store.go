@@ -88,7 +88,10 @@ func (self StoreAPI) One(c *gin.Context) {
 	// Mark as readed
 	order.Touch()
 
-	c.JSON(200, order.Data())
+	data := order.Data()
+	data.RelatedUsers = order.MatchUsers()
+
+	c.JSON(200, data)
 }
 
 // Use one of the predefined answers to answer an order

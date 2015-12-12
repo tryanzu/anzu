@@ -2,6 +2,8 @@ package store
 
 import (
 	"github.com/fernandez14/spartangeek-blacker/modules/mail"
+	"github.com/fernandez14/spartangeek-blacker/modules/user"
+	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"gopkg.in/mgo.v2/bson"
 	"time"
 	"strings"
@@ -153,6 +155,46 @@ func (self *One) Stage(name string) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func (self *One) MatchUsers() []user.UserBasic {
+
+	database := self.di.Mongo.Database
+	ip := self.data.User.Ip
+
+	if ip != "" {
+
+		var checkins []user.CheckinModel
+		var users_id []bson.ObjectId
+
+		err := database.C("checkins").Find(bson.M{"client_ip": ip}).All(&checkins)
+
+		if err != nil {
+			panic(err)
+		}
+
+		for _, checkin := range checkins {
+
+			duplicated, _ := helpers.InArray(checkin.UserId, users_id)
+
+			if ! duplicated {
+
+				users_id = append(users_id, checkin.UserId)
+			}
+		}
+
+		var users []user.UserBasic
+
+		err = database.C("users").Find(bson.M{"_id": bson.M{"$in": users_id}}).Select(bson.M{"_id": 1, "username": 1, "username_slug": 1, "email": 1, "facebook": 1, "validated": 1, "banned": 1, "created_at": 1, "updated_at": 1}).All(&users)
+
+		if err != nil {
+			panic(err)
+		}
+
+		return users
+	}
+
+	return make([]user.UserBasic, 0)
 }
 
 func (self *One) Touch() {
