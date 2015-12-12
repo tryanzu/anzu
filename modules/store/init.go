@@ -82,7 +82,7 @@ func (module *Module) GetSortedOrders(limit, skip int) []OrderModel {
 	var list []OrderModel
 
 	database := module.Mongo.Database
-	err := database.C("orders").Find(bson.M{"deleted_at": bson.M{"$exists": true}}).Sort("-updated_at").Limit(limit).Skip(skip).All(&list)
+	err := database.C("orders").Find(bson.M{"deleted_at": bson.M{"$exists": false}}).Sort("-updated_at").Limit(limit).Skip(skip).All(&list)
 
 	if err != nil {
 		panic(err)
