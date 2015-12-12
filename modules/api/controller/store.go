@@ -24,6 +24,7 @@ func (self StoreAPI) PlaceOrder(c *gin.Context) {
 				Name:  form.User.Name,
 				Email: form.User.Email,
 				Phone: form.User.Phone,
+				Ip: c.ClientIP(),
 			},
 			Content:  form.Content,
 			Budget:   form.Budget,
