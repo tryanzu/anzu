@@ -17,6 +17,8 @@ func (self StoreAPI) PlaceOrder(c *gin.Context) {
 
 	var form OrderForm
 
+	var ip string = c.ClientIP()
+
 	if c.BindJSON(&form) == nil {
 
 		order := store.OrderModel{
@@ -24,7 +26,7 @@ func (self StoreAPI) PlaceOrder(c *gin.Context) {
 				Name:  form.User.Name,
 				Email: form.User.Email,
 				Phone: form.User.Phone,
-				Ip: c.ClientIP(),
+				Ip: ip,
 			},
 			Content:  form.Content,
 			Budget:   form.Budget,
@@ -39,7 +41,7 @@ func (self StoreAPI) PlaceOrder(c *gin.Context) {
 
 		self.Store.CreateOrder(order)
 
-		c.JSON(200, gin.H{"status": "okay"})
+		c.JSON(200, gin.H{"status": "okay", "signed": ip})
 	}
 }
 
