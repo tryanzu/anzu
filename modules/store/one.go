@@ -185,7 +185,11 @@ func (self *One) MatchUsers() []user.UserBasic {
 
 		var users []user.UserBasic
 
-		err = database.C("users").Find(bson.M{"_id": bson.M{"$in": users_id}}).Select(bson.M{"_id": 1, "username": 1, "username_slug": 1, "email": 1, "facebook": 1, "validated": 1, "banned": 1, "created_at": 1, "updated_at": 1}).All(&users)
+		err = database.C("users").Find(bson.M{"$or": []bson.M{
+				{"_id": bson.M{"$in": users_id}},
+				{"email": self.data.User.Email},
+				{"facebook.email": self.data.User.Email},
+			}}).Select(bson.M{"_id": 1, "username": 1, "username_slug": 1, "email": 1, "facebook": 1, "validated": 1, "banned": 1, "created_at": 1, "updated_at": 1}).All(&users)
 
 		if err != nil {
 			panic(err)
