@@ -87,8 +87,8 @@ func (component *ComponentModel) UpdatePrice(vendors map[string]map[string]inter
 
 			u := ComponentStoreItemModel{
 				Price: price.(float64),
-				Stock: stock.(int),
-				Priority: prio.(int),
+				Stock: int(stock.(float64)),
+				Priority: int(prio.(float64)),
 			}
 
 			set["store.vendors." + key] = u
