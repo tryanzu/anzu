@@ -72,6 +72,10 @@ func (component *ComponentModel) UpdatePrice(vendors map[string]map[string]inter
 		if err != nil {
 			panic(err)
 		}
+	} else {
+
+		// Allocate the map
+		component.Store.Vendors = make(map[string]ComponentStoreItemModel)
 	}
 
 
