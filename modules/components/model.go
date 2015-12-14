@@ -30,9 +30,14 @@ type ComponentImageModel struct {
 }
 
 type ComponentStoreModel struct {
-	Prices  map[string]float64 `bson:"prices" json:"prices"`
-	Stock   int 			   `bson:"stock" json:"stock"`
+	Vendors map[string]ComponentStoreItemModel `bson:"vendors" json:"vendors"`
 	Updated time.Time 		   `bson:"updated_at" json:"updated_at"`
+}
+
+type ComponentStoreItemModel struct {
+	Price float64 `bson:"price" json:"price"`
+	Stock int `bson:"stock" json:"stock"`
+	Priority int `bson:"priority" json:"priority"`
 }
 
 type ComponentHistoricModel struct {

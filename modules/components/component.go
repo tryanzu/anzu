@@ -34,21 +34,32 @@ func (component *ComponentModel) GetData() map[string]interface{} {
 // Get Store price for vendor
 func (component *ComponentModel) GetVendorPrice(vendor string) (float64, error) {
 
-	if price, exists := component.Store.Prices[vendor]; exists {
+	if v, exists := component.Store.Vendors[vendor]; exists {
 
-		return price, nil
+		return v.Price, nil
 	}
 
 	return float64(math.NaN()), exceptions.NotFound{"Invalid vendor. Not found."}
 }
 
+// Get Vendor object
+func (component *ComponentModel) GetVendor(vendor string) (ComponentStoreItemModel, error) {
+
+	if v, exists := component.Store.Vendors[vendor]; exists {
+
+		return v, nil
+	}
+
+	return ComponentStoreItemModel{}, exceptions.NotFound{"Invalid vendor. Not found."}
+}
+
 // Update component's price 
-func (component *ComponentModel) UpdatePrice(prices map[string]float64) {
+func (component *ComponentModel) UpdatePrice(vendors map[string]map[string]interface{}) {
 
 	database := component.di.Mongo.Database
 
 	// Record price history
-	if len(component.Store.Prices) > 0 {
+	if len(component.Store.Vendors) > 0 {
 
 		historic := &ComponentHistoricModel{
 			ComponentId: component.Id,
@@ -66,12 +77,25 @@ func (component *ComponentModel) UpdatePrice(prices map[string]float64) {
 
 	set := bson.M{"store.updated_at": time.Now(), "activated": true}
 
-	for key, price := range prices {
+	for key, item := range vendors {
 
-		set["store.prices." + key] = price
+		price, with_price := item["price"]
+		stock, with_stock := item["stock"]
+		prio, with_prio := item["priority"]
 
-		// Runtime update
-		component.Store.Prices[key] = price
+		if with_price && with_stock && with_prio {
+
+			u := ComponentStoreItemModel{
+				Price: price.(float64),
+				Stock: stock.(int),
+				Priority: prio.(int),
+			}
+
+			set["store.vendors." + key] = u
+
+			// Runtime update
+			component.Store.Vendors[key] = u
+		}
 	}
 
 	err := database.C("components").Update(bson.M{"_id": component.Id}, bson.M{"$set": set})
@@ -111,14 +135,16 @@ func (component *ComponentModel) UpdateAlgolia() {
 	object["type"] = component.Type
 	object["activated"] = true
 
-	price, with_price := component.GetVendorPrice("spartangeek")
+	v, err := component.GetVendor("spartangeek")
 
-	if with_price == nil {
+	if err == nil {
 
-		object["price"] = price
+		object["price"] = v.Price
+		object["priority"] = v.Priority
+		object["stock"] = v.Stock
 	}
 
-	_, err := index.UpdateObject(object)
+	_, err = index.UpdateObject(object)
 
 	if err != nil {
 		panic(err)

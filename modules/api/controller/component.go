@@ -87,5 +87,5 @@ func (this ComponentAPI) UpdatePrice(c *gin.Context) {
 }
 
 type ComponentPriceUpdateForm struct {
-	Price  map[string]float64 `json:"price" binding:"required"`
+	Price  map[string]map[string]interface{} `json:"prices" binding:"required"`
 }
