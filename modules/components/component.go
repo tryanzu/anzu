@@ -3,7 +3,6 @@ package components
 import (
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"gopkg.in/mgo.v2/bson"
-	"strings"
 	"time"
 	"math"
 )
@@ -70,6 +69,9 @@ func (component *ComponentModel) UpdatePrice(prices map[string]float64) {
 	for key, price := range prices {
 
 		set["store.prices." + key] = price
+
+		// Runtime update
+		component.Store.Prices[key] = price
 	}
 
 	err := database.C("components").Update(bson.M{"_id": component.Id}, bson.M{"$set": set})
@@ -96,9 +98,7 @@ func (component *ComponentModel) UpdateAlgolia() {
 	var image string
 
 	if len(component.Images) > 0 {
-
-		image = component.Images[0].Path
-		image = strings.Replace(image, "full/", "", -1)
+		image = component.Images[0]
 	}
 
 	object := make(map[string]interface{})

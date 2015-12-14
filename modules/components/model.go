@@ -16,9 +16,8 @@ type ComponentModel struct {
 	Type         string                `bson:"type" json:"type"`
 	PartNumber   string                `bson:"part_number" json:"part_number"`
 	Manufacturer string                `bson:"manufacturer" json:"manufacturer"`
-	Images       []ComponentImageModel `bson:"images" json:"images"`
-	ImageUrls    []string              `bson:"image_urls" json:"image_urls"`
-	Activated    bool `bson:"activated" json:"activated"`
+	Images       []string              `bson:"images" json:"images"`
+	Activated    bool                  `bson:"activated" json:"activated"`
 	Store        ComponentStoreModel   `bson:"store,omitempty" json:"store,omitempty"`
 	di           *Module
 	generic      []byte
