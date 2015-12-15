@@ -5,11 +5,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/fernandez14/spartangeek-blacker/modules/components"
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
+	"github.com/fernandez14/spartangeek-blacker/modules/user"
 )
 
 type ComponentAPI struct {
 	Components *components.Module `inject:""`
 	Feed       *feed.FeedModule `inject:""`
+	User       *user.Module `inject:""`
 }
 
 // Get component by slug
@@ -27,6 +29,20 @@ func (this ComponentAPI) Get(c *gin.Context) {
 	if err != nil {
 		c.JSON(404, gin.H{"message": "Invalid request, component not found.", "status": "error"})
 		return
+	}
+
+	user_ref, signed_in := c.Get("user_id")
+
+	if signed_in {
+
+		user_id := bson.ObjectIdHex(user_ref.(string))
+		usr, err := this.User.Get(user_id)
+
+		if err == nil {
+
+			// Track user viewing the component
+			usr.TrackView("component", component.Id)
+		}
 	}
 
 	c.JSON(200, component.GetData())

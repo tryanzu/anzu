@@ -81,6 +81,23 @@ func (self *One) TrackUserSignin(client_address string) {
 	}
 }
 
+func (self *One) TrackView(entity string, entity_id bson.ObjectId) {
+
+	database := self.di.Mongo.Database
+	record := &ViewModel{
+		UserId: self.data.Id,
+		Related: entity,
+		RelatedId: entity_id,
+		Created: time.Now(),
+	}
+
+	err := database.C("user_views").Insert(record)
+
+	if err != nil {
+		panic(err)
+	}
+}
+
 func (self *One) SendConfirmationEmail() {
 
 	mailing := self.di.Mail

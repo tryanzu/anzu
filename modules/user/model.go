@@ -135,6 +135,14 @@ type UserId struct {
 	Id   bson.ObjectId `bson:"_id,omitempty" json:"id"`
 }
 
+type ViewModel struct {
+	Id      bson.ObjectId `bson:"_id,omitempty" json:"id"`
+	UserId  bson.ObjectId `bson:"user_id" json:"user_id"`
+	Related string        `bson:"related" json:"related"`
+	RelatedId bson.ObjectId `bson:"related_id" json:"related_id"`
+	Created time.Time     `bson:"created_at" json:"created_at"`
+}
+
 type CheckinModel struct {
 	Id      bson.ObjectId `bson:"_id,omitempty" json:"id"`
 	UserId  bson.ObjectId `bson:"user_id" json:"user_id"`
