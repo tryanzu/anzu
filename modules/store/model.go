@@ -39,7 +39,7 @@ type MessageModel struct {
 	Type      string        `bson:"type" json:"type"`
 	Content   string        `bson:"content" json:"content"`
 	RelatedId bson.ObjectId `bson:"related_id,omitempty" json:"related_id,omitempty"`
-	Meta      map[string]interface{} `bson:"-" json:"meta"`
+	Meta      map[string]interface{} `bson:"-" json:"meta,omitempty"`
 	Created   time.Time     `bson:"created_at" json:"created_at"`
 	Updated   time.Time     `bson:"updated_at" json:"updated_at"`
 }

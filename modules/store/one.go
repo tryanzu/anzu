@@ -92,7 +92,9 @@ func (self *One) LoadAssets() {
 		panic(err)
 	}
 
-	for key, msg := range self.data.Messages {
+	messages := self.data.Messages
+
+	for key, msg := range messages {
 
 		for _, asset := range als {
 
@@ -103,7 +105,7 @@ func (self *One) LoadAssets() {
 					a := l.([]assets.Asset)
 					a = append(a, asset)
 
-					self.data.Messages[key].Meta["assets"] = a
+					messages[key].Meta["assets"] = a
 
 				} else {	
 
@@ -111,15 +113,15 @@ func (self *One) LoadAssets() {
 
 					a = append(a, asset)
 
-					self.data.Messages[key].Meta = map[string]interface{}{
+					messages[key].Meta = map[string]interface{}{
 						"assets": a,
 					}
 				}
-
-				break
 			}
 		}
 	}
+
+	self.data.Messages = messages
 }
 
 func (self *One) PushTag(tag string) {
