@@ -77,6 +77,10 @@ func (self *One) LoadAssets() {
 	database := self.di.Mongo.Database
 
 	for _, msg := range self.data.Messages {
+ 	
+ 		if !msg.RelatedId.Valid() {
+ 			continue
+ 		}
 
 		if duplicated, _ := helpers.InArray(msg.RelatedId, list); !duplicated {
 
@@ -86,7 +90,7 @@ func (self *One) LoadAssets() {
 
 	var als []assets.Asset
 
-	err := database.C("assets").Find(bson.M{"related": "email", "related_id": bson.M{"$in": list}}).All(&als)
+	err := database.C("assets").Find(bson.M{"related": "mail", "related_id": bson.M{"$in": list}}).All(&als)
 
 	if err != nil {
 		panic(err)
