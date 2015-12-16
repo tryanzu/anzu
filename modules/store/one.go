@@ -104,7 +104,7 @@ func (self *One) LoadAssets() {
 
 			if asset.RelatedId == msg.RelatedId {
 
-				if l, init := msg.Meta["assets"]; init {
+				if l, init := messages[key].Meta["assets"]; init {
 
 					a := l.([]assets.Asset)
 					a = append(a, asset)
