@@ -88,8 +88,12 @@ func (self StoreAPI) One(c *gin.Context) {
 	// Mark as readed
 	order.Touch()
 
+	// Load assets
+	order.LoadAssets()
+
 	data := order.Data()
 	data.RelatedUsers = order.MatchUsers()
+
 
 	c.JSON(200, data)
 }

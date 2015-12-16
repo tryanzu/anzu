@@ -4,6 +4,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
+	"github.com/fernandez14/spartangeek-blacker/modules/assets"
 	"gopkg.in/mgo.v2/bson"
 	"time"
 	"strings"
@@ -66,6 +67,58 @@ func (self *One) PushAnswer(text, kind string) {
 
 			mailing.Send(compose)
 		}()
+	}
+}
+
+func (self *One) LoadAssets() {
+
+	var list []bson.ObjectId
+
+	database := self.di.Mongo.Database
+
+	for _, msg := range self.data.Messages {
+
+		if duplicated, _ := helpers.InArray(msg.RelatedId, list); !duplicated {
+
+			list = append(list, msg.RelatedId)
+		}
+	}
+
+	var als []assets.Asset
+
+	err := database.C("assets").Find(bson.M{"related": "email", "related_id": bson.M{"$in": list}}).All(&als)
+
+	if err != nil {
+		panic(err)
+	}
+
+	for key, msg := range self.data.Messages {
+
+		for _, asset := range als {
+
+			if asset.RelatedId == msg.RelatedId {
+
+				if l, init := msg.Meta["assets"]; init {
+
+					a := l.([]assets.Asset)
+					a = append(a, asset)
+
+					self.data.Messages[key].Meta["assets"] = a
+
+				} else {	
+
+					var a []assets.Asset
+
+					a = append(a, asset)
+
+					self.data.Messages[key].Meta = map[string]interface{}{
+						"assets": a,
+					}
+				}
+
+				break
+			}
+		}
 	}
 }
 
