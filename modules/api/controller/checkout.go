@@ -67,7 +67,12 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 		customer := this.GCommerce.GetCustomerFromUser(userId)
 
 		// Get a reference for the customer's address that will be used on the order
-		address := customer.Address("mx", form.Delivery.State, form.Delivery.City, form.Delivery.Zipcode, form.Delivery.AddressLine1, form.Delivery.AddressLine2, form.Delivery.Extra)
+		address, err := customer.Address(form.ShipTo)
+
+		if err != nil {
+			c.JSON(400, gin.H{"message": "Invalid ship_to parameter.", "status": "error"})
+			return
+		}
 
 		// Get a reference for the customer's new order
 		order, err := customer.NewOrder(form.Gateway, form.Meta)
@@ -118,15 +123,6 @@ func (this CheckoutAPI) getCartObject(c *gin.Context) *cart.Cart {
 
 type CheckoutForm struct {
 	Gateway  string       `json:"gateway" binding:"required"`
-	Delivery DeliveryForm `json:"delivery" binding:"required"`	
+	ShipTo   bson.ObjectId `json:"ship_to" binding:"required"`	
 	Meta     map[string]interface{} `json:"meta"`
-}
-
-type DeliveryForm struct {
-	State   string `json:"state" binding:"required"`
-	City    string `json:"city" binding:"required"`
-	Zipcode string `json:"zipcode" binding:"required"`
-	AddressLine1 string `json:"address_line1" binding:"required"`
-	AddressLine2 string `json:"address_line2"`
-	Extra        string `json:"extra"`
 }

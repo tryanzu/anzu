@@ -30,11 +30,19 @@ func (this *Order) Add(name, description, image string, price float64, q int, me
 	this.Total = this.Total + gateway_price
 }
 
-func (this *Order) Ship(price float64, name string, address Address) {
+func (this *Order) Ship(price float64, name string, address *CustomerAddress) {
 
 	this.Shipping.Price = price
 	this.Shipping.Type = name
-	this.Shipping.Address = address
+	this.Shipping.Address = address.Address
+
+	// Save the address reference in case we need it
+	this.Shipping.Meta = map[string]interface{}{
+		"related_id": address.Id,
+	}
+
+	// Use the address once
+	address.UseOnce()
 
 	this.Total = this.Total + price
 }

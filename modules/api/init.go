@@ -34,6 +34,7 @@ type Module struct {
 	Components   controller.ComponentAPI
 	Cart         controller.CartAPI
 	Checkout     controller.CheckoutAPI
+	Customer     controller.CustomerAPI
 }
 
 type ModuleDI struct {
@@ -64,6 +65,7 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.Components},
 		&inject.Object{Value: &module.Cart},
 		&inject.Object{Value: &module.Checkout},
+		&inject.Object{Value: &module.Customer},
 	)
 
 	if err != nil {
@@ -186,15 +188,27 @@ func (module *Module) Run() {
 			store.GET("/cart", module.Cart.Get)
 			store.POST("/cart", module.Cart.Add)
 			store.DELETE("/cart/:id", module.Cart.Delete)
+		
+			// Store routes with auth
+			astore := store.Group("")
 
-			// Checkout routes
-			store.POST("/checkout", module.Checkout.Place)
+			astore.Use(module.Middlewares.NeedAuthorization())
+			{
+				astore.POST("/checkout", module.Checkout.Place)
+
+				// Customer routes
+				astore.GET("/customer", module.Customer.Get)
+				astore.POST("/customer/address", module.Customer.CreateAddress)
+				astore.DELETE("/customer/address/:id", module.Customer.DeleteAddress)
+				astore.PUT("/customer/address/:id", module.Customer.UpdateAddress)
+			}	
 		}
 
 		authorized := v1.Group("")
 
 		authorized.Use(module.Middlewares.NeedAuthorization())
 		{
+
 			// Comment routes
 			authorized.POST("/post/comment/:id", module.Comments.CommentAdd)
 			authorized.PUT("/post/comment/:id/:index", module.Comments.CommentUpdate)

@@ -1,10 +1,11 @@
 package gcommerce
 
 import (
-	"reflect"
 	"time"
+	"errors"
 
 	"gopkg.in/mgo.v2/bson"
+	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 )
 
 // Set DI instance
@@ -12,9 +13,41 @@ func (this *Customer) SetDI(di *Module) {
 	this.di = di
 }
 
-func (this *Customer) Address(country, state, city, postal_code, line1, line2, extra string) Address {
+func (this *Customer) MAddresses() {
 
-	address := Address{
+	var ls []CustomerAddress
+
+	database := this.di.Mongo.Database
+	err := database.C("customer_addresses").Find(bson.M{"customer_id": this.Id}).All(&ls)
+
+	if err != nil {
+		panic(err)
+	}
+
+	// Dump objects inside the same customer pointer
+	this.Addresses = ls
+}
+
+func (this *Customer) Address(id bson.ObjectId) (*CustomerAddress, error) {
+
+	var a *CustomerAddress
+
+	database := this.di.Mongo.Database
+	err := database.C("customer_addresses").Find(bson.M{"customer_id": this.Id, "_id": id}).One(&a)
+
+	if err != nil {
+		return a, errors.New("Not found")
+	}
+
+	// Share DI instance with address object
+	a.SetDI(this.di)
+
+	return a, nil
+}	
+
+func (this *Customer) AddAddress(name, country, state, city, postal_code, line1, line2, extra string) CustomerAddress {
+
+	a := Address{
 		Country: country,
 		State: state,
 		City: city,
@@ -24,21 +57,71 @@ func (this *Customer) Address(country, state, city, postal_code, line1, line2, e
 		Extra: extra,
 	}
 
-	for _, a := range this.Addresses {
-
-		if reflect.DeepEqual(a, address) {
-			return a
-		}
+	ca := CustomerAddress{
+		Id: bson.NewObjectId(),
+		CustomerId: this.Id,
+		Alias: name,
+		Slug: helpers.StrSlug(name),
+		Address: a,
+		TimesUsed: 0,
+		LastUsed: time.Now(),
+		Default: false,
+		Created: time.Now(),
+		Updated: time.Now(),
 	}
 
 	database := this.di.Mongo.Database
-	err := database.C("customers").Update(bson.M{"_id": this.Id}, bson.M{"$push": bson.M{"addresses": address}, "$set": bson.M{"updated_at": time.Now()}})
+	err := database.C("customer_addresses").Insert(ca)
 
 	if err != nil {
 		panic(err)
 	}
 
-	return address
+	return ca
+}
+
+func (this *Customer) DeleteAddress(id bson.ObjectId) error {
+
+	database := this.di.Mongo.Database
+	err := database.C("customer_addresses").RemoveId(id)
+
+	return err
+}
+
+func (this *Customer) UpdateAddress(id bson.ObjectId, name, country, state, city, postal_code, line1, line2, extra string) (CustomerAddress, error) {
+
+	var a CustomerAddress
+
+	database := this.di.Mongo.Database
+	err := database.C("customer_addresses").Find(bson.M{"customer_id": this.Id, "_id": id}).One(&a)
+
+	if err != nil {
+		return a, errors.New("Not found")
+	}
+
+	ad := Address{
+		Country: country,
+		State: state,
+		City: city,
+		PostalCode: postal_code,
+		Line1: line1,
+		Line2: line2,
+		Extra: extra,
+	}
+
+	set := bson.M{"address": ad, "updated_at": time.Now(), "alias": name, "slug": helpers.StrSlug(name)}
+	err = database.C("customer_addresses").Update(bson.M{"customer_id": this.Id, "_id": id}, bson.M{"$set": set})
+
+	if err != nil {
+		panic(err)
+	}
+
+	a.Address = ad
+	a.Updated = time.Now()
+	a.Alias = name
+	a.Slug = helpers.StrSlug(name)
+
+	return a, nil
 }
 
 func (this *Customer) NewOrder(gateway_name string, meta map[string]interface{}) (*Order, error) {
