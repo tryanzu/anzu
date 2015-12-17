@@ -110,6 +110,7 @@ func (this CustomerAPI) UpdateAddress(c *gin.Context) {
 		}
 
 		c.JSON(200, gin.H{"status": "okay"})
+		return
 	}
 
 	c.JSON(400, gin.H{"message": "Invalid request, check customer docs.", "status": "error"})
