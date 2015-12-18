@@ -1,8 +1,8 @@
 package cart
 
 import (
-	"github.com/gin-gonic/contrib/sessions"
 	"encoding/json"
+	"github.com/gin-gonic/contrib/sessions"
 )
 
 type GinGonicSession struct {
@@ -10,7 +10,7 @@ type GinGonicSession struct {
 }
 
 func (gcs GinGonicSession) Restore() (map[string]*CartItem, error) {
-	
+
 	var list map[string]*CartItem
 
 	session := gcs.Session
@@ -19,23 +19,23 @@ func (gcs GinGonicSession) Restore() (map[string]*CartItem, error) {
 	if data == nil {
 
 		list = make(map[string]*CartItem)
-		
+
 		return list, nil
 	} else {
 
 		encoded := data.(string)
 
 		if err := json.Unmarshal([]byte(encoded), &list); err != nil {
-	        
-	        return list, err
-	    }
 
-	    return list, nil
+			return list, err
+		}
+
+		return list, nil
 	}
-} 
+}
 
 func (gcs GinGonicSession) Save(data map[string]*CartItem) error {
-	
+
 	encoded, err := json.Marshal(data)
 
 	if err != nil {
@@ -48,4 +48,4 @@ func (gcs GinGonicSession) Save(data map[string]*CartItem) error {
 	session.Save()
 
 	return nil
-} 
+}

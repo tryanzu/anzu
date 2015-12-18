@@ -8,4 +8,3 @@ type CartBucket interface {
 	// Save the cart struct for persistance.
 	Save(map[string]*CartItem) error
 }
-

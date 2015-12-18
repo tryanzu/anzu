@@ -1,11 +1,11 @@
 package cart
 
 type Cart struct {
-	items map[string]*CartItem
+	items   map[string]*CartItem
 	storage CartBucket
 }
 
-type mutator func(*CartItem) 
+type mutator func(*CartItem)
 
 func Boot(storage CartBucket) (*Cart, error) {
 
@@ -16,7 +16,7 @@ func Boot(storage CartBucket) (*Cart, error) {
 	}
 
 	bucket := &Cart{
-		items: restored,
+		items:   restored,
 		storage: storage,
 	}
 
@@ -29,10 +29,10 @@ func (module *Cart) Add(id, name string, price float64, q int, attrs map[string]
 	if _, exists := module.items[id]; !exists {
 
 		module.items[id] = &CartItem{
-			Id: id,
-			Name: name,
-			Price: price,
-			Quantity: q,
+			Id:         id,
+			Name:       name,
+			Price:      price,
+			Quantity:   q,
 			Attributes: attrs,
 		}
 	} else {
