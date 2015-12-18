@@ -45,7 +45,7 @@ func (this *Customer) Address(id bson.ObjectId) (*CustomerAddress, error) {
 	return a, nil
 }
 
-func (this *Customer) AddAddress(name, country, state, city, postal_code, line1, line2, extra, first_name, last_name string) CustomerAddress {
+func (this *Customer) AddAddress(name, country, state, city, postal_code, line1, line2, extra, recipient string) CustomerAddress {
 
 	a := Address{
 		Country:    country,
@@ -66,10 +66,7 @@ func (this *Customer) AddAddress(name, country, state, city, postal_code, line1,
 		TimesUsed:  0,
 		LastUsed:   time.Now(),
 		Default:    false,
-		Recipient: AddressRecipient{
-			FirstName: first_name,
-			LastName:  last_name,
-		},
+		Recipient: recipient,
 		Created: time.Now(),
 		Updated: time.Now(),
 	}
@@ -92,7 +89,7 @@ func (this *Customer) DeleteAddress(id bson.ObjectId) error {
 	return err
 }
 
-func (this *Customer) UpdateAddress(id bson.ObjectId, name, country, state, city, postal_code, line1, line2, extra, first_name, last_name string) (CustomerAddress, error) {
+func (this *Customer) UpdateAddress(id bson.ObjectId, name, country, state, city, postal_code, line1, line2, extra, recipient string) (CustomerAddress, error) {
 
 	var a CustomerAddress
 
@@ -113,7 +110,7 @@ func (this *Customer) UpdateAddress(id bson.ObjectId, name, country, state, city
 		Extra:      extra,
 	}
 
-	set := bson.M{"address": ad, "updated_at": time.Now(), "alias": name, "slug": helpers.StrSlug(name), "recipient.first_name": first_name, "recipient.last_name": last_name}
+	set := bson.M{"address": ad, "updated_at": time.Now(), "alias": name, "slug": helpers.StrSlug(name), "recipient": recipient}
 	err = database.C("customer_addresses").Update(bson.M{"customer_id": this.Id, "_id": id}, bson.M{"$set": set})
 
 	if err != nil {
