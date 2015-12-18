@@ -1,9 +1,9 @@
-package gcommerce 
+package gcommerce
 
 import (
+	"errors"
 	"github.com/stripe/stripe-go"
 	"github.com/stripe/stripe-go/charge"
-	"errors"
 	"time"
 )
 
@@ -22,7 +22,7 @@ func (this *GatewayStripe) SetOrder(order *Order) {
 }
 
 func (this *GatewayStripe) Charge(amount float64) error {
-	
+
 	database := this.di.Mongo.Database
 
 	// Setup stripe private key always
@@ -30,25 +30,25 @@ func (this *GatewayStripe) Charge(amount float64) error {
 
 	cents := uint64(amount * 100)
 	chargeParams := &stripe.ChargeParams{
-	  Amount: cents,
-	  Currency: "mxn",
-	  Desc: "Test description",
+		Amount:   cents,
+		Currency: "mxn",
+		Desc:     "Test description",
 	}
 
 	chargeParams.SetSource(&stripe.CardParams{
-	    Name:   "Go Stripe",
-	    Number: "4242424242424242",
-	    Month:  "10",
-	    Year:   "20",
+		Name:   "Go Stripe",
+		Number: "4242424242424242",
+		Month:  "10",
+		Year:   "20",
 	})
 	ch, err := charge.New(chargeParams)
 
 	transaction := &Transaction{
-		OrderId: this.order.Id,
-		Gateway: "stripe",
+		OrderId:  this.order.Id,
+		Gateway:  "stripe",
 		Response: ch,
-		Created: time.Now(),
-		Updated: time.Now(),
+		Created:  time.Now(),
+		Updated:  time.Now(),
 	}
 
 	if err != nil {
@@ -57,7 +57,6 @@ func (this *GatewayStripe) Charge(amount float64) error {
 
 		transaction.Error = stripeErr
 		database.C("gcommerce_transactions").Insert(transaction)
-
 
 		switch stripeErr.Code {
 		case stripe.IncorrectNum:

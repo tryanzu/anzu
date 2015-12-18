@@ -1,11 +1,11 @@
 package gcommerce
 
 import (
-	"time"
 	"errors"
+	"time"
 
-	"gopkg.in/mgo.v2/bson"
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
+	"gopkg.in/mgo.v2/bson"
 )
 
 // Set DI instance
@@ -43,32 +43,32 @@ func (this *Customer) Address(id bson.ObjectId) (*CustomerAddress, error) {
 	a.SetDI(this.di)
 
 	return a, nil
-}	
+}
 
 func (this *Customer) AddAddress(name, country, state, city, postal_code, line1, line2, extra, first_name, last_name string) CustomerAddress {
 
 	a := Address{
-		Country: country,
-		State: state,
-		City: city,
+		Country:    country,
+		State:      state,
+		City:       city,
 		PostalCode: postal_code,
-		Line1: line1,
-		Line2: line2,
-		Extra: extra,
+		Line1:      line1,
+		Line2:      line2,
+		Extra:      extra,
 	}
 
 	ca := CustomerAddress{
-		Id: bson.NewObjectId(),
+		Id:         bson.NewObjectId(),
 		CustomerId: this.Id,
-		Alias: name,
-		Slug: helpers.StrSlug(name),
-		Address: a,
-		TimesUsed: 0,
-		LastUsed: time.Now(),
-		Default: false,
+		Alias:      name,
+		Slug:       helpers.StrSlug(name),
+		Address:    a,
+		TimesUsed:  0,
+		LastUsed:   time.Now(),
+		Default:    false,
 		Recipient: AddressRecipient{
 			FirstName: first_name,
-			LastName: last_name,
+			LastName:  last_name,
 		},
 		Created: time.Now(),
 		Updated: time.Now(),
@@ -104,13 +104,13 @@ func (this *Customer) UpdateAddress(id bson.ObjectId, name, country, state, city
 	}
 
 	ad := Address{
-		Country: country,
-		State: state,
-		City: city,
+		Country:    country,
+		State:      state,
+		City:       city,
 		PostalCode: postal_code,
-		Line1: line1,
-		Line2: line2,
-		Extra: extra,
+		Line1:      line1,
+		Line2:      line2,
+		Extra:      extra,
 	}
 
 	set := bson.M{"address": ad, "updated_at": time.Now(), "alias": name, "slug": helpers.StrSlug(name), "recipient.first_name": first_name, "recipient.last_name": last_name}
@@ -131,19 +131,19 @@ func (this *Customer) UpdateAddress(id bson.ObjectId, name, country, state, city
 func (this *Customer) NewOrder(gateway_name string, meta map[string]interface{}) (*Order, error) {
 
 	order := &Order{
-		Id: bson.NewObjectId(),
-		Status: ORDER_AWAITING,
+		Id:       bson.NewObjectId(),
+		Status:   ORDER_AWAITING,
 		Statuses: make([]Status, 0),
-		UserId: this.Id,
-		Items: make([]Item, 0),
-		Total: 0,
-		Gateway: gateway_name,
-		Meta: meta,
-		Created: time.Now(),
-		Updated: time.Now(),
+		UserId:   this.Id,
+		Items:    make([]Item, 0),
+		Total:    0,
+		Gateway:  gateway_name,
+		Meta:     meta,
+		Created:  time.Now(),
+		Updated:  time.Now(),
 	}
 
-	order.SetDI(this.di) 
+	order.SetDI(this.di)
 
 	return order, nil
 }

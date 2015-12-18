@@ -1,4 +1,4 @@
-package gcommerce 
+package gcommerce
 
 type GatewayOffline struct {
 	di    *Module

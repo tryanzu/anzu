@@ -4,8 +4,8 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
-	"github.com/xuyu/goredis"
 	"github.com/olebedev/config"
+	"github.com/xuyu/goredis"
 	"gopkg.in/mgo.v2/bson"
 	"time"
 )
@@ -18,11 +18,11 @@ func Boot(key string) *Module {
 }
 
 type Module struct {
-	Mongo  *mongo.Service               `inject:""`
-	Errors *exceptions.ExceptionsModule `inject:""`
-	Redis  *goredis.Redis               `inject:""`
-	Config *config.Config               `inject:""`
-	Mail   *mail.Module                 `inject:""`
+	Mongo     *mongo.Service               `inject:""`
+	Errors    *exceptions.ExceptionsModule `inject:""`
+	Redis     *goredis.Redis               `inject:""`
+	Config    *config.Config               `inject:""`
+	Mail      *mail.Module                 `inject:""`
 	StripeKey string
 }
 
@@ -36,8 +36,8 @@ func (module *Module) GetCustomerFromUser(user_id bson.ObjectId) Customer {
 	if err != nil {
 
 		customer = Customer{
-			Id: bson.NewObjectId(),
-			UserId: user_id,
+			Id:      bson.NewObjectId(),
+			UserId:  user_id,
 			Created: time.Now(),
 			Updated: time.Now(),
 		}
@@ -47,9 +47,9 @@ func (module *Module) GetCustomerFromUser(user_id bson.ObjectId) Customer {
 		if err != nil {
 			panic(err)
 		}
-	} 
+	}
 
 	customer.SetDI(module)
-	
+
 	return customer
 }

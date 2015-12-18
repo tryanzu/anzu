@@ -5,7 +5,7 @@ import (
 )
 
 type Gateway interface {
-	
+
 	// Charge money logic
 	Charge(float64) error
 

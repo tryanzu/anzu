@@ -15,7 +15,7 @@ func (this *CustomerAddress) SetDI(di *Module) {
 func (this *CustomerAddress) UseOnce() {
 
 	database := this.di.Mongo.Database
-	err := database.C("customer_addresses").Update(bson.M{"_id": this.Id}, bson.M{"$set": bson.M{"last_used": time.Now()}, "$inc": bson.M{"times_used": 1}})	
+	err := database.C("customer_addresses").Update(bson.M{"_id": this.Id}, bson.M{"$set": bson.M{"last_used": time.Now()}, "$inc": bson.M{"times_used": 1}})
 
 	if err != nil {
 		panic(err)
