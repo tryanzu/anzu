@@ -37,7 +37,7 @@ func (this CustomerAPI) CreateAddress(c *gin.Context) {
 	if c.Bind(&form) == nil {
 
 		customer := this.GCommerce.GetCustomerFromUser(userId)
-		address := customer.AddAddress(form.Alias, "mx", form.State, form.City, form.Zipcode, form.AddressLine1, form.AddressLine2, form.Extra, form.Recipient)
+		address := customer.AddAddress(form.Alias, "mx", form.State, form.City, form.Zipcode, form.Neighborhood, form.AddressLine1, form.AddressLine2, form.Extra, form.Recipient, form.Phone)
 
 		c.JSON(200, gin.H{"status": "okay", "address_id": address.Id})
 		return
@@ -102,7 +102,7 @@ func (this CustomerAPI) UpdateAddress(c *gin.Context) {
 	if c.Bind(&form) == nil {
 
 		customer := this.GCommerce.GetCustomerFromUser(userId)
-		_, err := customer.UpdateAddress(address_id, form.Alias, "mx", form.State, form.City, form.Zipcode, form.AddressLine1, form.AddressLine2, form.Extra, form.Recipient)
+		_, err := customer.UpdateAddress(address_id, form.Alias, "mx", form.State, form.City, form.Zipcode, form.Neighborhood, form.AddressLine1, form.AddressLine2, form.Extra, form.Recipient, form.Phone)
 
 		if err != nil {
 			c.JSON(400, gin.H{"message": "Couldnt perform operation, try again later.", "status": "error"})
@@ -124,5 +124,7 @@ type AddressForm struct {
 	AddressLine1 string `json:"line1" binding:"required"`
 	AddressLine2 string `json:"line2"`
 	Extra        string `json:"extra"`
+	Phone        string `json:"phone" binding:"required"`
+	Neighborhood string `json:"neighborhood" binding:"required"`
 	Recipient    string `json:"recipient" binding:"required"`
 }

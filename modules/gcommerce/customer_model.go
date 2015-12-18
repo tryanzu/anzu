@@ -22,6 +22,8 @@ type CustomerAddress struct {
 	Alias      string           `bson:"alias" json:"alias"`
 	Slug       string           `bson:"slug" json:"slug"`
 	Recipient  string           `bson:"recipient" json:"recipient"`
+	Phone      string           `bson:"phone" json:"phone"`
+	
 	Address    Address          `bson:"address" json:"address"`
 	TimesUsed  int              `bson:"times_used" json:"times_used"`
 	LastUsed   time.Time        `bson:"last_used" json:"last_used"`

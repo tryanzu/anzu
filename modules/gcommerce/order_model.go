@@ -61,5 +61,6 @@ type Address struct {
 	Line2      string `bson:"line2" json:"line3"`
 	PostalCode string `bson:"postal_code" json:"postal_code"`
 	State      string `bson:"state" json:"state"`
+	Neighborhood string `bson:"neighborhood" json:"neighborhood"`
 	Extra      string `bson:"extra" json:"extra"`
 }
