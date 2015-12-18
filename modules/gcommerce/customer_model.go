@@ -21,6 +21,7 @@ type CustomerAddress struct {
 	CustomerId bson.ObjectId `bson:"customer_id" json:"customer_id"`
 	Alias     string    `bson:"alias" json:"alias"`
 	Slug      string    `bson:"slug" json:"slug"`
+	Recipient AddressRecipient `bson:"recipient" json:"recipient"`
 	Address   Address   `bson:"address" json:"address"`
 	TimesUsed int       `bson:"times_used" json:"times_used"`
 	LastUsed  time.Time `bson:"last_used" json:"last_used"`
@@ -29,4 +30,9 @@ type CustomerAddress struct {
 	Updated   time.Time `bson:"updated_at" json:"updated_at"`
 
 	di        *Module
+}
+
+type AddressRecipient struct {
+	FirstName     string    `bson:"first_name" json:"first_name"`
+	LastName      string    `bson:"last_name" json:"last_name"`
 }

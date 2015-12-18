@@ -248,7 +248,6 @@ func main() {
 
 			// Populate dependencies using the already instantiated DI
 			queueModule.Populate(g)
-
 			queueModule.Listen(args[0])
 		},
 	}	
