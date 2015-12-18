@@ -1,17 +1,17 @@
 package controller
 
 import (
-	"gopkg.in/mgo.v2/bson"
-	"github.com/fernandez14/spartangeek-blacker/modules/store"
 	"github.com/fernandez14/spartangeek-blacker/modules/components"
 	"github.com/fernandez14/spartangeek-blacker/modules/gcommerce"
+	"github.com/fernandez14/spartangeek-blacker/modules/store"
 	"github.com/gin-gonic/gin"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type CustomerAPI struct {
-	Store      *store.Module `inject:""`
-	Components *components.Module `inject:""` 
-	GCommerce  *gcommerce.Module `inject:""`
+	Store      *store.Module      `inject:""`
+	Components *components.Module `inject:""`
+	GCommerce  *gcommerce.Module  `inject:""`
 }
 
 func (this CustomerAPI) Get(c *gin.Context) {
@@ -29,7 +29,7 @@ func (this CustomerAPI) Get(c *gin.Context) {
 }
 
 func (this CustomerAPI) CreateAddress(c *gin.Context) {
-	
+
 	var form AddressForm
 	user := c.MustGet("user_id")
 	userId := bson.ObjectIdHex(user.(string))
@@ -47,7 +47,7 @@ func (this CustomerAPI) CreateAddress(c *gin.Context) {
 }
 
 func (this CustomerAPI) DeleteAddress(c *gin.Context) {
-	
+
 	address_str := c.Param("id")
 	user := c.MustGet("user_id")
 	userId := bson.ObjectIdHex(user.(string))
@@ -57,7 +57,7 @@ func (this CustomerAPI) DeleteAddress(c *gin.Context) {
 		return
 	}
 
-	address_id :=  bson.ObjectIdHex(address_str)
+	address_id := bson.ObjectIdHex(address_str)
 
 	// Retrieve customer from user
 	customer := this.GCommerce.GetCustomerFromUser(userId)
@@ -86,7 +86,7 @@ func (this CustomerAPI) DeleteAddress(c *gin.Context) {
 }
 
 func (this CustomerAPI) UpdateAddress(c *gin.Context) {
-	
+
 	var form AddressForm
 	user := c.MustGet("user_id")
 	userId := bson.ObjectIdHex(user.(string))
@@ -97,7 +97,7 @@ func (this CustomerAPI) UpdateAddress(c *gin.Context) {
 		return
 	}
 
-	address_id :=  bson.ObjectIdHex(address_str)
+	address_id := bson.ObjectIdHex(address_str)
 
 	if c.Bind(&form) == nil {
 
@@ -117,13 +117,13 @@ func (this CustomerAPI) UpdateAddress(c *gin.Context) {
 }
 
 type AddressForm struct {
-	Alias   string `json:"name" binding:"required"`
-	State   string `json:"state" binding:"required"`
-	City    string `json:"city" binding:"required"`
-	Zipcode string `json:"postal_code" binding:"required"`
+	Alias        string `json:"name" binding:"required"`
+	State        string `json:"state" binding:"required"`
+	City         string `json:"city" binding:"required"`
+	Zipcode      string `json:"postal_code" binding:"required"`
 	AddressLine1 string `json:"line1" binding:"required"`
 	AddressLine2 string `json:"line2"`
 	Extra        string `json:"extra"`
-	FirstName string `json:"first_name" binding:"required"`
-	LastName  string `json:"last_name" binding:"required"`
+	FirstName    string `json:"first_name" binding:"required"`
+	LastName     string `json:"last_name" binding:"required"`
 }

@@ -1,11 +1,11 @@
-package controller 
+package controller
 
 import (
-	"gopkg.in/mgo.v2/bson"
-	"github.com/gin-gonic/gin"
-	"github.com/fernandez14/spartangeek-blacker/modules/components"
 	"github.com/fernandez14/spartangeek-blacker/modules/cart"
+	"github.com/fernandez14/spartangeek-blacker/modules/components"
 	"github.com/gin-gonic/contrib/sessions"
+	"github.com/gin-gonic/gin"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type CartAPI struct {
@@ -54,7 +54,7 @@ func (this CartAPI) Add(c *gin.Context) {
 				return
 			}
 
-			attrs :=  map[string]interface{}{
+			attrs := map[string]interface{}{
 				"vendor": form.Vendor,
 			}
 

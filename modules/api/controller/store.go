@@ -26,7 +26,7 @@ func (self StoreAPI) PlaceOrder(c *gin.Context) {
 				Name:  form.User.Name,
 				Email: form.User.Email,
 				Phone: form.User.Phone,
-				Ip: ip,
+				Ip:    ip,
 			},
 			Content:  form.Content,
 			Budget:   form.Budget,
@@ -93,7 +93,6 @@ func (self StoreAPI) One(c *gin.Context) {
 
 	data := order.Data()
 	data.RelatedUsers = order.MatchUsers()
-
 
 	c.JSON(200, data)
 }
@@ -241,7 +240,7 @@ type OrderForm struct {
 	Budget   int           `json:"budget" binding:"required"`
 	BuyDelay int           `json:"buydelay" binding:"required"`
 	State    string        `json:"estado" binding:"required"`
-	Usage    string		   `json:"usage"`
+	Usage    string        `json:"usage"`
 	Games    []string      `json:"games"`
 	Extra    []string      `json:"extra"`
 }
@@ -253,17 +252,17 @@ type OrderUserForm struct {
 }
 
 type OrderTagForm struct {
-	Name  string `json:"name" binding:"required"`
+	Name string `json:"name" binding:"required"`
 }
 
 type OrderStageForm struct {
-	Name  string `json:"name" binding:"required"`
+	Name string `json:"name" binding:"required"`
 }
 
 type OrderActivityForm struct {
-	Name         string `json:"name" binding:"required"`
-	Description  string `json:"description"`
-	Due          string `json:"due_at" binding:"required"`
+	Name        string `json:"name" binding:"required"`
+	Description string `json:"description"`
+	Due         string `json:"due_at" binding:"required"`
 }
 
 type OrderAnswerForm struct {

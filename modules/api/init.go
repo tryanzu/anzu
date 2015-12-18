@@ -6,8 +6,8 @@ import (
 	"github.com/facebookgo/inject"
 	"github.com/fernandez14/spartangeek-blacker/handle"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller"
-	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/contrib/sessions"
+	"github.com/gin-gonic/gin"
 	"github.com/olebedev/config"
 	"os"
 )
@@ -109,7 +109,7 @@ func (module *Module) Run() {
 	}
 
 	store, err := sessions.NewRedisStore(10, "tcp", redis_server, "", []byte(secret))
-	
+
 	if err != nil {
 		panic(err)
 	}
@@ -179,7 +179,7 @@ func (module *Module) Run() {
 		v1.GET("/stats/board", module.Stats.BoardGet)
 
 		// Store routes
-		store := v1.Group("/store") 
+		store := v1.Group("/store")
 		{
 
 			store.POST("/order", module.Store.PlaceOrder)
@@ -188,7 +188,7 @@ func (module *Module) Run() {
 			store.GET("/cart", module.Cart.Get)
 			store.POST("/cart", module.Cart.Add)
 			store.DELETE("/cart/:id", module.Cart.Delete)
-		
+
 			// Store routes with auth
 			astore := store.Group("")
 
@@ -201,7 +201,7 @@ func (module *Module) Run() {
 				astore.POST("/customer/address", module.Customer.CreateAddress)
 				astore.DELETE("/customer/address/:id", module.Customer.DeleteAddress)
 				astore.PUT("/customer/address/:id", module.Customer.UpdateAddress)
-			}	
+			}
 		}
 
 		authorized := v1.Group("")

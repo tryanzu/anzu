@@ -6,18 +6,18 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
-	
+
 	"strconv"
 )
 
 type PostAPI struct {
-	Feed *feed.FeedModule `inject:""`
-	Acl  *acl.Module      `inject:""`
+	Feed       *feed.FeedModule   `inject:""`
+	Acl        *acl.Module        `inject:""`
 	Components *components.Module `inject:""`
 }
 
 func (this PostAPI) MarkCommentAsAnswer(c *gin.Context) {
-	
+
 	post_id := c.Param("id")
 	comment_pos := c.Param("comment")
 
@@ -49,7 +49,7 @@ func (this PostAPI) MarkCommentAsAnswer(c *gin.Context) {
 	}
 
 	if user.CanSolvePost(post.Data()) == false {
-		
+
 		c.JSON(400, gin.H{"message": "Can't update post. Insufficient permissions", "status": "error"})
 		return
 	}
@@ -58,7 +58,7 @@ func (this PostAPI) MarkCommentAsAnswer(c *gin.Context) {
 
 		c.JSON(400, gin.H{"status": "error", "message": "Already solved."})
 		return
-	} 
+	}
 
 	comment, err := post.Comment(comment_index)
 
@@ -96,7 +96,7 @@ func (this PostAPI) Relate(c *gin.Context) {
 		return
 	}
 
-	component, err := this.Components.Get(component_id) 
+	component, err := this.Components.Get(component_id)
 
 	if err != nil {
 

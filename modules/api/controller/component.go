@@ -1,17 +1,17 @@
-package controller 
+package controller
 
 import (
-	"gopkg.in/mgo.v2/bson"
-	"github.com/gin-gonic/gin"
 	"github.com/fernandez14/spartangeek-blacker/modules/components"
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
+	"github.com/gin-gonic/gin"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type ComponentAPI struct {
 	Components *components.Module `inject:""`
-	Feed       *feed.FeedModule `inject:""`
-	User       *user.Module `inject:""`
+	Feed       *feed.FeedModule   `inject:""`
+	User       *user.Module       `inject:""`
 }
 
 // Get component by slug
@@ -82,7 +82,7 @@ func (this ComponentAPI) GetPosts(c *gin.Context) {
 
 // Update component's price
 func (this ComponentAPI) UpdatePrice(c *gin.Context) {
-	
+
 	var form ComponentPriceUpdateForm
 
 	slug := c.Param("slug")
@@ -103,5 +103,5 @@ func (this ComponentAPI) UpdatePrice(c *gin.Context) {
 }
 
 type ComponentPriceUpdateForm struct {
-	Price  map[string]map[string]interface{} `json:"prices" binding:"required"`
+	Price map[string]map[string]interface{} `json:"prices" binding:"required"`
 }

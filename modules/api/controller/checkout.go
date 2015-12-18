@@ -1,19 +1,19 @@
 package controller
 
 import (
-	"gopkg.in/mgo.v2/bson"
-	"github.com/fernandez14/spartangeek-blacker/modules/store"
-	"github.com/fernandez14/spartangeek-blacker/modules/components"
 	"github.com/fernandez14/spartangeek-blacker/modules/cart"
+	"github.com/fernandez14/spartangeek-blacker/modules/components"
 	"github.com/fernandez14/spartangeek-blacker/modules/gcommerce"
-	"github.com/gin-gonic/gin"
+	"github.com/fernandez14/spartangeek-blacker/modules/store"
 	"github.com/gin-gonic/contrib/sessions"
+	"github.com/gin-gonic/gin"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type CheckoutAPI struct {
-	Store      *store.Module `inject:""`
-	Components *components.Module `inject:""` 
-	GCommerce  *gcommerce.Module `inject:""`
+	Store      *store.Module      `inject:""`
+	Components *components.Module `inject:""`
+	GCommerce  *gcommerce.Module  `inject:""`
 }
 
 func (this CheckoutAPI) Place(c *gin.Context) {
@@ -37,7 +37,7 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 		for id, item := range items {
 
 			component_id := bson.ObjectIdHex(id)
-			component, err :=  this.Components.Get(component_id)
+			component, err := this.Components.Get(component_id)
 
 			if err != nil {
 				c.JSON(400, gin.H{"message": "Component in cart not found, hijacked.", "key": "invalid-component", "status": "error"})
@@ -85,9 +85,9 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 		for id, item := range items {
 
 			meta := map[string]interface{}{
-				"related": "components",
+				"related":    "components",
 				"related_id": bson.ObjectIdHex(id),
-				"cart": item.Attributes, 
+				"cart":       item.Attributes,
 			}
 
 			order.Add(item.Name, "", "", item.Price, item.Quantity, meta)
@@ -122,7 +122,7 @@ func (this CheckoutAPI) getCartObject(c *gin.Context) *cart.Cart {
 }
 
 type CheckoutForm struct {
-	Gateway  string       `json:"gateway" binding:"required"`
-	ShipTo   bson.ObjectId `json:"ship_to" binding:"required"`	
-	Meta     map[string]interface{} `json:"meta"`
+	Gateway string                 `json:"gateway" binding:"required"`
+	ShipTo  bson.ObjectId          `json:"ship_to" binding:"required"`
+	Meta    map[string]interface{} `json:"meta"`
 }

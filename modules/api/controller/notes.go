@@ -97,7 +97,7 @@ func (self BuildNotesAPI) Delete(c *gin.Context) {
 	}
 
 	err := self.Store.DeleteNote(bson.ObjectIdHex(id))
-	
+
 	if err != nil {
 
 		c.JSON(400, gin.H{"status": "error"})

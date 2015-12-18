@@ -1,23 +1,23 @@
 package controller
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/modules/store"
 	"github.com/fernandez14/spartangeek-blacker/modules/assets"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
+	"github.com/fernandez14/spartangeek-blacker/modules/store"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
 
-	"io/ioutil"
 	"encoding/json"
+	"io/ioutil"
 	"time"
 )
 
 type MailAPI struct {
-	Mongo   *mongo.Service `inject:""`
-	Store   *store.Module  `inject:""`
-	Assets  *assets.Module `inject:""`
-	Errors  *exceptions.ExceptionsModule `inject:""`
+	Mongo  *mongo.Service               `inject:""`
+	Store  *store.Module                `inject:""`
+	Assets *assets.Module               `inject:""`
+	Errors *exceptions.ExceptionsModule `inject:""`
 }
 
 // Get an inbound mail from mandrill
@@ -56,7 +56,7 @@ func (self MailAPI) Inbound(c *gin.Context) {
 
 		// Recover from any panic even inside this goroutine
 		defer self.Errors.Recover()
-		
+
 		assets := self.Assets
 		database := self.Mongo.Database
 
@@ -75,7 +75,7 @@ func (self MailAPI) Inbound(c *gin.Context) {
 		// Save the time
 		form.Created = time.Now()
 
-		err = database.C("inbound_mails").Insert(form)		
+		err = database.C("inbound_mails").Insert(form)
 
 		if err != nil {
 			panic(err)
@@ -104,7 +104,7 @@ func (self MailAPI) Inbound(c *gin.Context) {
 		}
 
 	}(form, self)
-	
+
 	c.JSON(200, gin.H{"status": "okay"})
 }
 
@@ -133,7 +133,7 @@ func (self MailAPI) MandrillFallback(c *gin.Context) {
 			id := bson.NewObjectId()
 			mail.Id = id
 
-			// Persist each inbound email 
+			// Persist each inbound email
 			err := database.C("mails").Insert(mail)
 
 			if err != nil {
@@ -154,28 +154,28 @@ func (self MailAPI) MandrillFallback(c *gin.Context) {
 }
 
 type MailInbound struct {
-	Id        bson.ObjectId    `bson:"_id,omitempty" json:"id"`
-	MessageID string           `json:"MessageID"`
-	From      string           `json:"From"`
-	FromName  string           `json:"FromName"`
-	FromFull MailFullInbound   `json:"FromFull"`
-	To       string            `json:"To"`
-	ToFull   []MailFullInbound `json:"ToFull"`
-	Cc       string            `json:"Cc"`
-	CcFull   []MailFullInbound `json:"CcFull"`
-	Bcc      string            `json:"Bcc"`
-	BccFull  []MailFullInbound `json:"BccFull"`
-	Subject  string            `json:"Subject"`
-	Date     string            `json:"Date"`
-	ReplyTo  string            `json:"ReplyTo"`
-	MailboxHash  string        `json:"MailboxHash"`
-	OriginalRecipient string   `json:"OriginalRecipient"`
-	TextBody string   `json:"TextBody"`
-	HtmlBody string   `json:"HtmlBody"`
-	StrippedTextReply string `json:"StrippedTextReply"`
+	Id                bson.ObjectId     `bson:"_id,omitempty" json:"id"`
+	MessageID         string            `json:"MessageID"`
+	From              string            `json:"From"`
+	FromName          string            `json:"FromName"`
+	FromFull          MailFullInbound   `json:"FromFull"`
+	To                string            `json:"To"`
+	ToFull            []MailFullInbound `json:"ToFull"`
+	Cc                string            `json:"Cc"`
+	CcFull            []MailFullInbound `json:"CcFull"`
+	Bcc               string            `json:"Bcc"`
+	BccFull           []MailFullInbound `json:"BccFull"`
+	Subject           string            `json:"Subject"`
+	Date              string            `json:"Date"`
+	ReplyTo           string            `json:"ReplyTo"`
+	MailboxHash       string            `json:"MailboxHash"`
+	OriginalRecipient string            `json:"OriginalRecipient"`
+	TextBody          string            `json:"TextBody"`
+	HtmlBody          string            `json:"HtmlBody"`
+	StrippedTextReply string            `json:"StrippedTextReply"`
 
-	Attachments  []MailAttachmentInbound `bson:"-" json:"Attachments"`
-	Created time.Time `bson:"created_at,omitempty" json:"created_at,omitempty"`
+	Attachments []MailAttachmentInbound `bson:"-" json:"Attachments"`
+	Created     time.Time               `bson:"created_at,omitempty" json:"created_at,omitempty"`
 }
 
 type MailFullInbound struct {
@@ -185,17 +185,17 @@ type MailFullInbound struct {
 }
 
 type MailAttachmentInbound struct {
-	Name    string `json:"Name"`
-	Content string `json:"Content" bson:"-"`
-	ContentType string `json:"ContentType"`
-	ContentLength int `json:"ContentLength"`
-	ContentID string `json:"ContentID"`
+	Name          string `json:"Name"`
+	Content       string `json:"Content" bson:"-"`
+	ContentType   string `json:"ContentType"`
+	ContentLength int    `json:"ContentLength"`
+	ContentID     string `json:"ContentID"`
 }
 
 type MailMandrillInbound struct {
-	Id        bson.ObjectId      `bson:"_id,omitempty" json:"id,omitempty"`
-	Timestamp int                `json:"ts"`
-	Event     string             `json:"event"`
+	Id        bson.ObjectId              `bson:"_id,omitempty" json:"id,omitempty"`
+	Timestamp int                        `json:"ts"`
+	Event     string                     `json:"event"`
 	Message   MailMandrillInboundMessage `json:"msg"`
 }
 
