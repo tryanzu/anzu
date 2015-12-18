@@ -50,7 +50,13 @@ func (module *Cart) Remove(id string) bool {
 
 	if _, exists := module.items[id]; exists {
 
-		delete(module.items, id)
+		module.items[id].Quantity = module.items[id].Quantity - 1
+
+		if module.items[id].Quantity <= 0 {
+
+			delete(module.items, id)
+		}
+
 		module.storage.Save(module.items)
 
 		return true
