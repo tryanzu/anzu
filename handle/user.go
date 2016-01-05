@@ -678,7 +678,7 @@ func (di *UserAPI) UserGetActivity(c *gin.Context) {
 		// No results from the aggregation
 		if err != nil {
 			
-			commented_count = PostCommentCountModel{
+			commented_count = model.PostCommentCountModel{
 				Count: 0,
 			}
 		}
