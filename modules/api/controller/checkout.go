@@ -5,6 +5,8 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/components"
 	"github.com/fernandez14/spartangeek-blacker/modules/gcommerce"
 	"github.com/fernandez14/spartangeek-blacker/modules/store"
+	"github.com/fernandez14/spartangeek-blacker/modules/mail"
+	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
@@ -20,6 +22,8 @@ type CheckoutAPI struct {
 	Store      *store.Module      `inject:""`
 	Components *components.Module `inject:""`
 	GCommerce  *gcommerce.Module  `inject:""`
+	Mail  *mail.Module   `inject:""`
+	User  *user.Module   `inject:""`
 }
 
 func (this CheckoutAPI) Place(c *gin.Context) {
@@ -201,6 +205,48 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 			c.JSON(400, gin.H{"message": err.Error(), "key": err.Error(), "status": "error"})
 			return
 		}
+
+		// After checkout procedures
+		mailing := this.Mail
+		{
+			usr, err := this.User.Get(userId)
+
+			if err != nil {
+				panic(err)
+			}
+
+			var paymentType string
+
+			if form.Gateway == "offline" {
+				paymentType = "Transferencia o Deposito"
+			} else if form.Gateway == "stripe" {
+				paymentType = "Pago en linea"
+			}
+
+			compose := mail.Mail{
+				Template: 252541,
+				Recipient: []mail.MailRecipient{
+					{
+						Name:  usr.Name(),
+						Email: usr.Email(),
+					},
+				},
+				Variables: map[string]interface{}{
+					"name": usr.Name(),
+					"payment": paymentType,
+					"line1": address.Line1(),
+					"line2": address.Line2(),
+					"line3": address.Extra(),
+					"total_products": order.Total - order.Shipping.Price,
+					"total_shipping": order.Shipping.Price,
+					"subtotal": order.Total,
+					"total": order.Total,
+				},
+			}
+
+			go mailing.Send(compose)
+		}
+
 
 		c.JSON(200, gin.H{"status": "okay"})
 		return

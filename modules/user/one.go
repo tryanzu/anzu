@@ -21,6 +21,22 @@ func (self *One) RUpdate(data *User) {
 	self.data = data
 }
 
+func (self *One) Email() string {
+
+	fb := self.data.Facebook.(map[string]interface{})
+
+	if email, exists := fb["email"]; exists {
+
+		return email.(string)
+	}
+
+	return self.data.Email
+}
+
+func (self *One) Name() string {
+	return self.data.UserName
+}
+
 // Load data helper
 func (self *One) Load(section string) *One {
 

@@ -25,3 +25,22 @@ func (this *CustomerAddress) UseOnce() {
 	this.LastUsed = time.Now()
 	this.TimesUsed = this.TimesUsed + 1
 }
+
+// Compute First address line
+func (this *CustomerAddress) Line1() string {
+
+	return this.Address.Line1 + ", " + this.Address.Line2
+}
+
+// Compute Second address line
+func (this *CustomerAddress) Line2() string {
+
+	return this.Address.Neighborhood + ", " + this.Address.City + ", " + this.Address.State + " " + this.Address.PostalCode
+}
+
+// Compute Extra address line
+func (this *CustomerAddress) Extra() string {
+
+	return this.Address.Extra
+}
+
