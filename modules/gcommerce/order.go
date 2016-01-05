@@ -32,7 +32,9 @@ func (this *Order) Add(name, description, image string, price float64, q int, me
 
 func (this *Order) Ship(price float64, name string, address *CustomerAddress) {
 
-	this.Shipping.Price = price
+	gateway_price := this.gateway.ModifyPrice(price)
+
+	this.Shipping.Price = gateway_price
 	this.Shipping.Type = name
 	this.Shipping.Address = address.Address
 
@@ -44,10 +46,17 @@ func (this *Order) Ship(price float64, name string, address *CustomerAddress) {
 	// Use the address once
 	address.UseOnce()
 
-	this.Total = this.Total + price
+	this.Total = this.Total + gateway_price
+}
+
+func (this *Order) GetTotal() float64 {
+	return this.gateway.AdjustPrice(this.Total)
 }
 
 func (this *Order) Checkout() error {
+
+	// Global price mutators
+	this.Total = this.gateway.AdjustPrice(this.Total)
 
 	database := this.di.Mongo.Database
 

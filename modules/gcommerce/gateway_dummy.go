@@ -21,3 +21,7 @@ func (this *GatewayDummy) Charge(amount float64) error {
 func (this *GatewayDummy) ModifyPrice(p float64) float64 {
 	return p
 }
+
+func (this *GatewayDummy) AdjustPrice(p float64) float64 {
+	return p
+}

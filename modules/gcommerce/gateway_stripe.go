@@ -1,10 +1,12 @@
 package gcommerce
 
 import (
-	"errors"
 	"github.com/stripe/stripe-go"
 	"github.com/stripe/stripe-go/charge"
+	
+	"errors"
 	"time"
+	"math"
 )
 
 type GatewayStripe struct {
@@ -90,5 +92,9 @@ func (this *GatewayStripe) Charge(amount float64) error {
 }
 
 func (this *GatewayStripe) ModifyPrice(p float64) float64 {
-	return p * 1.035
+	return p * 1.042
+}
+
+func (this *GatewayStripe) AdjustPrice(p float64) float64 {
+	return math.Ceil(p + 3.5)
 }

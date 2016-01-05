@@ -21,3 +21,7 @@ func (this *GatewayOffline) Charge(amount float64) error {
 func (this *GatewayOffline) ModifyPrice(p float64) float64 {
 	return p
 }
+
+func (this *GatewayOffline) AdjustPrice(p float64) float64 {
+	return p
+}

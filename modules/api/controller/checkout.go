@@ -187,6 +187,14 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 		// Setup shipping information
 		order.Ship(shipping_cost, "generic", address)
 
+		// Match calculated total against frontend total
+		total := order.GetTotal() 
+
+		if total != form.Total {
+			c.JSON(400, gin.H{"message": "Invalid total parameter.", "key": "bad-total", "status": "error"})
+			return
+		}
+
 		err = order.Checkout()
 
 		if err != nil {
