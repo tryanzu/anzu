@@ -9,3 +9,6 @@ Godeps
 test/
 .c9/
 spartangeek-blacker
+.ottoid
+temp-blacker
+.otto/

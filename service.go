@@ -1,5 +1,8 @@
 package main
 
+// #cgo LDFLAGS: -Wl,-rpath,/usr/local/lib
+import "C"
+
 import (
 	"fmt"
 	"github.com/cactus/go-statsd-client/statsd"

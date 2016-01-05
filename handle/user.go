@@ -675,8 +675,12 @@ func (di *UserAPI) UserGetActivity(c *gin.Context) {
 
 		err = pipeline.One(&commented_count)
 
+		// No results from the aggregation
 		if err != nil {
-			panic(err)
+			
+			commented_count = PostCommentCountModel{
+				Count: 0,
+			}
 		}
 
 		for _, post := range commented_posts {
