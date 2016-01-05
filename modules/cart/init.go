@@ -45,6 +45,22 @@ func (module *Cart) Add(id, name string, price float64, q int, attrs map[string]
 	return module.items[id]
 }
 
+// Update an Item inside the cart
+func (module *Cart) Update(id, name string, price float64, q int, attrs map[string]interface{}) *CartItem {
+
+	module.items[id] = &CartItem{
+		Id:         id,
+		Name:       name,
+		Price:      price,
+		Quantity:   q,
+		Attributes: attrs,
+	}
+
+	module.storage.Save(module.items)
+
+	return module.items[id]
+}
+
 // An Item will be removed of the list in case it exists.
 func (module *Cart) Remove(id string) bool {
 

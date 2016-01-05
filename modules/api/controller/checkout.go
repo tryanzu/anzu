@@ -10,6 +10,12 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
+const ITEM_NOT_FOUND = "not-found"
+const ITEM_NO_SELLER = "invalid-seller"
+const ITEM_NOT_AVAILABLE = "cant-sell"
+const ITEM_CHEAPER = "cheaper-now"
+const ITEM_MORE_EXPENSIVE = "more-expensive"
+
 type CheckoutAPI struct {
 	Store      *store.Module      `inject:""`
 	Components *components.Module `inject:""`
@@ -33,6 +39,10 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 			return
 		}
 
+		shipping_cost := 0.0
+		item_count := 0
+		errors := make([]CheckoutError, 0)
+
 		// Check items against stored prices
 		for id, item := range items {
 
@@ -40,28 +50,109 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 			component, err := this.Components.Get(component_id)
 
 			if err != nil {
-				c.JSON(400, gin.H{"message": "Component in cart not found, hijacked.", "key": "invalid-component", "status": "error"})
-				return
+
+				errors = append(errors, CheckoutError{
+					Type: ITEM_NOT_FOUND,
+					Related: component_id,
+				})
+
+				// Remove from items
+				cartContainer.Remove(id)
+				delete(items, id)
+
+				continue
 			}
 
 			vendor, err := item.Attr("vendor")
 
 			if err != nil {
-				c.JSON(400, gin.H{"message": "Component in cart invalid, hijacked.", "key": "invalid-component-data", "status": "error"})
-				return
+
+				errors = append(errors, CheckoutError{
+					Type: ITEM_NO_SELLER,
+					Related: component_id,
+				})
+
+				// Remove from items
+				cartContainer.Remove(id)
+				delete(items, id)
+
+				continue
 			}
 
 			price, err := component.GetVendorPrice(vendor.(string))
 
 			if err != nil {
-				c.JSON(400, gin.H{"message": "Vendor price does coulnt be verified.", "key": "invalid-vendor", "status": "error"})
-				return
+
+				errors = append(errors, CheckoutError{
+					Type: ITEM_NOT_AVAILABLE,
+					Related: component_id,
+				})
+
+				// Remove from items
+				cartContainer.Remove(id)
+				delete(items, id)
+
+				continue
 			}
 
 			if item.Price != price {
-				c.JSON(400, gin.H{"message": "Stored price and in-cart price have differences, perform check.", "key": "price-expired", "status": "error"})
-				return
+
+				if item.Price > price {
+
+					errors = append(errors, CheckoutError{
+						Type: ITEM_CHEAPER,
+						Related: component_id,
+						Meta: map[string]interface{}{
+							"before": item.Price,
+							"after": price,
+						},
+					})
+
+					cartContainer.Update(id, item.Name, price, item.Quantity, item.Attributes)
+					item.Price = price
+
+					continue
+
+				} else if item.Price < price {
+
+					errors = append(errors, CheckoutError{
+						Type: ITEM_MORE_EXPENSIVE,
+						Related: component_id,
+						Meta: map[string]interface{}{
+							"before": item.Price,
+							"after": price,
+						},
+					})
+
+					cartContainer.Update(id, item.Name, price, item.Quantity, item.Attributes)
+					item.Price = price
+
+					continue
+				}
 			}
+
+			if component.Type == "case" {
+
+				shipping_cost = shipping_cost + 320.0
+
+			} else {
+				
+				if item_count == 0 {
+
+					shipping_cost = shipping_cost + 120.0
+				} else {
+
+					shipping_cost = shipping_cost + 60.0
+				}
+
+				item_count = item_count + 1
+			}
+		}
+
+		if len(errors) > 0 {
+
+			c.JSON(409, gin.H{"status": "error", "list": errors})
+			return
 		}
 
 		customer := this.GCommerce.GetCustomerFromUser(userId)
@@ -94,7 +185,7 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 		}
 
 		// Setup shipping information
-		order.Ship(120, "generic", address)
+		order.Ship(shipping_cost, "generic", address)
 
 		err = order.Checkout()
 
@@ -124,5 +215,12 @@ func (this CheckoutAPI) getCartObject(c *gin.Context) *cart.Cart {
 type CheckoutForm struct {
 	Gateway string                 `json:"gateway" binding:"required"`
 	ShipTo  bson.ObjectId          `json:"ship_to" binding:"required"`
+	Total   float64                `json:"total" binding:"required"`
 	Meta    map[string]interface{} `json:"meta"`
+}
+
+type CheckoutError struct {
+	Type    string `json:"type"`
+	Related bson.ObjectId `json:"related_id"`
+	Meta    map[string]interface{} `json:"data,omitempty"`
 }
