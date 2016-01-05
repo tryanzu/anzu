@@ -23,7 +23,7 @@ func (self *One) RUpdate(data *User) {
 
 func (self *One) Email() string {
 
-	fb := self.data.Facebook.(map[string]interface{})
+	fb := self.data.Facebook.(bson.M)
 
 	if email, exists := fb["email"]; exists {
 

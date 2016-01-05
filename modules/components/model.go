@@ -14,6 +14,7 @@ type ComponentModel struct {
 	Price        float64               `bson:"price" json:"price"`
 	External     float64               `bson:"external" json:"external"`
 	Type         string                `bson:"type" json:"type"`
+	Image        string                `bson:"image" json:"image"`
 	PartNumber   string                `bson:"part_number" json:"part_number"`
 	Manufacturer string                `bson:"manufacturer" json:"manufacturer"`
 	Images       []string              `bson:"images" json:"images"`

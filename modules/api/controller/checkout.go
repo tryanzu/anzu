@@ -47,6 +47,8 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 		item_count := 0
 		errors := make([]CheckoutError, 0)
 
+		clist := map[string]*components.ComponentModel{}
+
 		// Check items against stored prices
 		for id, item := range items {
 
@@ -67,6 +69,7 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 				continue
 			}
 
+			clist[id] = component
 			vendor, err := item.Attr("vendor")
 
 			if err != nil {
@@ -185,7 +188,16 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 				"cart":       item.Attributes,
 			}
 
-			order.Add(item.Name, "", "", item.Price, item.Quantity, meta)
+			description := ""
+			image := ""
+
+			if c, exists := clist[id]; exists {
+
+				description = c.Manufacturer + " / " +  c.PartNumber
+				image = c.Image
+			}
+
+			order.Add(item.Name, description, image, item.Price, item.Quantity, meta)
 		}
 
 		// Setup shipping information
@@ -241,6 +253,7 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 					"total_shipping": order.Shipping.Price,
 					"subtotal": order.Total,
 					"total": order.Total,
+					"items": order.Items,
 				},
 			}
 
