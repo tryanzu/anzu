@@ -187,6 +187,14 @@ func (di *UserAPI) UserGetOne(c *gin.Context) {
 func (di *UserAPI) UserGetByToken(c *gin.Context) {
 
 	id := c.MustGet("user_id")
+
+	if bson.IsObjectIdHex(id.(string)) == false {
+
+		// Dont allow the request
+		c.JSON(400, gin.H{"status": "error", "message": "Invalid request, need valid token."})
+		return
+	} 
+
 	user_id := bson.ObjectIdHex(id.(string))
 
 	// Get the user using its id
