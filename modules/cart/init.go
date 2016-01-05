@@ -40,7 +40,11 @@ func (module *Cart) Add(id, name string, price float64, q int, attrs map[string]
 		module.items[id].Quantity = module.items[id].Quantity + q
 	}
 
-	module.storage.Save(module.items)
+	err := module.storage.Save(module.items)
+
+	if err != nil {
+		panic(err)
+	}
 
 	return module.items[id]
 }
@@ -56,7 +60,11 @@ func (module *Cart) Update(id, name string, price float64, q int, attrs map[stri
 		Attributes: attrs,
 	}
 
-	module.storage.Save(module.items)
+	err := module.storage.Save(module.items)
+
+	if err != nil {
+		panic(err)
+	}
 
 	return module.items[id]
 }
@@ -73,7 +81,11 @@ func (module *Cart) Remove(id string) bool {
 			delete(module.items, id)
 		}
 
-		module.storage.Save(module.items)
+		err := module.storage.Save(module.items)
+
+		if err != nil {
+			panic(err)
+		}
 
 		return true
 	}
@@ -104,5 +116,9 @@ func (module *Cart) Each(callback mutator) {
 		callback(item)
 	}
 
-	module.storage.Save(module.items)
+	err := module.storage.Save(module.items)
+
+	if err != nil {
+		panic(err)
+	}
 }

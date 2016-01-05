@@ -3,7 +3,6 @@ package cart
 import (
 	"encoding/json"
 	"github.com/gin-gonic/contrib/sessions"
-	"log"
 )
 
 type GinGonicSession struct {
@@ -19,16 +18,12 @@ func (gcs GinGonicSession) Restore() (map[string]*CartItem, error) {
 
 	if data == nil {
 
-		log.Printf("Carrito vacio \n")
-
 		list = make(map[string]*CartItem)
 
 		return list, nil
 	} else {
 
 		encoded := data.(string)
-
-		log.Printf("%v\n", encoded)
 
 		if err := json.Unmarshal([]byte(encoded), &list); err != nil {
 
