@@ -228,15 +228,18 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 			}
 
 			var paymentType string
+			var template int
 
 			if form.Gateway == "offline" {
 				paymentType = "Transferencia o Deposito"
+				template = 324721
 			} else if form.Gateway == "stripe" {
 				paymentType = "Pago en linea"
+				template = 252541
 			}
 
 			compose := mail.Mail{
-				Template: 252541,
+				Template: template,
 				Recipient: []mail.MailRecipient{
 					{
 						Name:  usr.Name(),
@@ -254,6 +257,7 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 					"subtotal": order.Total,
 					"total": order.Total,
 					"items": order.Items,
+					"reference": order.Reference,
 				},
 			}
 

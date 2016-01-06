@@ -9,6 +9,7 @@ const ORDER_AWAITING string = "awaiting"
 
 type Order struct {
 	Id bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
+	Reference string `bson:"reference" json:"reference"`
 
 	// Information about the order status
 	Status   string   `bson:"status" json:"status"`

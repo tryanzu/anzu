@@ -89,6 +89,21 @@ func StrRandom(length int) string {
 	return generated
 }
 
+func StrCapRandom(length int) string {
+
+	var letters = []rune("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+	b := make([]rune, length)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+
+	generated := string(b)
+
+	return generated
+}
+
+
 func Sha256(s string) string {
 
 	password_encrypted := []byte(s)

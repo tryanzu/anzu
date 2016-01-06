@@ -130,8 +130,13 @@ func (this *Customer) UpdateAddress(id bson.ObjectId, name, country, state, city
 
 func (this *Customer) NewOrder(gateway_name string, meta map[string]interface{}) (*Order, error) {
 
+	t := time.Now()
+
+	reference := t.Format("20060102-1504") + "-" + helpers.StrCapRandom(5)
+
 	order := &Order{
-		Id:       bson.NewObjectId(),
+		Id:        bson.NewObjectId(),
+		Reference: reference,
 		Status:   ORDER_AWAITING,
 		Statuses: make([]Status, 0),
 		UserId:   this.Id,
