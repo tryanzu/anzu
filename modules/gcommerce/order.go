@@ -67,8 +67,14 @@ func (this *Order) Checkout() error {
 		return errors.New("internal-error")
 	}
 
+	// Meta stuff
+	meta := this.Meta
+	meta["reference"] = this.Reference
+
+	this.gateway.SetMeta(meta)
+
 	// Charge the user
 	err = this.gateway.Charge(this.Total)
 
-	return nil
+	return err
 }

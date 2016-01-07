@@ -12,6 +12,7 @@ import (
 type GatewayStripe struct {
 	di    *Module
 	order *Order
+	meta  map[string]interface{}
 }
 
 // Set DI instance
@@ -23,6 +24,10 @@ func (this *GatewayStripe) SetOrder(order *Order) {
 	this.order = order
 }
 
+func (this *GatewayStripe) SetMeta(meta map[string]interface{}) {
+	this.meta = meta
+}
+
 func (this *GatewayStripe) Charge(amount float64) error {
 
 	database := this.di.Mongo.Database
@@ -30,19 +35,29 @@ func (this *GatewayStripe) Charge(amount float64) error {
 	// Setup stripe private key always
 	stripe.Key = this.di.StripeKey
 
+	// Check meta data integrity
+	reference, exists := this.meta["reference"].(string)
+
+	if !exists {
+		return errors.New("no-reference")
+	}
+
+	token, exists := this.meta["token"].(string)
+
+	if !exists {
+		return errors.New("invalid-token")
+	}
+
 	cents := uint64(amount * 100)
 	chargeParams := &stripe.ChargeParams{
 		Amount:   cents,
 		Currency: "mxn",
-		Desc:     "Test description",
+		Desc:     "Pago del pedido #" + reference,
 	}
 
-	chargeParams.SetSource(&stripe.CardParams{
-		Name:   "Go Stripe",
-		Number: "4242424242424242",
-		Month:  "10",
-		Year:   "20",
-	})
+	chargeParams.SetSource(token)
+	chargeParams.AddMeta("order_ref", reference)
+
 	ch, err := charge.New(chargeParams)
 
 	transaction := &Transaction{

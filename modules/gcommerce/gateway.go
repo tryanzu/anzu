@@ -18,6 +18,7 @@ type Gateway interface {
 	// Set the Dependency injection module
 	SetDI(*Module)
 	SetOrder(*Order)
+	SetMeta(map[string]interface{})
 }
 
 func getGateway(name string) (Gateway, error) {

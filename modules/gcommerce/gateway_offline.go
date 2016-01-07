@@ -3,6 +3,7 @@ package gcommerce
 type GatewayOffline struct {
 	di    *Module
 	order *Order
+	meta  map[string]interface{}
 }
 
 // Set DI instance
@@ -12,6 +13,10 @@ func (this *GatewayOffline) SetDI(di *Module) {
 
 func (this *GatewayOffline) SetOrder(order *Order) {
 	this.order = order
+}
+
+func (this *GatewayOffline) SetMeta(meta map[string]interface{}) {
+	this.meta = meta
 }
 
 func (this *GatewayOffline) Charge(amount float64) error {

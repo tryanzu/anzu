@@ -286,6 +286,7 @@ func (this CheckoutAPI) getCartObject(c *gin.Context) *cart.Cart {
 type CheckoutForm struct {
 	Gateway string                 `json:"gateway" binding:"required"`
 	ShipTo  bson.ObjectId          `json:"ship_to" binding:"required"`
+	Order   bson.ObjectId          `json:"order_id"`
 	Total   float64                `json:"total" binding:"required"`
 	Meta    map[string]interface{} `json:"meta"`
 }
