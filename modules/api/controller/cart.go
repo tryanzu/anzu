@@ -58,7 +58,17 @@ func (this CartAPI) Add(c *gin.Context) {
 				"vendor": form.Vendor,
 			}
 
-			container.Add(component.Id.Hex(), component.Name, price, 1, attrs)
+			base := cart.CartItem{
+				Id: component.Id.Hex(),
+				Name: component.Name,
+				Price: price,
+				Quantity: 1,
+				Attributes: attrs,
+			}
+
+			item := &CartComponentItem{base, component.FullName, component.Image, component.Slug, component.Type}
+
+			container.Add(item)
 		}
 
 		c.JSON(200, gin.H{"status": "okay"})
@@ -97,4 +107,12 @@ func (this CartAPI) getCart(c *gin.Context) *cart.Cart {
 type CartAddForm struct {
 	Id     string `json:"id" binding:"required"`
 	Vendor string `json:"vendor" binding:"required"`
+}
+
+type CartComponentItem struct {
+	cart.CartItem
+	FullName string `json:"full_name"`
+	Image    string `json:"image"`
+	Slug     string `json:"slug"`
+	Type     string `json:"type"` 
 }

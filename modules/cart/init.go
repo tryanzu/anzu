@@ -1,11 +1,11 @@
 package cart
 
 type Cart struct {
-	items   map[string]*CartItem
+	items   map[string]ItemFoundation
 	storage CartBucket
 }
 
-type mutator func(*CartItem)
+type mutator func(ItemFoundation)
 
 func Boot(storage CartBucket) (*Cart, error) {
 
@@ -15,29 +15,31 @@ func Boot(storage CartBucket) (*Cart, error) {
 		return nil, err
 	}
 
+	items := map[string]ItemFoundation{}
+
+	for id, item := range restored {
+
+		items[id] = item
+	}
+
 	bucket := &Cart{
-		items:   restored,
+		items:   items,
 		storage: storage,
 	}
 
 	return bucket, nil
 }
 
-// A Cart will have many items on it and this will write to it.
-func (module *Cart) Add(id, name string, price float64, q int, attrs map[string]interface{}) *CartItem {
+func (module *Cart) Add(item ItemFoundation) {
+
+	id := item.GetId()
 
 	if _, exists := module.items[id]; !exists {
 
-		module.items[id] = &CartItem{
-			Id:         id,
-			Name:       name,
-			Price:      price,
-			Quantity:   q,
-			Attributes: attrs,
-		}
+		module.items[id] = item
 	} else {
 
-		module.items[id].Quantity = module.items[id].Quantity + q
+		module.items[id].IncQuantity(1)
 	}
 
 	err := module.storage.Save(module.items)
@@ -45,28 +47,20 @@ func (module *Cart) Add(id, name string, price float64, q int, attrs map[string]
 	if err != nil {
 		panic(err)
 	}
-
-	return module.items[id]
 }
 
 // Update an Item inside the cart
-func (module *Cart) Update(id, name string, price float64, q int, attrs map[string]interface{}) *CartItem {
+func (module *Cart) Update(item ItemFoundation) {
 
-	module.items[id] = &CartItem{
-		Id:         id,
-		Name:       name,
-		Price:      price,
-		Quantity:   q,
-		Attributes: attrs,
-	}
+	id := item.GetId()
+
+	module.items[id] = item
 
 	err := module.storage.Save(module.items)
 
 	if err != nil {
 		panic(err)
 	}
-
-	return module.items[id]
 }
 
 // An Item will be removed of the list in case it exists.
@@ -74,9 +68,9 @@ func (module *Cart) Remove(id string) bool {
 
 	if _, exists := module.items[id]; exists {
 
-		module.items[id].Quantity = module.items[id].Quantity - 1
+		module.items[id].IncQuantity(-1)
 
-		if module.items[id].Quantity <= 0 {
+		if module.items[id].GetQuantity() <= 0 {
 
 			delete(module.items, id)
 		}
@@ -104,7 +98,7 @@ func (module *Cart) IsEmpty() bool {
 }
 
 // Get Cart contents for mutator approaches.
-func (module *Cart) GetContent() map[string]*CartItem {
+func (module *Cart) GetContent() map[string]ItemFoundation {
 	return module.items
 }
 

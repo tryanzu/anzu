@@ -102,37 +102,37 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 				continue
 			}
 
-			if item.Price != price {
+			if item.GetPrice() != price {
 
-				if item.Price > price {
+				if item.GetPrice() > price {
 
 					errors = append(errors, CheckoutError{
 						Type: ITEM_CHEAPER,
 						Related: component_id,
 						Meta: map[string]interface{}{
-							"before": item.Price,
+							"before": item.GetPrice(),
 							"after": price,
 						},
 					})
 
-					cartContainer.Update(id, item.Name, price, item.Quantity, item.Attributes)
-					item.Price = price
+					item.SetPrice(price)
+					cartContainer.Update(item)
 
 					continue
 
-				} else if item.Price < price {
+				} else if item.GetPrice() < price {
 
 					errors = append(errors, CheckoutError{
 						Type: ITEM_MORE_EXPENSIVE,
 						Related: component_id,
 						Meta: map[string]interface{}{
-							"before": item.Price,
+							"before": item.GetPrice(),
 							"after": price,
 						},
 					})
 
-					cartContainer.Update(id, item.Name, price, item.Quantity, item.Attributes)
-					item.Price = price
+					item.SetPrice(price)
+					cartContainer.Update(item)
 
 					continue
 				}
@@ -176,7 +176,7 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 		order, err := customer.NewOrder(form.Gateway, form.Meta)
 
 		if err != nil {
-			c.JSON(400, gin.H{"message": err.Error(), "key": err.Error(), "status": "error"})
+			c.JSON(400, gin.H{"message": err.Error(), "key": err.Error(), "status": "error", "order_id": order.Id})
 			return
 		}
 
@@ -185,7 +185,7 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 			meta := map[string]interface{}{
 				"related":    "components",
 				"related_id": bson.ObjectIdHex(id),
-				"cart":       item.Attributes,
+				"cart":       item,
 			}
 
 			description := ""
@@ -197,7 +197,7 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 				image = c.Image
 			}
 
-			order.Add(item.Name, description, image, item.Price, item.Quantity, meta)
+			order.Add(item.GetName(), description, image, item.GetPrice(), item.GetQuantity(), meta)
 		}
 
 		// Setup shipping information

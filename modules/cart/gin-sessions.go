@@ -34,7 +34,7 @@ func (gcs GinGonicSession) Restore() (map[string]*CartItem, error) {
 	}
 }
 
-func (gcs GinGonicSession) Save(data map[string]*CartItem) error {
+func (gcs GinGonicSession) Save(data interface{}) error {
 
 	encoded, err := json.Marshal(data)
 
