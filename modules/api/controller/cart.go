@@ -78,16 +78,32 @@ func (this CartAPI) Add(c *gin.Context) {
 				"vendor": form.Vendor,
 			}
 
-			base := cart.CartItem{
-				Id: component.Id.Hex(),
-				Name: component.Name,
-				Price: price,
-				Quantity: 1,
-				Attributes: attrs,
+			exists := false
+
+			for index, item := range items {
+
+				if item.Id == component.Id.Hex() {
+
+					exists = true
+
+					items[index].IncQuantity(1) 
+					break
+				}
 			}
 
-			item := CartComponentItem{base, component.FullName, component.Image, component.Slug, component.Type}
-			items = append(items, item)
+			if !exists {
+
+				base := cart.CartItem{
+					Id: component.Id.Hex(),
+					Name: component.Name,
+					Price: price,
+					Quantity: 1,
+					Attributes: attrs,
+				}
+
+				item := CartComponentItem{base, component.FullName, component.Image, component.Slug, component.Type}
+				items = append(items, item)
+			}
 			
 			err = container.Save(items)
 
