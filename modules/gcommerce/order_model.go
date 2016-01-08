@@ -8,8 +8,8 @@ import (
 const ORDER_AWAITING string = "awaiting"
 
 type Order struct {
-	Id bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
-	Reference string `bson:"reference" json:"reference"`
+	Id        bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
+	Reference string        `bson:"reference" json:"reference"`
 
 	// Information about the order status
 	Status   string   `bson:"status" json:"status"`
@@ -56,12 +56,12 @@ type Shipping struct {
 }
 
 type Address struct {
-	Country    string `bson:"country" json:"country"`
-	City       string `bson:"city" json:"city"`
-	Line1      string `bson:"line1" json:"line1"`
-	Line2      string `bson:"line2" json:"line3"`
-	PostalCode string `bson:"postal_code" json:"postal_code"`
-	State      string `bson:"state" json:"state"`
+	Country      string `bson:"country" json:"country"`
+	City         string `bson:"city" json:"city"`
+	Line1        string `bson:"line1" json:"line1"`
+	Line2        string `bson:"line2" json:"line3"`
+	PostalCode   string `bson:"postal_code" json:"postal_code"`
+	State        string `bson:"state" json:"state"`
 	Neighborhood string `bson:"neighborhood" json:"neighborhood"`
-	Extra      string `bson:"extra" json:"extra"`
+	Extra        string `bson:"extra" json:"extra"`
 }

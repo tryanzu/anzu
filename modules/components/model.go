@@ -6,20 +6,20 @@ import (
 )
 
 type ComponentModel struct {
-	Id           bson.ObjectId         `bson:"_id,omitempty" json:"id"`
-	Name         string                `bson:"name" json:"name"`
-	FullName     string                `bson:"full_name" json:"full_name"`
-	Slug         string                `bson:"slug" json:"slug"`
-	Source       string                `bson:"source" json:"source"`
-	Price        float64               `bson:"price" json:"price"`
-	External     float64               `bson:"external" json:"external"`
-	Type         string                `bson:"type" json:"type"`
-	Image        string                `bson:"image" json:"image"`
-	PartNumber   string                `bson:"part_number" json:"part_number"`
-	Manufacturer string                `bson:"manufacturer" json:"manufacturer"`
-	Images       []string              `bson:"images" json:"images"`
-	Activated    bool                  `bson:"activated" json:"activated"`
-	Store        ComponentStoreModel   `bson:"store,omitempty" json:"store,omitempty"`
+	Id           bson.ObjectId       `bson:"_id,omitempty" json:"id"`
+	Name         string              `bson:"name" json:"name"`
+	FullName     string              `bson:"full_name" json:"full_name"`
+	Slug         string              `bson:"slug" json:"slug"`
+	Source       string              `bson:"source" json:"source"`
+	Price        float64             `bson:"price" json:"price"`
+	External     float64             `bson:"external" json:"external"`
+	Type         string              `bson:"type" json:"type"`
+	Image        string              `bson:"image" json:"image"`
+	PartNumber   string              `bson:"part_number" json:"part_number"`
+	Manufacturer string              `bson:"manufacturer" json:"manufacturer"`
+	Images       []string            `bson:"images" json:"images"`
+	Activated    bool                `bson:"activated" json:"activated"`
+	Store        ComponentStoreModel `bson:"store,omitempty" json:"store,omitempty"`
 	di           *Module
 	generic      []byte
 }
@@ -32,20 +32,20 @@ type ComponentImageModel struct {
 
 type ComponentStoreModel struct {
 	Vendors map[string]ComponentStoreItemModel `bson:"vendors" json:"vendors"`
-	Updated time.Time 		   `bson:"updated_at" json:"updated_at"`
+	Updated time.Time                          `bson:"updated_at" json:"updated_at"`
 }
 
 type ComponentStoreItemModel struct {
-	Price float64 `bson:"price" json:"price"`
-	Stock int `bson:"stock" json:"stock"`
-	Priority int `bson:"priority" json:"priority"`
+	Price    float64 `bson:"price" json:"price"`
+	Stock    int     `bson:"stock" json:"stock"`
+	Priority int     `bson:"priority" json:"priority"`
 }
 
 type ComponentHistoricModel struct {
-	Id bson.ObjectId  `bson:"_id,omitempty" json:"id"`
-	ComponentId bson.ObjectId  `bson:"component_id" json:"component_id"`
-	Store ComponentStoreModel   `bson:"store" json:"store"`
-	Created time.Time 		   `bson:"created_at" json:"created_at"`
+	Id          bson.ObjectId       `bson:"_id,omitempty" json:"id"`
+	ComponentId bson.ObjectId       `bson:"component_id" json:"component_id"`
+	Store       ComponentStoreModel `bson:"store" json:"store"`
+	Created     time.Time           `bson:"created_at" json:"created_at"`
 }
 
 type ComponentMotherboardModel struct {

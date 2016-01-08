@@ -48,13 +48,13 @@ func (this *Customer) Address(id bson.ObjectId) (*CustomerAddress, error) {
 func (this *Customer) AddAddress(name, country, state, city, postal_code, neighborhood, line1, line2, extra, recipient, phone string) CustomerAddress {
 
 	a := Address{
-		Country:    country,
-		State:      state,
-		City:       city,
-		PostalCode: postal_code,
-		Line1:      line1,
-		Line2:      line2,
-		Extra:      extra,
+		Country:      country,
+		State:        state,
+		City:         city,
+		PostalCode:   postal_code,
+		Line1:        line1,
+		Line2:        line2,
+		Extra:        extra,
 		Neighborhood: neighborhood,
 	}
 
@@ -67,10 +67,10 @@ func (this *Customer) AddAddress(name, country, state, city, postal_code, neighb
 		TimesUsed:  0,
 		LastUsed:   time.Now(),
 		Default:    false,
-		Recipient: recipient,
-		Phone:     phone,
-		Created: time.Now(),
-		Updated: time.Now(),
+		Recipient:  recipient,
+		Phone:      phone,
+		Created:    time.Now(),
+		Updated:    time.Now(),
 	}
 
 	database := this.di.Mongo.Database
@@ -103,14 +103,14 @@ func (this *Customer) UpdateAddress(id bson.ObjectId, name, country, state, city
 	}
 
 	ad := Address{
-		Country:    country,
-		State:      state,
-		City:       city,
-		PostalCode: postal_code,
-		Line1:      line1,
-		Line2:      line2,
+		Country:      country,
+		State:        state,
+		City:         city,
+		PostalCode:   postal_code,
+		Line1:        line1,
+		Line2:        line2,
 		Neighborhood: neighborhood,
-		Extra:      extra,
+		Extra:        extra,
 	}
 
 	set := bson.M{"address": ad, "updated_at": time.Now(), "alias": name, "slug": helpers.StrSlug(name), "recipient": recipient, "phone": phone}
@@ -137,15 +137,15 @@ func (this *Customer) NewOrder(gateway_name string, meta map[string]interface{})
 	order := &Order{
 		Id:        bson.NewObjectId(),
 		Reference: reference,
-		Status:   ORDER_AWAITING,
-		Statuses: make([]Status, 0),
-		UserId:   this.Id,
-		Items:    make([]Item, 0),
-		Total:    0,
-		Gateway:  gateway_name,
-		Meta:     meta,
-		Created:  time.Now(),
-		Updated:  time.Now(),
+		Status:    ORDER_AWAITING,
+		Statuses:  make([]Status, 0),
+		UserId:    this.Id,
+		Items:     make([]Item, 0),
+		Total:     0,
+		Gateway:   gateway_name,
+		Meta:      meta,
+		Created:   time.Now(),
+		Updated:   time.Now(),
 	}
 
 	order.SetDI(this.di)

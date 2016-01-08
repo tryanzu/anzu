@@ -3,8 +3,8 @@ package components
 import (
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"gopkg.in/mgo.v2/bson"
-	"time"
 	"math"
+	"time"
 )
 
 // Set DI instance
@@ -53,7 +53,7 @@ func (component *ComponentModel) GetVendor(vendor string) (ComponentStoreItemMod
 	return ComponentStoreItemModel{}, exceptions.NotFound{"Invalid vendor. Not found."}
 }
 
-// Update component's price 
+// Update component's price
 func (component *ComponentModel) UpdatePrice(vendors map[string]map[string]interface{}) {
 
 	database := component.di.Mongo.Database
@@ -63,8 +63,8 @@ func (component *ComponentModel) UpdatePrice(vendors map[string]map[string]inter
 
 		historic := &ComponentHistoricModel{
 			ComponentId: component.Id,
-			Store: component.Store,
-			Created: time.Now(),
+			Store:       component.Store,
+			Created:     time.Now(),
 		}
 
 		err := database.C("components_historic").Insert(historic)
@@ -78,7 +78,6 @@ func (component *ComponentModel) UpdatePrice(vendors map[string]map[string]inter
 		component.Store.Vendors = make(map[string]ComponentStoreItemModel)
 	}
 
-
 	set := bson.M{"store.updated_at": time.Now(), "activated": true}
 
 	for key, item := range vendors {
@@ -90,12 +89,12 @@ func (component *ComponentModel) UpdatePrice(vendors map[string]map[string]inter
 		if with_price && with_stock && with_prio {
 
 			u := ComponentStoreItemModel{
-				Price: price.(float64),
-				Stock: int(stock.(float64)),
+				Price:    price.(float64),
+				Stock:    int(stock.(float64)),
 				Priority: int(prio.(float64)),
 			}
 
-			set["store.vendors." + key] = u
+			set["store.vendors."+key] = u
 
 			// Runtime update
 			component.Store.Vendors[key] = u
@@ -117,7 +116,7 @@ func (component *ComponentModel) UpdateAlgolia() {
 	index := component.di.Search.Get("components")
 
 	// Compose algolia item
-	full_name := component.FullName 
+	full_name := component.FullName
 
 	if full_name == "" {
 		full_name = component.Name
@@ -152,5 +151,5 @@ func (component *ComponentModel) UpdateAlgolia() {
 
 	if err != nil {
 		panic(err)
-	}	
+	}
 }

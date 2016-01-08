@@ -3,10 +3,10 @@ package gcommerce
 import (
 	"github.com/stripe/stripe-go"
 	"github.com/stripe/stripe-go/charge"
-	
+
 	"errors"
-	"time"
 	"math"
+	"time"
 )
 
 type GatewayStripe struct {

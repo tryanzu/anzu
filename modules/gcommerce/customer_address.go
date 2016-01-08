@@ -43,4 +43,3 @@ func (this *CustomerAddress) Extra() string {
 
 	return this.Address.Extra
 }
-
