@@ -15,10 +15,16 @@ type CartAPI struct {
 // Get Cart items
 func (this CartAPI) Get(c *gin.Context) {
 
-	// Initialize cart library
-	container := this.getCart(c)
+	var items []CartComponentItem
 
-	c.JSON(200, container.GetContent())
+	// Initialize cart library
+	err := this.getCart(c).Bind(&items)
+
+	if err != nil {
+		c.JSON(500, gin.H{"status": "error", "message": err.Error()})
+	} else {
+		c.JSON(200, items)
+	}
 }
 
 // Add Cart item from component id
@@ -47,6 +53,15 @@ func (this CartAPI) Add(c *gin.Context) {
 		// Initialize cart library
 		container := this.getCart(c)
 		{
+			var items []CartComponentItem
+
+			err := container.Bind(&items)
+
+			if err != nil {
+				c.JSON(500, gin.H{"status": "error", "message": err.Error()})
+				return
+			}
+
 			price, err := component.GetVendorPrice(form.Vendor)
 
 			if err != nil {
@@ -66,9 +81,15 @@ func (this CartAPI) Add(c *gin.Context) {
 				Attributes: attrs,
 			}
 
-			item := &CartComponentItem{base, component.FullName, component.Image, component.Slug, component.Type}
+			item := CartComponentItem{base, component.FullName, component.Image, component.Slug, component.Type}
+			items = append(items, item)
+			
+			err = container.Save(items)
 
-			container.Add(item)
+			if err != nil {
+				c.JSON(500, gin.H{"status": "error", "message": err.Error()})
+				return
+			}
 		}
 
 		c.JSON(200, gin.H{"status": "okay"})
@@ -85,11 +106,29 @@ func (this CartAPI) Delete(c *gin.Context) {
 		return
 	}
 
-	shopping_cart := this.getCart(c)
+	container := this.getCart(c)
 	{
-		exists := shopping_cart.Remove(id)
+		var items []CartComponentItem
 
-		c.JSON(200, gin.H{"status": "okay", "removed": exists})
+		err := container.Bind(&items)
+
+		if err != nil {
+			c.JSON(500, gin.H{"status": "error", "message": err.Error()})
+			return
+		}
+
+		for i, item := range items {
+
+			if item.Id == id {
+
+				items = append(items[:i], items[i+1:]...)
+				break
+			}
+		}
+
+		container.Save(items)
+
+		c.JSON(200, gin.H{"status": "okay"})
 	}
 }
 

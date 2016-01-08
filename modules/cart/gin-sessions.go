@@ -9,28 +9,24 @@ type GinGonicSession struct {
 	Session sessions.Session
 }
 
-func (gcs GinGonicSession) Restore() (map[string]*CartItem, error) {
-
-	var list map[string]*CartItem
+func (gcs GinGonicSession) Restore(where interface{}) error {
 
 	session := gcs.Session
 	data := session.Get("cart")
 
 	if data == nil {
 
-		list = make(map[string]*CartItem)
-
-		return list, nil
+		return nil
 	} else {
 
 		encoded := data.(string)
 
-		if err := json.Unmarshal([]byte(encoded), &list); err != nil {
+		if err := json.Unmarshal([]byte(encoded), &where); err != nil {
 
-			return list, err
+			return err
 		}
 
-		return list, nil
+		return nil
 	}
 }
 

@@ -36,10 +36,19 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 
 	if c.Bind(&form) == nil {
 
-		items := cartContainer.GetContent()
+		var items []CartComponentItem
 
-		if len(items) == 0 {
-			c.JSON(400, gin.H{"message": "No items in cart.", "status": "error"})
+		// Initialize cart library
+		err := cartContainer.Bind(&items)
+
+		if err != nil || len(items) == 0 {
+
+			if err != nil {
+				c.JSON(500, gin.H{"message": err.Error(), "status": "error"})
+			} else {
+				c.JSON(400, gin.H{"message": "No items in cart.", "status": "error"})
+			}
+
 			return
 		}
 
@@ -50,8 +59,9 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 		clist := map[string]*components.ComponentModel{}
 
 		// Check items against stored prices
-		for id, item := range items {
+		for index, item := range items {
 
+			id := item.Id
 			component_id := bson.ObjectIdHex(id)
 			component, err := this.Components.Get(component_id)
 
@@ -63,8 +73,7 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 				})
 
 				// Remove from items
-				cartContainer.Remove(id)
-				delete(items, id)
+				items = append(items[:index], items[index+1:]...)
 
 				continue
 			}
@@ -80,8 +89,7 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 				})
 
 				// Remove from items
-				cartContainer.Remove(id)
-				delete(items, id)
+				items = append(items[:index], items[index+1:]...)
 
 				continue
 			}
@@ -96,8 +104,7 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 				})
 
 				// Remove from items
-				cartContainer.Remove(id)
-				delete(items, id)
+				items = append(items[:index], items[index+1:]...)
 
 				continue
 			}
@@ -116,7 +123,6 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 					})
 
 					item.SetPrice(price)
-					cartContainer.Update(item)
 
 					continue
 
@@ -132,7 +138,6 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 					})
 
 					item.SetPrice(price)
-					cartContainer.Update(item)
 
 					continue
 				}
@@ -158,6 +163,8 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 
 		if len(errors) > 0 {
 
+			cartContainer.Save(items)
+			
 			c.JSON(409, gin.H{"status": "error", "list": errors})
 			return
 		}
@@ -180,8 +187,9 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 			return
 		}
 
-		for id, item := range items {
+		for _, item := range items {
 
+			id := item.Id
 			meta := map[string]interface{}{
 				"related":    "components",
 				"related_id": bson.ObjectIdHex(id),
