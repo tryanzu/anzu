@@ -111,5 +111,5 @@ func (this *GatewayStripe) ModifyPrice(p float64) float64 {
 }
 
 func (this *GatewayStripe) AdjustPrice(p float64) float64 {
-	return math.Ceil(p + 3.5)
+	return math.Ceil(p + 4)
 }
