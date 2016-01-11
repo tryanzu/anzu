@@ -1,11 +1,17 @@
 package gcommerce
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"gopkg.in/mgo.v2/bson"
 	"time"
 )
 
 const ORDER_AWAITING string = "awaiting"
+const ORDER_CONFIRMED string = "confirmed"
+const ORDER_INSTOCK string = "stock_confirmed"
+const ORDER_SHIPPED string = "shipped"
+const ORDER_COMPLETED string = "completed"
+const ORDER_CANCELED string = "canceled"
 
 type Order struct {
 	Id        bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
@@ -28,6 +34,10 @@ type Order struct {
 	Meta    map[string]interface{} `bson:"meta" json:"meta"`
 	Created time.Time              `bson:"created_at" json:"created_at"`
 	Updated time.Time              `bson:"updated_at" json:"updated_at"`
+
+	// Runtime fields
+	User     user.UserBasic `bson:"-" json:"user,omitempty"`
+	Customer Customer `bson:"-" json:"customer,omitempty"`
 
 	di      *Module
 	gateway Gateway

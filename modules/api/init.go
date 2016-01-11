@@ -35,6 +35,7 @@ type Module struct {
 	Cart         controller.CartAPI
 	Checkout     controller.CheckoutAPI
 	Customer     controller.CustomerAPI
+	Orders       controller.OrdersAPI
 }
 
 type ModuleDI struct {
@@ -66,6 +67,7 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.Cart},
 		&inject.Object{Value: &module.Checkout},
 		&inject.Object{Value: &module.Customer},
+		&inject.Object{Value: &module.Orders},
 	)
 
 	if err != nil {
@@ -242,6 +244,11 @@ func (module *Module) Run() {
 
 			backoffice.Use(module.Middlewares.NeedAclAuthorization())
 			{
+				store := backoffice.Group("/store")
+				{
+					store.GET("/order", module.Orders.Get)
+				}
+
 				backoffice.GET("/order", module.Store.Orders)
 				backoffice.GET("/order/:id", module.Store.One)
 				backoffice.POST("/order/:id", module.Store.Answer)
