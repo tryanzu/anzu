@@ -24,7 +24,7 @@ func (this *Order) SetDI(di *Module) {
 func (this *Order) Add(name, description, image string, price float64, q int, meta map[string]interface{}) {
 
 	// Update price based on gateway
-	gateway_price := this.gateway.ModifyPrice(price)
+	gateway_price := this.gateway.ModifyPrice(price) * q
 
 	this.Items = append(this.Items, Item{name, image, description, gateway_price, q, meta})
 	this.Total = this.Total + gateway_price

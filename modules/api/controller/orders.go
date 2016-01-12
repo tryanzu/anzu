@@ -19,6 +19,7 @@ func (this OrdersAPI) Get(c *gin.Context) {
 
 	l := c.Query("limit")
 	o := c.Query("offset")
+	search := c.Query("search")
 
 	if l != "" {
 		cl, err := strconv.Atoi(l)
@@ -36,7 +37,27 @@ func (this OrdersAPI) Get(c *gin.Context) {
 		}
 	}
 
-	orders := this.GCommerce.Get(bson.M{}, limit, offset)
+	meta := bson.M{}
+
+	if search != "" {
+
+		meta = bson.M{
+			"$or": []bson.M{
+				{
+					"reference": bson.M{
+						"$regex": search,
+					},
+				},
+				{
+					"$text": bson.M{
+						"$search": search,
+					},
+				},
+			},
+		}
+	}
+
+	orders := this.GCommerce.Get(meta, limit, offset)
 
 	c.JSON(200, orders)
 }

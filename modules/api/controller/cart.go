@@ -142,7 +142,12 @@ func (this CartAPI) Delete(c *gin.Context) {
 
 			if item.Id == id {
 
-				items = append(items[:i], items[i+1:]...)
+				items[i].Quantity = items[i].Quantity - 1
+
+				if items[i].Quantity <= 1 {
+					items = append(items[:i], items[i+1:]...)
+				}
+				
 				break
 			}
 		}
