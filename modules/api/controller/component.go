@@ -102,6 +102,23 @@ func (this ComponentAPI) UpdatePrice(c *gin.Context) {
 	}
 }
 
+// Delete Component's price
+func (this ComponentAPI) DeletePrice(c *gin.Context) {
+
+	slug := c.Param("slug")
+	component, err := this.Components.Get(bson.M{"slug": slug})
+
+	if err != nil {
+		c.JSON(400, gin.H{"message": "Invalid request, component not found.", "status": "error"})
+		return
+	}
+
+	component.DeletePrice()
+
+	c.JSON(200, gin.H{"status": "okay"})
+	
+}
+
 type ComponentPriceUpdateForm struct {
 	Price map[string]map[string]interface{} `json:"prices" binding:"required"`
 }

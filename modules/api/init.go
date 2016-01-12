@@ -265,6 +265,7 @@ func (module *Module) Run() {
 
 				// Components routes
 				backoffice.PUT("/component/:slug/price", module.Components.UpdatePrice)
+				backoffice.DELETE("/component/:slug/price", module.Components.DeletePrice)
 			}
 		}
 

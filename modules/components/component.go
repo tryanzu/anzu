@@ -107,6 +107,40 @@ func (component *ComponentModel) UpdatePrice(vendors map[string]map[string]inter
 		panic(err)
 	}
 
+	component.Activated = true
+
+	go component.UpdateAlgolia()
+}
+
+func (component *ComponentModel) DeletePrice() {
+
+	database := component.di.Mongo.Database
+
+	// Record price history
+	if len(component.Store.Vendors) > 0 {
+
+		historic := &ComponentHistoricModel{
+			ComponentId: component.Id,
+			Store:       component.Store,
+			Created:     time.Now(),
+		}
+
+		err := database.C("components_historic").Insert(historic)
+
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	component.Activated = false
+	component.Store.Vendors = make(map[string]ComponentStoreItemModel)
+
+	err := database.C("components").Update(bson.M{"_id": component.Id}, bson.M{"$unset": bson.M{"store": 1}, "$set": bson.M{"activated": false}})	
+
+	if err != nil {
+		panic(err)
+	}
+
 	go component.UpdateAlgolia()
 }
 
@@ -136,7 +170,7 @@ func (component *ComponentModel) UpdateAlgolia() {
 	object["slug"] = component.Slug
 	object["image"] = image
 	object["type"] = component.Type
-	object["activated"] = true
+	object["activated"] = component.Activated
 
 	v, err := component.GetVendor("spartangeek")
 
