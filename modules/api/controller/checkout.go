@@ -270,6 +270,9 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 			}
 
 			go mailing.Send(compose)
+
+			// Clean up cart items
+			cartContainer.Save(make([]CartComponentItem, 0))
 		}
 
 
