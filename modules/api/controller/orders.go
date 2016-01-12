@@ -59,5 +59,10 @@ func (this OrdersAPI) Get(c *gin.Context) {
 
 	orders := this.GCommerce.Get(meta, limit, offset)
 
+	if len(orders) == 0 {
+		c.JSON(200, make([]string, 0))
+		return
+	}
+
 	c.JSON(200, orders)
 }
