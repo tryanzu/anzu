@@ -215,7 +215,7 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 		total := order.GetTotal() 
 
 		if total != form.Total {
-			c.JSON(400, gin.H{"message": "Invalid total parameter.", "key": "bad-total", "status": "error"})
+			c.JSON(400, gin.H{"message": "Invalid total parameter.", "key": "bad-total", "status": "error", "shipping": shipping_cost, "total": total})
 			return
 		}
 
