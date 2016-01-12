@@ -3,6 +3,7 @@ package gcommerce
 import (
 	"github.com/stripe/stripe-go"
 	"github.com/stripe/stripe-go/charge"
+	"gopkg.in/mgo.v2/bson"
 
 	"errors"
 	"math"
@@ -75,6 +76,18 @@ func (this *GatewayStripe) Charge(amount float64) error {
 		transaction.Error = stripeErr
 		database.C("gcommerce_transactions").Insert(transaction)
 
+		status := Status{
+			this.order.Status,
+			make(map[string]interface{}),
+			this.order.Updated,
+		}
+	
+		err = database.C("gcommerce_orders").Update(bson.M{"_id": this.order.Id}, bson.M{"$set": bson.M{"status": ORDER_PAYMENT_ERROR}, "$push": bson.M{"statuses": status}})
+
+		if err != nil {
+			panic(err)
+		}
+
 		switch stripeErr.Code {
 		case stripe.IncorrectNum:
 			return errors.New("gateway-incorrect-num")
@@ -98,10 +111,28 @@ func (this *GatewayStripe) Charge(amount float64) error {
 			return errors.New("gateway-stripe-missing")
 		case stripe.ProcessingErr:
 			return errors.New("gateway-processing-err")
+		default:
+			return errors.New("gateway-error")
 		}
 	}
 
-	database.C("gcommerce_transactions").Insert(transaction)
+	status := Status{
+		this.order.Status,
+		make(map[string]interface{}),
+		this.order.Updated,
+	}
+
+	err = database.C("gcommerce_orders").Update(bson.M{"_id": this.order.Id}, bson.M{"$set": bson.M{"status": ORDER_CONFIRMED}, "$push": bson.M{"statuses": status}})
+
+	if err != nil {
+		panic(err)
+	}
+
+	err = database.C("gcommerce_transactions").Insert(transaction)
+
+	if err != nil {
+		panic(err)
+	}
 
 	return nil
 }

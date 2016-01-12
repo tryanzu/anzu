@@ -12,6 +12,7 @@ const ORDER_INSTOCK string = "stock_confirmed"
 const ORDER_SHIPPED string = "shipped"
 const ORDER_COMPLETED string = "completed"
 const ORDER_CANCELED string = "canceled"
+const ORDER_PAYMENT_ERROR string = "payment_error"
 
 type Order struct {
 	Id        bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
