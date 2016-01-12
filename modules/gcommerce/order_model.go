@@ -29,6 +29,7 @@ type Order struct {
 
 	// Information about the order itself
 	Items   []Item                 `bson:"items" json:"items"`
+	OTotal  float64                `bson:"original_total" json:"original_total"`
 	Total   float64                `bson:"total" json:"total"`
 	Gateway string                 `bson:"gateway" json:"gateway"`
 	Meta    map[string]interface{} `bson:"meta" json:"meta"`
@@ -48,6 +49,7 @@ type Item struct {
 	Image       string                 `bson:"image" json:"image"`
 	Description string                 `bson:"description" json:"description"`
 	Price       float64                `bson:"price" json:"price"`
+	OPrice      float64                `bson:"original_price" json:"original_price"`
 	Quantity    int                    `bson:"quantity" json:"quantity"`
 	Meta        map[string]interface{} `bson:"meta" json:"meta"`
 }
@@ -61,6 +63,7 @@ type Status struct {
 type Shipping struct {
 	Type    string                 `bson:"type" json:"type"`
 	Price   float64                `bson:"price" json:"price"`
+	OPrice  float64                `bson:"original_price" json:"original_price"`
 	Meta    map[string]interface{} `bson:"meta" json:"meta"`
 	Address Address                `bson:"address" json:"address"`
 }

@@ -24,16 +24,19 @@ func (this *Order) SetDI(di *Module) {
 func (this *Order) Add(name, description, image string, price float64, q int, meta map[string]interface{}) {
 
 	// Update price based on gateway
+	origin_price := price * float64(q)
 	gateway_price := this.gateway.ModifyPrice(price) * float64(q)
 
-	this.Items = append(this.Items, Item{name, image, description, gateway_price, q, meta})
+	this.Items = append(this.Items, Item{name, image, description, gateway_price, origin_price, q, meta})
 	this.Total = this.Total + gateway_price
+	this.OTotal = this.OTotal + origin_price
 }
 
 func (this *Order) Ship(price float64, name string, address *CustomerAddress) {
 
 	gateway_price := this.gateway.ModifyPrice(price)
 
+	this.Shipping.OPrice = price
 	this.Shipping.Price = gateway_price
 	this.Shipping.Type = name
 	this.Shipping.Address = address.Address
@@ -47,10 +50,19 @@ func (this *Order) Ship(price float64, name string, address *CustomerAddress) {
 	address.UseOnce()
 
 	this.Total = this.Total + gateway_price
+	this.OTotal = this.OTotal + price
 }
 
 func (this *Order) GetTotal() float64 {
 	return this.gateway.AdjustPrice(this.Total)
+}
+
+func (this *Order) GetOriginalTotal() float64 {
+	return this.OTotal
+}
+
+func (this *Order) GetGatewayCommision() float64 {
+	return this.GetTotal() - this.OTotal
 }
 
 func (this *Order) Checkout() error {
