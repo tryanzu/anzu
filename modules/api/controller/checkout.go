@@ -145,19 +145,22 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 
 			if component.Type == "case" {
 
-				shipping_cost = shipping_cost + 320.0
+				shipping_cost = shipping_cost + (320.0 * float64(item.GetQuantity()))
 
 			} else {
 				
-				if item_count == 0 {
+				for i := 0; i < item.GetQuantity(); i++ {
+					
+					if item_count == 0 {
 
-					shipping_cost = shipping_cost + 120.0
-				} else {
+						shipping_cost = shipping_cost + 120.0
+					} else {
 
-					shipping_cost = shipping_cost + 60.0
+						shipping_cost = shipping_cost + 60.0
+					}
+
+					item_count = item_count + 1
 				}
-
-				item_count = item_count + 1
 			}
 		}
 
