@@ -208,7 +208,13 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 				image = c.Image
 			}
 
-			order.Add(item.GetName(), description, image, item.GetPrice(), item.GetQuantity(), meta)
+			name := item.FullName 
+
+			if name == "" {
+				name = item.GetName()
+			}
+
+			order.Add(name, description, image, item.GetPrice(), item.GetQuantity(), meta)
 		}
 
 		// Setup shipping information
