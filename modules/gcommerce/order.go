@@ -62,7 +62,7 @@ func (this *Order) GetOriginalTotal() float64 {
 }
 
 func (this *Order) GetGatewayCommision() float64 {
-	return this.GetTotal() - this.OTotal
+	return this.Total - this.OTotal
 }
 
 func (this *Order) Checkout() error {
