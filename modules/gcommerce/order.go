@@ -1,6 +1,8 @@
 package gcommerce
 
 import (
+	"gopkg.in/mgo.v2/bson"
+
 	"errors"
 )
 
@@ -51,6 +53,22 @@ func (this *Order) Ship(price float64, name string, address *CustomerAddress) {
 
 	this.Total = this.Total + gateway_price
 	this.OTotal = this.OTotal + price
+}
+
+func (this *Order) GetRelatedAddress() *CustomerAddress {
+
+	database := this.di.Mongo.Database
+	address_id := this.Shipping.Meta["related_id"].(bson.ObjectId)
+
+	var a *CustomerAddress
+
+	err := database.C("customer_addresses").Find(bson.M{"_id": address_id}).One(&a)
+
+	if err != nil {
+		return a
+	}
+
+	return a
 }
 
 func (this *Order) GetTotal() float64 {

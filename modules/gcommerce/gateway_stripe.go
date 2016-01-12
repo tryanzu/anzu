@@ -50,10 +50,25 @@ func (this *GatewayStripe) Charge(amount float64) error {
 	}
 
 	cents := uint64(amount * 100)
+	address := this.order.GetRelatedAddress()
+	order_address := this.order.Shipping.Address
+
 	chargeParams := &stripe.ChargeParams{
 		Amount:   cents,
 		Currency: "mxn",
 		Desc:     "Pago del pedido #" + reference,
+		Shipping: &stripe.ShippingDetails{
+		    Name: address.Recipient,
+		    Phone: address.Phone,
+		    Address: stripe.Address{
+		      Line1: order_address.Line1,
+		      Line2: order_address.Line2,
+		      City: order_address.City,
+		      Country: order_address.Country,
+		      State: order_address.State,
+		      Zip: order_address.PostalCode,
+		    },
+		},
 	}
 
 	chargeParams.SetSource(token)
@@ -81,7 +96,7 @@ func (this *GatewayStripe) Charge(amount float64) error {
 			make(map[string]interface{}),
 			this.order.Updated,
 		}
-	
+
 		err = database.C("gcommerce_orders").Update(bson.M{"_id": this.order.Id}, bson.M{"$set": bson.M{"status": ORDER_PAYMENT_ERROR}, "$push": bson.M{"statuses": status}})
 
 		if err != nil {
