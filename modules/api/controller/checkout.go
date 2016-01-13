@@ -31,8 +31,8 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 	var form CheckoutForm
 
 	cartContainer := this.getCartObject(c)
-	user := c.MustGet("user_id")
-	userId := bson.ObjectIdHex(user.(string))
+	usr := c.MustGet("user_id")
+	userId := bson.ObjectIdHex(usr.(string))
 
 	if c.Bind(&form) == nil {
 

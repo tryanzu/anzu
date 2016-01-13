@@ -115,3 +115,19 @@ func (module *Module) Get(where bson.M, limit, offset int) []Order {
 
 	return list
 }
+
+func (module *Module) One(where bson.M) (*Order, error) {
+
+	var order *Order
+
+	database := module.Mongo.Database
+	err := database.C("gcommerce_orders").Find(where).One(&order)
+
+	if err != nil {
+		return nil, err
+	}
+
+	order.SetDI(module)
+	
+	return order, nil
+}

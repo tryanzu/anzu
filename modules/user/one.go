@@ -23,11 +23,14 @@ func (self *One) RUpdate(data *User) {
 
 func (self *One) Email() string {
 
-	fb := self.data.Facebook.(bson.M)
+	if self.data.Facebook != nil {
+		
+		fb := self.data.Facebook.(bson.M)
 
-	if email, exists := fb["email"]; exists {
+		if email, exists := fb["email"]; exists {
 
-		return email.(string)
+			return email.(string)
+		}
 	}
 
 	return self.data.Email
