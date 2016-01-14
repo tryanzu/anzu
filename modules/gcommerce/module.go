@@ -56,6 +56,22 @@ func (module *Module) GetCustomerFromUser(user_id bson.ObjectId) Customer {
 	return customer
 }
 
+func (module *Module) GetCustomer(id bson.ObjectId) (*Customer, error) {
+	
+	var customer *Customer
+
+	database := module.Mongo.Database
+	err := database.C("customers").Find(bson.M{"_id": id}).One(&customer)
+
+	if err != nil {
+		return nil, err
+	}
+
+	customer.SetDI(module)
+
+	return customer, nil
+}
+
 func (module *Module) Get(where bson.M, limit, offset int) []Order {
 
 	var list []Order
@@ -128,6 +144,6 @@ func (module *Module) One(where bson.M) (*Order, error) {
 	}
 
 	order.SetDI(module)
-	
+
 	return order, nil
 }

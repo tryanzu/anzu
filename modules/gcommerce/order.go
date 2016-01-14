@@ -23,6 +23,11 @@ func (this *Order) SetDI(di *Module) {
 	this.gateway.SetOrder(this)
 }
 
+func (this *Order) ChangeStatus(name string) {
+
+	
+}
+
 func (this *Order) Add(name, description, image string, price float64, q int, meta map[string]interface{}) {
 
 	// Update price based on gateway

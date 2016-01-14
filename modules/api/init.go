@@ -247,6 +247,7 @@ func (module *Module) Run() {
 				store := backoffice.Group("/store")
 				{
 					store.GET("/order", module.Orders.Get)
+					store.POST("/order/:id/send-confirmation", module.Orders.SendOrderConfirmation)
 				}
 
 				backoffice.GET("/order", module.Store.Orders)
