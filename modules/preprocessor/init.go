@@ -15,6 +15,7 @@ type Module struct {
 	Dependencies ModuleDI
 	Middlewares  handle.MiddlewareAPI
 	Posts        controller.PostAPI
+	Components   controller.ComponentAPI
 }
 
 type ModuleDI struct {
@@ -27,6 +28,7 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.Dependencies},
 		&inject.Object{Value: &module.Middlewares},
 		&inject.Object{Value: &module.Posts},
+		&inject.Object{Value: &module.Components},
 	)
 
 	if err != nil {
@@ -67,6 +69,7 @@ func (module *Module) Run() {
 
 	// Share base html page to the controllers
 	module.Posts.Page = base
+	module.Components.Page = base
 
 	// Start gin classic middlewares
 	router := gin.Default()
@@ -77,6 +80,7 @@ func (module *Module) Run() {
 
 	router.GET("/p/:slug/:id", module.Posts.Get)
 	router.GET("/p/:slug/:id/:comment", module.Posts.Get)
+	router.GET("/componente/:slug", module.Components.Get)
 	router.GET("/", module.Posts.ByPass)
 
 	// Run over the 3014 port
