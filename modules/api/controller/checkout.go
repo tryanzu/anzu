@@ -257,10 +257,16 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 
 			compose := mail.Mail{
 				Template: template,
+				FromName: "Spartan Geek",
+				FromEmail: "pedidos@spartangeek.com",
 				Recipient: []mail.MailRecipient{
 					{
 						Name:  usr.Name(),
 						Email: usr.Email(),
+					},
+					{
+						Name:  "Equipo Spartan Geek",
+						Email: "pedidos@spartangeek.com",
 					},
 				},
 				Variables: map[string]interface{}{
