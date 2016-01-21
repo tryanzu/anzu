@@ -77,12 +77,38 @@ func (module *Module) CreateOrder(order OrderModel) {
 	}
 }
 
-func (module *Module) GetSortedOrders(limit, skip int) []OrderModel {
+func (module *Module) GetSortedOrders(limit, skip int, search string) []OrderModel {
 
 	var list []OrderModel
 
 	database := module.Mongo.Database
-	err := database.C("orders").Find(bson.M{"deleted_at": bson.M{"$exists": false}}).Sort("-updated_at").Limit(limit).Skip(skip).All(&list)
+	
+	clause := bson.M{"deleted_at": bson.M{"$exists": false}}
+	
+	if search != "" {
+		
+		clause = bson.M{
+			"$and": []bson.M{
+				{
+					"deleted_at": bson.M{"$exists": false},
+				},
+				{
+					"$or": []bson.M{
+						{
+							"$text": bson.M{
+								"$search": search,
+							},
+						},
+						{
+							"budget": search,
+						},
+					},
+				},
+			},
+		}	
+	}
+	
+	err := database.C("orders").Find(clause).Sort("-updated_at").Limit(limit).Skip(skip).All(&list)
 
 	if err != nil {
 		panic(err)

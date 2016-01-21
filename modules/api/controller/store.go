@@ -60,8 +60,9 @@ func (self StoreAPI) Orders(c *gin.Context) {
 	if err != nil {
 		offset = 0
 	}
-
-	orders := self.Store.GetSortedOrders(limit, offset)
+	
+	search := c.Query("search")
+	orders := self.Store.GetSortedOrders(limit, offset, search)
 
 	c.JSON(200, orders)
 }
