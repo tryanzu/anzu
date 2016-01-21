@@ -88,21 +88,14 @@ func (module *Module) GetSortedOrders(limit, skip int, search string) []OrderMod
 	if search != "" {
 		
 		clause = bson.M{
-			"$and": []bson.M{
+			"$or": []bson.M{
 				{
-					"deleted_at": bson.M{"$exists": false},
+					"$text": bson.M{
+						"$search": search,
+					},
 				},
 				{
-					"$or": []bson.M{
-						{
-							"$text": bson.M{
-								"$search": search,
-							},
-						},
-						{
-							"budget": search,
-						},
-					},
+					"budget": search,
 				},
 			},
 		}	
