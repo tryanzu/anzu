@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
+	"github.com/iron-io/iron_go3/mq"
 )
 
 const ITEM_NOT_FOUND = "not-found"
@@ -286,6 +287,18 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 			}
 
 			go mailing.Send(compose)
+			
+			go func(id bson.ObjectId) {
+				
+				// Replicate the mail for two days
+				q := mq.New("gcommerce")
+				_, err := q.PushMessage(mq.Message{Delay: 3600*24*2, Body: "{\"fire\":\"payment-reminder\",\"id\":\""+id.Hex()+"\"}"})
+				
+				if err != nil {
+					panic(err)
+				}
+				
+			}(order.Id)
 
 			// Clean up cart items
 			cartContainer.Save(make([]CartComponentItem, 0))

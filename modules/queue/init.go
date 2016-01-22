@@ -2,7 +2,7 @@ package queue
 
 import (
 	"encoding/json"
-	"github.com/iron-io/iron_go/mq"
+	"github.com/iron-io/iron_go3/mq"
 	"github.com/facebookgo/inject"
 	"log"
 	"os"
@@ -36,6 +36,7 @@ func (module *Module) Populate(g inject.Graph) {
 
 	module.Handlers = map[string]fn {
 		"StoreDelayedResponse": module.Mail.StoreDelayedResponse,
+		"payment-reminder": module.Mail.GcommercePayReminder,
 	}
 }
 
@@ -48,7 +49,7 @@ func (module *Module) Listen(name string) {
 	for {
 
 		// Get ten messages with a 60 seconds release time and wait 30 seconds in case of boring time
-		msgs, err := queue.GetNWithTimeoutAndWait(10, 60, 30)
+		msgs, err := queue.LongPoll(10, 60, 30, false)
 
 		if err != nil {
 
@@ -66,7 +67,7 @@ func (module *Module) Listen(name string) {
 	}
 }
 
-func (module *Module) doMessage(msg *mq.Message) {
+func (module *Module) doMessage(msg mq.Message) {
 
 	var message map[string]interface{}
 
@@ -88,8 +89,8 @@ func (module *Module) doMessage(msg *mq.Message) {
     		return
     	}
 
-    	panic("Invalid handler for the message")
+    	log.Println("[error] Invalid handler for the message")
     }
 
-    panic("Not a valid message")
+    log.Println("[error] Not a valid message")
 }
