@@ -4,6 +4,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 
 	"errors"
+	"time"
 )
 
 // Set DI instance
@@ -24,8 +25,20 @@ func (this *Order) SetDI(di *Module) {
 }
 
 func (this *Order) ChangeStatus(name string) {
-
 	
+	database := this.di.Mongo.Database
+	
+	status := Status{
+		this.Status,
+		make(map[string]interface{}),
+		this.Updated,
+	}
+	
+	err := database.C("gcommerce_orders").Update(bson.M{"_id": this.Id}, bson.M{"$set": bson.M{"status": name, "updated_at": time.Now()}, "$push": bson.M{"statuses": status}})
+
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (this *Order) Add(name, description, image string, price float64, q int, meta map[string]interface{}) {

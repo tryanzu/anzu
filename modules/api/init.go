@@ -248,6 +248,7 @@ func (module *Module) Run() {
 				{
 					store.GET("/order", module.Orders.Get)
 					store.POST("/order/:id/send-confirmation", module.Orders.SendOrderConfirmation)
+					store.PUT("/order/:id/status", module.Orders.ChangeStatus)
 				}
 
 				backoffice.GET("/order", module.Store.Orders)

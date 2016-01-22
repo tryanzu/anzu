@@ -19,6 +19,22 @@ func Boot(key string) *Module {
 	return module
 }
 
+func ValidStatus(name string) bool {
+	
+	if name == ORDER_CONFIRMED ||
+	   name == ORDER_AWAITING ||
+	   name == ORDER_INSTOCK ||
+	   name == ORDER_SHIPPED ||
+	   name == ORDER_COMPLETED ||
+	   name == ORDER_CANCELED ||
+	   name == ORDER_PAYMENT_ERROR {
+	   	
+	   	return true
+	}
+	   
+	return false
+}
+
 type Module struct {
 	Mongo     *mongo.Service               `inject:""`
 	Errors    *exceptions.ExceptionsModule `inject:""`

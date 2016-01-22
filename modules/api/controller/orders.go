@@ -154,3 +154,41 @@ func (this OrdersAPI) SendOrderConfirmation(c *gin.Context) {
 		}
 	}
 }
+
+func (this OrdersAPI) ChangeStatus(c *gin.Context) {
+
+	var form ComponentStatusForm
+	
+	order_id := c.Param("id")
+	
+	if bson.IsObjectIdHex(order_id) == false {
+		c.JSON(400, gin.H{"message": "Invalid request, id not valid.", "status": "error"})
+		return
+	}
+
+	id := bson.ObjectIdHex(order_id)
+	order, err := this.GCommerce.One(bson.M{"_id": id})
+
+	if err != nil {
+		c.JSON(404, gin.H{"message": "Invalid request, order not found.", "status": "error"})
+		return
+	}
+
+	if c.Bind(&form) == nil {
+		
+	 	if gcommerce.ValidStatus(form.Name) {
+	 		
+	 		order.ChangeStatus(form.Name)
+	 		
+	 		c.JSON(200, gin.H{"status": "okay"})
+	 		return
+	 	}
+	}
+	
+	c.JSON(400, gin.H{"message": "Invalid request, status not valid.", "status": "error"})
+	return
+}
+
+type ComponentStatusForm struct {
+	Name string `json:"status" binding:"required"`
+}
