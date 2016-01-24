@@ -6,11 +6,11 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/gcommerce"
 	"github.com/fernandez14/spartangeek-blacker/modules/store"
 	"github.com/fernandez14/spartangeek-blacker/modules/mail"
+	"github.com/fernandez14/spartangeek-blacker/modules/queue"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
-	"github.com/iron-io/iron_go3/mq"
 )
 
 const ITEM_NOT_FOUND = "not-found"
@@ -154,7 +154,7 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 					
 					if item_count == 0 {
 
-						shipping_cost = shipping_cost + 120.0
+						shipping_cost = shipping_cost + 139.0
 					} else {
 
 						shipping_cost = shipping_cost + 60.0
@@ -290,10 +290,8 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 			
 			go func(id bson.ObjectId) {
 				
-				// Replicate the mail for two days
-				q := mq.New("gcommerce")
-				_, err := q.PushMessage(mq.Message{Delay: 3600*24*2, Body: "{\"fire\":\"payment-reminder\",\"id\":\""+id.Hex()+"\"}"})
-				
+				err := queue.PushWDelay("gcommerce", "payment-reminder", map[string]interface{}{"id": id.Hex()}, 3600*24*2)
+			
 				if err != nil {
 					panic(err)
 				}
