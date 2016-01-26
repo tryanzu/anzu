@@ -109,7 +109,7 @@ func (module *Module) GetSortedOrders(limit, skip int, search string) []OrderMod
 		}	
 	}
 	
-	err := database.C("orders").Find(clause).Sort("-updated_at").Limit(limit).Skip(skip).All(&list)
+	err := database.C("orders").Find(clause).Select(bson.M{"score": bson.M{"$meta": "textScore"}}).Sort("$textScore:score", "-updated_at").Limit(limit).Skip(skip).All(&list)
 
 	if err != nil {
 		panic(err)
