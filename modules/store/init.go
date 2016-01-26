@@ -6,7 +6,9 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/xuyu/goredis"
 	"gopkg.in/mgo.v2/bson"
+	
 	"time"
+	"strconv"
 )
 
 func Boot() *Module {
@@ -87,6 +89,12 @@ func (module *Module) GetSortedOrders(limit, skip int, search string) []OrderMod
 	
 	if search != "" {
 		
+		n, err := strconv.Atoi(search)
+
+		if err != nil {
+			n = -1
+		}
+
 		clause = bson.M{
 			"$or": []bson.M{
 				{
@@ -95,7 +103,7 @@ func (module *Module) GetSortedOrders(limit, skip int, search string) []OrderMod
 					},
 				},
 				{
-					"budget": search,
+					"budget": n,
 				},
 			},
 		}	
