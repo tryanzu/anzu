@@ -137,6 +137,11 @@ func (module *Module) Run() {
 
 	v1.Use(module.Middlewares.Authorization())
 	{
+		v1.GET("/whoami", func(c *gin.Context) {
+
+			c.String(200, c.ClientIP())
+		})
+
 		v1.POST("/subscribe", module.Users.UserSubscribe)
 
 		// Gamification routes
