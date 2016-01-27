@@ -6,6 +6,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 	"strings"
 	"net/http"
+	"html"
 )
 
 type ComponentAPI struct {
@@ -48,13 +49,13 @@ func (this ComponentAPI) Get(c *gin.Context) {
 		return
 	}
     
-    var name string = component.FullName
+    var name string = html.EscapeString(component.FullName)
     
     if name == "" {
-        name = component.Name    
+        name = html.EscapeString(component.Name)    
     }
     
-    var description string = "Especificaciones y características del " + name + " y precios en tiendas. Comentarios de usuarios, ratings y preguntas."
+    var description string = html.EscapeString("Especificaciones y características del " + name + " y precios en tiendas. Comentarios de usuarios, ratings y preguntas.")
 	var page string = this.Page
 
 	page = strings.Replace(page, "SpartanGeek.com | Comunidad de tecnología, geeks y más", "SpartanGeek.com | Componentes | " + name , 1)
