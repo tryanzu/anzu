@@ -16,6 +16,7 @@ type ComponentAPI struct {
 func (this ComponentAPI) Get(c *gin.Context) {
 	
 	slug := c.Param("slug")
+	kind := c.Param("type")
 
     if slug == "" {
 
@@ -30,6 +31,14 @@ func (this ComponentAPI) Get(c *gin.Context) {
 
 		// Post not found, url hacked
 		c.Redirect(http.StatusMovedPermanently, "/")
+		return
+	}
+
+	if kind != component.Type {
+		
+		var url string = "/componentes/" + component.Type + "/" + component.Slug
+	    
+		c.Redirect(http.StatusMovedPermanently, url)
 		return
 	}
     
@@ -59,6 +68,32 @@ func (this ComponentAPI) Get(c *gin.Context) {
 
 	c.Header("Content-Type", "text/html; charset=utf-8")
 	c.String(200, page)
+}
+
+func (this ComponentAPI) MigrateOld(c *gin.Context) {
+	
+	slug := c.Param("slug")
+
+    if slug == "" {
+
+		// Post not found, url hacked
+		c.Redirect(http.StatusMovedPermanently, "/")
+		return
+	}
+	
+	component, err := this.Components.Get(bson.M{"slug": slug})
+
+	if err != nil {
+
+		// C not found, url hacked
+		c.Redirect(http.StatusMovedPermanently, "/")
+		return
+	}
+
+	var url string = "/componentes/" + component.Type + "/" + component.Slug
+    
+	c.Redirect(http.StatusMovedPermanently, url)
+	return
 }
 
 func (this ComponentAPI) ByPass(c *gin.Context) {
