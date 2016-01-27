@@ -18,6 +18,12 @@ func (this ComponentAPI) Get(c *gin.Context) {
 	slug := c.Param("slug")
 	kind := c.Param("type")
 
+	if kind == "tienda" {
+
+		this.ByPass(c)
+		return
+	}
+
     if slug == "" {
 
 		// Post not found, url hacked
@@ -35,7 +41,7 @@ func (this ComponentAPI) Get(c *gin.Context) {
 	}
 
 	if kind != component.Type {
-		
+
 		var url string = "/componentes/" + component.Type + "/" + component.Slug
 	    
 		c.Redirect(http.StatusMovedPermanently, url)
