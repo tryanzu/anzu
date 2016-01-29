@@ -16,6 +16,7 @@ type Module struct {
 	Middlewares  handle.MiddlewareAPI
 	Posts        controller.PostAPI
 	Components   controller.ComponentAPI
+	General      controller.GeneralAPI
 }
 
 type ModuleDI struct {
@@ -29,6 +30,7 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.Middlewares},
 		&inject.Object{Value: &module.Posts},
 		&inject.Object{Value: &module.Components},
+		&inject.Object{Value: &module.General},
 	)
 
 	if err != nil {
@@ -84,7 +86,7 @@ func (module *Module) Run() {
 	router.GET("/componentes/:type", module.Components.ByPass)
 	router.GET("/componentes/:type/:slug", module.Components.Get)
 	router.GET("/componente/:slug", module.Components.MigrateOld)
-	router.GET("/", module.Posts.ByPass)
+	router.GET("/", module.General.Landing)
 
 	// Run over the 3014 port
 	port := os.Getenv("RUN_OVER")
