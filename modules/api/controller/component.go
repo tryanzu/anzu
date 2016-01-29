@@ -67,7 +67,7 @@ func (this ComponentAPI) GetPosts(c *gin.Context) {
 		return
 	}
 
-	posts, err := this.Feed.LightPosts(bson.M{"related_components": component.Id})
+	posts, err := this.Feed.LightPosts(bson.M{"related_components": component.Id, "deleted": bson.M{"$exists": false}})
 
 	if err != nil {
 
