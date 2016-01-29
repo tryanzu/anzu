@@ -72,6 +72,7 @@ func (module *Module) Run() {
 	// Share base html page to the controllers
 	module.Posts.Page = base
 	module.Components.Page = base
+	module.General.Page = base
 
 	// Start gin classic middlewares
 	router := gin.Default()
