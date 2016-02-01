@@ -8,6 +8,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 
 	"strconv"
+	"strings"
 )
 
 type OrdersAPI struct {
@@ -24,6 +25,7 @@ func (this OrdersAPI) Get(c *gin.Context) {
 	l := c.Query("limit")
 	o := c.Query("offset")
 	search := c.Query("search")
+	tags := c.Query("tags")
 
 	if l != "" {
 		cl, err := strconv.Atoi(l)
@@ -58,6 +60,33 @@ func (this OrdersAPI) Get(c *gin.Context) {
 					},
 				},
 			},
+		}
+	}
+
+	if tags != "" {
+
+		tag_list := strings.Split(tags, ",")
+
+		if search == "" {
+
+			meta = bson.M{
+				"status": bson.M{
+					"$in": tag_list,
+				},
+			}
+			
+		} else {
+
+			meta = bson.M{
+				"$and": []bson.M{
+					bson.M{
+						"status": bson.M{
+							"$in": tag_list,
+						},
+					},
+					meta,
+				},
+			}
 		}
 	}
 
