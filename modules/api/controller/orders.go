@@ -100,6 +100,55 @@ func (this OrdersAPI) Get(c *gin.Context) {
 	c.JSON(200, orders)
 }
 
+func (this OrdersAPI) GetOne(c *gin.Context) {
+
+	id_param := c.Param("id")
+
+	if bson.IsObjectIdHex(id_param) == false {
+		c.JSON(400, gin.H{"message": "Invalid request, id not valid.", "status": "error"})
+		return
+	}
+
+	id := bson.ObjectIdHex(id_param)
+	order, err := this.GCommerce.One(bson.M{"_id": id})
+
+	if err != nil {
+		c.JSON(404, gin.H{"message": "Invalid request, order not found.", "status": "error"})
+		return
+	}
+
+	customer, err := this.GCommerce.GetCustomer(order.UserId)
+
+	if err != nil {
+		c.JSON(404, gin.H{"message": "Invalid request, order customer not found.", "status": "error"})
+		return
+	}
+
+	usr, err := this.User.Get(customer.UserId)
+
+	if err != nil {
+		c.JSON(404, gin.H{"message": "Invalid request, order user not found.", "status": "error"})
+		return
+	}
+
+	address_id, exists := order.Shipping.Meta["related_id"]
+
+	if exists {
+
+		address, err := customer.Address(address_id.(bson.ObjectId))
+
+		if err != nil {
+			c.JSON(404, gin.H{"message": "Invalid request, order address not found.", "status": "error"})
+			return
+		}
+
+		c.JSON(200, gin.H{"order": order, "customer": customer, "user": usr.Data(), "address": address})
+		return
+	}
+
+	c.JSON(404, gin.H{"message": "Invalid request, order address not found.", "status": "error"})
+}
+
 func (this OrdersAPI) SendOrderConfirmation(c *gin.Context) {
 
 	order_id := c.Param("id")
