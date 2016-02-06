@@ -25,6 +25,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/fernandez14/spartangeek-blacker/modules/security"
 	"github.com/fernandez14/spartangeek-blacker/modules/gcommerce"
+	"github.com/fernandez14/spartangeek-blacker/modules/transmit"
 	"github.com/fernandez14/spartangeek-blacker/modules/search"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/getsentry/raven-go"
@@ -54,6 +55,7 @@ func main() {
 
 	// Resources for the API
 	var api api.Module
+	var transmitModule transmit.Module
 	var preprocessor preprocessor.Module
 	var cliModule cli.Module
 	var queueModule queue.Module
@@ -91,6 +93,7 @@ func main() {
 
 	searchService := search.Boot(searchConfig)
 	assetsService := assets.Boot()
+	transmitService := transmit.Boot(string_value(configService.String("zmq.push")))
 	mailService := mail.Boot(string_value(configService.String("mail.api_key")), mailConfig, false)
 
 	// Amazon services for the DI
@@ -125,6 +128,7 @@ func main() {
 		&inject.Object{Value: firebaseService, Complete: true},
 		&inject.Object{Value: statsService, Complete: true},
 		&inject.Object{Value: searchService, Complete: true},
+		&inject.Object{Value: transmitService, Complete: true},
 		&inject.Object{Value: aclService, Complete: false},
 		&inject.Object{Value: storeService, Complete: false},
 		&inject.Object{Value: gcommerceService, Complete: false},
@@ -139,6 +143,7 @@ func main() {
 		&inject.Object{Value: &securityModule},
 		&inject.Object{Value: &notificationsModule},
 		&inject.Object{Value: &feedModule},
+		&inject.Object{Value: &transmitModule},
 		&inject.Object{Value: &exceptions},
 	)
 
@@ -273,6 +278,24 @@ func main() {
 		},
 	}
 
+	var cmdRunTransmit = &cobra.Command{
+		Use:   "transmit",
+		Short: "Run transmit server",
+		Long: `Run transmit server, which
+		includes a socket-io instance and a zeromq pull server
+        `,
+		Run: func(cmd *cobra.Command, args []string) {
+
+			// Populate the DI with the instances
+			if err := g.Populate(); err != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+
+			transmitModule.Run()
+		},
+	}
+
 	var rootCmd = &cobra.Command{Use: "blacker"}
 	rootCmd.AddCommand(cmdApi)
 	rootCmd.AddCommand(cmdSyncGamification)
@@ -280,6 +303,7 @@ func main() {
 	rootCmd.AddCommand(cmdWorkerRoutine)
 	rootCmd.AddCommand(cmdJobs)
 	rootCmd.AddCommand(cmdRunRoutine)
+	rootCmd.AddCommand(cmdRunTransmit)
 	rootCmd.AddCommand(cmdPreprocessor)
 	rootCmd.Execute()
 
