@@ -34,6 +34,15 @@ func (module *Module) Run() {
         log.Fatal(err)
     }
 
+    server.SetAllowRequest(func(r *http.Request) error {
+
+        origin := r.Header.Get("Origin")
+
+        r.Header.Set("Access-Control-Allow-Origin", origin)
+
+        return nil
+    })
+    
     server.On("connection", func(so socketio.Socket) {
 
         log.Println("Connection handled.")
