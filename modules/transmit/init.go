@@ -87,8 +87,6 @@ func Boot(pushPort string) *Sender {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	defer sender.Close()
 	
 	// Bind to push port
 	sender.Bind("tcp://*:" + pushPort)

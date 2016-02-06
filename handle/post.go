@@ -11,6 +11,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
 	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
+	"github.com/fernandez14/spartangeek-blacker/modules/transmit"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -41,6 +42,7 @@ type PostAPI struct {
 	Firebase      *firebase.Client             `inject:""`
 	Gaming        *gaming.Module               `inject:""`
 	ConfigService *config.Config               `inject:""`
+	Transmit      *transmit.Sender             `inject:""`
 	Acl           *acl.Module                  `inject:""`
 }
 
@@ -58,7 +60,7 @@ func (di PostAPI) FeedGet(c *gin.Context) {
 	// Get the database interface from the DI
 	database := di.DataService.Database
 	redis := di.CacheService
-
+	
 	var feed []model.FeedPost
 	offset := 0
 	limit := 10
@@ -1182,9 +1184,17 @@ func (di PostAPI) syncUsersFeed(post *model.Post) {
 	var users map[string]model.UserFirebase
 
 	redis := di.CacheService
+	carrier := di.Transmit
 
 	// Recover from any panic even inside this goroutine
 	defer di.Errors.Recover()
+
+	carrierParams := map[string]interface{}{
+		"fire": "new-post",
+		"category": post.Category.Hex(),
+	} 
+
+	carrier.Emit("feed", "action", carrierParams)
 
 	// Search the online users
 	onlineParams := map[string]string{
