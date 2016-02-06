@@ -89,7 +89,7 @@ func Boot(pushPort string) *Sender {
 	}
 	
 	// Bind to push port
-	sender.Bind("tcp://*:" + pushPort)
+	sender.Bind("tcp://localhost:" + pushPort)
 
 	spot := &Sender{sender}
 	
