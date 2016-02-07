@@ -1,7 +1,7 @@
 package handle
 
 import (
-	"code.google.com/p/go-uuid/uuid"
+	"github.com/satori/go.uuid"
 	"crypto/sha256"
 	"encoding/hex"
 	"github.com/CloudCom/fireauth"
@@ -266,10 +266,10 @@ func (di *UserAPI) UserGetToken(c *gin.Context) {
 	}
 
 	// Generate user token
-	uuid := uuid.New()
+	uuid := uuid.NewV4()
 	token := &model.UserToken{
 		UserId:  user.Id,
-		Token:   uuid,
+		Token:   uuid.String(),
 		Closed:  false,
 		Created: time.Now(),
 		Updated: time.Now(),

@@ -13,6 +13,7 @@ type Module struct {
 	Map   *gorbac.RBAC
 	Mongo *mongo.Service `inject:""`
 	Rules map[string]AclRole
+	Permissions map[string]gorbac.Permission
 }
 
 func (module *Module) User(id bson.ObjectId) *User {
@@ -50,8 +51,21 @@ func Boot(file string) *Module {
 
 	for name, rules := range module.Rules {
 
+		role := gorbac.NewStdRole(name)
+
+		for _, p := range rules.Permissions {
+			module.Permissions[p] = gorbac.NewStdPermission(p)
+			role.AddPermission(module.Permissions[p])
+		}
+
 		// Populate map with permissions
-		module.Map.Add(name, rules.Permissions, rules.Inherits)
+		module.Map.Add(role)
+	}
+
+	for name, rules := range module.Rules {
+		if len(rules.Inherits) > 0 {
+			module.Map.SetParents(name, rules.Inherits)
+		}
 	}
 
 	return module

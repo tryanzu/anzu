@@ -133,21 +133,24 @@ func (user *User) isGranted(permission string) bool {
 
 	for _, role := range user.data.Roles {
 
-		if user.acl.Map.IsGranted(role.Name, permission, nil) {
+		p, exists := user.acl.Permissions[permission]
 
-			// User's role is granted to do "permission"
-			return true
+		if exists {
+			if user.acl.Map.IsGranted(role.Name, p, nil) {
+				// User's role is granted to do "permission"
+				return true
+			}
 		}
 	}
 
 	return false
 }
 
-func (user *User) checkRolesRecursive(role string, compare string) bool {
+func (user *User) checkRolesRecursive(name string, compare string) bool {
 
-	if role_permissions := user.acl.Map.Get(role); role_permissions != nil {
+	_, parents, err := user.acl.Map.Get(name)
 
-		parents := role_permissions.Parents()
+	if err != nil {
 
 		if allowed, _ := helpers.InArray(compare, parents); allowed {
 			return true
