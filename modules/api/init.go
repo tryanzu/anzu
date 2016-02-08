@@ -132,6 +132,7 @@ func (module *Module) Run() {
 
 	// Sitemap generator
 	router.GET("/sitemap.xml", module.Sitemap.GetSitemap)
+	router.GET("/sitemap_components.xml", module.Sitemap.GetComponentsSitemap)
 
 	v1 := router.Group("/v1")
 
