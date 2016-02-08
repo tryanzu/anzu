@@ -20,7 +20,6 @@ func (this ComponentAPI) Get(c *gin.Context) {
 	kind := c.Param("type")
 
 	if kind == "tienda" {
-
 		this.Landing(c)
 		return
 	}
@@ -109,7 +108,7 @@ func (this ComponentAPI) Landing(c *gin.Context) {
 
 	page = strings.Replace(page, "SpartanGeek.com | Comunidad de tecnología, geeks y más", "Tienda de Componentes, PCs, Hardware y Tecnología | SpartanGeek.com", 1)
 	page = strings.Replace(page, "{{ page.title }}", "Tienda de Componentes, PCs, Hardware y Tecnología | SpartanGeek.com", 1)
-	page = strings.Replace(page, "{{ page.description }}", "Compra componentes de hardware, tecnología y más al mejor precio, calidad y seguridad. Arma tu propia PC Gamer o de alto rendimiento para tu profesión en SpartanGeek.com", 2)
+	page = strings.Replace(page, "{{ page.description }}", "CCompra componentes para PC en México al mejor precio, calidad y seguridad. Arma tu propia PC Gamer o de alto rendimiento para tu profesión en SpartanGeek", 2)
 	page = strings.Replace(page, "{{ page.image }}", "http://spartangeek.com/images/default-post.jpg", 1)
 
 	c.Header("Content-Type", "text/html; charset=utf-8")
