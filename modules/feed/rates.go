@@ -31,7 +31,9 @@ func (di *FeedModule) UpdateFeedRates(list []model.FeedPost) {
 			// Calculate the rates
 			view_rate := 100.0 / float64(reached) * float64(viewed)
 			comment_rate := 100.0 / float64(viewed) * float64(post.Comments.Count)
-			final_rate := (view_rate + comment_rate) / 2.0
+			participants_rate := 100.0 / float64(post.Comments.Count) * float64(len(post.Users))
+
+			final_rate := (view_rate + comment_rate + participants_rate) / 3.0
 			date := post.Created.Format("2006-01-02")
 
 			if _, okay := zadd[date]; !okay {
@@ -74,7 +76,9 @@ func (di *FeedModule) UpdatePostRate(post model.Post) {
 		// Calculate the rates
 		view_rate := 100.0 / float64(reached) * float64(viewed)
 		comment_rate := 100.0 / float64(viewed) * float64(post.Comments.Count)
-		final_rate := (view_rate + comment_rate) / 2.0
+		participants_rate := 100.0 / float64(post.Comments.Count) * float64(len(post.Users))
+
+		final_rate := (view_rate + comment_rate + participants_rate) / 3.0
 		date := post.Created.Format("2006-01-02")
 
 		zadd[post.Id.Hex()] = final_rate
