@@ -59,7 +59,7 @@ func (self *Module) ResetGeneralRanking() {
 	database := self.Mongo.Database
 	current_batch := time.Now()
 
-	iter := database.C("users").Find(nil).Iter()
+	iter := database.C("users").Find(nil).Batch(1000).Prefetch(0.50).Iter()
 
 	log.Println("[job] [ResetGeneralRanking] Started")
 
