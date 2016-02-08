@@ -104,16 +104,18 @@ func (self *Module) ResetGeneralRanking() {
 
 	p := 0
 	
-	for i, _ := range rankings {
+	for i := 0; i < len(rankings); i++ {
 		p++
 		rankings[i].Position.Swords = p
+
+		log.Printf("[job] [ResetGeneralRanking] [Swords] User %v is %v \n", rankings[i].Id.Hex(), p)
 	}
 
 	sort.Sort(RankByCoins(rankings))
 
 	p = 0
 
-	for i, _ := range rankings {
+	for i := 0; i < len(rankings); i++ {
 		p++
 		rankings[i].Position.Wealth = p
 	}
@@ -122,7 +124,7 @@ func (self *Module) ResetGeneralRanking() {
 
 	p = 0
 
-	for i, _ := range rankings {
+	for i := 0; i < len(rankings); i++ {
 
 		p++
 		rankings[i].Position.Badges = p

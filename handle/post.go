@@ -458,7 +458,6 @@ func (di PostAPI) PostsGetOne(c *gin.Context) {
 		err := collection.Find(bson.M{"_id": bson.M{"$in": post.Users}}).All(&users)
 
 		if err != nil {
-
 			panic(err)
 		}
 
