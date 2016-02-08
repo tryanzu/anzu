@@ -48,6 +48,7 @@ func Boot(file string) *Module {
 	}
 
 	module.Map = gorbac.New()
+	module.Permissions = make(map[string]gorbac.Permission)
 
 	for name, rules := range module.Rules {
 
