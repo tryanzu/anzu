@@ -9,6 +9,7 @@ import (
 	"github.com/jinzhu/now"
 
 	"time"
+	"log"
 )
 
 type SitemapAPI struct {
@@ -57,7 +58,7 @@ func (di *SitemapAPI) GetComponentsSitemap(c *gin.Context) {
 	// Get the database interface from the DI
 	database := di.DataService.Database
 
-	iter := database.C("components").Find(nil).Iter()
+	iter := database.C("components").Find(nil).Limit(50000).Iter()
 	
 	// Let's say each component without store info changes once every month
 	month := now.BeginningOfMonth()
@@ -75,6 +76,8 @@ func (di *SitemapAPI) GetComponentsSitemap(c *gin.Context) {
 		// Add to the sitemap url
 		urls = append(urls, model.SitemapUrl{Location: location, Updated: updated, Priority: "0.9"})
 	}
+
+	log.Printf("count: %v\n", len(urls))
 
 	urls = append(urls, model.SitemapUrl{Location: "http://www.spartangeek.com/componentes", Updated: month.Format("2006-01-02T15:04:05.999999-07:00"), Priority: "1.0"})
 	urls = append(urls, model.SitemapUrl{Location: "http://www.spartangeek.com/componentes/tienda", Updated: month.Format("2006-01-02T15:04:05.999999-07:00"), Priority: "1.0"})
