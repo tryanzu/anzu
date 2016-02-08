@@ -126,7 +126,7 @@ func (self *Module) ResetGeneralRanking() {
 	for pos, item := range swordsRank {
 
 		r := rankings[item.Id]
-		r.Position.Swords = pos
+		r.Position.Swords = pos + 1
 		rankings[item.Id] = r
 
 		log.Printf("[job] [ResetGeneralRanking] [Swords] User %v is %v \n", item.Id, pos)
@@ -135,7 +135,7 @@ func (self *Module) ResetGeneralRanking() {
 	for pos, item := range wealthRank {
 
 		r := rankings[item.Id]
-		r.Position.Wealth = pos
+		r.Position.Wealth = pos + 1
 		rankings[item.Id] = r
 
 		log.Printf("[job] [ResetGeneralRanking] [Wealth] User %v is %v \n", item.Id, pos)
@@ -144,7 +144,7 @@ func (self *Module) ResetGeneralRanking() {
 	for pos, item := range badgesRank {
 
 		r := rankings[item.Id]
-		r.Position.Badges = pos
+		r.Position.Badges = pos + 1
 		rankings[item.Id] = r
 
 		log.Printf("[job] [ResetGeneralRanking] [Badges] User %v is %v \n", item.Id, pos)
