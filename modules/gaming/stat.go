@@ -51,7 +51,11 @@ func (self *Module) GetRankingBy(sort string) []RankingModel {
 func (self *Module) ResetGeneralRanking() {
 
 	var usr user.User
-	var rankings []RankingModel
+	var swordsRank RankPositions
+	var wealthRank RankPositions
+	var badgesRank RankPositions
+	
+	rankings := map[string]RankingModel{}
 
 	// Recover from any panic even inside this goroutine
 	defer self.Errors.Recover()
@@ -85,7 +89,7 @@ func (self *Module) ResetGeneralRanking() {
 			before = before_this.Position
 		}
 
-		rankings = append(rankings, RankingModel{
+		rankings[usr.Id.Hex()] = RankingModel{
 			UserId: usr.Id,
 			Badges: len(usr.Gaming.Badges),
 			Swords: usr.Gaming.Swords,
@@ -97,40 +101,55 @@ func (self *Module) ResetGeneralRanking() {
 			},
 			Before:  before,
 			Created: current_batch,
+		}
+
+		swordsRank = append(swordsRank, RankPosition{
+			Id: usr.Id.Hex(),
+			Value: usr.Gaming.Swords,
+		})
+
+		wealthRank = append(wealthRank, RankPosition{
+			Id: usr.Id.Hex(),
+			Value: usr.Gaming.Coins,
+		})
+
+		badgesRank = append(badgesRank, RankPosition{
+			Id: usr.Id.Hex(),
+			Value: len(usr.Gaming.Badges),
 		})
 	}
 
-	sort.Sort(RankBySwords(rankings))
-
-	p := 0
+	sort.Sort(swordsRank)
+	sort.Sort(wealthRank)
+	sort.Sort(badgesRank)
 	
-	for i := 0; i < len(rankings); i++ {
-		p++
-		rankings[i].Position.Swords = p
+	for pos, item := range swordsRank {
 
-		log.Printf("[job] [ResetGeneralRanking] [Swords] User %v is %v \n", rankings[i].UserId.Hex(), p)
+		r := rankings[item.Id]
+		r.Position.Swords = pos
+		rankings[item.Id] = r
+
+		log.Printf("[job] [ResetGeneralRanking] [Swords] User %v is %v \n", item.Id, pos)
 	}
 
-	sort.Sort(RankByCoins(rankings))
+	for pos, item := range wealthRank {
 
-	p = 0
+		r := rankings[item.Id]
+		r.Position.Wealth = pos
+		rankings[item.Id] = r
 
-	for i := 0; i < len(rankings); i++ {
-		p++
-		rankings[i].Position.Wealth = p
+		log.Printf("[job] [ResetGeneralRanking] [Wealth] User %v is %v \n", item.Id, pos)
 	}
 
-	sort.Sort(RankByBadges(rankings))
+	for pos, item := range badgesRank {
 
-	p = 0
+		r := rankings[item.Id]
+		r.Position.Badges = pos
+		rankings[item.Id] = r
 
-	for i := 0; i < len(rankings); i++ {
+		log.Printf("[job] [ResetGeneralRanking] [Badges] User %v is %v \n", item.Id, pos)
 
-		p++
-		rankings[i].Position.Badges = p
-
-		err := database.C("stats").Insert(rankings[i])
-
+		err := database.C("stats").Insert(rankings[item.Id])
 		if err != nil {
 			panic(err)
 		}

@@ -42,7 +42,7 @@ type RankingModel struct {
 	Coins    int                  `bson:"coins" json:"coins"`
 	Position RankingPositionModel `bson:"position" json:"position"`
 	Before   RankingPositionModel `bson:"before" json:"before"`
-	User     RankingUserModel     `json:"user,omitempty"`
+	User     RankingUserModel     `bson:"-" json:"user,omitempty"`
 	Created  time.Time            `bson:"created_at" json:"created_at"`
 }
 
@@ -58,6 +58,17 @@ type RankingUserModel struct {
 	Image    string                 `bson:"image" json:"image,omitempty"`
 	Gaming   map[string]interface{} `bson:"gaming" json:"gaming,omitempty"`
 }
+
+type RankPosition struct {
+	Id string
+	Value int
+}
+
+type RankPositions []RankPosition
+
+func (a RankPositions) Len() int           { return len(a) }
+func (a RankPositions) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a RankPositions) Less(i, j int) bool { return a[i].Value > a[j].Value }
 
 type RankBySwords []RankingModel
 
