@@ -21,7 +21,7 @@ func (this ComponentAPI) Get(c *gin.Context) {
 
 	if kind == "tienda" {
 
-		this.ByPass(c)
+		this.Landing(c)
 		return
 	}
 
@@ -101,6 +101,19 @@ func (this ComponentAPI) MigrateOld(c *gin.Context) {
     
 	c.Redirect(http.StatusMovedPermanently, url)
 	return
+}
+
+func (this ComponentAPI) Landing(c *gin.Context) {
+	
+	var page string = this.Page
+
+	page = strings.Replace(page, "SpartanGeek.com | Comunidad de tecnología, geeks y más", "Tienda de Componentes, PCs, Hardware y Tecnología | SpartanGeek.com", 1)
+	page = strings.Replace(page, "{{ page.title }}", "Tienda de Componentes, PCs, Hardware y Tecnología | SpartanGeek.com", 1)
+	page = strings.Replace(page, "{{ page.description }}", "Compra componentes de hardware, tecnología y más al mejor precio, calidad y seguridad. Arma tu propia PC Gamer o de alto rendimiento para tu profesión en SpartanGeek.com", 2)
+	page = strings.Replace(page, "{{ page.image }}", "http://spartangeek.com/images/default-post.jpg", 1)
+
+	c.Header("Content-Type", "text/html; charset=utf-8")
+	c.String(200, page)
 }
 
 func (this ComponentAPI) ByPass(c *gin.Context) {

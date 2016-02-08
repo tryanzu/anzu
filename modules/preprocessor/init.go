@@ -83,7 +83,7 @@ func (module *Module) Run() {
 
 	router.GET("/p/:slug/:id", module.Posts.Get)
 	router.GET("/p/:slug/:id/:comment", module.Posts.Get)
-	router.GET("/componentes", module.Components.ByPass)
+	router.GET("/componentes", module.Components.Landing)
 	router.GET("/componentes/:type", module.Components.ByPass)
 	router.GET("/componentes/:type/:slug", module.Components.Get)
 	router.GET("/componente/:slug", module.Components.MigrateOld)
