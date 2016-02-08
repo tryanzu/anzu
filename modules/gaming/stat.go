@@ -102,23 +102,30 @@ func (self *Module) ResetGeneralRanking() {
 
 	sort.Sort(RankBySwords(rankings))
 
+	p := 0
+	
 	for i, _ := range rankings {
-
-		rankings[i].Position.Swords = i + 1
+		p++
+		rankings[i].Position.Swords = p
 	}
 
 	sort.Sort(RankByCoins(rankings))
 
-	for i, _ := range rankings {
+	p = 0
 
-		rankings[i].Position.Wealth = i + 1
+	for i, _ := range rankings {
+		p++
+		rankings[i].Position.Wealth = p
 	}
 
 	sort.Sort(RankByBadges(rankings))
 
+	p = 0
+
 	for i, _ := range rankings {
 
-		rankings[i].Position.Badges = i + 1
+		p++
+		rankings[i].Position.Badges = p
 
 		err := database.C("stats").Insert(rankings[i])
 
