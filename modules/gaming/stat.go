@@ -108,7 +108,7 @@ func (self *Module) ResetGeneralRanking() {
 		p++
 		rankings[i].Position.Swords = p
 
-		log.Printf("[job] [ResetGeneralRanking] [Swords] User %v is %v \n", rankings[i].Id.Hex(), p)
+		log.Printf("[job] [ResetGeneralRanking] [Swords] User %v is %v \n", rankings[i].UserId.Hex(), p)
 	}
 
 	sort.Sort(RankByCoins(rankings))
