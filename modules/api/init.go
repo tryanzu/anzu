@@ -36,6 +36,7 @@ type Module struct {
 	Checkout     controller.CheckoutAPI
 	Customer     controller.CustomerAPI
 	Orders       controller.OrdersAPI
+	Owners       controller.OwnersAPI
 }
 
 type ModuleDI struct {
@@ -68,6 +69,7 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.Checkout},
 		&inject.Object{Value: &module.Customer},
 		&inject.Object{Value: &module.Orders},
+		&inject.Object{Value: &module.Owners},
 	)
 
 	if err != nil {
@@ -236,6 +238,7 @@ func (module *Module) Run() {
 			authorized.PUT("/user/my", module.Users.UserUpdateProfile)
 			authorized.PUT("/category/subscription/:id", module.Users.UserCategorySubscribe)
 			authorized.DELETE("/category/subscription/:id", module.Users.UserCategoryUnsubscribe)
+			authorized.POST("/user/own/:kind/:id", module.Owners.Post)
 
 			// Gamification routes
 			authorized.POST("/badges/buy/:id", module.Gaming.BuyBadge)

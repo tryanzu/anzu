@@ -100,6 +100,27 @@ func (self *One) TrackUserSignin(client_address string) {
 	}
 }
 
+// Helper method to track a signin from the user
+func (self *One) Owns(status, entity string, id bson.ObjectId) {
+
+	di := self.di
+	database := di.Mongo.Database
+
+	record := &OwnModel{
+		UserId:  self.data.Id,
+		Related: entity,
+		RelatedId: id,
+		Type: status,
+		Created: time.Now(),
+	}
+
+	err := database.C("user_owns").Insert(record)
+
+	if err != nil {
+		panic(err)
+	}
+}
+
 func (self *One) TrackView(entity string, entity_id bson.ObjectId) {
 
 	database := self.di.Mongo.Database
