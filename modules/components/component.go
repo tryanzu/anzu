@@ -147,6 +147,7 @@ func (component *ComponentModel) DeletePrice() {
 func (component *ComponentModel) GetAggregatedUsrVotes(kind string) map[string]int {
 
 	var votes []CommentVotesModel
+
 	aggregated := make(map[string]int)
 	database := component.di.Mongo.Database
 
@@ -160,14 +161,29 @@ func (component *ComponentModel) GetAggregatedUsrVotes(kind string) map[string]i
 	if err != nil {
 		panic(err)
 	}
-	
+
 	total := 0
 
 	if len(votes) > 0 {
-
 		for _, vote := range votes {
 			aggregated[vote.Id] = vote.Count
 			total = total + vote.Count
+		}
+	}
+
+	if kind == "component" {
+		for _, k := range []string{"have-it", "had-it", "want-it"} {
+			if _, exists := aggregated[k]; !exists {
+				aggregated[k] = 0
+			}
+		}
+	}
+
+	if kind == "component-buy" {
+		for _, k := range []string{"no", "yes", "maybe", "wow"} {
+			if _, exists := aggregated[k]; !exists {
+				aggregated[k] = 0
+			}
 		}
 	}
 
