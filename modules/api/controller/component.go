@@ -32,6 +32,7 @@ func (this ComponentAPI) Get(c *gin.Context) {
 	}
 
 	user_ref, signed_in := c.Get("user_id")
+	data := component.GetData()
 
 	if signed_in {
 
@@ -39,13 +40,24 @@ func (this ComponentAPI) Get(c *gin.Context) {
 		usr, err := this.User.Get(user_id)
 
 		if err == nil {
-
-			// Track user viewing the component
 			usr.TrackView("component", component.Id)
+
+			componentVote := usr.GetVoteStatus("component", component.Id)
+			componentBuyVote := usr.GetVoteStatus("component-buy", component.Id)
+
+			data["votes"] = map[string]interface{}{
+				"component": componentVote,
+				"component-buy": componentBuyVote,
+			}
+		}
+
+		data["stats"] = map[string]interface{}{
+			"component": component.GetAggregatedUsrVotes("component"),
+			"component-buy": component.GetAggregatedUsrVotes("component-buy"),
 		}
 	}
 
-	c.JSON(200, component.GetData())
+	c.JSON(200, data)
 }
 
 // Get component's related posts

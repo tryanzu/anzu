@@ -874,17 +874,23 @@ func (di PostAPI) PostCreate(c *gin.Context) {
 
 		case "category-post":
 
-			slug := helpers.StrSlug(post.Name)
+			title := post.Name
+
+			if len([]rune(title)) > 72 {
+				title = helpers.Truncate(title, 72) + "..."
+			}
+
+			slug := helpers.StrSlug(title)
 			slug_exists, _ := database.C("posts").Find(bson.M{"slug": slug}).Count()
 
 			if slug_exists > 0 {
 
-				slug = helpers.StrSlugRandom(post.Name)
+				slug = helpers.StrSlugRandom(title)
 			}
 
 			publish := &model.Post{
 				Id:         post_id,
-				Title:      post.Name,
+				Title:      title,
 				Content:    content,
 				Type:       "category-post",
 				Slug:       slug,

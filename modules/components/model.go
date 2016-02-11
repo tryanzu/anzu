@@ -48,6 +48,11 @@ type ComponentHistoricModel struct {
 	Created     time.Time           `bson:"created_at" json:"created_at"`
 }
 
+type CommentVotesModel struct {
+	Id    string `bson:"_id,omitempty" json:"_id,omitempty"`
+	Count int    `bson:"count" json:"count"`
+}
+
 type ComponentMotherboardModel struct {
 	ComponentModel
 }

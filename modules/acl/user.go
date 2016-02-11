@@ -150,7 +150,7 @@ func (user *User) checkRolesRecursive(name string, compare string) bool {
 
 	_, parents, err := user.acl.Map.Get(name)
 
-	if err != nil {
+	if err == nil {
 
 		if allowed, _ := helpers.InArray(compare, parents); allowed {
 			return true

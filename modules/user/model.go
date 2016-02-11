@@ -165,6 +165,15 @@ type ReferralsModel struct {
 	List  []UserLightModel `json:"users"`
 }
 
+type OwnModel struct {
+	Id         bson.ObjectId `bson:"_id,omitempty" json:"id"`
+	UserId     bson.ObjectId `bson:"user_id" json:"user_id"`
+	RelatedId  bson.ObjectId `bson:"related_id" json:"related_id"`
+	Related    string        `bson:"related" json:"related"`
+	Type       string        `bson:"type" json:"type"`     
+	Created    time.Time     `bson:"created_at" json:"created_at"`
+}
+
 type ByCreatedAt []UserActivity
 
 func (a ByCreatedAt) Len() int           { return len(a) }
