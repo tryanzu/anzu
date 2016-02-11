@@ -24,9 +24,9 @@ func (self OwnersAPI) Post(c *gin.Context) {
 	usrParam := c.MustGet("user_id")
 	usrId := bson.ObjectIdHex(usrParam.(string))
 
-	if kindParam == "component" && bson.IsObjectIdHex(idParam) && c.Bind(&form) == nil {
+	if bson.IsObjectIdHex(idParam) && c.Bind(&form) == nil {
 		
-		if form.Status == "want-it" || form.Status == "have-it" || form.Status == "had-it" {
+		if IsOwnStatusValid(kindParam, form.Status) {
 
 			usr, err := self.User.Get(usrId)
 
@@ -43,14 +43,32 @@ func (self OwnersAPI) Post(c *gin.Context) {
 				return
 			} 
 
-			usr.Owns(form.Status, "component", component.Id)
-
+			usr.Owns(form.Status, kindParam, component.Id)
+			
 			c.JSON(200, gin.H{"status": "okay"})
+			return
 		}  
 	}
 
 	c.JSON(400, gin.H{"status": "error", "message": "Invalid vote request, check docs."})
 	return
+}
+
+func IsOwnStatusValid(name, status string) bool {
+
+	if (name != "component" && name != "component-buy") {
+		return false
+	}
+
+	if name == "component" && status != "want-it" && status != "have-it" && status != "had-it" {
+		return false
+	}
+
+	if (name == "component-buy" && status != "yes" && status != "maybe" && status != "no" && status != "wow") {
+		return false
+	}
+
+	return true
 }
 
 type OwnersPostForm struct {

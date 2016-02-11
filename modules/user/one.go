@@ -121,6 +121,21 @@ func (self *One) Owns(status, entity string, id bson.ObjectId) {
 	}
 }
 
+func (self *One) GetVoteStatus(name string, id bson.ObjectId) string {
+
+	var model OwnModel
+
+	di := self.di
+	database := di.Mongo.Database
+	err := database.C("user_owns").Find(bson.M{"related": name, "related_id": id, "user_id": self.data.Id}).Sort("-created_at").One(&model)
+
+	if err != nil {
+		return "not-available"
+	}
+
+	return model.Type
+}
+
 func (self *One) TrackView(entity string, entity_id bson.ObjectId) {
 
 	database := self.di.Mongo.Database

@@ -32,6 +32,7 @@ func (this ComponentAPI) Get(c *gin.Context) {
 	}
 
 	user_ref, signed_in := c.Get("user_id")
+	data := component.GetData()
 
 	if signed_in {
 
@@ -39,9 +40,15 @@ func (this ComponentAPI) Get(c *gin.Context) {
 		usr, err := this.User.Get(user_id)
 
 		if err == nil {
-
-			// Track user viewing the component
 			usr.TrackView("component", component.Id)
+
+			componentVote := usr.GetVoteStatus("component", component.Id)
+			componentBuyVote := usr.GetVoteStatus("component-buy", component.Id)
+
+			data["votes"] = map[string]interface{}{
+				"component": componentVote,
+				"component-buy": componentBuyVote,
+			}
 		}
 	}
 
