@@ -52,7 +52,7 @@ func (this ComponentAPI) Get(c *gin.Context) {
 		}
 	}
 
-	c.JSON(200, component.GetData())
+	c.JSON(200, data)
 }
 
 // Get component's related posts
