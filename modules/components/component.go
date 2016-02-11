@@ -144,6 +144,38 @@ func (component *ComponentModel) DeletePrice() {
 	go component.UpdateAlgolia()
 }
 
+func (component *ComponentModel) GetAggregatedUsrVotes(kind string) map[string]int {
+
+	var votes []CommentVotesModel
+	aggregated := make(map[string]int)
+	database := component.di.Mongo.Database
+
+	pipe := database.C("user_owns").Pipe([]bson.M{
+		{"$match": bson.M{"related": kind, "related_id": component.Id}},
+		{"$group": bson.M{"_id": "$type", "count": bson.M{"$sum": 1}}},
+	})
+
+	err := pipe.All(&votes)
+
+	if err != nil {
+		panic(err)
+	}
+	
+	total := 0
+
+	if len(votes) > 0 {
+
+		for _, vote := range votes {
+			aggregated[vote.Id] = vote.Count
+			total = total + vote.Count
+		}
+	}
+
+	aggregated["total"] = total
+
+	return aggregated
+}
+
 // Perform component's algolia's record sync
 func (component *ComponentModel) UpdateAlgolia() {
 

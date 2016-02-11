@@ -50,6 +50,11 @@ func (this ComponentAPI) Get(c *gin.Context) {
 				"component-buy": componentBuyVote,
 			}
 		}
+
+		data["stats"] = map[string]interface{}{
+			"component": component.GetAggregatedUsrVotes("component"),
+			"component-buy": component.GetAggregatedUsrVotes("component-buy"),
+		}
 	}
 
 	c.JSON(200, data)
