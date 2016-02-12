@@ -42,13 +42,24 @@ func (this ComponentAPI) Get(c *gin.Context) {
 		if err == nil {
 			usr.TrackView("component", component.Id)
 
-			componentVote := usr.GetVoteStatus("component", component.Id)
-			componentBuyVote := usr.GetVoteStatus("component-buy", component.Id)
+			cvotes := map[string]interface{}{}
+			componentVote, err := usr.GetVoteStatus("component", component.Id)
 
-			data["votes"] = map[string]interface{}{
-				"component": componentVote,
-				"component-buy": componentBuyVote,
+			if err != nil {
+				cvotes["component"] = nil
+			} else {
+				cvotes["component"] = componentVote
 			}
+
+			componentBuyVote, err := usr.GetVoteStatus("component-buy", component.Id)
+
+			if err != nil {
+				cvotes["component-buy"] = nil
+			} else {
+				cvotes["component-buy"] = componentBuyVote
+			}
+
+			data["votes"] = cvotes
 		}
 
 		data["stats"] = map[string]interface{}{

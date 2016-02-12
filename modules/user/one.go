@@ -3,7 +3,9 @@ package user
 import (
 	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"gopkg.in/mgo.v2/bson"
+	
 	"time"
+	"errors"
 )
 
 type One struct {
@@ -121,7 +123,7 @@ func (self *One) Owns(status, entity string, id bson.ObjectId) {
 	}
 }
 
-func (self *One) GetVoteStatus(name string, id bson.ObjectId) string {
+func (self *One) GetVoteStatus(name string, id bson.ObjectId) (string, error) {
 
 	var model OwnModel
 
@@ -130,10 +132,10 @@ func (self *One) GetVoteStatus(name string, id bson.ObjectId) string {
 	err := database.C("user_owns").Find(bson.M{"related": name, "related_id": id, "user_id": self.data.Id}).Sort("-created_at").One(&model)
 
 	if err != nil {
-		return "not-available"
+		return "", errors.New("not-available")
 	}
 
-	return model.Type
+	return model.Type, nil
 }
 
 func (self *One) TrackView(entity string, entity_id bson.ObjectId) {
