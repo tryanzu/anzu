@@ -152,7 +152,7 @@ func (component *ComponentModel) GetAggregatedUsrVotes(kind string) map[string]i
 	database := component.di.Mongo.Database
 
 	pipe := database.C("user_owns").Pipe([]bson.M{
-		{"$match": bson.M{"related": kind, "related_id": component.Id}},
+		{"$match": bson.M{"related": kind, "related_id": component.Id, "removed": bson.M{"$exists": false}}},
 		{"$group": bson.M{"_id": "$type", "count": bson.M{"$sum": 1}}},
 	})
 

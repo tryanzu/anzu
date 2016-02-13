@@ -3,7 +3,9 @@ package user
 import (
 	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"gopkg.in/mgo.v2/bson"
+	
 	"time"
+	"errors"
 )
 
 type One struct {
@@ -114,6 +116,8 @@ func (self *One) Owns(status, entity string, id bson.ObjectId) {
 		Created: time.Now(),
 	}
 
+	self.ROwns(entity, id)
+	
 	err := database.C("user_owns").Insert(record)
 
 	if err != nil {
@@ -121,19 +125,32 @@ func (self *One) Owns(status, entity string, id bson.ObjectId) {
 	}
 }
 
-func (self *One) GetVoteStatus(name string, id bson.ObjectId) string {
+// Helper method to track a signin from the user
+func (self *One) ROwns(entity string, id bson.ObjectId) {
+
+	di := self.di
+	database := di.Mongo.Database
+
+	_, err := database.C("user_owns").UpdateAll(bson.M{"related": entity, "related_id": id, "user_id": self.data.Id, "removed": bson.M{"$exists": false}}, bson.M{"$set": bson.M{"removed": true, "removed_at": time.Now()}})
+
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (self *One) GetVoteStatus(name string, id bson.ObjectId) (string, error) {
 
 	var model OwnModel
 
 	di := self.di
 	database := di.Mongo.Database
-	err := database.C("user_owns").Find(bson.M{"related": name, "related_id": id, "user_id": self.data.Id}).Sort("-created_at").One(&model)
+	err := database.C("user_owns").Find(bson.M{"related": name, "related_id": id, "user_id": self.data.Id, "removed": bson.M{"$exists": false}}).Sort("-created_at").One(&model)
 
 	if err != nil {
-		return "not-available"
+		return "", errors.New("not-available")
 	}
 
-	return model.Type
+	return model.Type, nil
 }
 
 func (self *One) TrackView(entity string, entity_id bson.ObjectId) {

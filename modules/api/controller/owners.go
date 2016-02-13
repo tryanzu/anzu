@@ -54,6 +54,40 @@ func (self OwnersAPI) Post(c *gin.Context) {
 	return
 }
 
+func (self OwnersAPI) Delete(c *gin.Context) {
+
+	kindParam := c.Param("kind")
+	idParam  := c.Param("id")
+	usrParam := c.MustGet("user_id")
+	usrId := bson.ObjectIdHex(usrParam.(string))
+
+	if bson.IsObjectIdHex(idParam) {
+		
+		usr, err := self.User.Get(usrId)
+
+		if err != nil {
+			c.JSON(400, gin.H{"status": "error", "message": "Auth could not be performed, check token."})
+			return
+		}
+
+		id := bson.ObjectIdHex(idParam)
+		component, err := self.Components.Get(id)
+
+		if err != nil {
+			c.JSON(400, gin.H{"status": "error", "message": "Component could not be found, check id."})
+			return
+		} 
+
+		usr.ROwns(kindParam, component.Id)
+		
+		c.JSON(200, gin.H{"status": "okay"})
+		return 
+	}
+
+	c.JSON(400, gin.H{"status": "error", "message": "Invalid delete vote request, check docs."})
+	return
+}
+
 func IsOwnStatusValid(name, status string) bool {
 
 	if (name != "component" && name != "component-buy") {
