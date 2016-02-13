@@ -82,7 +82,9 @@ func (module *Module) Run() {
 	router.Use(module.Middlewares.MongoRefresher())
 
 	router.GET("/p/:slug/:id", module.Posts.Get)
+	router.GET("/p/:slug/:id/", module.Posts.Get)
 	router.GET("/p/:slug/:id/:comment", module.Posts.Get)
+	router.GET("/p/:slug/:id/:comment/", module.Posts.Get)
 	router.GET("/componentes", module.Components.Landing)
 	router.GET("/componentes/", module.Components.Landing)
 	router.GET("/componentes/:type", module.Components.Get)

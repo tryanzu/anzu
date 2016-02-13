@@ -31,7 +31,7 @@ func (di *SitemapAPI) GetSitemap(c *gin.Context) {
 	for iter.Next(&post) {
 
 		// Generate the post url
-		location = "https://www.spartangeek.com/p/" + post.Slug + "/" + post.Id.Hex()
+		location = "https://www.spartangeek.com/p/" + post.Slug + "/" + post.Id.Hex() + "/"
 
 		// Add to the sitemap url
 		urls = append(urls, model.SitemapUrl{Location: location, Updated: post.Updated.Format("2006-01-02T15:04:05.999999-07:00"), Priority: "0.6"})
@@ -66,7 +66,7 @@ func (di *SitemapAPI) GetComponentsSitemap(c *gin.Context) {
 	for iter.Next(&component) {
 
 		// Generate the post url
-		location = "https://www.spartangeek.com/componentes/" + component.Type + "/" + component.Slug
+		location = "https://www.spartangeek.com/componentes/" + component.Type + "/" + component.Slug + "/"
 		updated := month.Format("2006-01-02T15:04:05.999999-07:00")
 
 		if component.Activated {
@@ -79,8 +79,8 @@ func (di *SitemapAPI) GetComponentsSitemap(c *gin.Context) {
 
 	log.Printf("count: %v\n", len(urls))
 
-	urls = append(urls, model.SitemapUrl{Location: "http://www.spartangeek.com/componentes", Updated: month.Format("2006-01-02T15:04:05.999999-07:00"), Priority: "1.0"})
-	urls = append(urls, model.SitemapUrl{Location: "http://www.spartangeek.com/componentes/tienda", Updated: month.Format("2006-01-02T15:04:05.999999-07:00"), Priority: "1.0"})
+	urls = append(urls, model.SitemapUrl{Location: "http://www.spartangeek.com/componentes/", Updated: month.Format("2006-01-02T15:04:05.999999-07:00"), Priority: "1.0"})
+	urls = append(urls, model.SitemapUrl{Location: "http://www.spartangeek.com/componentes/tienda/", Updated: month.Format("2006-01-02T15:04:05.999999-07:00"), Priority: "1.0"})
 
 	sitemap := model.SitemapSet{
 		Urls:        urls,
