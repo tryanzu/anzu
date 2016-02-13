@@ -61,11 +61,11 @@ func (this ComponentAPI) Get(c *gin.Context) {
 
 			data["votes"] = cvotes
 		}
+	}
 
-		data["stats"] = map[string]interface{}{
-			"component": component.GetAggregatedUsrVotes("component"),
-			"component-buy": component.GetAggregatedUsrVotes("component-buy"),
-		}
+	data["stats"] = map[string]interface{}{
+		"component": component.GetAggregatedUsrVotes("component"),
+		"component-buy": component.GetAggregatedUsrVotes("component-buy"),
 	}
 
 	c.JSON(200, data)
