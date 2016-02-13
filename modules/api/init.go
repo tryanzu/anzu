@@ -239,6 +239,7 @@ func (module *Module) Run() {
 			authorized.PUT("/category/subscription/:id", module.Users.UserCategorySubscribe)
 			authorized.DELETE("/category/subscription/:id", module.Users.UserCategoryUnsubscribe)
 			authorized.POST("/user/own/:kind/:id", module.Owners.Post)
+			authorized.DELETE("/user/own/:kind/:id", module.Owners.Delete)
 
 			// Gamification routes
 			authorized.POST("/badges/buy/:id", module.Gaming.BuyBadge)
