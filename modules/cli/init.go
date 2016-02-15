@@ -10,6 +10,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/fernandez14/spartangeek-blacker/modules/search"
+	"github.com/fernandez14/spartangeek-blacker/modules/transmit"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"gopkg.in/mgo.v2/bson"
 	"log"
@@ -20,11 +21,12 @@ import (
 )
 
 type Module struct {
-	Mongo   *mongo.Service               `inject:""`
-	Search  *search.Module               `inject:""`
-	Errors  *exceptions.ExceptionsModule `inject:""`
-	User    *user.Module                 `inject:""`
-	Feed    *feed.FeedModule             `inject:""`
+	Mongo    *mongo.Service               `inject:""`
+	Search   *search.Module               `inject:""`
+	Errors   *exceptions.ExceptionsModule `inject:""`
+	User     *user.Module                 `inject:""`
+	Feed     *feed.FeedModule             `inject:""`
+	Transmit *transmit.Sender             `inject:""`
 }
 
 type fn func()
@@ -38,6 +40,7 @@ func (module Module) Run(name string) {
 		"index-components": module.IndexComponentsAlgolia,
 		"send-confirmations": module.ConfirmationEmails,	
 		"replace-url": module.ReplaceURL,
+		"test-transmit": module.TestSocket,
 	}
 
 	if handler, exists := commands[name]; exists {
@@ -48,6 +51,20 @@ func (module Module) Run(name string) {
 
 	// If reachs this point then panic
 	log.Panic("No such handler for cli")
+}
+
+func (module Module) TestSocket() {
+
+	carrier := module.Transmit
+
+	carrierParams := map[string]interface{}{
+		"fire": "new-post",
+		"category": "549da59c6461740097000000",
+	} 
+
+	carrier.Emit("feed", "action", carrierParams)
+
+	fmt.Println("feed action emmited")
 }
 
 func (module Module) ReplaceURL() {

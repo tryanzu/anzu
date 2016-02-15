@@ -8,6 +8,7 @@ import (
     "log"
     "net/http"
     "encoding/json"
+    "sync"
 )
 
 type Module struct {
@@ -28,45 +29,24 @@ func (module *Module) Run() {
 		log.Fatal("ZMQ pull port not found in config.")
 	}
 
-	server, err := socketio.NewServer(nil)
-    
-    if err != nil {
-        log.Fatal(err)
-    }
+    var wg sync.WaitGroup
+    wg.Add(2)
 
-    server.SetAllowRequest(func(r *http.Request) error {
-
-        origin := r.Header.Get("Origin")
-
-        r.Header.Set("Access-Control-Allow-Origin", origin)
-
-        return nil
-    })
-    
-    server.On("connection", func(so socketio.Socket) {
-
-        log.Println("Connection handled.")
-
-        so.Join("feed")
-        so.Join("post")
-        so.Join("general")
-        so.Join("user")
-        
-        so.On("disconnection", func() {
-            log.Println("Diconnection handled.")
-        })
-    })
-
-    server.On("error", func(so socketio.Socket, err error) {
-        log.Println("error:", err)
-    })
+    messages := make(chan Message)
 
     go func() {
 
+        defer wg.Done()
+
         //  Socket to receive messages on
-        receiver, _ := zmq.NewSocket(zmq.PULL)
+        receiver, err := zmq.NewSocket(zmq.PULL)
+
+        if err != nil {
+            panic(err)
+        }
+
         defer receiver.Close()
-        receiver.Connect("tcp://localhost:" + pullPort)
+        receiver.Bind("tcp://127.0.0.1:" + pullPort)
 
         for {
 
@@ -78,29 +58,62 @@ func (module *Module) Run() {
                 continue
             }
 
-            server.BroadcastTo(message.Room, message.Event, message.Message)
+            messages <- message
+
             log.Println("Broadcasted message to " + message.Room)
         }
     }()
 
-    log.Println("Started sockets server at localhost:" + socketPort + "...")
-    http.Handle("/socket.io/", server)
-    log.Fatal(http.ListenAndServe(":" + socketPort, nil))
+    go func() {
+
+        defer wg.Done()
+
+        server, err := socketio.NewServer(nil)
+    
+        if err != nil {
+            log.Fatal(err)
+        }
+        
+        server.On("connection", func(so socketio.Socket) {
+
+            log.Println("Connection handled.")
+
+            so.Join("feed")
+            so.Join("post")
+            so.Join("general")
+            so.Join("user")
+            
+            so.On("disconnection", func() {
+                log.Println("Diconnection handled.")
+            })
+        })
+
+        server.On("error", func(so socketio.Socket, err error) {
+            log.Println("error:", err)
+        })
+
+        go func() {
+            for {
+                msg := <-messages
+                log.Println("received message from channel")
+                log.Printf("%v\n", msg)
+
+                server.BroadcastTo(msg.Room, msg.Event, msg.Message)
+            }
+        }()
+
+        log.Println("Started sockets server at localhost:" + socketPort + "...")
+        http.Handle("/socket.io/", server)
+        log.Fatal(http.ListenAndServe(":" + socketPort, nil))
+    }()
+	   
+    log.Println("Waiting To Finish")
+    wg.Wait()
 }
 
 func Boot(pushPort string) *Sender {
 
-	//  Socket to send messages on
-	sender, err := zmq.NewSocket(zmq.PUSH)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-	
-	// Bind to push port
-	sender.Bind("tcp://localhost:" + pushPort)
-
-	spot := &Sender{sender}
+	spot := &Sender{pushPort}
 	
 	return spot
 }
