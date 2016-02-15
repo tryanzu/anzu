@@ -46,7 +46,14 @@ func (module *Module) Run() {
         }
 
         defer receiver.Close()
-        receiver.Bind("tcp://127.0.0.1:" + pullPort)
+
+        err = receiver.Bind("tcp://127.0.0.1:" + pullPort)
+
+        if err != nil {
+            panic(err)
+        }
+
+        log.Println("Started zmq pull server at tcp://127.0.0.1:" + pullPort)
 
         for {
 
