@@ -4,6 +4,7 @@ import (
 	zmq "github.com/pebbe/zmq4"
 
 	"encoding/json"
+	"time"
 )
 
 type Sender struct {
@@ -13,10 +14,14 @@ type Sender struct {
 func (this *Sender) Emit(channel, event string, params map[string]interface{}) {
 
 	//  Socket to send messages on
-	sender, _ := zmq.NewSocket(zmq.PUSH)
+	sender, err := zmq.NewSocket(zmq.PUSH)
 	defer sender.Close()
 
-	err := sender.Connect("tcp://127.0.0.1:" + this.port)
+	if err != nil {
+		panic(err)
+	}
+
+	err = sender.Connect("tcp://127.0.0.1:" + this.port)
 
 	if err != nil {
 		panic(err)
@@ -39,5 +44,12 @@ func (this *Sender) Emit(channel, event string, params map[string]interface{}) {
 		panic(err)
 	}
 
-	sender.Send(string(msg), zmq.DONTWAIT)
+	_, err = sender.Send(string(msg), 0)
+
+	if err != nil {
+		panic(err)
+	}
+
+	// Give 0mq time to deliver
+	time.Sleep(time.Second)
 }

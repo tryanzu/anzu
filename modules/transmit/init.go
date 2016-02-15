@@ -45,15 +45,13 @@ func (module *Module) Run() {
             panic(err)
         }
 
-        defer receiver.Close()
-
-        err = receiver.Bind("tcp://127.0.0.1:" + pullPort)
+        err = receiver.Bind("tcp://*:" + pullPort)
 
         if err != nil {
             panic(err)
         }
 
-        log.Println("Started zmq pull server at tcp://127.0.0.1:" + pullPort)
+        log.Println("Started zmq pull server at tcp://*:" + pullPort)
 
         for {
 
@@ -69,6 +67,9 @@ func (module *Module) Run() {
 
             log.Println("Broadcasted message to " + message.Room)
         }
+
+        log.Println("Closed receiver")
+        receiver.Close()
     }()
 
     go func() {
