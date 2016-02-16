@@ -1094,9 +1094,31 @@ func (di PostAPI) PostUpdate(c *gin.Context) {
 			set_directive["pinned"] = postForm.Pinned
 			update_directive["$set"] = set_directive
 
+			go func(carrier *transmit.Sender, id bson.ObjectId) {
+
+				carrierParams := map[string]interface{}{
+					"fire": "pinned",
+					"id": id,
+				} 
+
+				carrier.Emit("feed", "action", carrierParams)
+
+			}(di.Transmit, post.Id)
+
 		} else {
 
 			update_directive["$unset"] = bson.M{"pinned": ""}
+
+			go func(carrier *transmit.Sender, id bson.ObjectId) {
+
+				carrierParams := map[string]interface{}{
+					"fire": "unpinned",
+					"id": id,
+				} 
+
+				carrier.Emit("feed", "action", carrierParams)
+
+			}(di.Transmit, post.Id)
 		}
 
 		if postForm.IsQuestion != post.IsQuestion {
@@ -1180,6 +1202,17 @@ func (di PostAPI) PostDelete(c *gin.Context) {
 	if err != nil {
 		panic(err)
 	}
+
+	go func(carrier *transmit.Sender, id bson.ObjectId) {
+
+		carrierParams := map[string]interface{}{
+			"fire": "delete-post",
+			"id": id,
+		} 
+
+		carrier.Emit("feed", "action", carrierParams)
+
+	}(di.Transmit, post.Id)
 
 	c.JSON(200, gin.H{"status": "okay"})
 }

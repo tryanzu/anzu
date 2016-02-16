@@ -4,6 +4,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/acl"
 	"github.com/fernandez14/spartangeek-blacker/modules/components"
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
+	"github.com/fernandez14/spartangeek-blacker/modules/transmit"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
 
@@ -14,6 +15,7 @@ type PostAPI struct {
 	Feed       *feed.FeedModule   `inject:""`
 	Acl        *acl.Module        `inject:""`
 	Components *components.Module `inject:""`
+	Transmit   *transmit.Sender   `inject:""`
 }
 
 func (this PostAPI) MarkCommentAsAnswer(c *gin.Context) {
@@ -69,6 +71,17 @@ func (this PostAPI) MarkCommentAsAnswer(c *gin.Context) {
 	}
 
 	comment.MarkAsAnswer()
+
+	go func(carrier *transmit.Sender, id bson.ObjectId) {
+
+		carrierParams := map[string]interface{}{
+			"fire": "best-answer",
+			"id": id,
+		} 
+
+		carrier.Emit("feed", "action", carrierParams)
+
+	}(this.Transmit, post.Data().Id)
 
 	c.JSON(200, gin.H{"status": "okay"})
 }

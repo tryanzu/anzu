@@ -10,6 +10,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/acl"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
+	"github.com/fernandez14/spartangeek-blacker/modules/transmit"
 	"github.com/fernandez14/spartangeek-blacker/modules/notifications"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/ftrvxmtrx/gravatar"
@@ -39,6 +40,7 @@ type CommentAPI struct {
 	Errors        *exceptions.ExceptionsModule       `inject:""`
 	Gaming        *gaming.Module                     `inject:""`
 	Acl           *acl.Module                        `inject:""`
+	Transmit      *transmit.Sender                   `inject:""`
 }
 
 func (di *CommentAPI) CommentAdd(c *gin.Context) {
@@ -125,6 +127,17 @@ func (di *CommentAPI) CommentAdd(c *gin.Context) {
 			Author:        user_bson_id,
 			Post:          post,
 		})
+
+		go func(carrier *transmit.Sender, id bson.ObjectId) {
+
+			carrierParams := map[string]interface{}{
+				"fire": "new-comment",
+				"id": id,
+			} 
+
+			carrier.Emit("feed", "action", carrierParams)
+
+		}(di.Transmit, post.Id)
 
 		// Check if we need to add participant
 		users := post.Users
@@ -310,6 +323,17 @@ func (di *CommentAPI) CommentDelete(c *gin.Context) {
 	if err != nil {
 		panic(err)
 	}
+
+	go func(carrier *transmit.Sender, id bson.ObjectId) {
+
+		carrierParams := map[string]interface{}{
+			"fire": "delete-comment",
+			"id": id,
+		} 
+
+		carrier.Emit("feed", "action", carrierParams)
+
+	}(di.Transmit, post.Id)
 
 	c.JSON(200, gin.H{"status": "okay"})
 	return

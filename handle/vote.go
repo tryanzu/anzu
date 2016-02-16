@@ -5,6 +5,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
+	"github.com/fernandez14/spartangeek-blacker/modules/transmit"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -17,6 +18,7 @@ type VoteAPI struct {
 	Data   *mongo.Service `inject:""`
 	Gaming *gaming.Module `inject:""`
 	User   *user.Module   `inject:""`
+	Transmit *transmit.Sender `inject:""`
 }
 
 func (di *VoteAPI) VoteComponent(c *gin.Context) {
@@ -588,12 +590,34 @@ func (di *VoteAPI) VotePost(c *gin.Context) {
 
 			vote_value = 1
 			add.WriteString("up")
+
+			go func(carrier *transmit.Sender, id bson.ObjectId) {
+
+				carrierParams := map[string]interface{}{
+					"fire": "upvote",
+					"id": id,
+				} 
+
+				carrier.Emit("feed", "action", carrierParams)
+
+			}(di.Transmit, post.Id)
 		}
 
 		if vote.Direction == "down" {
 
 			vote_value = -1
 			add.WriteString("down")
+
+			go func(carrier *transmit.Sender, id bson.ObjectId) {
+
+				carrierParams := map[string]interface{}{
+					"fire": "downvote",
+					"id": id,
+				} 
+
+				carrier.Emit("feed", "action", carrierParams)
+
+			}(di.Transmit, post.Id)
 		}
 
 		inc := add.String()
