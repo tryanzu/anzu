@@ -20,9 +20,10 @@ type Author struct {
 }
 
 type Comments struct {
-	Count int       `bson:"count" json:"count"`
-	Total int       `bson:"-" json:"total,omitempty"`
-	Set   []Comment `bson:"set" json:"set"`
+	Count  int       `bson:"count" json:"count"`
+	Total  int       `bson:"-" json:"total,omitempty"`
+	Answer Comment   `bson:"-" json:"answer,omitempty"`
+	Set    []Comment `bson:"set" json:"set"`
 }
 
 type FeedComments struct {

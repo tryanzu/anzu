@@ -546,6 +546,17 @@ func (di PostAPI) PostsGetOne(c *gin.Context) {
 			}(user_bson_id, users)
 		}
 
+		if post.Solved == true {
+
+			var bestComments model.CommentsPost
+
+			err := database.C("posts").FindId(post.Id).Select(bson.M{"_id": 1, "comments.set": bson.M{"$elemMatch": bson.M{"chosen": true}}}).One(&bestComments)
+
+			if err == nil && len(bestComments.Comments.Set) > 0 {
+				post.Comments.Answer = bestComments.Comments.Set[0]
+			}
+		}
+
 		// This will calculate the position based on the sliced array
 		true_count := di.Feed.TrueCommentCount(post.Id)
 		count := true_count - 10

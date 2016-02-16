@@ -124,6 +124,23 @@ func (this PostAPI) GetPostComments(c *gin.Context) {
 	offset = offsetC
 	limit = limitC
 
+	// This will calculate the position based on the sliced array
+	count := 0
+	true_count := this.Feed.TrueCommentCount(id)
+
+	if offset >= 0 {
+		count = offset
+	} else {
+
+		offsetN := -offset 
+
+		if offsetN  > true_count {
+			offset = -true_count
+		}
+
+		count = true_count + offset
+	}
+
 	err = database.C("posts").FindId(id).Select(bson.M{"_id": 1, "comments.set": bson.M{"$slice": []int{offset, limit}}}).One(&post)
 	
 	if err != nil {
@@ -179,15 +196,6 @@ func (this PostAPI) GetPostComments(c *gin.Context) {
 		// Get the likes given by the current user
 		_ = database.C("votes").Find(bson.M{"type": "comment", "related_id": post.Id, "user_id": user_bson_id}).All(&likes)
 	}	
-
-	// This will calculate the position based on the sliced array
-	count := 0
-
-	if offset >= 0 {
-		count = offset
-	} else {
-		count = this.Feed.TrueCommentCount(post.Id) + offset
-	}
 
 	for index := range post.Comments.Set {
 
