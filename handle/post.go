@@ -588,6 +588,7 @@ func (di PostAPI) PostsGetOne(c *gin.Context) {
 		}
 
 		post.Comments.Set = comments
+		post.Comments.Total = true_count
 
 		// Sort by created at
 		sort.Sort(model.ByCommentCreatedAt(post.Comments.Set))
