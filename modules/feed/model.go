@@ -62,6 +62,11 @@ type PostCommentModel struct {
 	Comment  CommentModel  `bson:"comment" json:"comment,omitempty"`
 }
 
+type PostCommentCountModel struct {
+	Id    bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
+	Count int  `bson:"count" json:"count"`
+}
+
 type VotesModel struct {
 	Up     int `bson:"up" json:"up"`
 	Down   int `bson:"down" json:"down"`
