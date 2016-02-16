@@ -616,10 +616,9 @@ func (di VoteAPI) VotePost(c *gin.Context) {
 
 				carrierParams := map[string]interface{}{
 					"fire": "upvote",
-					"id": id.Hex(),
 				} 
 
-				carrier.Emit("feed", "action", carrierParams)
+				carrier.Emit("post", id.Hex(), carrierParams)
 
 			}(di.Transmit, post.Id)
 		}
@@ -633,10 +632,9 @@ func (di VoteAPI) VotePost(c *gin.Context) {
 
 				carrierParams := map[string]interface{}{
 					"fire": "downvote",
-					"id": id.Hex(),
 				} 
 
-				carrier.Emit("feed", "action", carrierParams)
+				carrier.Emit("post", id.Hex(), carrierParams)
 
 			}(di.Transmit, post.Id)
 		}
