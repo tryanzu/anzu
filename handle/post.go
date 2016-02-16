@@ -435,11 +435,11 @@ func (di PostAPI) PostsGetOne(c *gin.Context) {
 
 	// Try to fetch the needed post by id
 	if post_type == "id" {
-		err = collection.FindId(bson.ObjectIdHex(id)).One(&post)
+		err = collection.FindId(bson.ObjectIdHex(id)).Select(bson.M{"comments.set": bson.M{"$slice": -10}}).One(&post)
 	}
 
 	if post_type == "slug" {
-		err = collection.Find(bson.M{"slug": id}).One(&post)
+		err = collection.Find(bson.M{"slug": id}).Select(bson.M{"comments.set": bson.M{"$slice": -10}}).One(&post)
 	}
 
 	if err != nil {
@@ -546,12 +546,20 @@ func (di PostAPI) PostsGetOne(c *gin.Context) {
 			}(user_bson_id, users)
 		}
 
+		// This will calculate the position based on the sliced array
+		true_count := di.Feed.TrueCommentCount(post.Id)
+		count := true_count - 10
+
+		if count < 0 {
+			count = 0
+		}
+
 		for index := range post.Comments.Set {
 
 			comment := &post.Comments.Set[index]
 
 			// Save the position over the comment
-			post.Comments.Set[index].Position = index
+			post.Comments.Set[index].Position = count + index
 
 			// Check if user liked that comment already
 			for _, vote := range likes {
