@@ -103,7 +103,6 @@ func (module *Module) Run() {
         go func() {
             for {
                 msg := <-messages
-                log.Println("received message from channel")
                 log.Printf("%v\n", msg)
 
                 server.BroadcastTo(msg.Room, msg.Event, msg.Message)
