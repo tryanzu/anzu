@@ -22,7 +22,7 @@ type Author struct {
 type Comments struct {
 	Count  int       `bson:"count" json:"count"`
 	Total  int       `bson:"-" json:"total,omitempty"`
-	Answer Comment   `bson:"-" json:"answer,omitempty"`
+	Answer *Comment  `bson:"-" json:"answer,omitempty"`
 	Set    []Comment `bson:"set" json:"set"`
 }
 
@@ -104,6 +104,11 @@ type PostCommentModel struct {
 type PostCommentCountModel struct {
 	Id    bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
 	Count int           `bson:"count" json:"count"`
+}
+
+type CommentAggregated struct {
+	Id      bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
+	Comment Comment `bson:"comment" json:"comment"`
 }
 
 type CommentsPost struct {

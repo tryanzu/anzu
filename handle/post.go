@@ -548,19 +548,29 @@ func (di PostAPI) PostsGetOne(c *gin.Context) {
 
 		if post.Solved == true {
 
-			var bestComments model.CommentsPost
+			var best model.CommentAggregated
 
-			err := database.C("posts").FindId(post.Id).Select(bson.M{"_id": 1, "comments.set": bson.M{"$elemMatch": bson.M{"chosen": true}}}).One(&bestComments)
+			pipe := database.C("posts").Pipe([]bson.M{
+				{"$match": bson.M{"_id": post.Id}},
+				{"$unwind": "$comments.set"},
+				{"$match": bson.M{"comments.set.chosen": true}},
+				{"$project": bson.M{"_id": 1, "comment": "$comments.set"}},
+			})
 
-			if err == nil && len(bestComments.Comments.Set) > 0 {
+			err := pipe.One(&best)
 
-				bestComment := bestComments.Comments.Set[0]
+			if err != nil {
+				panic(err)
+			}
 
-				if _, okay := usersMap[bestComment.UserId]; okay {
-					bestComment.User = usersMap[bestComment.UserId]
+			if err == nil {
+
+				answer := best.Comment
+				post.Comments.Answer = &answer
+
+				if _, okay := usersMap[answer.UserId]; okay {
+					post.Comments.Answer.User = usersMap[answer.UserId]
 				}
-
-				post.Comments.Answer = bestComment
 			}
 		}
 
@@ -1251,7 +1261,7 @@ func (di PostAPI) PostDelete(c *gin.Context) {
 }
 
 func (di PostAPI) syncUsersFeed(post *model.Post) {
-
+	
 	carrier := di.Transmit
 
 	// Recover from any panic even inside this goroutine
@@ -1261,6 +1271,7 @@ func (di PostAPI) syncUsersFeed(post *model.Post) {
 		"fire": "new-post",
 		"category": post.Category.Hex(),
 		"user_id": post.UserId.Hex(),
+		"id": post.Id.Hex(),
 	} 
 
 	carrier.Emit("feed", "action", carrierParams)
