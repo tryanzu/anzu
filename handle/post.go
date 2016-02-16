@@ -1098,10 +1098,16 @@ func (di PostAPI) PostUpdate(c *gin.Context) {
 
 				carrierParams := map[string]interface{}{
 					"fire": "pinned",
-					"id": id,
+					"id": id.Hex(),
 				} 
 
 				carrier.Emit("feed", "action", carrierParams)
+
+				carrierParams = map[string]interface{}{
+					"fire": "updated",
+				} 
+
+				carrier.Emit("post", id.Hex(), carrierParams)
 
 			}(di.Transmit, post.Id)
 
@@ -1113,7 +1119,7 @@ func (di PostAPI) PostUpdate(c *gin.Context) {
 
 				carrierParams := map[string]interface{}{
 					"fire": "unpinned",
-					"id": id,
+					"id": id.Hex(),
 				} 
 
 				carrier.Emit("feed", "action", carrierParams)
@@ -1207,7 +1213,7 @@ func (di PostAPI) PostDelete(c *gin.Context) {
 
 		carrierParams := map[string]interface{}{
 			"fire": "delete-post",
-			"id": id,
+			"id": id.Hex(),
 		} 
 
 		carrier.Emit("feed", "action", carrierParams)

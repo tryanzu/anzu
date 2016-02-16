@@ -132,7 +132,7 @@ func (di *CommentAPI) CommentAdd(c *gin.Context) {
 
 			carrierParams := map[string]interface{}{
 				"fire": "new-comment",
-				"id": id,
+				"id": id.Hex(),
 			} 
 
 			carrier.Emit("feed", "action", carrierParams)
@@ -328,7 +328,7 @@ func (di *CommentAPI) CommentDelete(c *gin.Context) {
 
 		carrierParams := map[string]interface{}{
 			"fire": "delete-comment",
-			"id": id,
+			"id": id.Hex(),
 		} 
 
 		carrier.Emit("feed", "action", carrierParams)
