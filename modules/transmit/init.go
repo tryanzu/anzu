@@ -3,6 +3,7 @@ package transmit
 import (
 	"github.com/olebedev/config"
 	"github.com/googollee/go-socket.io"
+    "github.com/rs/cors"
 	zmq "github.com/pebbe/zmq4"
 
     "log"
@@ -110,8 +111,12 @@ func (module *Module) Run() {
         }()
 
         log.Println("Started sockets server at localhost:" + socketPort + "...")
-        http.Handle("/socket.io/", server)
-        log.Fatal(http.ListenAndServe(":" + socketPort, nil))
+
+        mux := http.NewServeMux()
+        mux.Handle("/socket.io/", server)
+        handler := cors.Default().Handler(mux)
+
+        log.Fatal(http.ListenAndServe(":" + socketPort, handler))
     }()
 	   
     log.Println("Waiting To Finish")
