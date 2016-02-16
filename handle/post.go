@@ -1234,9 +1234,6 @@ func (di PostAPI) PostDelete(c *gin.Context) {
 
 func (di PostAPI) syncUsersFeed(post *model.Post) {
 
-	var users map[string]model.UserFirebase
-
-	redis := di.CacheService
 	carrier := di.Transmit
 
 	// Recover from any panic even inside this goroutine
@@ -1245,49 +1242,10 @@ func (di PostAPI) syncUsersFeed(post *model.Post) {
 	carrierParams := map[string]interface{}{
 		"fire": "new-post",
 		"category": post.Category.Hex(),
+		"user_id": post.UserId.Hex(),
 	} 
 
 	carrier.Emit("feed", "action", carrierParams)
-
-	// Search the online users
-	onlineParams := map[string]string{
-		"orderBy": "\"online\"",
-		"startAt": "1",
-	}
-	_ = di.Firebase.Child("users", onlineParams, &users)
-
-	// Information about the post
-	category := post.Category.Hex()
-
-	for user_id, user := range users {
-
-		// Must be either seeing that category or own general feed
-		if user.Viewing != category && user.Viewing != "all" {
-			continue
-		}
-
-		if user.Viewing == "all" {
-
-			subscribed, err := redis.SIsMember("user:categories:"+user_id, category)
-
-			// User is actually not subscribed or and error just happened
-			if subscribed == false || err != nil {
-
-				// Temp stuff - check if user has no single subscription already
-				user_categories_list, err := redis.SMembers("user:categories:" + user_id)
-
-				if err != nil || len(user_categories_list) > 0 {
-					continue
-				}
-			}
-		}
-
-		// Add a pending counter
-		userPath := "users/" + user_id
-		userRef := di.Firebase.Child(userPath, nil, nil)
-
-		userRef.Set("pending", user.Pending+1, nil)
-	}
 }
 
 func (di PostAPI) downloadAssetFromUrl(from string, post_id bson.ObjectId) error {

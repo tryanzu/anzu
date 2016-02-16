@@ -128,16 +128,17 @@ func (di *CommentAPI) CommentAdd(c *gin.Context) {
 			Post:          post,
 		})
 
-		go func(carrier *transmit.Sender, id bson.ObjectId) {
+		go func(carrier *transmit.Sender, id bson.ObjectId, usrId bson.ObjectId) {
 
 			carrierParams := map[string]interface{}{
 				"fire": "new-comment",
 				"id": id.Hex(),
+				"user_id": usrId.Hex(),
 			} 
 
 			carrier.Emit("feed", "action", carrierParams)
 
-		}(di.Transmit, post.Id)
+		}(di.Transmit, post.Id, user_bson_id)
 
 		// Check if we need to add participant
 		users := post.Users
