@@ -553,7 +553,14 @@ func (di PostAPI) PostsGetOne(c *gin.Context) {
 			err := database.C("posts").FindId(post.Id).Select(bson.M{"_id": 1, "comments.set": bson.M{"$elemMatch": bson.M{"chosen": true}}}).One(&bestComments)
 
 			if err == nil && len(bestComments.Comments.Set) > 0 {
-				post.Comments.Answer = bestComments.Comments.Set[0]
+
+				bestComment := bestComments.Comments.Set[0]
+
+				if _, okay := usersMap[bestComment.UserId]; okay {
+					bestComment.User = usersMap[bestComment.UserId]
+				}
+
+				post.Comments.Answer = bestComment
 			}
 		}
 
