@@ -21,7 +21,7 @@ type VoteAPI struct {
 	Transmit *transmit.Sender `inject:""`
 }
 
-func (di *VoteAPI) VoteComponent(c *gin.Context) {
+func (di VoteAPI) VoteComponent(c *gin.Context) {
 
 	// Get the database interface from the DI
 	database := di.Data.Database
@@ -197,7 +197,7 @@ func (di *VoteAPI) VoteComponent(c *gin.Context) {
 	c.JSON(401, gin.H{"error": "Couldnt create post, missing information...", "status": 205})
 }
 
-func (di *VoteAPI) VoteComment(c *gin.Context) {
+func (di VoteAPI) VoteComment(c *gin.Context) {
 
 	// Get the database interface from the DI
 	database := di.Data.Database
@@ -337,7 +337,6 @@ func (di *VoteAPI) VoteComment(c *gin.Context) {
 			if (vote.Direction == "up" && user_model.Gaming.Tribute < 1) || (vote.Direction == "down" && user_model.Gaming.Shit < 1) {
 
 				c.JSON(400, gin.H{"message": "Dont have enough gaming points to do this.", "status": "error"})
-
 				return
 			}
 
@@ -349,12 +348,34 @@ func (di *VoteAPI) VoteComment(c *gin.Context) {
 
 				vote_value = 1
 				add.WriteString(".votes.up")
+
+				go func(carrier *transmit.Sender, id bson.ObjectId) {
+
+					carrierParams := map[string]interface{}{
+						"fire": "comment-upvote",
+						"index": comment_index,
+					} 
+
+					carrier.Emit("post", id.Hex(), carrierParams)
+
+				}(di.Transmit, post.Id)
 			}
 
 			if vote.Direction == "down" {
 
 				vote_value = -1
 				add.WriteString(".votes.down")
+
+				go func(carrier *transmit.Sender, id bson.ObjectId) {
+
+					carrierParams := map[string]interface{}{
+						"fire": "comment-downvote",
+						"index": comment_index,
+					} 
+
+					carrier.Emit("post", id.Hex(), carrierParams)
+
+				}(di.Transmit, post.Id)
 			}
 
 			inc := add.String()
@@ -446,7 +467,7 @@ func (di *VoteAPI) VoteComment(c *gin.Context) {
 	c.JSON(401, gin.H{"error": "Couldnt vote, missing information...", "status": 608})
 }
 
-func (di *VoteAPI) VotePost(c *gin.Context) {
+func (di VoteAPI) VotePost(c *gin.Context) {
 
 	// Get the database interface from the DI
 	database := di.Data.Database

@@ -251,6 +251,17 @@ func (di *CommentAPI) CommentUpdate(c *gin.Context) {
 			panic(err)
 		}
 
+		go func(carrier *transmit.Sender, id bson.ObjectId) {
+
+			carrierParams := map[string]interface{}{
+				"fire": "comment-updated",
+				"index": comment_index,
+			} 
+
+			carrier.Emit("post", id.Hex(), carrierParams)
+
+		}(di.Transmit, post.Id)
+
 		// Process the mentions. TODO - Determine race conditions
 		go di.Notifications.ParseContentMentions(notifications.MentionParseObject{
 			Type:          "comment",
@@ -332,6 +343,13 @@ func (di *CommentAPI) CommentDelete(c *gin.Context) {
 		} 
 
 		carrier.Emit("feed", "action", carrierParams)
+
+		carrierParams = map[string]interface{}{
+			"fire": "delete-comment",
+			"index": comment_index,
+		} 
+
+		carrier.Emit("post", id.Hex(), carrierParams)
 
 	}(di.Transmit, post.Id)
 
