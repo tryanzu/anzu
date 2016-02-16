@@ -169,6 +169,25 @@ func (module *FeedModule) FulfillBestAnswer(list []LightPostModel) []LightPostMo
 	return list
 }
 
+func (module *FeedModule) TrueCommentCount(id bson.ObjectId) int {
+
+	var count PostCommentCountModel
+	database := module.Mongo.Database
+
+	pipe := database.C("posts").Pipe([]bson.M{
+		{"$match": bson.M{"_id": id}},
+		{"$project": bson.M{"count": bson.M{"$size": "$comments.set"}}},
+	})
+
+	err := pipe.One(&count)
+
+	if err != nil {
+		return 0
+	}
+
+	return count.Count
+}
+
 func (module *FeedModule) Posts(limit, offset int) List {
 
 	list := List{
