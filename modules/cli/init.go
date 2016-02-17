@@ -11,12 +11,14 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/fernandez14/spartangeek-blacker/modules/search"
 	"github.com/fernandez14/spartangeek-blacker/modules/transmit"
+	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"gopkg.in/mgo.v2/bson"
 	"log"
 	"reflect"
 	"regexp"
 	"strconv"
+	"time"
 	"strings"
 )
 
@@ -27,6 +29,7 @@ type Module struct {
 	User     *user.Module                 `inject:""`
 	Feed     *feed.FeedModule             `inject:""`
 	Transmit *transmit.Sender             `inject:""`
+	Mail     *mail.Module                 `inject:""`
 }
 
 type fn func()
@@ -41,6 +44,7 @@ func (module Module) Run(name string) {
 		"send-confirmations": module.ConfirmationEmails,	
 		"replace-url": module.ReplaceURL,
 		"test-transmit": module.TestSocket,
+		"first-newsletter": module.FirstNewsletter,
 	}
 
 	if handler, exists := commands[name]; exists {
@@ -51,6 +55,51 @@ func (module Module) Run(name string) {
 
 	// If reachs this point then panic
 	log.Panic("No such handler for cli")
+}
+
+func (module Module) FirstNewsletter() {
+
+	var news NewsletterModel
+	var usr user.User
+
+	database := module.Mongo.Database
+	mails := module.Mail
+	iter := database.C("newsletter").Find(bson.M{"fn": bson.M{"$exists": false}}).Limit(200000).Iter()
+
+	for iter.Next(&news) {
+
+		email := news.Value.Email
+		err := database.C("users").Find(bson.M{"$or": []bson.M{{"email": email}, {"facebook.email": email}}}).One(&usr)
+
+		if err == nil {
+
+			gamificated := usr.Gamificated
+			since := time.Since(gamificated)
+
+			if since.Hours() < float64(60.0 * 24.0 * 20) {
+				fmt.Printf("-")
+				continue
+			}
+		}
+
+		compose := mail.Mail{
+			Template: 421061,
+			Recipient: []mail.MailRecipient{
+				{
+					Name:  email,
+					Email: email,
+				},
+			},
+			Variables: map[string]interface{}{},
+		}
+
+		mails.Send(compose)
+		database.C("newsletter").Update(bson.M{"_id": news.Id}, bson.M{"$set": bson.M{"fn": true}})
+
+		fmt.Printf(".")
+	}
+
+	fmt.Println("Finished")
 }
 
 func (module Module) TestSocket() {

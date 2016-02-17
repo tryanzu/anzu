@@ -1,5 +1,9 @@
 package cli
 
+import (
+	"gopkg.in/mgo.v2/bson"
+)
+
 type PostModel struct {
 	Id         string        `json:"objectID"`
 	Title      string        `json:"title"`
@@ -17,6 +21,15 @@ type PostModel struct {
 type CategoryModel struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
+}
+
+type NewsletterModel struct {
+	Id      bson.ObjectId `bson:"_id,omitempty" json:"id"`
+	Value   NewsletterValueModel        `bson:"value" json:"value"`
+}
+
+type NewsletterValueModel struct {
+	Email string `bson:"email" json:"email"`
 }
 
 type UserModel struct {
