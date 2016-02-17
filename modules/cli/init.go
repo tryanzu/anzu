@@ -63,8 +63,7 @@ func (module Module) FirstNewsletter() {
 	var usr user.User
 
 	database := module.Mongo.Database
-	mails := module.Mail
-	iter := database.C("newsletter").Find(bson.M{"fn": bson.M{"$exists": false}}).Limit(200000).Iter()
+	iter := database.C("newsletter").Find(nil).Limit(200000).Iter()
 
 	for iter.Next(&news) {
 
@@ -77,24 +76,13 @@ func (module Module) FirstNewsletter() {
 			since := time.Since(gamificated)
 
 			if since.Hours() < float64(60.0 * 24.0 * 20) {
+				database.C("newsletter").Update(bson.M{"_id": news.Id}, bson.M{"$set": bson.M{"old": false}})
 				fmt.Printf("-")
 				continue
 			}
 		}
 
-		compose := mail.Mail{
-			Template: 421061,
-			Recipient: []mail.MailRecipient{
-				{
-					Name:  email,
-					Email: email,
-				},
-			},
-			Variables: map[string]interface{}{},
-		}
-
-		mails.Send(compose)
-		database.C("newsletter").Update(bson.M{"_id": news.Id}, bson.M{"$set": bson.M{"fn": true}})
+		database.C("newsletter").Update(bson.M{"_id": news.Id}, bson.M{"$set": bson.M{"old": true}})
 
 		fmt.Printf(".")
 	}
