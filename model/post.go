@@ -21,7 +21,7 @@ type Author struct {
 
 type Comments struct {
 	Count  int       `bson:"count" json:"count"`
-	Total  int       `bson:"-" json:"total,omitempty"`
+	Total  int       `bson:"-" json:"total"`
 	Answer *Comment  `bson:"-" json:"answer,omitempty"`
 	Set    []Comment `bson:"set" json:"set"`
 }
