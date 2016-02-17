@@ -1131,37 +1131,41 @@ func (di PostAPI) PostUpdate(c *gin.Context) {
 			set_directive["pinned"] = postForm.Pinned
 			update_directive["$set"] = set_directive
 
-			go func(carrier *transmit.Sender, id bson.ObjectId) {
+			if post.Pinned == false {			
+				go func(carrier *transmit.Sender, id bson.ObjectId) {
 
-				carrierParams := map[string]interface{}{
-					"fire": "pinned",
-					"id": id.Hex(),
-				} 
+					carrierParams := map[string]interface{}{
+						"fire": "pinned",
+						"id": id.Hex(),
+					} 
 
-				carrier.Emit("feed", "action", carrierParams)
+					carrier.Emit("feed", "action", carrierParams)
 
-				carrierParams = map[string]interface{}{
-					"fire": "updated",
-				} 
+					carrierParams = map[string]interface{}{
+						"fire": "updated",
+					} 
 
-				carrier.Emit("post", id.Hex(), carrierParams)
+					carrier.Emit("post", id.Hex(), carrierParams)
 
-			}(di.Transmit, post.Id)
+				}(di.Transmit, post.Id)
+			}
 
 		} else {
 
 			update_directive["$unset"] = bson.M{"pinned": ""}
 
-			go func(carrier *transmit.Sender, id bson.ObjectId) {
+			if post.Pinned == true {
+				go func(carrier *transmit.Sender, id bson.ObjectId) {
 
-				carrierParams := map[string]interface{}{
-					"fire": "unpinned",
-					"id": id.Hex(),
-				} 
+					carrierParams := map[string]interface{}{
+						"fire": "unpinned",
+						"id": id.Hex(),
+					} 
 
-				carrier.Emit("feed", "action", carrierParams)
+					carrier.Emit("feed", "action", carrierParams)
 
-			}(di.Transmit, post.Id)
+				}(di.Transmit, post.Id)
+			}
 		}
 
 		if postForm.IsQuestion != post.IsQuestion {
