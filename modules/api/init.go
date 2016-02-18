@@ -6,6 +6,7 @@ import (
 	"github.com/facebookgo/inject"
 	"github.com/fernandez14/spartangeek-blacker/handle"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller"
+	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/posts"
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/olebedev/config"
@@ -30,7 +31,7 @@ type Module struct {
 	Store        controller.StoreAPI
 	BuildNotes   controller.BuildNotesAPI
 	Mail         controller.MailAPI
-	PostsFactory controller.PostAPI
+	PostsFactory posts.API
 	Components   controller.ComponentAPI
 	Cart         controller.CartAPI
 	Checkout     controller.CheckoutAPI
