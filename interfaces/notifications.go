@@ -5,5 +5,5 @@ import (
 )
 
 type NotificationBroadcaster interface {
-	Send(message *model.UserFirebaseNotification) // TODO - Decouple the model from firebase implementation
+	Send(message model.UserFirebaseNotification) // TODO - Decouple the model from firebase implementation
 }

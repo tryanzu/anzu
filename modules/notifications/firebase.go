@@ -9,22 +9,20 @@ type FirebaseBroadcaster struct {
 	Firebase *firebase.Client `inject:""`
 }
 
-func (broadcaster FirebaseBroadcaster) Send(message *model.UserFirebaseNotification) {
-
-	var target_notification model.UserFirebaseNotifications
+func (broadcaster FirebaseBroadcaster) Send(message model.UserFirebaseNotification) {
 
 	// Firebase path target
 	firebase := broadcaster.Firebase
 	target_path := "users/" + message.UserId.Hex() + "/notifications"
 
-	// TODO - As the notifications increases this will slow down the whole process, change this
-	target_ref := firebase.Child(target_path, nil, &target_notification)
+	root := firebase.Child(target_path, nil, nil)
+	count := root.Child("count", nil, nil).Value().(int)
 
 	// Increase the notifications count
-	target_ref.Set("count", target_notification.Count+1, nil)
+	root.Set("count", count+1, nil)
 
 	// Send the notification to firebase straight forward
-	target_ref.Child("list", nil, nil).Push(message, nil)
+	root.Child("list", nil, nil).Push(message, nil)
 
 	return
 }

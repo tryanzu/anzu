@@ -98,7 +98,7 @@ func (di *NotificationsModule) ParseContentMentions(obj MentionParseObject) {
 				}
 
 				// Compose notification
-				notification := &model.UserFirebaseNotification{
+				notification := model.UserFirebaseNotification{
 					UserId:       target_user.Id,
 					RelatedId:    post.Id,
 					RelatedExtra: post.Slug,
