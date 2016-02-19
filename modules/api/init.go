@@ -229,7 +229,7 @@ func (module *Module) Run() {
 			// Post routes
 			authorized.POST("/post", module.Posts.PostCreate)
 			authorized.POST("/post/image", module.Posts.PostUploadAttachment)
-			authorized.PUT("/posts/:id", module.Posts.PostUpdate)
+			authorized.PUT("/posts/:id", module.PostsFactory.Update)
 			authorized.DELETE("/posts/:id", module.Posts.PostDelete)
 			authorized.POST("/posts/:id/answer/:comment", module.PostsFactory.MarkCommentAsAnswer)
 			authorized.POST("/posts/:id/relate/:related_id", module.PostsFactory.Relate)
