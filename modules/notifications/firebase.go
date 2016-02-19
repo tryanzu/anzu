@@ -16,7 +16,11 @@ func (broadcaster FirebaseBroadcaster) Send(message model.UserFirebaseNotificati
 	target_path := "users/" + message.UserId.Hex() + "/notifications"
 
 	root := firebase.Child(target_path, nil, nil)
-	count := root.Child("count", nil, nil).Value().(int)
+	count := 0
+
+	if fcount := root.Child("count", nil, nil).Value(); fcount != nil {
+		count = fcount.(int)
+	}
 
 	// Increase the notifications count
 	root.Set("count", count+1, nil)
