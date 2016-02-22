@@ -78,8 +78,12 @@ func (this API) Update(c *gin.Context) {
 			return
 		}
 
-		if postForm.Pinned == true && postForm.Pinned != post.Pinned && user.Can("pin-board-posts") == false {
+		if postForm.Lock == true && postForm.Lock != post.NoComments && user.Can("block-own-post-comments") == false {
+			c.JSON(400, gin.H{"status": "error", "message": "Not enough permissions to lock."})
+			return
+		}
 
+		if postForm.Pinned == true && postForm.Pinned != post.Pinned && user.Can("pin-board-posts") == false {
 			c.JSON(400, gin.H{"status": "error", "message": "Not enough permissions to pin."})
 			return
 		}
@@ -117,12 +121,6 @@ func (this API) Update(c *gin.Context) {
 
 					carrier.Emit("feed", "action", carrierParams)
 
-					carrierParams = map[string]interface{}{
-						"fire": "updated",
-					} 
-
-					carrier.Emit("post", id.Hex(), carrierParams)
-
 				}(this.Transmit, post.Id)
 			}
 
@@ -139,6 +137,41 @@ func (this API) Update(c *gin.Context) {
 					} 
 
 					carrier.Emit("feed", "action", carrierParams)
+
+				}(this.Transmit, post.Id)
+			}
+		}
+
+		if postForm.Lock == true {
+
+			set_directive := update_directive["$set"].(bson.M)
+			set_directive["comments_blocked"] = postForm.Lock
+			update_directive["$set"] = set_directive
+
+			if post.NoComments == false {			
+				go func(carrier *transmit.Sender, id bson.ObjectId) {
+
+					carrierParams := map[string]interface{}{
+						"fire": "locked",
+					} 
+
+					carrier.Emit("post", id.Hex(), carrierParams)
+
+				}(this.Transmit, post.Id)
+			}
+
+		} else {
+
+			update_directive["$unset"] = bson.M{"comments_blocked": ""}
+
+			if post.NoComments == true {
+				go func(carrier *transmit.Sender, id bson.ObjectId) {
+
+					carrierParams := map[string]interface{}{
+						"fire": "unlocked",
+					} 
+
+					carrier.Emit("post", id.Hex(), carrierParams)
 
 				}(this.Transmit, post.Id)
 			}
@@ -176,6 +209,16 @@ func (this API) Update(c *gin.Context) {
 			// Download the asset on other routine in order to non block the API request
 			go this.savePostImages(asset, post.Id)
 		}
+
+		go func(carrier *transmit.Sender, id bson.ObjectId) {
+
+			carrierParams := map[string]interface{}{
+				"fire": "updated",
+			} 
+
+			carrier.Emit("post", id.Hex(), carrierParams)
+
+		}(this.Transmit, post.Id)
 
 		c.JSON(200, gin.H{"status": "okay"})
 		return

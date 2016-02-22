@@ -313,6 +313,17 @@ func (di VoteAPI) VoteComment(c *gin.Context) {
 
 					}(usr, comment_)
 
+					go func(carrier *transmit.Sender, id bson.ObjectId) {
+
+						carrierParams := map[string]interface{}{
+							"fire": "comment-upvote-remove",
+							"index": comment_index,
+						} 
+
+						carrier.Emit("post", id.Hex(), carrierParams)
+
+					}(di.Transmit, post.Id)
+
 				} else if already_voted.Value == -1 {
 
 					go func(usr *user.One, comment model.Comment) {
@@ -327,6 +338,17 @@ func (di VoteAPI) VoteComment(c *gin.Context) {
 						}
 
 					}(usr, comment_)
+
+					go func(carrier *transmit.Sender, id bson.ObjectId) {
+
+						carrierParams := map[string]interface{}{
+							"fire": "comment-downvote-remove",
+							"index": comment_index,
+						} 
+
+						carrier.Emit("post", id.Hex(), carrierParams)
+
+					}(di.Transmit, post.Id)
 				}
 
 				c.JSON(200, gin.H{"status": "okay"})
@@ -576,6 +598,16 @@ func (di VoteAPI) VotePost(c *gin.Context) {
 
 				}(usr, post)
 
+				go func(carrier *transmit.Sender, id bson.ObjectId) {
+
+					carrierParams := map[string]interface{}{
+						"fire": "upvote-remove",
+					} 
+
+					carrier.Emit("post", id.Hex(), carrierParams)
+
+				}(di.Transmit, post.Id)
+
 			} else if already_voted.Value == -1 {
 
 				go func(usr *user.One, post model.Post) {
@@ -590,6 +622,16 @@ func (di VoteAPI) VotePost(c *gin.Context) {
 					}
 
 				}(usr, post)
+
+				go func(carrier *transmit.Sender, id bson.ObjectId) {
+
+					carrierParams := map[string]interface{}{
+						"fire": "downvote-remove",
+					} 
+
+					carrier.Emit("post", id.Hex(), carrierParams)
+
+				}(di.Transmit, post.Id)
 			}
 
 			c.JSON(200, gin.H{"status": "okay"})
@@ -692,32 +734,6 @@ func (di VoteAPI) VotePost(c *gin.Context) {
 				}(usr, post)
 			}
 		}
-
-		// Notify the author of the comment
-		go func(token bson.ObjectId, post model.Post) {
-
-			/*user_id := comment.UserId
-
-			  // Get the comment like author
-			  var user model.User
-
-			  database.C("users").Find(bson.M{"_id": token.UserId}).One(&user)
-
-			  if err == nil {
-
-			      // Gravatar url
-			      emailHash := gravatar.EmailHash(user.Email)
-			      image := gravatar.GetAvatarURL("http", emailHash, "http://spartangeek.com/images/default-avatar.png", 80)
-
-			      // Construct the notification message
-			      title := fmt.Sprintf("A **%s** le gusta tu comentario.", user.UserName)
-			      message := post.Title
-
-			      // We are inside an isolated routine, so we dont need to worry about the processing cost
-			      //notify(user_id, "like", post.Id, "/post/" + post.Slug, title, message, image.String())
-			  }*/
-
-		}(user_bson_id, post)
 
 		c.JSON(200, gin.H{"status": "okay"})
 		return
