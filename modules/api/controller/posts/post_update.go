@@ -220,7 +220,7 @@ func (this API) Update(c *gin.Context) {
 
 		}(this.Transmit, post.Id)
 
-		c.JSON(200, gin.H{"status": "okay"})
+		c.JSON(200, gin.H{"status": "okay", "id": post.Id.Hex(), "slug": post.Slug})
 		return
 	}
 

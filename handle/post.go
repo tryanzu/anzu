@@ -741,8 +741,12 @@ func (di PostAPI) PostCreate(c *gin.Context) {
 		}
 
 		if post.Pinned == true && user.Can("pin-board-posts") == false {
-
 			c.JSON(400, gin.H{"status": "error", "message": "Not enough permissions to pin."})
+			return
+		}
+
+		if post.Lock == true && user.Can("block-own-post-comments") == false {
+			c.JSON(400, gin.H{"status": "error", "message": "Not enough permissions to lock."})
 			return
 		}
 
@@ -824,6 +828,7 @@ func (di PostAPI) PostCreate(c *gin.Context) {
 					Votes:      votes,
 					IsQuestion: post.IsQuestion,
 					Pinned:     post.Pinned,
+					NoComments: post.Lock,
 					Created:    time.Now(),
 					Updated:    time.Now(),
 				}
@@ -939,6 +944,7 @@ func (di PostAPI) PostCreate(c *gin.Context) {
 				Votes:      votes,
 				IsQuestion: post.IsQuestion,
 				Pinned:     post.Pinned,
+				NoComments: post.Lock,
 				Created:    time.Now(),
 				Updated:    time.Now(),
 			}
@@ -1106,6 +1112,7 @@ func (di PostAPI) syncUsersFeed(post *model.Post) {
 		"category": post.Category.Hex(),
 		"user_id": post.UserId.Hex(),
 		"id": post.Id.Hex(),
+		"slug": post.Slug,
 	} 
 
 	carrier.Emit("feed", "action", carrierParams)
