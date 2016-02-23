@@ -78,7 +78,7 @@ func (this API) Update(c *gin.Context) {
 			return
 		}
 
-		if postForm.Lock == true && postForm.Lock != post.NoComments && user.Can("block-own-post-comments") == false {
+		if postForm.Lock == true && postForm.Lock != post.NoComments && user.CanLockPost(post) == false {
 			c.JSON(400, gin.H{"status": "error", "message": "Not enough permissions to lock."})
 			return
 		}

@@ -15,7 +15,7 @@
 	},
 
 	"child-moderator": {
-		"permissions": ["edit-category-comments", "edit-category-posts", "solve-category-posts", "delete-category-posts", "delete-category-comments"],
+		"permissions": ["block-category-post-comments", "edit-category-comments", "edit-category-posts", "solve-category-posts", "delete-category-posts", "delete-category-comments"],
 		"parents": ["spartan-girl"]
 	},
 
@@ -25,7 +25,7 @@
 	},
 
 	"super-moderator": {
-		"permissions": ["edit-board-comments", "edit-board-posts", "solve-board-posts", "delete-board-comments", "delete-board-posts", "pin-board-posts"],
+		"permissions": ["block-board-post-comments", "edit-board-comments", "edit-board-posts", "solve-board-posts", "delete-board-comments", "delete-board-posts", "pin-board-posts"],
 		"parents": ["category-moderator"]
 	},
 
