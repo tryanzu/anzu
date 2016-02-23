@@ -38,6 +38,7 @@ type Module struct {
 	Customer     controller.CustomerAPI
 	Orders       controller.OrdersAPI
 	Owners       controller.OwnersAPI
+	Lead         controller.LeadAPI
 }
 
 type ModuleDI struct {
@@ -71,6 +72,7 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.Customer},
 		&inject.Object{Value: &module.Orders},
 		&inject.Object{Value: &module.Owners},
+		&inject.Object{Value: &module.Lead},
 	)
 
 	if err != nil {
@@ -147,6 +149,7 @@ func (module *Module) Run() {
 		})
 
 		v1.POST("/subscribe", module.Users.UserSubscribe)
+		v1.POST("/leads", module.Lead.Post)
 
 		// Gamification routes
 		v1.GET("/gamification", module.Gaming.GetRules)
