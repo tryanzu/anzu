@@ -103,6 +103,7 @@ func (this API) Update(c *gin.Context) {
 		assets = urls.FindAllString(content, -1)
 
 		update_directive := bson.M{"$set": bson.M{"content": content, "slug": slug, "title": postForm.Name, "category": bson.ObjectIdHex(post_category), "updated_at": time.Now()}}
+		unset := bson.M{}
 
 		if postForm.Pinned == true {
 
@@ -126,7 +127,7 @@ func (this API) Update(c *gin.Context) {
 
 		} else {
 
-			update_directive["$unset"] = bson.M{"pinned": ""}
+			unset["pinned"] = ""
 
 			if post.Pinned == true {
 				go func(carrier *transmit.Sender, id bson.ObjectId) {
@@ -162,7 +163,7 @@ func (this API) Update(c *gin.Context) {
 
 		} else {
 
-			update_directive["$unset"] = bson.M{"comments_blocked": ""}
+			unset["comments_blocked"] = ""
 
 			if post.NoComments == true {
 				go func(carrier *transmit.Sender, id bson.ObjectId) {
@@ -175,6 +176,10 @@ func (this API) Update(c *gin.Context) {
 
 				}(this.Transmit, post.Id)
 			}
+		}
+
+		if len(unset) > 0 {
+			update_directive["$unset"] = unset
 		}
 
 		if postForm.IsQuestion != post.IsQuestion {
