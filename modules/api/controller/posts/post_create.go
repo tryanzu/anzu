@@ -205,12 +205,12 @@ func (this API) Create(c *gin.Context) {
 
 					carrier := this.Transmit
 					carrierParams := map[string]interface{}{
-						"fire": "new-post",
+						"fire":     "new-post",
 						"category": publish.Category.Hex(),
 						"user_id":  publish.UserId.Hex(),
 						"id":       publish.Id.Hex(),
 						"slug":     publish.Slug,
-					} 
+					}
 
 					carrier.Emit("feed", "action", carrierParams)
 
@@ -287,12 +287,12 @@ func (this API) Create(c *gin.Context) {
 
 				carrier := this.Transmit
 				carrierParams := map[string]interface{}{
-					"fire": "new-post",
+					"fire":     "new-post",
 					"category": publish.Category.Hex(),
 					"user_id":  publish.UserId.Hex(),
 					"id":       publish.Id.Hex(),
 					"slug":     publish.Slug,
-				} 
+				}
 
 				carrier.Emit("feed", "action", carrierParams)
 

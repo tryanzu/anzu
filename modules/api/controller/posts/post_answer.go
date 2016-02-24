@@ -66,8 +66,8 @@ func (this API) MarkCommentAsAnswer(c *gin.Context) {
 
 		carrierParams := map[string]interface{}{
 			"fire": "best-answer",
-			"id": id.Hex(),
-		} 
+			"id":   id.Hex(),
+		}
 
 		carrier.Emit("feed", "action", carrierParams)
 

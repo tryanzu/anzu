@@ -1,11 +1,10 @@
 package posts
 
-
 import (
 	"github.com/fernandez14/spartangeek-blacker/model"
-	"github.com/fernandez14/spartangeek-blacker/modules/transmit"
-	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
+	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
+	"github.com/fernandez14/spartangeek-blacker/modules/transmit"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"gopkg.in/mgo.v2/bson"
@@ -116,13 +115,13 @@ func (this API) Update(c *gin.Context) {
 			set_directive["pinned"] = postForm.Pinned
 			update_directive["$set"] = set_directive
 
-			if post.Pinned == false {			
+			if post.Pinned == false {
 				go func(carrier *transmit.Sender, id bson.ObjectId) {
 
 					carrierParams := map[string]interface{}{
 						"fire": "pinned",
-						"id": id.Hex(),
-					} 
+						"id":   id.Hex(),
+					}
 
 					carrier.Emit("feed", "action", carrierParams)
 
@@ -138,8 +137,8 @@ func (this API) Update(c *gin.Context) {
 
 					carrierParams := map[string]interface{}{
 						"fire": "unpinned",
-						"id": id.Hex(),
-					} 
+						"id":   id.Hex(),
+					}
 
 					carrier.Emit("feed", "action", carrierParams)
 
@@ -153,12 +152,12 @@ func (this API) Update(c *gin.Context) {
 			set_directive["lock"] = postForm.Lock
 			update_directive["$set"] = set_directive
 
-			if post.Lock == false {			
+			if post.Lock == false {
 				go func(carrier *transmit.Sender, id bson.ObjectId) {
 
 					carrierParams := map[string]interface{}{
 						"fire": "locked",
-					} 
+					}
 
 					carrier.Emit("post", id.Hex(), carrierParams)
 
@@ -174,7 +173,7 @@ func (this API) Update(c *gin.Context) {
 
 					carrierParams := map[string]interface{}{
 						"fire": "unlocked",
-					} 
+					}
 
 					carrier.Emit("post", id.Hex(), carrierParams)
 
@@ -223,7 +222,7 @@ func (this API) Update(c *gin.Context) {
 
 			carrierParams := map[string]interface{}{
 				"fire": "updated",
-			} 
+			}
 
 			carrier.Emit("post", id.Hex(), carrierParams)
 

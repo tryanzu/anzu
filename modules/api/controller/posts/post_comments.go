@@ -5,8 +5,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
 
-	"strconv"
 	"sort"
+	"strconv"
 )
 
 func (this API) GetPostComments(c *gin.Context) {
@@ -51,9 +51,9 @@ func (this API) GetPostComments(c *gin.Context) {
 		count = offset
 	} else {
 
-		offsetN := -offset 
+		offsetN := -offset
 
-		if offsetN  > true_count {
+		if offsetN > true_count {
 			offset = -true_count
 		}
 
@@ -61,7 +61,7 @@ func (this API) GetPostComments(c *gin.Context) {
 	}
 
 	err = database.C("posts").FindId(id).Select(bson.M{"_id": 1, "comments.set": bson.M{"$slice": []int{offset, limit}}}).One(&post)
-	
+
 	if err != nil {
 		c.JSON(404, gin.H{"message": "Couldnt found post with that id.", "status": "error"})
 		return
@@ -114,7 +114,7 @@ func (this API) GetPostComments(c *gin.Context) {
 
 		// Get the likes given by the current user
 		_ = database.C("votes").Find(bson.M{"type": "comment", "related_id": post.Id, "user_id": user_bson_id}).All(&likes)
-	}	
+	}
 
 	for index := range post.Comments.Set {
 

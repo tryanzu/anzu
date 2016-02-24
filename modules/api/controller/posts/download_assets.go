@@ -5,13 +5,13 @@ import (
 	"github.com/mitchellh/goamz/s3"
 	"gopkg.in/mgo.v2/bson"
 
-	"errors"
-	"net/http"
-	"net/url"
 	"crypto/tls"
-	"path/filepath"
+	"errors"
 	"fmt"
 	"io/ioutil"
+	"net/http"
+	"net/url"
+	"path/filepath"
 	"strings"
 )
 
