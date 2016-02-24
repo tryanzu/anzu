@@ -230,7 +230,7 @@ func (module *Module) Run() {
 			authorized.DELETE("/post/comment/:id/:index", module.Comments.CommentDelete)
 
 			// Post routes
-			authorized.POST("/post", module.Posts.PostCreate)
+			authorized.POST("/post", module.PostsFactory.Create)
 			authorized.POST("/post/image", module.Posts.PostUploadAttachment)
 			authorized.PUT("/posts/:id", module.PostsFactory.Update)
 			authorized.DELETE("/posts/:id", module.Posts.PostDelete)

@@ -116,7 +116,7 @@ func main() {
 	// Implementations will be fullfilled manually
 	firebaseBroadcaster := notifications.FirebaseBroadcaster{Firebase: firebaseService}
 	broadcaster := interfaces.NotificationBroadcaster(firebaseBroadcaster)
-
+	
 	// Provide graph with service instances
 	err = g.Provide(
 		&inject.Object{Value: configService, Complete: true},

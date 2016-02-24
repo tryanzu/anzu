@@ -43,7 +43,7 @@ type LightPostModel struct {
 	Pinned     bool          `bson:"pinned,omitempty" json:"pinned,omitempty"`
 	IsQuestion bool          `bson:"is_question,omitempty" json:"is_question,omitempty"`
 	Solved     bool          `bson:"solved,omitempty" json:"solved,omitempty"`
-	NoComments bool          `bson:"comments_blocked,omitempty" json:"comments_blocked,omitempty"`
+	Lock       bool          `bson:"lock" json:"lock"`
 	BestAnswer *CommentModel  `json:"best_answer,omitempty"`
 	Created    time.Time     `bson:"created_at" json:"created_at"`
 	Updated    time.Time     `bson:"updated_at" json:"updated_at"`

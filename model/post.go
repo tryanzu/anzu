@@ -85,7 +85,7 @@ type Post struct {
 	RelatedComponents []bson.ObjectId `bson:"related_components,omitempty" json:"related_components,omitempty"`
 	Following  bool            `bson:"following,omitempty" json:"following,omitempty"`
 	Pinned     bool            `bson:"pinned,omitempty" json:"pinned,omitempty"`
-	NoComments bool            `bson:"comments_blocked" json:"comments_blocked"`
+	Lock       bool            `bson:"lock" json:"lock"`
 	IsQuestion bool            `bson:"is_question" json:"is_question"`
 	Solved     bool            `bson:"solved,omitempty" json:"solved,omitempty"`
 	Liked      int             `bson:"liked,omitempty" json:"liked,omitempty"`
@@ -158,6 +158,7 @@ type PostForm struct {
 	Lock       bool                   `json:"lock"`
 	Components map[string]interface{} `json:"components"`
 }
+
 
 // ByCommentCreatedAt implements sort.Interface for []ElectionOption based on Created field
 type ByCommentCreatedAt []Comment

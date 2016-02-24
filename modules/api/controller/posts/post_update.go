@@ -78,7 +78,7 @@ func (this API) Update(c *gin.Context) {
 			return
 		}
 
-		if postForm.Lock == true && postForm.Lock != post.NoComments && user.CanLockPost(post) == false {
+		if postForm.Lock == true && postForm.Lock != post.Lock && user.CanLockPost(post) == false {
 			c.JSON(400, gin.H{"status": "error", "message": "Not enough permissions to lock."})
 			return
 		}
@@ -88,12 +88,16 @@ func (this API) Update(c *gin.Context) {
 			return
 		}
 
-		slug := helpers.StrSlug(postForm.Name)
-		slug_exists, _ := database.C("posts").Find(bson.M{"slug": slug}).Count()
+		slug := post.Slug
 
-		if slug_exists > 0 {
+		if postForm.Name != post.Title {
 
-			slug = helpers.StrSlugRandom(postForm.Name)
+			slug := helpers.StrSlug(postForm.Name)
+			slug_exists, _ := database.C("posts").Find(bson.M{"slug": slug}).Count()
+
+			if slug_exists > 0 {
+				slug = helpers.StrSlugRandom(postForm.Name)
+			}
 		}
 
 		content := html.EscapeString(postForm.Content)
@@ -146,10 +150,10 @@ func (this API) Update(c *gin.Context) {
 		if postForm.Lock == true {
 
 			set_directive := update_directive["$set"].(bson.M)
-			set_directive["comments_blocked"] = postForm.Lock
+			set_directive["lock"] = postForm.Lock
 			update_directive["$set"] = set_directive
 
-			if post.NoComments == false {			
+			if post.Lock == false {			
 				go func(carrier *transmit.Sender, id bson.ObjectId) {
 
 					carrierParams := map[string]interface{}{
@@ -163,9 +167,9 @@ func (this API) Update(c *gin.Context) {
 
 		} else {
 
-			unset["comments_blocked"] = ""
+			unset["lock"] = ""
 
-			if post.NoComments == true {
+			if post.Lock == true {
 				go func(carrier *transmit.Sender, id bson.ObjectId) {
 
 					carrierParams := map[string]interface{}{

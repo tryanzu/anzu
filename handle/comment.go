@@ -76,8 +76,7 @@ func (di *CommentAPI) CommentAdd(c *gin.Context) {
 			return
 		}
 
-		if post.NoComments == true {
-
+		if post.Lock == true {
 			c.JSON(403, gin.H{"status": "error", "message": "Commnets now allowed at all."})
 			return
 		}
