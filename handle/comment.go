@@ -16,7 +16,6 @@ import (
 	"github.com/ftrvxmtrx/gravatar"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
-	"github.com/kennygrant/sanitize"
 	"github.com/mitchellh/goamz/s3"
 	"github.com/olebedev/config"
 	"gopkg.in/mgo.v2/bson"
@@ -87,7 +86,7 @@ func (di *CommentAPI) CommentAdd(c *gin.Context) {
 		}
 
 		// Html sanitize
-		content := sanitize.HTML(comment.Content)
+		content := html.EscapeString(comment.Content)
 		comment := model.Comment{
 			UserId:  user_bson_id,
 			Votes:   votes,
