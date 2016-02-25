@@ -167,10 +167,11 @@ func (di *UserAPI) UserGetOne(c *gin.Context) {
 	usr, err := di.User.Get(user_bson_id)
 
 	if err != nil {
-
 		c.JSON(400, gin.H{"status": "error", "message": err.Error()})
 		return
 	}
+
+	usr.Load("components")
 
 	// Save the activity
 	user_logged_id, signed_in := c.Get("user_id")

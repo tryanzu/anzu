@@ -78,9 +78,58 @@ func (self *One) Load(section string) *One {
 			Count: count,
 			List:  users,
 		}
+
+	case "components": 
+
+		self.loadOwnedComponents()
 	}
 
 	return self
+}
+
+func (self *One) loadOwnedComponents() {
+
+	var ownings []OwnModel
+	var components_list []bson.ObjectId
+	var components []OwnedComponent
+
+	di := self.di
+	database := di.Mongo.Database
+
+	err := database.C("user_owns").Find(bson.M{"user_id": self.data.Id, "related": "component"}).Sort("created_at").All(&ownings)
+
+	if err != nil {
+		panic(err)
+	}
+
+	for _, owning := range ownings {
+		components_list = append(components_list, owning.RelatedId)
+	}
+
+	err = database.C("components").Find(bson.M{"_id": bson.M{"$in": components_list}}).All(&components)
+
+	if err != nil {
+		panic(err)
+	}
+
+	for index, component := range components {
+
+		for _, owning := range ownings {
+
+			if component.Id == owning.RelatedId {
+
+				components[index].Relationship = OwnRelationship{
+					Type: owning.Type,
+					Created: owning.Created,
+				}
+
+				break
+			}
+		}
+	}
+
+
+	self.data.Components = components
 }
 
 // Helper method to track a signin from the user

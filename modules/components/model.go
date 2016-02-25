@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-type ComponentModel struct {
+type Component struct {
 	Id           bson.ObjectId       `bson:"_id,omitempty" json:"id"`
 	Name         string              `bson:"name" json:"name"`
 	FullName     string              `bson:"full_name" json:"full_name"`
@@ -17,6 +17,11 @@ type ComponentModel struct {
 	Image        string              `bson:"image" json:"image"`
 	PartNumber   string              `bson:"part_number" json:"part_number"`
 	Manufacturer string              `bson:"manufacturer" json:"manufacturer"`
+}
+
+type ComponentModel struct {
+	Component `bson:",inline"`
+
 	Images       []string            `bson:"images" json:"images"`
 	Activated    bool                `bson:"activated" json:"activated"`
 	Store        ComponentStoreModel `bson:"store,omitempty" json:"store,omitempty"`

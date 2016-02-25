@@ -1,7 +1,9 @@
 package user
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/modules/components"
 	"gopkg.in/mgo.v2/bson"
+
 	"time"
 )
 
@@ -34,8 +36,9 @@ type User struct {
 	Updated          time.Time              `bson:"updated_at" json:"updated_at"`
 	Gamificated      time.Time              `bson:"gamificated_at" json:"gamificated_at"`
 
-	// Runtime generated and not persisted in database
-	Referrals ReferralsModel `json:"referrals,omitempty"`
+	// Runtime generated
+	Referrals        ReferralsModel         `json:"referrals,omitempty"`
+	Components       []OwnedComponent       `bson:"-" json:"components,omitempty"`
 }
 
 type UserBasic struct {
@@ -172,6 +175,17 @@ type OwnModel struct {
 	Related    string        `bson:"related" json:"related"`
 	Type       string        `bson:"type" json:"type"`     
 	Created    time.Time     `bson:"created_at" json:"created_at"`
+}
+
+type OwnRelationship struct {
+	Type    string `bson:"-" json:"type"`
+	Created time.Time `bson:"-" json:"created_at"`
+}
+
+type OwnedComponent struct {
+	components.Component `bson:",inline"`
+
+	Relationship OwnRelationship `bson:"-" json:"relationship"`
 }
 
 type ByCreatedAt []UserActivity
