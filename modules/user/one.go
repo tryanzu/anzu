@@ -9,17 +9,17 @@ import (
 )
 
 type One struct {
-	data *User
+	data *UserPrivate
 	di   *Module
 }
 
 // Return data model
-func (self *One) Data() *User {
+func (self *One) Data() *UserPrivate {
 	return self.data
 }
 
 // Data update only persistent on runtime
-func (self *One) RUpdate(data *User) {
+func (self *One) RUpdate(data *UserPrivate) {
 	self.data = data
 }
 

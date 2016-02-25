@@ -26,7 +26,7 @@ type Module struct {
 // Gets an instance of a user
 func (module *Module) Get(usr interface{}) (*One, error) {
 
-	var model *User
+	var model *UserPrivate
 	context := module
 	database := module.Mongo.Database
 
@@ -51,9 +51,9 @@ func (module *Module) Get(usr interface{}) (*One, error) {
 			return nil, exceptions.NotFound{"Invalid user id. Not found."}
 		}
 
-	case *User:
+	case *UserPrivate:
 
-		model = usr.(*User)
+		model = usr.(*UserPrivate)
 
 	default:
 		panic("Unkown argument")
@@ -130,26 +130,28 @@ func (module *Module) SignUp(email, username, password, referral string) (*One, 
 		"bio":     "Just another spartan geek",
 	}
 
-	usr := &User{
-		Id:               id,
-		UserName:         username,
-		UserNameSlug:     slug,
-		NameChanges:      1,
+	usr := &UserPrivate{
+		User: User{
+			Id:               id,
+			UserName:         username,
+			UserNameSlug:     slug,
+			Description:      "",
+			Profile:          profile,
+			Created:          time.Now(),
+			Permissions:      make([]string, 0),
+			NameChanges:      1,
+			Roles: []UserRole{
+				{
+					Name: "user",
+				},
+			},
+			Validated:        false,
+		},
 		Password:         hash,
 		Email:            email,
-		Permissions:      make([]string, 0),
-		Description:      "",
-		Profile:          profile,
 		ReferralCode:     helpers.StrRandom(6),
 		VerificationCode: helpers.StrRandom(12),
-		Validated:        false,
-		Created:          time.Now(),
 		Updated:          time.Now(),
-		Roles: []UserRole{
-			{
-				Name: "user",
-			},
-		},
 	}
 
 	err = database.C("users").Insert(usr)
@@ -216,27 +218,29 @@ func (module *Module) SignUpFacebook(facebook map[string]interface{}) (*One, err
 	username := facebook["first_name"].(string) + " " + facebook["last_name"].(string)
 	username = helpers.StrSlug(username)
 
-	usr := &User{
-		Id:               id,
-		UserName:         username,
-		UserNameSlug:     username,
-		NameChanges:      0,
+	usr := &UserPrivate{
+		User: User{
+			Id:               id,
+			UserName:         username,
+			UserNameSlug:     username,
+			Description:      "",
+			Profile:          profile,
+			Created:          time.Now(),
+			Permissions:      make([]string, 0),
+			NameChanges:      0,
+			Roles: []UserRole{
+				{
+					Name: "user",
+				},
+			},
+			Validated:        true,
+		},
 		Password:         "",
 		Email:            email,
-		Permissions:      make([]string, 0),
-		Description:      "",
-		Profile:          profile,
-		Facebook:         facebook,
 		ReferralCode:     helpers.StrRandom(6),
 		VerificationCode: helpers.StrRandom(12),
-		Validated:        true,
-		Created:          time.Now(),
 		Updated:          time.Now(),
-		Roles: []UserRole{
-			{
-				Name: "user",
-			},
-		},
+		Facebook:         facebook,
 	}
 
 	err := database.C("users").Insert(usr)

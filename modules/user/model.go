@@ -14,31 +14,37 @@ type User struct {
 	UserName         string                 `bson:"username" json:"username"`
 	UserNameSlug     string                 `bson:"username_slug" json:"username_slug"`
 	NameChanges      int                    `bson:"name_changes" json:"name_changes"`
+	Description      string                 `bson:"description" json:"description,omitempty"`
+	Image            string                 `bson:"image" json:"image,omitempty"`
+	Roles            []UserRole             `bson:"roles" json:"roles,omitempty"`
+	Permissions      []string               `bson:"permissions" json:"permissions,omitempty"`
+	
+	Notifications    interface{}            `bson:"notifications,omitempty" json:"notifications,omitempty"`
+	Profile          map[string]interface{} `bson:"profile,omitempty" json:"profile,omitempty"`
+	Gaming           UserGaming             `bson:"gaming,omitempty" json:"gaming,omitempty"`
+	
+	Version          string                 `bson:"version,omitempty" json:"version,omitempty"`
+	Validated        bool                   `bson:"validated" json:"validated"`
+	Banned           bool                   `bson:"banned" json:"banned"`
+	Created          time.Time              `bson:"created_at" json:"created_at"`
+
+	// Runtime generated
+	Referrals        ReferralsModel         `bson:"-" json:"referrals,omitempty"`
+	Components       []OwnedComponent       `bson:"-" json:"components,omitempty"`
+}
+
+type UserPrivate struct {
+	User `bson:",inline"`
 	Password         string                 `bson:"password" json:"-"`
 	Step             int                    `bson:"step,omitempty" json:"step"`
 	Email            string                 `bson:"email" json:"email,omitempty"`
 	Categories       []bson.ObjectId        `bson:"categories,omitempty" json:"categories,omitempty"`
-	Roles            []UserRole             `bson:"roles" json:"roles,omitempty"`
-	Permissions      []string               `bson:"permissions" json:"permissions,omitempty"`
-	Description      string                 `bson:"description" json:"description,omitempty"`
-	Image            string                 `bson:"image" json:"image,omitempty"`
 	Facebook         interface{}            `bson:"facebook,omitempty" json:"facebook,omitempty"`
-	Notifications    interface{}            `bson:"notifications,omitempty" json:"notifications,omitempty"`
-	Profile          map[string]interface{} `bson:"profile,omitempty" json:"profile,omitempty"`
-	Gaming           UserGaming             `bson:"gaming,omitempty" json:"gaming,omitempty"`
 	Stats            UserStats              `bson:"stats,omitempty" json:"stats,omitempty"`
-	Version          string                 `bson:"version,omitempty" json:"version,omitempty"`
 	ReferralCode     string                 `bson:"ref_code,omitempty" json:"ref_code"`
 	VerificationCode string                 `bson:"ver_code,omitempty" json:"ver_code"`
-	Validated        bool                   `bson:"validated" json:"validated"`
-	Banned           bool                   `bson:"banned" json:"banned"`
-	Created          time.Time              `bson:"created_at" json:"created_at"`
 	Updated          time.Time              `bson:"updated_at" json:"updated_at"`
 	Gamificated      time.Time              `bson:"gamificated_at" json:"gamificated_at"`
-
-	// Runtime generated
-	Referrals        ReferralsModel         `json:"referrals,omitempty"`
-	Components       []OwnedComponent       `bson:"-" json:"components,omitempty"`
 }
 
 type UserBasic struct {

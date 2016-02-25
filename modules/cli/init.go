@@ -60,7 +60,7 @@ func (module Module) Run(name string) {
 func (module Module) FirstNewsletter() {
 
 	var news NewsletterModel
-	var usr user.User
+	var usr user.UserPrivate
 
 	database := module.Mongo.Database
 	iter := database.C("newsletter").Find(nil).Limit(200000).Iter()
@@ -106,7 +106,7 @@ func (module Module) TestSocket() {
 
 func (module Module) ReplaceURL() {
 
-	var usr user.User
+	var usr user.UserPrivate
 	var post model.Post
 
 	database := module.Mongo.Database
@@ -168,7 +168,7 @@ func (module Module) ReplaceURL() {
 
 func (module Module) SlugFix() {
 
-	var usr user.User
+	var usr user.UserPrivate
 	database := module.Mongo.Database
 	valid_name, _ := regexp.Compile(`^[a-zA-Z][a-zA-Z0-9]*[._-]?[a-zA-Z0-9]+$`)
 
@@ -214,7 +214,7 @@ func (module Module) SlugFix() {
 
 func (module Module) Codes() {
 
-	var usr user.User
+	var usr user.UserPrivate
 	database := module.Mongo.Database
 
 	// Get all users
@@ -255,7 +255,7 @@ func (module Module) Codes() {
 
 func (module Module) ConfirmationEmails() {
 
-	var usr user.User
+	var usr user.UserPrivate
 	database := module.Mongo.Database
 
 	// Get all users
