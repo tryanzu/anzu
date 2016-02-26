@@ -130,6 +130,7 @@ type FeedPost struct {
 	Votes      Votes         `bson:"votes" json:"votes"`
 	Pinned     bool          `bson:"pinned,omitempty" json:"pinned,omitempty"`
 	Solved     bool          `bson:"solved,omitempty" json:"solved,omitempty"`
+	IsQuestion bool          `bson:"is_question" json:"is_question"`
 	Stats      FeedPostStat  `bson:"stats,omitempty" json:"stats"`
 	Created    time.Time     `bson:"created_at" json:"created_at"`
 	Updated    time.Time     `bson:"updated_at" json:"updated_at"`

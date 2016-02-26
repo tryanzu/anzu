@@ -1,0 +1,58 @@
+package: github.com/fernandez14/spartangeek-blacker
+ignore: 
+- github.com/fernandez14/spartangeek-blacker
+import:
+- package: github.com/CloudCom/fireauth
+- package: github.com/algolia/algoliasearch-client-go
+  subpackages:
+  - algoliasearch
+- package: github.com/brandfolder/gin-gorelic
+- package: github.com/cactus/go-statsd-client
+  subpackages:
+  - statsd
+- package: github.com/cosn/firebase
+- package: github.com/dgrijalva/jwt-go
+- package: github.com/facebookgo/inject
+- package: github.com/ftrvxmtrx/gravatar
+- package: github.com/getsentry/raven-go
+- package: github.com/gin-gonic/contrib
+  subpackages:
+  - sessions
+- package: github.com/gin-gonic/gin
+  subpackages:
+  - binding
+- package: github.com/goinggo/work
+- package: github.com/googollee/go-socket.io
+- package: github.com/hjr265/postmark.go
+  subpackages:
+  - postmark
+- package: github.com/iron-io/iron_go3
+  subpackages:
+  - mq
+- package: github.com/jinzhu/now
+- package: github.com/kennygrant/sanitize
+- package: github.com/mikespook/gorbac
+- package: github.com/mitchellh/goamz
+  subpackages:
+  - aws
+  - s3
+- package: github.com/olebedev/config
+- package: github.com/pebbe/zmq4
+- package: github.com/robfig/cron
+- package: github.com/rs/cors
+- package: github.com/satori/go.uuid
+- package: github.com/spf13/cobra
+- package: github.com/stripe/stripe-go
+  subpackages:
+  - charge
+- package: github.com/xuyu/goredis
+- package: golang.org/x/crypto
+  subpackages:
+  - ssh
+- package: golang.org/x/text
+  subpackages:
+  - unicode/norm
+- package: gopkg.in/h2non/bimg.v0
+- package: gopkg.in/mgo.v2
+  subpackages:
+  - bson

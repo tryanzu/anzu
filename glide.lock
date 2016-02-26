@@ -1,0 +1,154 @@
+hash: 4b1c168208e4a335f8b6c4e5490d6a4ed1b4c8cc93ea83d4a775b870fb413e25
+updated: 2016-02-26T20:51:15.213241966Z
+imports:
+- name: github.com/algolia/algoliasearch-client-go
+  version: 014752bdad6f8bbf05510219b1b7b0d1ac2e5243
+  subpackages:
+  - algoliasearch
+- name: github.com/boj/redistore
+  version: fc113767cd6b051980f260d6dbe84b2740c46ab0
+- name: github.com/brandfolder/gin-gorelic
+  version: b3200fd6d4c7c434fd4d4d7ecb39a3c43aa8253c
+- name: github.com/cactus/go-statsd-client
+  version: 622050b6bcde4795a7bab76c613019f121e36fe2
+  subpackages:
+  - statsd
+- name: github.com/CloudCom/fireauth
+  version: a9bc3901b2ed3797c49c67d78f748a69806cc237
+- name: github.com/cosn/firebase
+  version: 9a5bce64e5c22fba9ea18907bfa8dff54bd4ac12
+- name: github.com/dgrijalva/jwt-go
+  version: f2193411bd642f7db03249fd79d5292c9b34916a
+- name: github.com/facebookgo/inject
+  version: d5029152fecb2a8e68f7f8eb3c6391fc8ee70496
+- name: github.com/facebookgo/structtag
+  version: 217e25fb96916cc60332e399c9aa63f5c422ceed
+- name: github.com/ftrvxmtrx/gravatar
+  version: 5aaa334f4e974f251f8049520e0decd9b50ae53f
+- name: github.com/garyburd/redigo
+  version: 55d64223b60ff7c6a7f1c391f611038a88a86b01
+  subpackages:
+  - redis
+  - internal
+- name: github.com/getsentry/raven-go
+  version: 1cc47a9463b90f246a0503d4c2e9a55c9459ced3
+- name: github.com/gin-gonic/contrib
+  version: 14f66d54cdb96059bafca98665bcc6d9df4951f2
+  subpackages:
+  - sessions
+- name: github.com/gin-gonic/gin
+  version: 00b10c30a00cdba00ba288154052b9e29ec4d0bf
+  subpackages:
+  - binding
+  - render
+- name: github.com/goinggo/work
+  version: e2c4d06662b4a79fa3db3a83f65d6e252620c55e
+- name: github.com/golang/protobuf
+  version: 2402d76f3d41f928c7902a765dfc872356dd3aad
+  subpackages:
+  - proto
+- name: github.com/googollee/go-engine.io
+  version: a66cf68b24e56df0cacdc6041b93742f983a296a
+  subpackages:
+  - message
+  - parser
+  - polling
+  - transport
+  - websocket
+- name: github.com/googollee/go-socket.io
+  version: 7000a8a5cd56ab1c3ead7cf33de3e9b2b1906af4
+- name: github.com/gorilla/context
+  version: 1c83b3eabd45b6d76072b66b746c20815fb2872d
+- name: github.com/gorilla/securecookie
+  version: e95799a481bbcc3d01c2ad5178524cb8bec9f370
+- name: github.com/gorilla/sessions
+  version: c7070b76d6855676921194cdc383b3d7804c9f8b
+- name: github.com/gorilla/websocket
+  version: 5c91b59efa232fa9a87b705d54101832c498a172
+- name: github.com/hjr265/postmark.go
+  version: 6d6b3dad1442bf91f92f0dc0caf703ee85a4f2c1
+  subpackages:
+  - postmark
+- name: github.com/inconshreveable/mousetrap
+  version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
+- name: github.com/iron-io/iron_go3
+  version: 4aec4b86e69b521ea83e4434e274630585b73b54
+  subpackages:
+  - mq
+  - api
+  - config
+- name: github.com/jinzhu/now
+  version: ce80572eb55aa0ac839330041ca9db1afa5f1f6c
+- name: github.com/kennygrant/sanitize
+  version: ce9fd1f6ce32afaa38b51feea32320fc8875e8e4
+- name: github.com/manucorporat/sse
+  version: ee05b128a739a0fb76c7ebd3ae4810c1de808d6d
+- name: github.com/mikespook/gorbac
+  version: dbda763bd0bfb6eb82d731608d5a3824acb97d16
+- name: github.com/mitchellh/goamz
+  version: caaaea8b30ee15616494ee68abd5d8ebbbef05cf
+  subpackages:
+  - aws
+  - s3
+- name: github.com/olebedev/config
+  version: e3edea7d68b76222b5118cc2e1cf3825e30abb80
+- name: github.com/pebbe/zmq4
+  version: 83e3214acbc851e6f7d5be2d0c02886c6d752203
+- name: github.com/robfig/cron
+  version: 32d9c273155a0506d27cf73dd1246e86a470997e
+- name: github.com/rs/cors
+  version: 5950cf11d77f8a61b432a25dd4d444b4ced01379
+- name: github.com/rs/xhandler
+  version: d9d9599b6aaf6a058cb7b1f48291ded2cbd13390
+- name: github.com/satori/go.uuid
+  version: e673fdd4dea8a7334adbbe7f57b7e4b00bdc5502
+- name: github.com/spf13/cobra
+  version: 65a708cee0a4424f4e353d031ce440643e312f92
+- name: github.com/spf13/pflag
+  version: 7f60f83a2c81bc3c3c0d5297f61ddfa68da9d3b7
+- name: github.com/stripe/stripe-go
+  version: 1c5790a942605dbd24258e40c42c9dc8614737ce
+  subpackages:
+  - charge
+  - orderitem
+- name: github.com/tj/go-debug
+  version: ff4a55a20a86994118644bbddc6a216da193cc13
+- name: github.com/vaughan0/go-ini
+  version: a98ad7ee00ec53921f08832bc06ecf7fd600e6a1
+- name: github.com/xuyu/goredis
+  version: 300f7e8cf453e2ea44337b3969d3aecf1a92ebe3
+- name: github.com/yvasiyarov/go-metrics
+  version: c25f46c4b94079672242ec48a545e7ca9ebe3aec
+- name: github.com/yvasiyarov/gorelic
+  version: 899fe5e1be7138f2440c28e77532f0635c1249f1
+- name: github.com/yvasiyarov/newrelic_platform_go
+  version: db03d6dfd965ebc22dbfd910567c641b326ff055
+- name: golang.org/x/crypto
+  version: 5dc8cb4b8a8eb076cbb5a06bc3b8682c15bdbbd3
+  subpackages:
+  - ssh
+  - curve25519
+- name: golang.org/x/net
+  version: f315505cf3349909cdf013ea56690da34e96a451
+  subpackages:
+  - context
+  - html
+  - html/atom
+- name: golang.org/x/text
+  version: a71fd10341b064c10f4a81ceac72bcf70f26ea34
+  subpackages:
+  - unicode/norm
+  - transform
+- name: gopkg.in/go-playground/validator.v8
+  version: c193cecd124b5cc722d7ee5538e945bdb3348435
+- name: gopkg.in/h2non/bimg.v0
+  version: eb9d6938e19c840497c2c6a02076552a7d96166f
+- name: gopkg.in/mgo.v2
+  version: d90005c5262a3463800497ea5a89aed5fe22c886
+  subpackages:
+  - bson
+  - internal/sasl
+  - internal/scram
+- name: gopkg.in/yaml.v2
+  version: f7716cbe52baa25d2e9b0d0da546fcf909fc16b4
+devImports: []
