@@ -530,7 +530,7 @@ func (di *UserAPI) UserUpdateProfile(c *gin.Context) {
 
 				description := profileUpdate.Description
 
-				if len([]rune(description)) > 57 {
+				if len([]rune(description)) > 60 {
 					description = helpers.Truncate(description, 57) + "..."
 				}
 
