@@ -80,6 +80,7 @@ type UserActivity struct {
 
 type UserProfileForm struct {
 	UserName string `json:"username,omitempty"`
+	Description string `json:"description,omitempty"`
 }
 
 type UserRegisterForm struct {

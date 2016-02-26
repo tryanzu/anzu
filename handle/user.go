@@ -10,6 +10,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/fernandez14/spartangeek-blacker/modules/security"
+	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -523,6 +524,17 @@ func (di *UserAPI) UserUpdateProfile(c *gin.Context) {
 						set["name_changes"] = user.NameChanges + 1
 					}
 				}
+			}
+
+			if profileUpdate.Description != "" {
+
+				description := profileUpdate.Description
+
+				if len([]rune(description)) > 57 {
+					description = helpers.Truncate(description, 57) + "..."
+				}
+
+				set["description"] = description
 			}
 
 			set["updated_at"] = time.Now()
