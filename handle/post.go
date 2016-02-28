@@ -353,10 +353,7 @@ func (di PostAPI) FeedGet(c *gin.Context) {
 				post.Author = model.User{
 					Id:        postUser.Id,
 					UserName:  postUser.UserName,
-					FirstName: postUser.FirstName,
-					LastName:  postUser.LastName,
 					Step:      authorLevel,
-					Email:     postUser.Email,
 					Image:     postUser.Image,
 				}
 			}
