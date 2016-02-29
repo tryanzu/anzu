@@ -9,6 +9,7 @@ import (
 	
 	"time"
 	"strconv"
+	"strings"
 )
 
 func Boot() *Module {
@@ -113,6 +114,29 @@ func (module *Module) GetSortedOrders(limit, skip int, search string) []OrderMod
 
 	if err != nil {
 		panic(err)
+	}
+
+	var mails []string
+	var leads []Lead
+
+	for _, order := range list {
+		mails = append(mails, order.User.Email)
+	}
+
+	err = database.C("leads").Find(bson.M{"email": bson.M{"$in": mails}}).All(&leads)
+
+	if err == nil {
+		
+		for index, order := range list {
+
+			for _, lead := range leads {
+
+				if strings.ToLower(lead.Email) == strings.ToLower(order.User.Email) {
+
+					list[index].Lead = true
+				}
+			}
+		}
 	}
 
 	return list

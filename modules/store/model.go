@@ -5,6 +5,13 @@ import (
 	"time"
 )
 
+type Lead struct {
+	Id      bson.ObjectId `bson:"_id,omitempty" json:"id"`
+	Email   string        `bson:"email" json:"email"`
+	Name    string        `bson:"name" json:"name"`
+	Created time.Time     `bson:"created_at" json:"created_at"`
+}
+
 type OrderModel struct {
 	Id         bson.ObjectId   `bson:"_id,omitempty" json:"id,omitempty"`
 	User       OrderUserModel  `bson:"user" json:"user"`
@@ -21,6 +28,7 @@ type OrderModel struct {
 	Tags       []TagModel      `bson:"tags,omitempty" json:"tags"`
 	Activities []ActivityModel `bson:"activities,omitempty" json:"activities"`
 	Pipeline   PipelineModel   `bson:"pipeline,omitempty" json:"pipeline"`
+	Lead       bool            `bson:"-" json:"lead"`
 	Created    time.Time       `bson:"created_at" json:"created_at"`
 	Updated   time.Time        `bson:"updated_at" json:"updated_at"`
 
