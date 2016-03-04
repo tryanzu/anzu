@@ -7,6 +7,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/handle"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/posts"
+	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/components"
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/olebedev/config"
@@ -39,6 +40,7 @@ type Module struct {
 	Orders       controller.OrdersAPI
 	Owners       controller.OwnersAPI
 	Lead         controller.LeadAPI
+	ComponentsFactory components.API
 }
 
 type ModuleDI struct {
@@ -52,6 +54,7 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.Collector},
 		&inject.Object{Value: &module.Posts},
 		&inject.Object{Value: &module.PostsFactory},
+		&inject.Object{Value: &module.ComponentsFactory},
 		&inject.Object{Value: &module.Votes},
 		&inject.Object{Value: &module.Users},
 		&inject.Object{Value: &module.Categories},
@@ -161,7 +164,7 @@ func (module *Module) Run() {
 		// Post routes
 		v1.GET("/feed", module.Posts.FeedGet)
 		v1.GET("/post", module.Posts.FeedGet)
-		v1.GET("/post/search", module.PostsFactory.Search)
+		v1.GET("/search/posts", module.PostsFactory.Search)
 		v1.GET("/posts/:id", module.Posts.PostsGetOne)
 		v1.GET("/posts/:id/comments", module.PostsFactory.GetPostComments)
 		v1.GET("/posts/:id/light", module.Posts.GetLightweight)
@@ -188,6 +191,7 @@ func (module *Module) Run() {
 		v1.GET("/part", module.Parts.GetPartTypes)
 		v1.GET("/part/:type/manufacturers", module.Parts.GetPartManufacturers)
 		v1.GET("/part/:type/models", module.Parts.GetPartManufacturerModels)
+		v1.GET("/search/components", module.ComponentsFactory.Search)
 		v1.GET("/component/:id", module.Components.Get)
 		v1.GET("/component/:id/posts", module.Components.GetPosts)
 
