@@ -6,9 +6,11 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"gopkg.in/mgo.v2/bson"
+
 	"regexp"
 	"strings"
 	"time"
+	"fmt"
 )
 
 func Boot() *Module {
@@ -253,3 +255,22 @@ func (module *Module) SignUpFacebook(facebook map[string]interface{}) (*One, err
 
 	return user, nil
 }
+
+func (module *Module) IsValidRecoveryToken(token string) (bool, error) {
+
+	database := module.Mongo.Database
+
+	// Only tokens that are 15 minutes old
+	valid_date := time.Now().Add(-15 * time.Minute)
+
+	c, err := database.C("user_recovery_tokens").Find(bson.M{"token": token, "used": false, "created_at": bson.M{"$gte": valid_date}}).Count()
+
+	if err != nil {
+		return false, err
+	}
+
+	fmt.Printf("%v\n", bson.M{"token": token, "used": false, "created_at": bson.M{"$gte": valid_date}})
+
+	return c > 0, nil
+}
+

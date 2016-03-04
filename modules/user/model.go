@@ -57,6 +57,15 @@ type UserSimple struct {
 	Updated          time.Time              `bson:"updated_at" json:"updated_at"`
 }
 
+type UserRecoveryToken struct {
+	Id               bson.ObjectId          `bson:"_id,omitempty" json:"id"`
+	Token            string                 `bson:"token" json:"token"`
+	UserId           bson.ObjectId          `bson:"user_id" json:"user_id"`
+	Used  		     bool               	`bson:"used" json:"used"`
+	Created          time.Time              `bson:"created_at" json:"created_at"`
+	Updated          time.Time              `bson:"updated_at" json:"updated_at"`
+}
+
 var UserSimpleFields bson.M = bson.M{"id": 1, "username": 1, "username_slug": 1, "image": 1, "gaming": 1, "created_at": 1, "updated_at": 1}
 
 type UserBasic struct {

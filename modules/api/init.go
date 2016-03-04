@@ -8,6 +8,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/posts"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/components"
+	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/users"
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/olebedev/config"
@@ -41,6 +42,7 @@ type Module struct {
 	Owners       controller.OwnersAPI
 	Lead         controller.LeadAPI
 	ComponentsFactory components.API
+	UsersFactory      users.API
 }
 
 type ModuleDI struct {
@@ -55,6 +57,7 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.Posts},
 		&inject.Object{Value: &module.PostsFactory},
 		&inject.Object{Value: &module.ComponentsFactory},
+		&inject.Object{Value: &module.UsersFactory},
 		&inject.Object{Value: &module.Votes},
 		&inject.Object{Value: &module.Users},
 		&inject.Object{Value: &module.Categories},
@@ -182,6 +185,8 @@ func (module *Module) Run() {
 		v1.POST("/user/get-token/facebook", module.Users.UserGetTokenFacebook)
 		v1.GET("/user/get-token", module.Users.UserGetToken)
 		v1.GET("/auth/get-token", module.Users.UserGetJwtToken)
+		v1.GET("/auth/lost-password", module.UsersFactory.RequestPasswordRecovery)
+		v1.GET("/auth/recovery-token/:token", module.UsersFactory.ValidatePasswordRecovery)
 		v1.GET("/user/confirm/:code", module.Users.UserValidateEmail)
 
 		// Categories routes

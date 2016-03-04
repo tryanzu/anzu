@@ -72,10 +72,10 @@ func (module *Module) Get(find interface{}) (*ComponentModel, error) {
 	return component, nil
 }
 
-func (module *Module) List(limit, offset int, search, kind string) ([]Component, []ComponentTypeCountModel) {
+func (module *Module) List(limit, offset int, search, kind string) ([]Component, []ComponentTypeCountModel, int) {
 
 	components := make([]Component, 0)
-	count := make([]ComponentTypeCountModel, 0)
+	facets   := make([]ComponentTypeCountModel, 0)
 	database := module.Mongo.Database
 
 	// Fields to retrieve
@@ -107,17 +107,23 @@ func (module *Module) List(limit, offset int, search, kind string) ([]Component,
 		}
 	}
 
-	// Remove type from aggregation since its not needed
-	delete(query, "type")
-
-	err := database.C("components").Pipe([]bson.M{
-		{"$match": query},
-		{"$group": bson.M{"_id": "$type", "count": bson.M{"$sum": 1}}},
-	}).All(&count)
+	rows, err := database.C("components").Find(query).Count()
 
 	if err != nil {
 		panic(err)
 	}
 
-	return components, count
+	// Remove type from aggregation since its not needed
+	delete(query, "type")
+
+	err = database.C("components").Pipe([]bson.M{
+		{"$match": query},
+		{"$group": bson.M{"_id": "$type", "count": bson.M{"$sum": 1}}},
+	}).All(&facets)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return components, facets, rows
 }

@@ -2,6 +2,7 @@ package user
 
 import (
 	"github.com/fernandez14/spartangeek-blacker/modules/mail"
+	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"gopkg.in/mgo.v2/bson"
 	
 	"time"
@@ -232,12 +233,48 @@ func (self *One) SendConfirmationEmail() {
 			},
 		},
 		Variables: map[string]interface{}{
-			"confirm_url": "http://spartangeek.com/signup/confirm/" + self.data.VerificationCode,
+			"confirm_url": "https://spartangeek.com/signup/confirm/" + self.data.VerificationCode,
 		},
 	}
 
 	mailing.Send(compose)
 }
+
+func (self *One) SendRecoveryEmail() {
+
+	mailing := self.di.Mail
+	database := self.di.Mongo.Database
+
+	record := &UserRecoveryToken{
+		UserId: self.data.Id,
+		Token: helpers.StrRandom(12),
+		Used: false,
+		Created: time.Now(),
+		Updated: time.Now(),
+	}
+	
+	err := database.C("user_recovery_tokens").Insert(record)
+
+	if err != nil {
+		panic(err)
+	}
+
+	compose := mail.Mail{
+		Template: 461461,
+		Recipient: []mail.MailRecipient{
+			{
+				Name:  self.data.UserName,
+				Email: self.data.Email,
+			},
+		},
+		Variables: map[string]interface{}{
+			"recover_url": "https://spartangeek.com/user/lost_password/" + record.Token,
+		},
+	}
+
+	mailing.Send(compose)
+}
+
 
 func (self *One) MarkAsValidated() {
 

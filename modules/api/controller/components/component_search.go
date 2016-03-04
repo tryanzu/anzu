@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"strconv"
+	"time"
 )
 
 func (this API) Search(c *gin.Context) {
@@ -24,7 +25,9 @@ func (this API) Search(c *gin.Context) {
 		offset = oq
 	}
 
-	ls, aggregation := this.Components.List(limit, offset, query, kind)
+	start := time.Now()
+	ls, aggregation, count := this.Components.List(limit, offset, query, kind)
+	elapsed := time.Since(start)
 
-	c.JSON(200, gin.H{"limit": limit, "offset": offset, "facets": aggregation, "results": ls})
+	c.JSON(200, gin.H{"limit": limit, "offset": offset, "facets": aggregation, "results": ls, "total": count, "elapsed": elapsed/time.Millisecond})
 }
