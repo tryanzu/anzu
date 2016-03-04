@@ -72,7 +72,7 @@ func (module *Module) Get(find interface{}) (*ComponentModel, error) {
 	return component, nil
 }
 
-func (module *Module) SearchComponents(content string) ([]Component, []ComponentTypeCountModel) {
+func (module *Module) List(limit, offset int, search string) ([]Component, []ComponentTypeCountModel) {
 
 	components := make([]Component, 0)
 	count := make([]ComponentTypeCountModel, 0)
@@ -80,21 +80,35 @@ func (module *Module) SearchComponents(content string) ([]Component, []Component
 
 	// Fields to retrieve
 	fields := ComponentFields
-	fields["score"] = bson.M{"$meta": "textScore"}
+	query := bson.M{}
 
-	query := bson.M{
-		"$text": bson.M{"$search": content},
+	if search != "" {
+
+		fields["score"] = bson.M{"$meta": "textScore"}
+
+		query = bson.M{
+			"$text": bson.M{"$search": search},
+		}
 	}
 
-	err := database.C("components").Find(query).Select(fields).Sort("$textScore:score").Limit(10).All(&components)
+	if _, exists := query["$text"]; exists {
 
-	if err != nil {
-		panic(err)
+		err := database.C("components").Find(query).Select(fields).Sort("$textScore:score").Limit(limit).Skip(offset).All(&components)
+
+		if err != nil {
+			panic(err)
+		}
+	} else {
+
+		err := database.C("components").Find(query).Select(fields).Limit(limit).Skip(offset).All(&components)
+
+		if err != nil {
+			panic(err)
+		}
 	}
 
-	err = database.C("components").Pipe([]bson.M{
+	err := database.C("components").Pipe([]bson.M{
 		{"$match": query},
-		{"$sort": bson.M{"score": bson.M{"$meta": "textScore"}}},
 		{"$group": bson.M{"_id": "$type", "count": bson.M{"$sum": 1}}},
 	}).All(&count)
 

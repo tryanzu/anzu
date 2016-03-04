@@ -2,12 +2,28 @@ package components
 
 import (
 	"github.com/gin-gonic/gin"
+
+	"strconv"
 )
 
 func (this API) Search(c *gin.Context) {
 
-	query := c.Query("q")
-	ls, aggregation := this.Components.SearchComponents(query)
+	var limit int = 10
+	var offset int = 0
 
-	c.JSON(200, gin.H{"facets": aggregation, "results": ls})
+	query := c.Query("q")
+	limitQuery := c.Query("limit")
+	offsetQuery := c.Query("offset")
+
+	if lq, err := strconv.Atoi(limitQuery); err == nil {
+		limit = lq
+	}
+
+	if oq, err := strconv.Atoi(offsetQuery); err == nil {
+		offset = oq
+	}
+
+	ls, aggregation := this.Components.List(limit, offset, query)
+
+	c.JSON(200, gin.H{"limit": limit, "offset": offset, "facets": aggregation, "results": ls})
 }
