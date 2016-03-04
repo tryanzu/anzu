@@ -72,7 +72,7 @@ func (module *Module) Get(find interface{}) (*ComponentModel, error) {
 	return component, nil
 }
 
-func (module *Module) List(limit, offset int, search string) ([]Component, []ComponentTypeCountModel) {
+func (module *Module) List(limit, offset int, search, kind string) ([]Component, []ComponentTypeCountModel) {
 
 	components := make([]Component, 0)
 	count := make([]ComponentTypeCountModel, 0)
@@ -82,13 +82,13 @@ func (module *Module) List(limit, offset int, search string) ([]Component, []Com
 	fields := ComponentFields
 	query := bson.M{}
 
+	if kind != "" {
+		query["type"] = kind
+	}
+
 	if search != "" {
-
 		fields["score"] = bson.M{"$meta": "textScore"}
-
-		query = bson.M{
-			"$text": bson.M{"$search": search},
-		}
+		query["$text"] = bson.M{"$search": search}
 	}
 
 	if _, exists := query["$text"]; exists {
@@ -106,6 +106,9 @@ func (module *Module) List(limit, offset int, search string) ([]Component, []Com
 			panic(err)
 		}
 	}
+
+	// Remove type from aggregation since its not needed
+	delete(query, "type")
 
 	err := database.C("components").Pipe([]bson.M{
 		{"$match": query},

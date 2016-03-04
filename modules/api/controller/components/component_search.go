@@ -12,6 +12,7 @@ func (this API) Search(c *gin.Context) {
 	var offset int = 0
 
 	query := c.Query("q")
+	kind  := c.Query("type")
 	limitQuery := c.Query("limit")
 	offsetQuery := c.Query("offset")
 
@@ -23,7 +24,7 @@ func (this API) Search(c *gin.Context) {
 		offset = oq
 	}
 
-	ls, aggregation := this.Components.List(limit, offset, query)
+	ls, aggregation := this.Components.List(limit, offset, query, kind)
 
 	c.JSON(200, gin.H{"limit": limit, "offset": offset, "facets": aggregation, "results": ls})
 }
