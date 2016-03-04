@@ -56,7 +56,7 @@ func Boot(file string) *Module {
 
 		for _, p := range rules.Permissions {
 			module.Permissions[p] = gorbac.NewStdPermission(p)
-			role.AssignPermission(module.Permissions[p])
+			role.Assign(module.Permissions[p])
 		}
 
 		// Populate map with permissions

@@ -8,6 +8,8 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/xuyu/goredis"
 	"gopkg.in/mgo.v2/bson"
+
+	"fmt"
 )
 
 var lightPostFields bson.M = bson.M{"_id": 1, "title": 1, "slug": 1, "solved": 1, "lock": 1, "category": 1, "user_id": 1, "pinned": 1, "created_at": 1, "updated_at": 1, "type": 1, "content": 1}
@@ -39,6 +41,9 @@ func (module *FeedModule) SearchPosts(content string) []SearchPostModel {
 	if err != nil {
 		panic(err)
 	}
+
+	fmt.Println(len(posts))
+	fmt.Println(content)
 
 	var users_id []bson.ObjectId
 	var users []user.UserSimple

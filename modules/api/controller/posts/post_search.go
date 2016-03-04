@@ -6,7 +6,7 @@ import (
 
 func (this API) Search(c *gin.Context) {
 
-	query := c.Param("q")
+	query := c.Query("q")
 	posts := this.Feed.SearchPosts(query)
 
 	c.JSON(200, posts)
