@@ -16,16 +16,16 @@ type Component struct {
 	Image        string              `bson:"image" json:"image"`
 	PartNumber   string              `bson:"part_number" json:"part_number"`
 	Manufacturer string              `bson:"manufacturer" json:"manufacturer"`
+	Store        ComponentStoreModel `bson:"store,omitempty" json:"store,omitempty"`
 }
 
-var ComponentFields bson.M = bson.M{"_id": 1, "name": 1, "full_name": 1, "slug": 1, "source": 1, "external": 1, "type": 1, "image": 1, "part_number": 1, "manufacturer": 1}
+var ComponentFields bson.M = bson.M{"_id": 1, "name": 1, "store": 1, "full_name": 1, "slug": 1, "source": 1, "external": 1, "type": 1, "image": 1, "part_number": 1, "manufacturer": 1}
 
 type ComponentModel struct {
 	Component `bson:",inline"`
 
 	Images       []string            `bson:"images" json:"images"`
 	Activated    bool                `bson:"activated" json:"activated"`
-	Store        ComponentStoreModel `bson:"store,omitempty" json:"store,omitempty"`
 	di           *Module
 	generic      []byte
 }
