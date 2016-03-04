@@ -20,6 +20,53 @@ type FeedModule struct {
 	User         *user.Module                 `inject:""`
 }
 
+func (module *FeedModule) SearchPosts(content string) []SearchPostModel {
+
+	var posts []SearchPostModel
+	database := module.Mongo.Database
+
+	// Make the search a phrase search
+	content = "\"" + content + "\""
+
+	// Fields to retrieve
+	fields := bson.M{"_id": 1, "score": bson.M{"$meta": "textScore"}, "title": 1, "slug": 1, "solved": 1, "lock": 1, "category": 1, "user_id": 1, "pinned": 1, "created_at": 1, "updated_at": 1, "type": 1, "content": 1}
+	query := bson.M{
+		"$text": bson.M{"$search": content},
+	}
+
+	err := database.C("posts").Find(query).Select(fields).Sort("$textScore:score").Limit(10).All(&posts)
+
+	if err != nil {
+		panic(err)
+	}
+
+	var users_id []bson.ObjectId
+	var users []user.UserSimple
+
+	for _, post := range posts {
+		users_id = append(users_id, post.UserId)
+	}
+
+	err = database.C("users").Find(bson.M{"_id": bson.M{"$in": users_id}}).Select(user.UserSimpleFields).All(&users)
+	if err != nil {
+		panic(err)
+	}
+
+	usersMap := make(map[bson.ObjectId]interface{})
+
+	for _, user := range users {
+		usersMap[user.Id] = user
+	}
+
+	for index, post := range posts {
+		if user, exists := usersMap[post.UserId]; exists {
+			posts[index].User = user
+		}
+	}
+
+	return posts
+}
+
 func (self *FeedModule) Post(post interface{}) (*Post, error) {
 
 	module := self

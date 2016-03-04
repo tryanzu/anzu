@@ -47,6 +47,18 @@ type UserPrivate struct {
 	Gamificated      time.Time              `bson:"gamificated_at" json:"gamificated_at"`
 }
 
+type UserSimple struct {
+	Id               bson.ObjectId          `bson:"_id,omitempty" json:"id"`
+	UserName         string                 `bson:"username" json:"username"`
+	UserNameSlug     string                 `bson:"username_slug" json:"username_slug"`
+	Image            string                 `bson:"image" json:"image,omitempty"`
+	Gaming           UserGaming             `bson:"gaming,omitempty" json:"gaming,omitempty"`
+	Created          time.Time              `bson:"created_at" json:"created_at"`
+	Updated          time.Time              `bson:"updated_at" json:"updated_at"`
+}
+
+var UserSimpleFields bson.M = bson.M{"id": 1, "username": 1, "username_slug": 1, "image": 1, "gaming": 1, "created_at": 1, "updated_at": 1}
+
 type UserBasic struct {
 	Id               bson.ObjectId          `bson:"_id,omitempty" json:"id"`
 	UserName         string                 `bson:"username" json:"username"`

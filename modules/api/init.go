@@ -161,6 +161,7 @@ func (module *Module) Run() {
 		// Post routes
 		v1.GET("/feed", module.Posts.FeedGet)
 		v1.GET("/post", module.Posts.FeedGet)
+		v1.GET("/post/search", module.PostsFactory.Search)
 		v1.GET("/posts/:id", module.Posts.PostsGetOne)
 		v1.GET("/posts/:id/comments", module.PostsFactory.GetPostComments)
 		v1.GET("/posts/:id/light", module.Posts.GetLightweight)
