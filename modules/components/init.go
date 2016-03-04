@@ -72,7 +72,7 @@ func (module *Module) Get(find interface{}) (*ComponentModel, error) {
 	return component, nil
 }
 
-func (module *Module) List(limit, offset int, search, kind string) ([]Component, []ComponentTypeCountModel, int) {
+func (module *Module) List(limit, offset int, search, kind string, activated bool) ([]Component, []ComponentTypeCountModel, int) {
 
 	components := make([]Component, 0)
 	facets   := make([]ComponentTypeCountModel, 0)
@@ -84,6 +84,10 @@ func (module *Module) List(limit, offset int, search, kind string) ([]Component,
 
 	if kind != "" {
 		query["type"] = kind
+	}
+
+	if activated == true {
+		query["activated"] = true
 	}
 
 	if search != "" {

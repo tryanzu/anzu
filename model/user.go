@@ -79,8 +79,9 @@ type UserActivity struct {
 }
 
 type UserProfileForm struct {
-	UserName string `json:"username,omitempty"`
+	UserName    string `json:"username,omitempty"`
 	Description string `json:"description,omitempty"`
+	Password    string `json:"password,omitempty"`
 }
 
 type UserRegisterForm struct {
