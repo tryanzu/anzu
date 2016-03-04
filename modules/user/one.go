@@ -275,7 +275,6 @@ func (self *One) SendRecoveryEmail() {
 	mailing.Send(compose)
 }
 
-
 func (self *One) MarkAsValidated() {
 
 	di := self.di
@@ -291,6 +290,19 @@ func (self *One) MarkAsValidated() {
 
 	// Confirm the referral in case it exists
 	self.followReferral()
+}
+
+func (self *One) Update(data map[string]interface{}) error {
+
+	database := self.di.Mongo.Database
+
+	if password, exists := data["password"]; exists {
+		data["password"] = helpers.Sha256(password.(string))
+	}
+
+	err := database.C("users").Update(bson.M{"_id": self.data.Id}, bson.M{"$set": data})
+
+	return err
 }
 
 func (self *One) followReferral() {

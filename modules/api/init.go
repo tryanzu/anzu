@@ -187,6 +187,7 @@ func (module *Module) Run() {
 		v1.GET("/auth/get-token", module.Users.UserGetJwtToken)
 		v1.GET("/auth/lost-password", module.UsersFactory.RequestPasswordRecovery)
 		v1.GET("/auth/recovery-token/:token", module.UsersFactory.ValidatePasswordRecovery)
+		v1.PUT("/auth/recovery-token/:token", module.UsersFactory.UpdatePasswordFromToken)
 		v1.GET("/user/confirm/:code", module.Users.UserValidateEmail)
 
 		// Categories routes

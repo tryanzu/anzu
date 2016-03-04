@@ -5,12 +5,12 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
+	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 
 	"regexp"
 	"strings"
 	"time"
-	"fmt"
 )
 
 func Boot() *Module {
@@ -269,8 +269,31 @@ func (module *Module) IsValidRecoveryToken(token string) (bool, error) {
 		return false, err
 	}
 
-	fmt.Printf("%v\n", bson.M{"token": token, "used": false, "created_at": bson.M{"$gte": valid_date}})
-
 	return c > 0, nil
+}
+
+func (module *Module) GetUserFromRecoveryToken(token string) (*One, error) {
+
+	var model UserRecoveryToken
+
+	database := module.Mongo.Database
+	change := mgo.Change{
+		Update: bson.M{"$set": bson.M{"used": true}},
+		ReturnNew: false,
+	}
+
+	_, err := database.C("user_recovery_tokens").Find(bson.M{"token": token}).Apply(change, &model)
+
+	if err != nil {
+		return nil, err
+	}
+
+	usr, err := module.Get(model.UserId)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return usr, nil
 }
 
