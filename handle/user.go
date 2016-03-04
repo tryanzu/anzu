@@ -537,6 +537,13 @@ func (di *UserAPI) UserUpdateProfile(c *gin.Context) {
 				set["description"] = description
 			}
 
+			if profileUpdate.Password != "" && len([]rune(profileUpdate.Password)) > 3 {
+
+				password := helpers.Sha256(profileUpdate.Password)
+
+				set["password"] = password
+			}
+
 			set["updated_at"] = time.Now()
 
 			// Update the user profile with some godness

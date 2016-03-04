@@ -278,7 +278,7 @@ func (module *Module) GetUserFromRecoveryToken(token string) (*One, error) {
 
 	database := module.Mongo.Database
 	change := mgo.Change{
-		Update: bson.M{"$set": bson.M{"used": true}},
+		Update: bson.M{"$set": bson.M{"used": true, "updated_at": time.Now()}},
 		ReturnNew: false,
 	}
 
