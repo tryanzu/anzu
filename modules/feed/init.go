@@ -20,7 +20,7 @@ type FeedModule struct {
 	User         *user.Module                 `inject:""`
 }
 
-func (module *FeedModule) SearchPosts(content string) []SearchPostModel {
+func (module *FeedModule) SearchPosts(content string) ([]SearchPostModel, int) {
 
 	posts := make([]SearchPostModel, 0)
 	database := module.Mongo.Database
@@ -32,6 +32,12 @@ func (module *FeedModule) SearchPosts(content string) []SearchPostModel {
 	}
 
 	err := database.C("posts").Find(query).Select(fields).Sort("$textScore:score").Limit(10).All(&posts)
+
+	if err != nil {
+		panic(err)
+	}
+
+	count, err := database.C("posts").Find(query).Count()
 
 	if err != nil {
 		panic(err)
@@ -61,7 +67,7 @@ func (module *FeedModule) SearchPosts(content string) []SearchPostModel {
 		}
 	}
 
-	return posts
+	return posts, count
 }
 
 func (self *FeedModule) Post(post interface{}) (*Post, error) {
