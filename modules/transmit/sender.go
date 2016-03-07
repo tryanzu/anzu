@@ -8,7 +8,7 @@ import (
 )
 
 type Sender struct {
-	port string
+	address string
 }
 
 func (this *Sender) Emit(channel, event string, params map[string]interface{}) {
@@ -21,7 +21,7 @@ func (this *Sender) Emit(channel, event string, params map[string]interface{}) {
 		panic(err)
 	}
 
-	err = sender.Connect("tcp://127.0.0.1:" + this.port)
+	err = sender.Connect("tcp://" + this.address)
 
 	if err != nil {
 		panic(err)

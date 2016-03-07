@@ -123,9 +123,9 @@ func (module *Module) Run() {
     wg.Wait()
 }
 
-func Boot(pushPort string) *Sender {
+func Boot(pushAddress string) *Sender {
 
-	spot := &Sender{pushPort}
+	spot := &Sender{pushAddress}
 	
 	return spot
 }
