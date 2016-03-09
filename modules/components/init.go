@@ -88,6 +88,7 @@ func (module *Module) List(limit, offset int, search, kind string, activated boo
 
 	if activated == true {
 		query["activated"] = true
+		query["store.vendors.spartangeek.stock"] = bson.M{"$ne": -1}
 	}
 
 	if search != "" {
