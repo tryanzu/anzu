@@ -46,7 +46,7 @@ func (self BuildNotesAPI) Create(c *gin.Context) {
 
 	if c.BindJSON(&form) == nil {
 
-		err := self.Store.CreateNote(form.Title, form.Content)
+		err := self.Store.CreateNote(form.Title, form.Content, form.Price)
 
 		if err != nil {
 
@@ -73,7 +73,7 @@ func (self BuildNotesAPI) Update(c *gin.Context) {
 
 	if c.BindJSON(&form) == nil {
 
-		err := self.Store.UpdateNote(bson.ObjectIdHex(id), form.Title, form.Content)
+		err := self.Store.UpdateNote(bson.ObjectIdHex(id), form.Title, form.Content, form.Price)
 
 		if err != nil {
 
@@ -110,4 +110,5 @@ func (self BuildNotesAPI) Delete(c *gin.Context) {
 type BuildResponseForm struct {
 	Title   string `json:"title" binding:"required"`
 	Content string `json:"content" binding:"required"`
+	Price   int `json:"price" binding:"required"`
 }

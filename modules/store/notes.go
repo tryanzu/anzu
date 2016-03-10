@@ -5,7 +5,7 @@ import (
 )
 
 func (module *Module) GetNotes() []BuildResponseModel {
-	
+
 	var list []BuildResponseModel
 
 	database := module.Mongo.Database
@@ -19,25 +19,26 @@ func (module *Module) GetNotes() []BuildResponseModel {
 }
 
 func (module *Module) GetNote(id bson.ObjectId) (*BuildResponseModel, error) {
-	
+
 	var one *BuildResponseModel
 
 	database := module.Mongo.Database
 	err := database.C("builds_responses").FindId(id).One(&one)
 
 	if err != nil {
-		
+
 		return nil, err
 	}
 
 	return one, nil
 }
 
-func (module *Module) CreateNote(title, content string) error {
+func (module *Module) CreateNote(title, content string, price int) error {
 
 	note := &BuildResponseModel{
 		Title: title,
 		Content: content,
+		Price: price,
 	}
 
 	database := module.Mongo.Database
@@ -46,10 +47,10 @@ func (module *Module) CreateNote(title, content string) error {
 	return err
 }
 
-func (module *Module) UpdateNote(id bson.ObjectId, title, content string) error {
+func (module *Module) UpdateNote(id bson.ObjectId, title, content string, price int) error {
 
 	database := module.Mongo.Database
-	err := database.C("builds_responses").Update(bson.M{"_id": id}, bson.M{"$set": bson.M{"title": title, "content": content}})
+	err := database.C("builds_responses").Update(bson.M{"_id": id}, bson.M{"$set": bson.M{"title": title, "content": content, "price": price}})
 
 	return err
 }
