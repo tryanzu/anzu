@@ -49,7 +49,7 @@ func (self *One) PushAnswer(text, kind string) {
 
 			mailing := self.di.Mail
 			text = strings.Replace(text, "\n", "<br>", -1)
-			
+
 			compose := mail.Mail{
 				Template: 250241,
 				Recipient: []mail.MailRecipient{
@@ -77,7 +77,7 @@ func (self *One) LoadAssets() {
 	database := self.di.Mongo.Database
 
 	for _, msg := range self.data.Messages {
- 	
+
  		if !msg.RelatedId.Valid() {
  			continue
  		}
@@ -111,7 +111,7 @@ func (self *One) LoadAssets() {
 
 					messages[key].Meta["assets"] = a
 
-				} else {	
+				} else {
 
 					var a []assets.Asset
 
@@ -248,14 +248,14 @@ func (self *One) MatchUsers() []user.UserBasic {
 				{"_id": bson.M{"$in": users_id}},
 				{"email": self.data.User.Email},
 				{"facebook.email": self.data.User.Email},
-			}}).Select(bson.M{"_id": 1, "username": 1, "username_slug": 1, "email": 1, "facebook": 1, "validated": 1, "banned": 1, "created_at": 1, "updated_at": 1}).All(&users)
+			}}).Select(bson.M{"_id": 1, "username": 1, "username_slug": 1, "email": 1, "gaming": 1, "facebook": 1, "validated": 1, "banned": 1, "created_at": 1, "updated_at": 1}).All(&users)
 
 		if err != nil {
 			panic(err)
 		}
 
 		return users
-	} 
+	}
 
 	var users []user.UserBasic
 
@@ -275,7 +275,7 @@ func (self *One) MatchUsers() []user.UserBasic {
 func (self *One) Touch() {
 
 	database := self.di.Mongo.Database
-	
+
 	err := database.C("orders").Update(bson.M{"_id": self.data.Id}, bson.M{"$set": bson.M{"unreaded": false}})
 
 	if err != nil {

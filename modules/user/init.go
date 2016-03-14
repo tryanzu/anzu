@@ -208,7 +208,6 @@ func (module *Module) SignUpFacebook(facebook map[string]interface{}) (*One, err
 	email := ""
 
 	if _, ok := facebook["email"]; ok {
-
 		email = facebook["email"].(string)
 	}
 
@@ -296,4 +295,3 @@ func (module *Module) GetUserFromRecoveryToken(token string) (*One, error) {
 
 	return usr, nil
 }
-
