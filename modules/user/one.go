@@ -4,7 +4,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"gopkg.in/mgo.v2/bson"
-	
+
 	"time"
 	"errors"
 )
@@ -27,7 +27,7 @@ func (self *One) RUpdate(data *UserPrivate) {
 func (self *One) Email() string {
 
 	if self.data.Facebook != nil {
-		
+
 		fb := self.data.Facebook.(bson.M)
 
 		if email, exists := fb["email"]; exists {
@@ -80,7 +80,7 @@ func (self *One) Load(section string) *One {
 			List:  users,
 		}
 
-	case "components": 
+	case "components":
 
 		self.loadOwnedComponents()
 	}
@@ -167,7 +167,7 @@ func (self *One) Owns(status, entity string, id bson.ObjectId) {
 	}
 
 	self.ROwns(entity, id)
-	
+
 	err := database.C("user_owns").Insert(record)
 
 	if err != nil {
@@ -252,7 +252,7 @@ func (self *One) SendRecoveryEmail() {
 		Created: time.Now(),
 		Updated: time.Now(),
 	}
-	
+
 	err := database.C("user_recovery_tokens").Insert(record)
 
 	if err != nil {

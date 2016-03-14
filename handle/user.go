@@ -385,14 +385,14 @@ func (di UserAPI) UserGetTokenFacebook(c *gin.Context) {
 
 		// The id for the token would be the same as the facebook user
 		id = usr.Data().Id
-
 		trusted_user := di.Security.TrustUserIP(c.ClientIP(), usr)
 
 		if !trusted_user {
-
 			c.JSON(403, gin.H{"status": "error", "message": "Not trusted."})
 			return
 		}
+
+		_ = usr.Update(map[string]interface{}{"facebook": facebook})
 	}
 
 	// Generate JWT with the information about the user
