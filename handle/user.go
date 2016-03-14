@@ -195,7 +195,7 @@ func (di *UserAPI) UserGetByToken(c *gin.Context) {
 		// Dont allow the request
 		c.JSON(400, gin.H{"status": "error", "message": "Invalid request, need valid token."})
 		return
-	} 
+	}
 
 	user_id := bson.ObjectIdHex(id.(string))
 
@@ -518,7 +518,6 @@ func (di *UserAPI) UserUpdateProfile(c *gin.Context) {
 					count, _ := database.C("users").Find(bson.M{"username_slug": username_slug}).Count()
 
 					if count == 0 {
-
 						set["username"] = profileUpdate.UserName
 						set["username_slug"] = username_slug
 						set["name_changes"] = user.NameChanges + 1
@@ -537,9 +536,15 @@ func (di *UserAPI) UserUpdateProfile(c *gin.Context) {
 				set["description"] = description
 			}
 
-			if profileUpdate.Password != "" && len([]rune(profileUpdate.Password)) > 3 {
+			if profileUpdate.Password != "" && profileUpdate.OPassword != "" && len([]rune(profileUpdate.Password)) > 3 {
 
 				password := helpers.Sha256(profileUpdate.Password)
+				opassword := helpers.Sha256(profileUpdate.OPassword)
+
+				if opassword != user.Password {
+					c.JSON(400, gin.H{"status": "error", "message": "Can't allow password update."})
+					return
+				}
 
 				set["password"] = password
 			}
@@ -705,7 +710,7 @@ func (di *UserAPI) UserGetActivity(c *gin.Context) {
 
 		// No results from the aggregation
 		if err != nil {
-			
+
 			commented_count = model.PostCommentCountModel{
 				Count: 0,
 			}

@@ -82,6 +82,7 @@ type UserProfileForm struct {
 	UserName    string `json:"username,omitempty"`
 	Description string `json:"description,omitempty"`
 	Password    string `json:"password,omitempty"`
+	OPassword   string `json:"old_password,omitempty"`
 }
 
 type UserRegisterForm struct {
