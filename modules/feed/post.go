@@ -18,7 +18,7 @@ type Post struct {
 }
 
 // Comments loading for post
-func (self *Post) LoadComments(take int) {
+func (self *Post) LoadComments(take, skip int) {
 
 	var c []model.Comment
 	var limit int = take
@@ -33,7 +33,7 @@ func (self *Post) LoadComments(take int) {
 		limit = -take
 	}
 
-	err := database.C("comments").Find(bson.M{"post_id": self.data.Id, "deleted_at": bson.M{"$exists": false}}).Sort(sort).Limit(limit).All(&c)
+	err := database.C("comments").Find(bson.M{"post_id": self.data.Id, "deleted_at": bson.M{"$exists": false}}).Sort(sort).Skip(skip).Limit(limit).All(&c)
 
 	if err != nil {
 		panic(err)
@@ -44,7 +44,31 @@ func (self *Post) LoadComments(take int) {
 
 func (self *Post) LoadUsers() {
 
+	var list []bson.ObjectId
+	var users []model.User
 
+	// Check if author need to be loaded
+	if self.data.Author == model.User{} {
+		list = append(list, self.data.UserId)
+	}
+
+	// Load comment set authors at runtime
+	if len(self.data.Comments.Set) > 0 {
+		for _, c := range self.data.Comments.Set {
+
+			// Do not repeat ids at the list
+			if ! helpers.InArray(c.UserId, list) {
+				list = append(list, c.UserId)
+			}
+		}
+	}
+
+	if len(list) > 0 {
+
+		database := self.di.Mongo.Database
+		err := database.C("users").Find(bson.M{"_id": bson.M{"$in": list}}).All(&users)
+
+	}
 }
 
 func (self *Post) LoadVotes() {
