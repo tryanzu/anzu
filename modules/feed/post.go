@@ -1,12 +1,13 @@
 package feed
 
 import (
-	"encoding/json"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/components"
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"gopkg.in/mgo.v2/bson"
+
+	"encoding/json"
 	"reflect"
 	"strconv"
 	"time"
@@ -50,7 +51,7 @@ func (self *Post) LoadComments(take, skip int) {
 		for _, c := range self.data.Comments.Set {
 			if c.Chosen == true {
 				loaded = true
-				self.data.Comments.Answer = *c
+				self.data.Comments.Answer = &c
 			}
 		}
 
@@ -65,7 +66,7 @@ func (self *Post) LoadComments(take, skip int) {
 				panic(err)
 			}
 
-			self.data.Comments.Answer = *ca
+			self.data.Comments.Answer = &ca
 		}
 	}
 }
@@ -76,7 +77,7 @@ func (self *Post) LoadUsers() {
 	var users []model.User
 
 	// Check if author need to be loaded
-	if self.data.Author == model.User{} {
+	if !self.data.Author.Id.Valid() {
 		list = append(list, self.data.UserId)
 	}
 
@@ -85,7 +86,7 @@ func (self *Post) LoadUsers() {
 		for _, c := range self.data.Comments.Set {
 
 			// Do not repeat ids at the list
-			if !helpers.InArray(c.UserId, list) {
+			if exists, _ := helpers.InArray(c.UserId, list); !exists {
 				list = append(list, c.UserId)
 			}
 		}
@@ -93,7 +94,7 @@ func (self *Post) LoadUsers() {
 		// Best answer author
 		if self.data.Comments.Answer != nil {
 
-			if !helpers.InArray(self.data.Comments.Answer.UserId, list) {
+			if exists, _ := helpers.InArray(self.data.Comments.Answer.UserId, list); !exists {
 				list = append(list, self.data.Comments.Answer.UserId)
 			}
 		}
@@ -112,7 +113,7 @@ func (self *Post) LoadUsers() {
 
 		for _, user := range users {
 
-			description = "Solo otro Spartan Geek más"
+			description := "Solo otro Spartan Geek más"
 
 			if len(user.Description) > 0 {
 				description = user.Description
@@ -146,8 +147,53 @@ func (self *Post) LoadUsers() {
 	}
 }
 
-func (self *Post) LoadVotes() {
+func (self *Post) LoadVotes(user_id bson.ObjectId) {
 
+	var post model.Vote
+	database := self.di.Mongo.Database
+
+	// Only when there's loaded comments on the post
+	if len(self.data.Comments.Set) > 0 {
+
+		var positions []string
+		var comments []model.Vote
+
+		for _, c := range self.data.Comments.Set {
+
+			// Transform to string due to the fact that nested type inside votes used to be strings - TODO: normalize
+			p := strconv.Itoa(c.Position)
+			positions = append(positions, p)
+		}
+
+		// Get votes given to post's comments
+		err := database.C("votes").Find(bson.M{"type": "comment", "related_id": self.data.Id, "nested_type": bson.M{"$in": positions}, "user_id": user_id}).All(&comments)
+
+		if err != nil {
+			panic(err)
+		}
+
+		if len(comments) > 0 {
+
+			for index, c := range self.data.Comments.Set {
+
+				p := strconv.Itoa(c.Position)
+
+				// Iterate over comment's votes to determine status
+				for _, v := range comments {
+
+					if v.NestedType == p {
+						self.data.Comments.Set[index].Liked = v.Value
+					}
+				}
+			}
+		}
+	}
+
+	err := database.C("votes").Find(bson.M{"type": "post", "related_id": post.Id, "user_id": user_id}).One(&post)
+
+	if err == nil {
+		self.data.Liked = post.Value
+	}
 }
 
 

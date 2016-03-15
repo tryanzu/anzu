@@ -91,7 +91,7 @@ func (self *FeedModule) Post(post interface{}) (*Post, error) {
 		post_object := &Post{data: this, di: module}
 
 		return post_object, nil
-		
+
 	case bson.M:
 
 		this := model.Post{}
