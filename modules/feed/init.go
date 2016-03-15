@@ -91,6 +91,22 @@ func (self *FeedModule) Post(post interface{}) (*Post, error) {
 		post_object := &Post{data: this, di: module}
 
 		return post_object, nil
+		
+	case bson.M:
+
+		this := model.Post{}
+		database := self.Mongo.Database
+
+		// Use user module reference to get the user and then create the user gaming instance
+		err := database.C("posts").Find(post.(bson.M)).One(&this)
+
+		if err != nil {
+			return nil, exceptions.NotFound{"Invalid post id. Not found."}
+		}
+
+		post_object := &Post{data: this, di: module}
+
+		return post_object, nil
 
 	case model.Post:
 
@@ -112,7 +128,7 @@ func (module *FeedModule) LightPost(post interface{}) (*LightPost, error) {
 		scope := LightPostModel{}
 		database := module.Mongo.Database
 
-		// Use light post model 
+		// Use light post model
 		err := database.C("posts").FindId(post.(bson.ObjectId)).Select(bson.M{"_id": 1, "title": 1, "slug": 1, "category": 1, "user_id": 1, "lock": 1, "pinned": 1, "created_at": 1, "updated_at": 1, "type": 1, "content": 1}).One(&scope)
 
 		if err != nil {
@@ -138,7 +154,7 @@ func (module *FeedModule) LightPosts(posts interface{}) ([]LightPostModel, error
 
 		database := module.Mongo.Database
 
-		// Use light post model 
+		// Use light post model
 		err := database.C("posts").Find(bson.M{"_id": bson.M{"$in": posts.([]bson.ObjectId)}}).Select(lightPostFields).All(&list)
 
 		if err != nil {
@@ -154,7 +170,7 @@ func (module *FeedModule) LightPosts(posts interface{}) ([]LightPostModel, error
 
 		database := module.Mongo.Database
 
-		// Use light post model 
+		// Use light post model
 		err := database.C("posts").Find(posts.(bson.M)).Select(lightPostFields).All(&list)
 
 		if err != nil {

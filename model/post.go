@@ -33,9 +33,9 @@ type FeedComments struct {
 type Comment struct {
 	UserId   bson.ObjectId `bson:"user_id" json:"user_id"`
 	Votes    Votes         `bson:"votes" json:"votes"`
-	User     interface{}   `bson:"author,omitempty" json:"author,omitempty"`
-	Position int           `bson:"position,omitempty" json:"position"`
-	Liked    int           `bson:"liked,omitempty" json:"liked,omitempty"`
+	User     interface{}   `bson:"-" json:"author,omitempty"`
+	Position int           `bson:"position" json:"position"`
+	Liked    int           `bson:"-" json:"liked,omitempty"`
 	Content  string        `bson:"content" json:"content"`
 	Chosen   bool          `bson:"chosen,omitempty" json:"chosen,omitempty"`
 	Created  time.Time     `bson:"created_at" json:"created_at"`
@@ -77,7 +77,7 @@ type Post struct {
 	Categories []string        `bson:"categories" json:"categories"`
 	Category   bson.ObjectId   `bson:"category" json:"category"`
 	Comments   Comments        `bson:"comments" json:"comments"`
-	Author     User            `bson:"author,omitempty" json:"author,omitempty"`
+	Author     User            `bson:"-" json:"author,omitempty"`
 	UserId     bson.ObjectId   `bson:"user_id,omitempty" json:"user_id,omitempty"`
 	Users      []bson.ObjectId `bson:"users,omitempty" json:"users,omitempty"`
 	Votes      Votes           `bson:"votes" json:"votes"`

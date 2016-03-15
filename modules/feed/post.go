@@ -17,6 +17,41 @@ type Post struct {
 	data model.Post
 }
 
+// Comments loading for post
+func (self *Post) LoadComments(take int) {
+
+	var c []model.Comment
+	var limit int = take
+	var sort string
+
+	database := self.di.Mongo.Database
+
+	if take > 0 {
+		sort = "created_at"
+	} else {
+		sort = "-created_at"
+		limit = -take
+	}
+
+	err := database.C("comments").Find(bson.M{"post_id": self.data.Id, "deleted_at": bson.M{"$exists": false}}).Sort(sort).Limit(limit).All(&c)
+
+	if err != nil {
+		panic(err)
+	}
+
+	self.data.Comments.Set = c
+}
+
+func (self *Post) LoadUsers() {
+
+
+}
+
+func (self *Post) LoadVotes() {
+
+}
+
+
 // Collects the post views
 func (self *Post) Viewed(user_id bson.ObjectId) {
 
@@ -153,7 +188,7 @@ func (self *Post) Category() model.Category {
 
 // Get comment object
 func (self *Post) Comment(index int) (*Comment, error) {
-	
+
 	if len(self.data.Comments.Set) < index {
 
 		return nil, exceptions.OutOfBounds{"Invalid comment index"}
