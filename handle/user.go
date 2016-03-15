@@ -540,7 +540,17 @@ func (di *UserAPI) UserUpdateProfile(c *gin.Context) {
 				set["description"] = description
 			}
 
-			if profileUpdate.Password != "" && profileUpdate.OPassword != "" && len([]rune(profileUpdate.Password)) > 3 {
+			if profileUpdate.Password != "" {
+
+				if len([]rune(profileUpdate.Password)) < 4 {
+					c.JSON(400, gin.H{"status": "error", "message": "Can't allow password update, too short."})
+					return
+				}
+
+				if profileUpdate.OPassword == "" {
+					c.JSON(400, gin.H{"status": "error", "message": "Can't allow password update, need old password."})
+					return
+				}
 
 				password := helpers.Sha256(profileUpdate.Password)
 				opassword := helpers.Sha256(profileUpdate.OPassword)
