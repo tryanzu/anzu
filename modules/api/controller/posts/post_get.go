@@ -36,8 +36,6 @@ func (this API) Get(c *gin.Context) {
 
     // Needed data loading to show post
     post.LoadComments(-10, 0)
-
-    if post.Data().
     post.LoadUsers()
     post.LoadVotes()
 

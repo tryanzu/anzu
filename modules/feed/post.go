@@ -40,6 +40,34 @@ func (self *Post) LoadComments(take, skip int) {
 	}
 
 	self.data.Comments.Set = c
+
+	// Load the best answer if needed
+	if self.data.Solved == true && self.data.Comments.Answer == nil {
+
+		loaded := false
+
+		// We may have the chosen answer within the loaded comments set
+		for _, c := range self.data.Comments.Set {
+			if c.Chosen == true {
+				loaded = true
+				self.data.Comments.Answer = *c
+			}
+		}
+
+		if !loaded {
+
+			var ca model.Comment
+
+			// Load the chosen answer from Database
+			err := database.C("comments").Find(bson.M{"post_id": self.data.Id, "deleted_at": bson.M{"$exists": false}, "chosen": true}).One(&ca)
+
+			if err != nil {
+				panic(err)
+			}
+
+			self.data.Comments.Answer = *ca
+		}
+	}
 }
 
 func (self *Post) LoadUsers() {
@@ -57,8 +85,16 @@ func (self *Post) LoadUsers() {
 		for _, c := range self.data.Comments.Set {
 
 			// Do not repeat ids at the list
-			if ! helpers.InArray(c.UserId, list) {
+			if !helpers.InArray(c.UserId, list) {
 				list = append(list, c.UserId)
+			}
+		}
+
+		// Best answer author
+		if self.data.Comments.Answer != nil {
+
+			if !helpers.InArray(self.data.Comments.Answer.UserId, list) {
+				list = append(list, self.data.Comments.Answer.UserId)
 			}
 		}
 	}
@@ -68,6 +104,45 @@ func (self *Post) LoadUsers() {
 		database := self.di.Mongo.Database
 		err := database.C("users").Find(bson.M{"_id": bson.M{"$in": list}}).All(&users)
 
+		if err != nil {
+			panic(err)
+		}
+
+		usersMap := make(map[bson.ObjectId]interface{})
+
+		for _, user := range users {
+
+			description = "Solo otro Spartan Geek más"
+
+			if len(user.Description) > 0 {
+				description = user.Description
+			}
+
+			usersMap[user.Id] = map[string]interface{}{
+				"id":          user.Id.Hex(),
+				"username":    user.UserName,
+				"description": description,
+				"image":       user.Image,
+				"level":       user.Gaming.Level,
+				"roles":       user.Roles,
+			}
+
+			if user.Id == self.data.UserId {
+				self.data.Author = user
+			}
+
+			if self.data.Comments.Answer != nil && self.data.Comments.Answer.UserId == user.Id {
+				self.data.Comments.Answer.User = usersMap[user.Id]
+			}
+		}
+
+		for index, c := range self.data.Comments.Set {
+
+			if user, exists := usersMap[c.UserId]; exists {
+
+				self.data.Comments.Set[index].User = user
+			}
+		}
 	}
 }
 
