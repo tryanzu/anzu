@@ -392,7 +392,11 @@ func (di UserAPI) UserGetTokenFacebook(c *gin.Context) {
 			return
 		}
 
-		_ = usr.Update(map[string]interface{}{"facebook": facebook})
+		if email, exists := facebook["email"]; exists {
+
+			_ = usr.Update(map[string]interface{}{"facebook": facebook, "email": email.(string)})
+		}
+
 	}
 
 	// Generate JWT with the information about the user
