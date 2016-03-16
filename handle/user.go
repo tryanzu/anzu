@@ -14,6 +14,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
+	"mo"
 	"github.com/kennygrant/sanitize"
 	"github.com/mitchellh/goamz/s3"
 	"github.com/olebedev/config"
@@ -211,7 +212,6 @@ func (di *UserAPI) UserGetByToken(c *gin.Context) {
 	trusted := di.Security.TrustUserIP(c.ClientIP(), usr)
 
 	if !trusted {
-
 		c.JSON(403, gin.H{"status": "error", "message": "Not trusted."})
 		return
 	}
@@ -299,7 +299,6 @@ func (di UserAPI) UserGetJwtToken(c *gin.Context) {
 	usr, err := di.User.Get(bson.M{"email": email})
 
 	if err != nil {
-
 		c.JSON(400, gin.H{"status": "error", "message": "Couldnt get user."})
 		return
 	}
@@ -312,7 +311,6 @@ func (di UserAPI) UserGetJwtToken(c *gin.Context) {
 	hash := hex.EncodeToString(md)
 
 	if usr.Data().Password != hash {
-
 		c.JSON(400, gin.H{"status": "error", "message": "Credentials are not correct", "code": 400})
 		return
 	}
@@ -325,6 +323,20 @@ func (di UserAPI) UserGetJwtToken(c *gin.Context) {
 		return
 	}
 
+	bucket := sessions.Default(c)
+	session := bucket.Get("session_id")
+	session_id := ""
+
+	if session == nil {
+
+		uuid := uuid.NewV4()
+		session_id = uuid.String()
+
+		bucket.Set("session_id", session_id)
+		bucket.Save()
+	} else {
+		session_id = session.(string)
+	}
 
 	// Generate JWT with the information about the user
 	token, firebase := di.generateUserToken(usr.Data().Id)
@@ -338,7 +350,7 @@ func (di UserAPI) UserGetJwtToken(c *gin.Context) {
 		go di.Collector.Activity(model.Activity{UserId: bson.ObjectIdHex(user_id.(string)), Event: "user-view", RelatedId: usr.Data().Id})
 	}
 
-	c.JSON(200, gin.H{"status": "okay", "token": token, "firebase": firebase})
+	c.JSON(200, gin.H{"status": "okay", "token": token, "session_id": session_id, "firebase": firebase})
 }
 
 func (di UserAPI) UserGetTokenFacebook(c *gin.Context) {
@@ -402,7 +414,22 @@ func (di UserAPI) UserGetTokenFacebook(c *gin.Context) {
 	// Generate JWT with the information about the user
 	token, firebase := di.generateUserToken(id)
 
-	c.JSON(200, gin.H{"status": "okay", "token": token, "firebase": firebase})
+	bucket := sessions.Default(c)
+	session := bucket.Get("session_id")
+	session_id := ""
+
+	if session == nil {
+
+		uuid := uuid.NewV4()
+		session_id = uuid.String()
+
+		bucket.Set("session_id", session_id)
+		bucket.Save()
+	} else {
+		session_id = session.(string)
+	}
+
+	c.JSON(200, gin.H{"status": "okay", "token": token, "firebase": firebase, "session_id": session_id})
 }
 
 func (di *UserAPI) UserUpdateProfileAvatar(c *gin.Context) {
