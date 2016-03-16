@@ -547,18 +547,7 @@ func (di *UserAPI) UserUpdateProfile(c *gin.Context) {
 					return
 				}
 
-				if profileUpdate.OPassword == "" {
-					c.JSON(400, gin.H{"status": "error", "message": "Can't allow password update, need old password."})
-					return
-				}
-
 				password := helpers.Sha256(profileUpdate.Password)
-				opassword := helpers.Sha256(profileUpdate.OPassword)
-
-				if opassword != user.Password {
-					c.JSON(400, gin.H{"status": "error", "message": "Can't allow password update."})
-					return
-				}
 
 				set["password"] = password
 			}
