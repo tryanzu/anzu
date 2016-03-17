@@ -226,8 +226,25 @@ func (di *UserAPI) UserGetByToken(c *gin.Context) {
 
 	}(usr)
 
+	bucket := sessions.Default(c)
+	session := bucket.Get("session_id")
+	session_id := ""
+
+	if session == nil {
+		uuid := uuid.NewV4()
+		session_id = uuid.String()
+
+		bucket.Set("session_id", session_id)
+		bucket.Save()
+	} else {
+		session_id = session.(string)
+	}
+
+	data := usr.Data()
+	data.SessionId = session_id
+
 	// Alright, go back and send the user info
-	c.JSON(200, usr.Data())
+	c.JSON(200, data)
 }
 
 func (di *UserAPI) UserGetToken(c *gin.Context) {
