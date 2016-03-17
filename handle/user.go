@@ -14,7 +14,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
-	"mo"
+	"github.com/gin-gonic/contrib/sessions"
 	"github.com/kennygrant/sanitize"
 	"github.com/mitchellh/goamz/s3"
 	"github.com/olebedev/config"
