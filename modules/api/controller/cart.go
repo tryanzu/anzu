@@ -3,6 +3,7 @@ package controller
 import (
 	"github.com/fernandez14/spartangeek-blacker/modules/cart"
 	"github.com/fernandez14/spartangeek-blacker/modules/components"
+	"github.com/fernandez14/go-siftscience"
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
@@ -40,6 +41,7 @@ func (this CartAPI) Add(c *gin.Context) {
 	if c.BindJSON(&form) == nil {
 
 		id := form.Id
+		session_id := c.MustGet("session_id").(string)
 
 		if !bson.IsObjectIdHex(id) {
 			c.JSON(400, gin.H{"message": "Invalid request, check id format.", "status": "error"})
@@ -59,6 +61,7 @@ func (this CartAPI) Add(c *gin.Context) {
 		container := this.getCart(c)
 		{
 			var items []CartComponentItem
+			var cartItem CartComponentItem
 
 			err := container.Bind(&items)
 
@@ -83,13 +86,14 @@ func (this CartAPI) Add(c *gin.Context) {
 			for index, item := range items {
 
 				if item.Id == component.Id.Hex() {
-
 					exists = true
-
-					items[index].IncQuantity(1) 
+					items[index].IncQuantity(1)
+					cartItem = items[index]
 					break
 				}
 			}
+
+			user_id_i, signed_in := c.Get("user_id")
 
 			if !exists {
 
@@ -103,8 +107,27 @@ func (this CartAPI) Add(c *gin.Context) {
 
 				item := CartComponentItem{base, component.FullName, component.Image, component.Slug, component.Type}
 				items = append(items, item)
+				cartItem = item
 			}
-			
+
+			go func() {
+
+				data := map[string]interface{}{
+					"$session_id": session_id,
+					"$item": this.generateSiftItem(cartItem, component),
+				}
+
+				if signed_in {
+					data["$user_id"] = user_id_i.(string)
+				}
+
+				err := gosift.Track("$add_item_to_cart", data)
+
+				if err != nil {
+					panic(err)
+				}
+			}()
+
 			err = container.Save(items)
 
 			if err != nil {
@@ -169,6 +192,22 @@ func (this CartAPI) getCart(c *gin.Context) *cart.Cart {
 	return obj
 }
 
+func (this CartAPI) generateSiftItem(c CartComponentItem, component *components.ComponentModel) map[string]interface{} {
+
+	data := map[string]interface{}{
+		"$item_id": c.Id,
+		"$product_title": c.FullName,
+		"$price": c.Price,
+		"$currency_code": "MXN",
+		"$brand": component.Manufacturer,
+		"$manufacturer": component.Manufacturer,
+		"$category": component.Type,
+		"$quantity": c.Quantity,
+	}
+
+	return data
+}
+
 type CartAddForm struct {
 	Id     string `json:"id" binding:"required"`
 	Vendor string `json:"vendor" binding:"required"`
@@ -179,5 +218,5 @@ type CartComponentItem struct {
 	FullName string `json:"full_name"`
 	Image    string `json:"image"`
 	Slug     string `json:"slug"`
-	Type     string `json:"type"` 
+	Type     string `json:"type"`
 }
