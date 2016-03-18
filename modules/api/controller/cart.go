@@ -230,10 +230,12 @@ func (this CartAPI) getCart(c *gin.Context) *cart.Cart {
 
 func (this CartAPI) generateSiftItem(c CartComponentItem, component *components.ComponentModel) map[string]interface{} {
 
+	micros := int64((c.Price * 100) * 1000)
+
 	data := map[string]interface{}{
 		"$item_id": c.Id,
 		"$product_title": c.FullName,
-		"$price": c.Price,
+		"$price": micros,
 		"$currency_code": "MXN",
 		"$brand": component.Manufacturer,
 		"$manufacturer": component.Manufacturer,
