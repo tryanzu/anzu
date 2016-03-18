@@ -1,14 +1,17 @@
 package handle
 
 import (
-	"errors"
-	"fmt"
 	"github.com/cactus/go-statsd-client/statsd"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/satori/go.uuid"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/getsentry/raven-go"
+	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/olebedev/config"
+
+	"errors"
+	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -72,6 +75,24 @@ func (di *MiddlewareAPI) MongoRefresher() gin.HandlerFunc {
 
 func (di *MiddlewareAPI) Authorization() gin.HandlerFunc {
 	return func(c *gin.Context) {
+
+		// Session ID
+		var session_id string
+
+		bucket := sessions.Default(c)
+		session := bucket.Get("session_id")
+
+		if session == nil {
+			uuid := uuid.NewV4()
+			session_id = uuid.String()
+			bucket.Set("session_id", session_id)
+			bucket.Save()
+		} else {
+			session_id = session.(string)
+		}
+
+		// Use same session id anywhere
+		c.Set("session_id", session_id)
 
 		// Check whether the token is present
 		token := c.Request.Header.Get("Authorization")

@@ -8,13 +8,14 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
+	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/fernandez14/spartangeek-blacker/modules/security"
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
+	"github.com/fernandez14/go-siftscience"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
-	"github.com/gin-gonic/contrib/sessions"
 	"github.com/kennygrant/sanitize"
 	"github.com/mitchellh/goamz/s3"
 	"github.com/olebedev/config"
@@ -31,6 +32,7 @@ import (
 )
 
 type UserAPI struct {
+	Errors        *exceptions.ExceptionsModule `inject:""`
 	DataService   *mongo.Service   `inject:""`
 	CacheService  *goredis.Redis   `inject:""`
 	ConfigService *config.Config   `inject:""`
@@ -226,19 +228,7 @@ func (di *UserAPI) UserGetByToken(c *gin.Context) {
 
 	}(usr)
 
-	bucket := sessions.Default(c)
-	session := bucket.Get("session_id")
-	session_id := ""
-
-	if session == nil {
-		uuid := uuid.NewV4()
-		session_id = uuid.String()
-
-		bucket.Set("session_id", session_id)
-		bucket.Save()
-	} else {
-		session_id = session.(string)
-	}
+	session_id := c.MustGet("session_id").(string)
 
 	data := usr.Data()
 	data.SessionId = session_id
@@ -340,20 +330,9 @@ func (di UserAPI) UserGetJwtToken(c *gin.Context) {
 		return
 	}
 
-	bucket := sessions.Default(c)
-	session := bucket.Get("session_id")
-	session_id := ""
+	session_id := c.MustGet("session_id").(string)
 
-	if session == nil {
-
-		uuid := uuid.NewV4()
-		session_id = uuid.String()
-
-		bucket.Set("session_id", session_id)
-		bucket.Save()
-	} else {
-		session_id = session.(string)
-	}
+	go di.trackSiftScienceLogin(usr.Data().Id.Hex(), session_id, true)
 
 	// Generate JWT with the information about the user
 	token, firebase := di.generateUserToken(usr.Data().Id)
@@ -389,6 +368,7 @@ func (di UserAPI) UserGetTokenFacebook(c *gin.Context) {
 		facebook_id = facebook["id"]
 	}
 
+	session_id := c.MustGet("session_id").(string)
 	usr, err := di.User.Get(bson.M{"facebook.id": facebook_id})
 
 	// Create a new user
@@ -422,29 +402,14 @@ func (di UserAPI) UserGetTokenFacebook(c *gin.Context) {
 		}
 
 		if email, exists := facebook["email"]; exists {
-
 			_ = usr.Update(map[string]interface{}{"facebook": facebook, "email": email.(string)})
 		}
 
+		go di.trackSiftScienceLogin(id.Hex(), session_id, true)
 	}
 
 	// Generate JWT with the information about the user
 	token, firebase := di.generateUserToken(id)
-
-	bucket := sessions.Default(c)
-	session := bucket.Get("session_id")
-	session_id := ""
-
-	if session == nil {
-
-		uuid := uuid.NewV4()
-		session_id = uuid.String()
-
-		bucket.Set("session_id", session_id)
-		bucket.Save()
-	} else {
-		session_id = session.(string)
-	}
 
 	c.JSON(200, gin.H{"status": "okay", "token": token, "firebase": firebase, "session_id": session_id})
 }
@@ -846,4 +811,25 @@ func (di *UserAPI) generateUserToken(id bson.ObjectId) (string, string) {
 	}
 
 	return tokenString, firebase_token
+}
+
+func (di *UserAPI) trackSiftScienceLogin(user_id, session_id string, success bool) {
+
+	defer di.Errors.Recover()
+
+	status := "$success"
+
+	if !success {
+		status = "$failure"
+	}
+
+	err := gosift.Track("$login", map[string]interface{}{
+		"$user_id": user_id,
+		"$session_id": session_id,
+		"$login_status": status,
+	})
+
+	if err != nil {
+		panic(err)
+	}
 }
