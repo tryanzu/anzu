@@ -15,6 +15,7 @@ import (
 	"github.com/fernandez14/go-siftscience"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
+	"github.com/gin-gonic/contrib/sessions"
 	"github.com/kennygrant/sanitize"
 	"github.com/mitchellh/goamz/s3"
 	"github.com/olebedev/config"
@@ -359,6 +360,16 @@ func (di UserAPI) UserGetTokenFacebook(c *gin.Context) {
 	token, firebase := di.generateUserToken(id)
 
 	c.JSON(200, gin.H{"status": "okay", "token": token, "firebase": firebase, "session_id": session_id})
+}
+
+func (this UserAPI) UserLogout(c *gin.Context) {
+
+	bucket := sessions.Default(c)
+
+	// Clear bucket
+	bucket.Clear()
+
+	c.JSON(200, gin.H{"status": "okay"})
 }
 
 func (di *UserAPI) UserUpdateProfileAvatar(c *gin.Context) {
