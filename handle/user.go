@@ -364,6 +364,22 @@ func (di UserAPI) UserGetTokenFacebook(c *gin.Context) {
 
 func (this UserAPI) UserLogout(c *gin.Context) {
 
+	id := c.MustGet("user_id")
+	user_id := id.(string)
+
+	go func() {
+
+		defer this.Errors.Recover()
+
+		err := gosift.Track("$logout", map[string]interface{}{
+			"$user_id": user_id,
+		})
+
+		if err != nil {
+			panic(err)
+		}
+	}()
+
 	bucket := sessions.Default(c)
 
 	// Clear bucket
