@@ -25,6 +25,7 @@ type User struct {
 
 	Version          string                 `bson:"version,omitempty" json:"version,omitempty"`
 	Validated        bool                   `bson:"validated" json:"validated"`
+	SiftAccount      bool                   `bson:"siftscience" json:"siftscience"`
 	Banned           bool                   `bson:"banned" json:"banned"`
 	Created          time.Time              `bson:"created_at" json:"created_at"`
 

@@ -21,8 +21,9 @@ func Boot() *Module {
 }
 
 type Module struct {
-	Mongo *mongo.Service `inject:""`
-	Mail  *mail.Module   `inject:""`
+	Mongo    *mongo.Service `inject:""`
+	Mail     *mail.Module   `inject:""`
+	Errors   *exceptions.ExceptionsModule `inject:""`
 }
 
 // Gets an instance of a user
@@ -62,6 +63,10 @@ func (module *Module) Get(usr interface{}) (*One, error) {
 	}
 
 	user := &One{data: model, di: context}
+
+	if model.SiftAccount != true {
+		go user.SiftScienceBackfill()
+	}
 
 	return user, nil
 }
