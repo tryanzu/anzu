@@ -59,7 +59,7 @@ func (this *GatewayStripe) Charge(amount float64) error {
 	customer := this.order.GetCustomer()
 	usr      := customer.GetUser()
 	address := this.order.GetRelatedAddress()
-	micros := int64((amount * 100) * 1000)
+	micros := int64((amount * 100) * 10000)
 	cents := uint64(amount * 100)
 	order_address := this.order.Shipping.Address
 

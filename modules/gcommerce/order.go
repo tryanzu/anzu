@@ -167,7 +167,7 @@ func (this *Order) Save() error {
 			customer := this.GetCustomer()
 			usr      := customer.GetUser()
 			caddress := this.GetRelatedAddress()
-			micros   := int64((this.Total * 100) * 1000)
+			micros   := int64((this.Total * 100) * 10000)
 
 			// Billing & shipping address
 			address := map[string]interface{}{
@@ -187,7 +187,7 @@ func (this *Order) Save() error {
 
 				if is_valid {
 
-					item_micros := int64((item.OPrice * 100) * 1000)
+					item_micros := int64((item.OPrice * 100) * 10000)
 					component, err := this.di.Components.Get(item_id)
 
 					if err == nil {
@@ -225,7 +225,7 @@ func (this *Order) Save() error {
 				"$shipping_method": "$physical",
 				"$items": items,
 			}
-			
+
 			err = gosift.Track("$create_order", data)
 
 			if err != nil {
