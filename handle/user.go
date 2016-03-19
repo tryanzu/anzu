@@ -1,7 +1,6 @@
 package handle
 
 import (
-	"github.com/satori/go.uuid"
 	"crypto/sha256"
 	"encoding/hex"
 	"github.com/CloudCom/fireauth"
@@ -235,58 +234,6 @@ func (di *UserAPI) UserGetByToken(c *gin.Context) {
 
 	// Alright, go back and send the user info
 	c.JSON(200, data)
-}
-
-func (di *UserAPI) UserGetToken(c *gin.Context) {
-
-	// Get the database interface from the DI
-	database := di.DataService.Database
-
-	// Get the query parameters
-	qs := c.Request.URL.Query()
-
-	// Get the email or the username or the id and its password
-	email, password := qs.Get("email"), qs.Get("password")
-
-	collection := database.C("users")
-
-	user := model.User{}
-
-	// Try to fetch the user using email param though
-	err := collection.Find(bson.M{"email": email}).One(&user)
-
-	if err != nil {
-
-		c.JSON(400, gin.H{"status": "error", "message": "Couldnt found user with that email", "code": 400})
-		return
-	}
-
-	// Incorrect password
-	password_encrypted := []byte(password)
-	sha256 := sha256.New()
-	sha256.Write(password_encrypted)
-	md := sha256.Sum(nil)
-	hash := hex.EncodeToString(md)
-
-	if user.Password != hash {
-
-		c.JSON(400, gin.H{"status": "error", "message": "Credentials are not correct", "code": 400})
-		return
-	}
-
-	// Generate user token
-	uuid := uuid.NewV4()
-	token := &model.UserToken{
-		UserId:  user.Id,
-		Token:   uuid.String(),
-		Closed:  false,
-		Created: time.Now(),
-		Updated: time.Now(),
-	}
-
-	err = database.C("tokens").Insert(token)
-
-	c.JSON(200, token)
 }
 
 func (di UserAPI) UserGetJwtToken(c *gin.Context) {
