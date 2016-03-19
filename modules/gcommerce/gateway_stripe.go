@@ -3,6 +3,7 @@ package gcommerce
 import (
 	"github.com/stripe/stripe-go"
 	"github.com/stripe/stripe-go/charge"
+	"github.com/fernandez14/go-siftscience"
 	"gopkg.in/mgo.v2/bson"
 
 	"errors"
@@ -43,14 +44,23 @@ func (this *GatewayStripe) Charge(amount float64) error {
 		return errors.New("no-reference")
 	}
 
+	session_id, exists := this.meta["session_id"].(string)
+
+	if !exists {
+		return errors.New("no-session-id")
+	}
+
 	token, exists := this.meta["token"].(string)
 
 	if !exists {
 		return errors.New("invalid-token")
 	}
 
-	cents := uint64(amount * 100)
+	customer := this.order.GetCustomer()
+	usr      := customer.GetUser()
 	address := this.order.GetRelatedAddress()
+	micros := int64((amount * 100) * 1000)
+	cents := uint64(amount * 100)
 	order_address := this.order.Shipping.Address
 
 	chargeParams := &stripe.ChargeParams{
@@ -84,9 +94,46 @@ func (this *GatewayStripe) Charge(amount float64) error {
 		Updated:  time.Now(),
 	}
 
+	// Siftscience transaction
+	siftAddress := map[string]interface{}{
+		"$name":   address.Recipient,
+		"$phone":  address.Phone,
+		"$address_1": address.Line1(),
+		"$address_2": address.Line2(),
+		"$city":   order_address.City,
+		"$region": order_address.State,
+		"$country": "MX",
+		"$zipcode": order_address.PostalCode,
+	}
+
+	siftTransaction := map[string]interface{}{
+		"$session_id": session_id,
+		"$user_id": usr.Data().Id.Hex(),
+		"$user_email": usr.Email(),
+		"$transaction_type": "$sale",
+		"$amount": micros,
+		"$currency_code": "MXN",
+		"$order_id": reference,
+		"$transaction_id": ch.ID,
+		"$billing_address": siftAddress,
+		"$shipping_address": siftAddress,
+		"$payment_method": map[string]interface{}{
+			"$payment_type": "$credit_card",
+			"$payment_gateway": "$stripe",
+			"$stripe_token": token,
+		},
+	}
+
 	if err != nil {
 
 		stripeErr := err.(*stripe.Error)
+
+		siftTransaction["$transaction_status"] = "$failure"
+		err := gosift.Track("$transaction", siftTransaction)
+
+		if err != nil {
+			panic(err)
+		}
 
 		transaction.Error = stripeErr
 		database.C("gcommerce_transactions").Insert(transaction)
@@ -129,6 +176,13 @@ func (this *GatewayStripe) Charge(amount float64) error {
 		default:
 			return errors.New("gateway-error")
 		}
+	}
+
+	siftTransaction["$transaction_status"] = "$success"
+	err = gosift.Track("$transaction", siftTransaction)
+
+	if err != nil {
+		panic(err)
 	}
 
 	status := Status{

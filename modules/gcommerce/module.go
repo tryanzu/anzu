@@ -4,6 +4,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
+	"github.com/fernandez14/spartangeek-blacker/modules/components"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/olebedev/config"
 	"github.com/xuyu/goredis"
@@ -20,7 +21,7 @@ func Boot(key string) *Module {
 }
 
 func ValidStatus(name string) bool {
-	
+
 	if name == ORDER_CONFIRMED ||
 	   name == ORDER_AWAITING ||
 	   name == ORDER_INSTOCK ||
@@ -28,20 +29,22 @@ func ValidStatus(name string) bool {
 	   name == ORDER_COMPLETED ||
 	   name == ORDER_CANCELED ||
 	   name == ORDER_PAYMENT_ERROR {
-	   	
+
 	   	return true
 	}
-	   
+
 	return false
 }
 
 type Module struct {
-	Mongo     *mongo.Service               `inject:""`
-	Errors    *exceptions.ExceptionsModule `inject:""`
-	Redis     *goredis.Redis               `inject:""`
-	Config    *config.Config               `inject:""`
-	Mail      *mail.Module                 `inject:""`
-	StripeKey string
+	Mongo      *mongo.Service               `inject:""`
+	Errors     *exceptions.ExceptionsModule `inject:""`
+	Redis      *goredis.Redis               `inject:""`
+	Config     *config.Config               `inject:""`
+	Mail       *mail.Module                 `inject:""`
+	User       *user.Module                 `inject:""`
+	Components *components.Module           `inject:""`
+	StripeKey  string
 }
 
 func (module *Module) GetCustomerFromUser(user_id bson.ObjectId) Customer {
@@ -73,7 +76,7 @@ func (module *Module) GetCustomerFromUser(user_id bson.ObjectId) Customer {
 }
 
 func (module *Module) GetCustomer(id bson.ObjectId) (*Customer, error) {
-	
+
 	var customer *Customer
 
 	database := module.Mongo.Database
@@ -128,21 +131,21 @@ func (module *Module) Get(where bson.M, limit, offset int) []Order {
 
 	for _, customer := range customers {
 		customer_map[customer.Id] = customer
-	}	
+	}
 
 	users_map := map[bson.ObjectId]user.UserBasic{}
 
 	for _, usr := range users {
 		users_map[usr.Id] = usr
-	}	
+	}
 
 	for index, order := range list {
 
 		c := customer_map[order.UserId]
 		usr := users_map[c.UserId]
 
-		list[index].Customer = c
-		list[index].User = usr
+		list[index].Customer = &c
+		list[index].User = &usr
 	}
 
 	return list

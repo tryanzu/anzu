@@ -34,6 +34,7 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 	cartContainer := this.getCartObject(c)
 	usr := c.MustGet("user_id")
 	userId := bson.ObjectIdHex(usr.(string))
+	session_id := c.MustGet("session_id").(string)
 
 	if c.Bind(&form) == nil {
 
@@ -149,9 +150,9 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 				shipping_cost = shipping_cost + (320.0 * float64(item.GetQuantity()))
 
 			} else {
-				
+
 				for i := 0; i < item.GetQuantity(); i++ {
-					
+
 					if item_count == 0 {
 
 						shipping_cost = shipping_cost + 139.0
@@ -168,7 +169,7 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 		if len(errors) > 0 {
 
 			cartContainer.Save(items)
-			
+
 			c.JSON(409, gin.H{"status": "error", "list": errors})
 			return
 		}
@@ -184,7 +185,10 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 		}
 
 		// Get a reference for the customer's new order
-		order, err := customer.NewOrder(form.Gateway, form.Meta)
+		meta := form.Meta
+		meta["session_id"] = session_id
+
+		order, err := customer.NewOrder(form.Gateway, meta)
 
 		if err != nil {
 			c.JSON(400, gin.H{"message": err.Error(), "key": err.Error(), "status": "error", "order_id": order.Id})
@@ -209,7 +213,7 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 				image = c.Image
 			}
 
-			name := item.FullName 
+			name := item.FullName
 
 			if name == "" {
 				name = item.GetName()
@@ -222,12 +226,20 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 		order.Ship(shipping_cost, "generic", address)
 
 		// Match calculated total against frontend total
-		total := order.GetTotal() 
+		total := order.GetTotal()
 
 		if total != form.Total {
 			c.JSON(400, gin.H{"message": "Invalid total parameter.", "key": "bad-total", "status": "error", "shipping": shipping_cost, "total": total})
 			return
 		}
+
+		err = order.Save()
+
+		if err != nil {
+			c.JSON(400, gin.H{"message": err.Error(), "key": err.Error(), "status": "error"})
+			return
+		}
+
 
 		err = order.Checkout()
 
@@ -287,15 +299,15 @@ func (this CheckoutAPI) Place(c *gin.Context) {
 			}
 
 			go mailing.Send(compose)
-			
+
 			go func(id bson.ObjectId) {
-				
+
 				err := queue.PushWDelay("gcommerce", "payment-reminder", map[string]interface{}{"id": id.Hex()}, 3600*24*2)
-			
+
 				if err != nil {
 					panic(err)
 				}
-				
+
 			}(order.Id)
 
 			// Clean up cart items

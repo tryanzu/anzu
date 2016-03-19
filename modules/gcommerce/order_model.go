@@ -38,8 +38,9 @@ type Order struct {
 	Updated time.Time              `bson:"updated_at" json:"updated_at"`
 
 	// Runtime fields
-	User     user.UserBasic `bson:"-" json:"user,omitempty"`
-	Customer Customer `bson:"-" json:"customer,omitempty"`
+	User           *user.UserBasic  `bson:"-" json:"user,omitempty"`
+	Customer       *Customer        `bson:"-" json:"customer,omitempty"`
+	CustomerAdress *CustomerAddress `bson:"-" json:"-"`
 
 	di      *Module
 	gateway Gateway

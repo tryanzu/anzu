@@ -3,14 +3,35 @@ package gcommerce
 import (
 	"errors"
 	"time"
+	"fmt"
 
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
+	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"gopkg.in/mgo.v2/bson"
 )
 
 // Set DI instance
 func (this *Customer) SetDI(di *Module) {
 	this.di = di
+}
+
+func (this *Customer) GetUser() *user.One {
+
+	if this.User == nil {
+
+		usr, err := this.di.User.Get(this.UserId)
+
+		fmt.Println("User from customer...")
+		fmt.Printf("%v\n", this)
+
+		if err != nil {
+			panic(err)
+		}
+
+		this.User = usr
+	}
+
+	return this.User
 }
 
 func (this *Customer) MAddresses() {
@@ -133,7 +154,6 @@ func (this *Customer) NewOrder(gateway_name string, meta map[string]interface{})
 	t := time.Now()
 
 	reference := t.Format("20060102-1504") + "-" + helpers.StrCapRandom(5)
-
 	order := &Order{
 		Id:        bson.NewObjectId(),
 		Reference: reference,
