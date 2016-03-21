@@ -46,7 +46,7 @@ func (self BuildNotesAPI) Create(c *gin.Context) {
 
 	if c.BindJSON(&form) == nil {
 
-		err := self.Store.CreateNote(form.Title, form.Content, form.Price)
+		id, err := self.Store.CreateNote(form.Title, form.Content, form.Price)
 
 		if err != nil {
 
@@ -54,7 +54,7 @@ func (self BuildNotesAPI) Create(c *gin.Context) {
 			return
 		}
 
-		c.JSON(200, gin.H{"status": "okay"})
+		c.JSON(200, gin.H{"status": "okay", "id": id})
 	}
 }
 

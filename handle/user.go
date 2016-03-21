@@ -384,6 +384,7 @@ func (this UserAPI) UserLogout(c *gin.Context) {
 
 	// Clear bucket
 	bucket.Clear()
+	bucket.Save()
 
 	c.JSON(200, gin.H{"status": "okay"})
 }
