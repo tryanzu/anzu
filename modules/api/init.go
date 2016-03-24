@@ -184,7 +184,6 @@ func (module *Module) Run() {
 		v1.GET("/user/search", module.Users.UserAutocompleteGet)
 		v1.POST("/user/get-token/facebook", module.Users.UserGetTokenFacebook)
 		v1.GET("/auth/get-token", module.Users.UserGetJwtToken)
-		v1.GET("/auth/logout", module.Users.UserLogout)
 		v1.GET("/auth/lost-password", module.UsersFactory.RequestPasswordRecovery)
 		v1.GET("/auth/recovery-token/:token", module.UsersFactory.ValidatePasswordRecovery)
 		v1.PUT("/auth/recovery-token/:token", module.UsersFactory.UpdatePasswordFromToken)
@@ -234,6 +233,8 @@ func (module *Module) Run() {
 
 		authorized.Use(module.Middlewares.NeedAuthorization())
 		{
+			// Auth routes
+			v1.GET("/auth/logout", module.Users.UserLogout)
 
 			// Comment routes
 			authorized.POST("/post/comment/:id", module.Comments.CommentAdd)
