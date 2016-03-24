@@ -366,29 +366,35 @@ func (di UserAPI) UserGetTokenFacebook(c *gin.Context) {
 
 func (this UserAPI) UserLogout(c *gin.Context) {
 
-	id := c.MustGet("user_id")
-	user_id := id.(string)
+	id, signed_in := c.Get("user_id")
 
-	go func() {
+	if signed_in {
 
-		defer this.Errors.Recover()
+		user_id := id.(string)
 
-		err := gosift.Track("$logout", map[string]interface{}{
-			"$user_id": user_id,
-		})
+		go func() {
 
-		if err != nil {
-			panic(err)
-		}
-	}()
+			defer this.Errors.Recover()
 
-	bucket := sessions.Default(c)
+			err := gosift.Track("$logout", map[string]interface{}{
+				"$user_id": user_id,
+			})
 
-	// Clear bucket
-	bucket.Clear()
-	bucket.Save()
+			if err != nil {
+				panic(err)
+			}
+		}()
 
-	c.JSON(200, gin.H{"status": "okay"})
+		bucket := sessions.Default(c)
+
+		// Clear bucket
+		bucket.Clear()
+		bucket.Save()
+
+		c.JSON(200, gin.H{"status": "okay"})
+	}
+
+	c.JSON(400, gin.H{"status": "error", "message": "Bad request, no user id."})
 }
 
 func (di *UserAPI) UserUpdateProfileAvatar(c *gin.Context) {
