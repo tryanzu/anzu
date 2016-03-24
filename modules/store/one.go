@@ -6,6 +6,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/fernandez14/spartangeek-blacker/modules/assets"
 	"gopkg.in/mgo.v2/bson"
+	
 	"time"
 	"strings"
 )
@@ -277,6 +278,16 @@ func (self *One) Touch() {
 	database := self.di.Mongo.Database
 
 	err := database.C("orders").Update(bson.M{"_id": self.data.Id}, bson.M{"$set": bson.M{"unreaded": false}})
+
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (self *One) Ignore() {
+
+	database := self.di.Mongo.Database
+	err := database.C("orders").Update(bson.M{"_id": self.data.Id}, bson.M{"$set": bson.M{"deleted_at": time.Now()}})
 
 	if err != nil {
 		panic(err)
