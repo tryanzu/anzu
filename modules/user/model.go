@@ -98,6 +98,7 @@ type UserGaming struct {
 	Shit    int         `bson:"shit" json:"shit"`
 	Coins   int         `bson:"coins" json:"coins"`
 	Level   int         `bson:"level" json:"level"`
+	Active  bool        `bson:"-" json:"active"`
 	Badges  []UserBadge `bson:"badges" json:"badges"`
 }
 

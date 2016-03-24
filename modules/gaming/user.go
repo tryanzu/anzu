@@ -34,6 +34,8 @@ func (self *User) SyncToLevel(reset bool) {
 	database := self.di.Mongo.Database
 	rules := self.di.Rules.Rules
 	user := self.user.Data()
+	activated := user.Validated
+	user.Gaming.Active = activated
 
 	// Swords and level will determine current user level
 	user_swords := user.Gaming.Swords
@@ -64,13 +66,13 @@ func (self *User) SyncToLevel(reset bool) {
 					fact_set["gaming.tribute"] = rule.Tribute
 					user.Gaming.Tribute = rule.Tribute
 				}
-				
+
 				// Update the user gamification facts
 				err := database.C("users").Update(bson.M{"_id": user.Id}, bson.M{"$set": fact_set})
- 		 
- 				if err != nil {	
+
+ 				if err != nil {
  					panic(err)
- 				}		 				
+ 				}
 
 				// Runtime update
 				self.user.RUpdate(user)
