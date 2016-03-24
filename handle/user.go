@@ -224,8 +224,10 @@ func (di *UserAPI) UserGetByToken(c *gin.Context) {
 		usr.TrackUserSignin(c.ClientIP())
 
 		// Does daily login calculations
-		di.Gaming.Get(usr).DailyLogin()
+		g := di.Gaming.Get(usr)
 
+		g.DailyLogin()
+		g.Sync()
 	}(usr)
 
 	session_id := c.MustGet("session_id").(string)

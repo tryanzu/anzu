@@ -34,8 +34,6 @@ func (self *User) SyncToLevel(reset bool) {
 	database := self.di.Mongo.Database
 	rules := self.di.Rules.Rules
 	user := self.user.Data()
-	activated := user.Validated
-	user.Gaming.Active = activated
 
 	// Swords and level will determine current user level
 	user_swords := user.Gaming.Swords
@@ -221,4 +219,15 @@ func (self *User) SyncRealtimeFirebase(data user.UserGaming) {
 
 	// Update the gaming part
 	self.di.Firebase.Set(userPath+"/gaming", data, nil)
+}
+
+func (self *User) Sync() {
+
+	defer self.di.Errors.Recover()
+
+	id := self.user.Data().Id.Hex()
+	validated := self.user.Data().Validated
+
+	// Sync user stuff
+	self.di.Firebase.Set("users/" + id + "/validated", validated, nil)
 }
