@@ -34,6 +34,7 @@ type OrderModel struct {
 
 	// Runtime generated and not persisted in database
 	RelatedUsers interface{} `bson:"-" json:"related_users,omitempty"`
+	Duplicates []OrderModel `bson:"-" json:"duplicates,omitempty"`
 }
 
 type OrderUserModel struct {

@@ -91,6 +91,7 @@ func (self StoreAPI) One(c *gin.Context) {
 
 	// Load assets
 	order.LoadAssets()
+	order.LoadDuplicates()
 
 	data := order.Data()
 	data.RelatedUsers = order.MatchUsers()

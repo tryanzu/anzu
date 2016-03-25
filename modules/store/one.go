@@ -6,7 +6,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/fernandez14/spartangeek-blacker/modules/assets"
 	"gopkg.in/mgo.v2/bson"
-	
+
 	"time"
 	"strings"
 )
@@ -68,6 +68,22 @@ func (self *One) PushAnswer(text, kind string) {
 
 			mailing.Send(compose)
 		}()
+	}
+}
+
+func (self *One) LoadDuplicates() {
+
+	list := make([]OrderModel, 0)
+	database := self.di.Mongo.Database
+
+	err := database.C("orders").Find(bson.M{"$or": []bson.M{{"user.email": self.data.User.Email}, {"user.ip": self.data.User.Ip}}}).All(&list)
+
+	if err != nil {
+		panic(err)
+	}
+
+	if len(list) > 0 {
+		self.data.Duplicates = list
 	}
 }
 
