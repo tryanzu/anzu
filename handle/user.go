@@ -392,6 +392,7 @@ func (this UserAPI) UserLogout(c *gin.Context) {
 		bucket.Save()
 
 		c.JSON(200, gin.H{"status": "okay"})
+		return
 	}
 
 	c.JSON(400, gin.H{"status": "error", "message": "Bad request, no user id."})
