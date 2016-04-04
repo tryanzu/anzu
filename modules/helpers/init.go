@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strings"
 	"unicode"
+	"time"
 )
 
 var lat = []*unicode.RangeTable{unicode.Letter, unicode.Number}
@@ -75,6 +76,9 @@ func StrSlug(s string) string {
 func StrSlugRandom(s string) string {
 
 	var letters = []rune("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+	now := time.Now()
+	rand.Seed(now.UnixNano())
 
 	b := make([]rune, 6)
 	for i := range b {
