@@ -9,7 +9,7 @@ import (
 type Product struct {
 	Id          bson.ObjectId          `bson:"_id,omitempty" json:"id"`
 	Name        string                 `bson:"name" json:"name"`
-	Description string                 `bson:"description" json:"full_name"`
+	Description string                 `bson:"description" json:"description"`
 	Slug        string                 `bson:"slug" json:"slug"`
 	Image       string                 `bson:"image" json:"image"`
 	Type        string                 `bson:"type" json:"type"`
@@ -21,4 +21,8 @@ type Product struct {
 	Updated     time.Time              `bson:"updated_at" json:"updated_at"`
 
 	di *gcommerce.Module
+}
+
+func (this *Product) SetDI(i *gcommerce.Module) {
+	this.di = i
 }

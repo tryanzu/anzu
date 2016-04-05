@@ -1,6 +1,11 @@
 package cart
 
-// Add Cart item from component id
+import (
+	"github.com/gin-gonic/gin"
+	"github.com/fernandez14/spartangeek-blacker/modules/cart"
+)
+
+// Add Cart item from type & id
 func (this API) Add(c *gin.Context) {
 
 	var form CartAddForm
@@ -15,12 +20,12 @@ func (this API) Add(c *gin.Context) {
 			return
 		}
 
-		// Get the component and its data
-		component_id := bson.ObjectIdHex(id)
-		component, err := this.Components.Get(component_id)
+		products := this.GCommerce.Products()
+		product_id := bson.ObjectIdHex(id)
+		product, err := products.GetById(product_id)
 
 		if err != nil {
-			c.JSON(404, gin.H{"message": "Invalid request, component not found.", "status": "error"})
+			c.JSON(404, gin.H{"message": "Invalid request, product not found.", "status": "error"})
 			return
 		}
 
@@ -105,4 +110,6 @@ func (this API) Add(c *gin.Context) {
 
 		c.JSON(200, gin.H{"status": "okay"})
 	}
+
+	c.JSON(400, gin.H{"status": "error", "message": "Malformed request."})
 }
