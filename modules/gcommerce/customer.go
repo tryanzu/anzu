@@ -2,8 +2,8 @@ package gcommerce
 
 import (
 	"errors"
-	"time"
 	"fmt"
+	"time"
 
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"

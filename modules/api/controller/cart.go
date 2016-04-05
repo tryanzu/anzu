@@ -247,8 +247,9 @@ func (this CartAPI) generateSiftItem(c CartComponentItem, component *components.
 }
 
 type CartAddForm struct {
+	Type   string `json:"type" binding:"required"`
 	Id     string `json:"id" binding:"required"`
-	Vendor string `json:"vendor" binding:"required"`
+	Vendor string `json:"vendor"`
 }
 
 type CartComponentItem struct {

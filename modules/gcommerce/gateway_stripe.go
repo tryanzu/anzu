@@ -1,9 +1,9 @@
 package gcommerce
 
 import (
+	"github.com/fernandez14/go-siftscience"
 	"github.com/stripe/stripe-go"
 	"github.com/stripe/stripe-go/charge"
-	"github.com/fernandez14/go-siftscience"
 	"gopkg.in/mgo.v2/bson"
 
 	"errors"
@@ -57,7 +57,7 @@ func (this *GatewayStripe) Charge(amount float64) error {
 	}
 
 	customer := this.order.GetCustomer()
-	usr      := customer.GetUser()
+	usr := customer.GetUser()
 	address := this.order.GetRelatedAddress()
 	micros := int64((amount * 100) * 10000)
 	cents := uint64(amount * 100)
@@ -68,16 +68,16 @@ func (this *GatewayStripe) Charge(amount float64) error {
 		Currency: "mxn",
 		Desc:     "Pago del pedido #" + reference,
 		Shipping: &stripe.ShippingDetails{
-		    Name: address.Recipient,
-		    Phone: address.Phone,
-		    Address: stripe.Address{
-		      Line1: order_address.Line1,
-		      Line2: order_address.Line2,
-		      City: order_address.City,
-		      Country: order_address.Country,
-		      State: order_address.State,
-		      Zip: order_address.PostalCode,
-		    },
+			Name:  address.Recipient,
+			Phone: address.Phone,
+			Address: stripe.Address{
+				Line1:   order_address.Line1,
+				Line2:   order_address.Line2,
+				City:    order_address.City,
+				Country: order_address.Country,
+				State:   order_address.State,
+				Zip:     order_address.PostalCode,
+			},
 		},
 	}
 
@@ -96,31 +96,31 @@ func (this *GatewayStripe) Charge(amount float64) error {
 
 	// Siftscience transaction
 	siftAddress := map[string]interface{}{
-		"$name":   address.Recipient,
-		"$phone":  address.Phone,
+		"$name":      address.Recipient,
+		"$phone":     address.Phone,
 		"$address_1": address.Line1(),
 		"$address_2": address.Line2(),
-		"$city":   order_address.City,
-		"$region": order_address.State,
-		"$country": "MX",
-		"$zipcode": order_address.PostalCode,
+		"$city":      order_address.City,
+		"$region":    order_address.State,
+		"$country":   "MX",
+		"$zipcode":   order_address.PostalCode,
 	}
 
 	siftTransaction := map[string]interface{}{
-		"$session_id": session_id,
-		"$user_id": usr.Data().Id.Hex(),
-		"$user_email": usr.Email(),
+		"$session_id":       session_id,
+		"$user_id":          usr.Data().Id.Hex(),
+		"$user_email":       usr.Email(),
 		"$transaction_type": "$sale",
-		"$amount": micros,
-		"$currency_code": "MXN",
-		"$order_id": reference,
-		"$transaction_id": ch.ID,
-		"$billing_address": siftAddress,
+		"$amount":           micros,
+		"$currency_code":    "MXN",
+		"$order_id":         reference,
+		"$transaction_id":   ch.ID,
+		"$billing_address":  siftAddress,
 		"$shipping_address": siftAddress,
 		"$payment_method": map[string]interface{}{
-			"$payment_type": "$credit_card",
+			"$payment_type":    "$credit_card",
 			"$payment_gateway": "$stripe",
-			"$stripe_token": token,
+			"$stripe_token":    token,
 		},
 	}
 

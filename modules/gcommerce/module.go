@@ -1,10 +1,10 @@
 package gcommerce
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/modules/components"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
-	"github.com/fernandez14/spartangeek-blacker/modules/components"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/olebedev/config"
 	"github.com/xuyu/goredis"
@@ -23,14 +23,14 @@ func Boot(key string) *Module {
 func ValidStatus(name string) bool {
 
 	if name == ORDER_CONFIRMED ||
-	   name == ORDER_AWAITING ||
-	   name == ORDER_INSTOCK ||
-	   name == ORDER_SHIPPED ||
-	   name == ORDER_COMPLETED ||
-	   name == ORDER_CANCELED ||
-	   name == ORDER_PAYMENT_ERROR {
+		name == ORDER_AWAITING ||
+		name == ORDER_INSTOCK ||
+		name == ORDER_SHIPPED ||
+		name == ORDER_COMPLETED ||
+		name == ORDER_CANCELED ||
+		name == ORDER_PAYMENT_ERROR {
 
-	   	return true
+		return true
 	}
 
 	return false

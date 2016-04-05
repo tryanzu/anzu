@@ -1,8 +1,8 @@
 package gcommerce
 
 import (
-	"gopkg.in/mgo.v2/bson"
 	"github.com/fernandez14/go-siftscience"
+	"gopkg.in/mgo.v2/bson"
 
 	"errors"
 	"time"
@@ -165,20 +165,20 @@ func (this *Order) Save() error {
 			var items []map[string]interface{}
 
 			customer := this.GetCustomer()
-			usr      := customer.GetUser()
+			usr := customer.GetUser()
 			caddress := this.GetRelatedAddress()
-			micros   := int64((this.Total * 100) * 10000)
+			micros := int64((this.Total * 100) * 10000)
 
 			// Billing & shipping address
 			address := map[string]interface{}{
-				"$name": caddress.Recipient,
-				"$phone": caddress.Phone,
+				"$name":      caddress.Recipient,
+				"$phone":     caddress.Phone,
 				"$address_1": caddress.Line1(),
 				"$address_2": caddress.Line2(),
-				"$city": caddress.Address.City,
-				"$region": caddress.Address.State,
-				"$country": "MX",
-				"$zipcode": caddress.Address.PostalCode,
+				"$city":      caddress.Address.City,
+				"$region":    caddress.Address.State,
+				"$country":   "MX",
+				"$zipcode":   caddress.Address.PostalCode,
 			}
 
 			for _, item := range this.Items {
@@ -193,37 +193,37 @@ func (this *Order) Save() error {
 					if err == nil {
 
 						items = append(items, map[string]interface{}{
-							"$item_id": item_id.Hex(),
+							"$item_id":       item_id.Hex(),
 							"$product_title": item.Name,
-							"$price": item_micros,
+							"$price":         item_micros,
 							"$currency_code": "MXN",
-							"$brand": component.Manufacturer,
-							"$manufacturer": component.Manufacturer,
-							"$category": component.Type,
-							"$quantity": item.Quantity,
+							"$brand":         component.Manufacturer,
+							"$manufacturer":  component.Manufacturer,
+							"$category":      component.Type,
+							"$quantity":      item.Quantity,
 						})
 					}
 				}
 			}
 
 			data := map[string]interface{}{
-				"$order_id": this.Reference,
-				"$user_id": usr.Data().Id.Hex(),
-				"$user_email": usr.Email(),
-				"$amount": micros,
-				"$currency_code": "MXN",
+				"$order_id":        this.Reference,
+				"$user_id":         usr.Data().Id.Hex(),
+				"$user_email":      usr.Email(),
+				"$amount":          micros,
+				"$currency_code":   "MXN",
 				"$billing_address": address,
-				"$payment_methods":  []map[string]interface{}{
+				"$payment_methods": []map[string]interface{}{
 					{
-						"$payment_type": "$credit_card",
+						"$payment_type":    "$credit_card",
 						"$payment_gateway": "$stripe",
-						"$stripe_token": token,
+						"$stripe_token":    token,
 					},
 				},
-				"$shipping_address": address,
+				"$shipping_address":   address,
 				"$expedited_shipping": false,
-				"$shipping_method": "$physical",
-				"$items": items,
+				"$shipping_method":    "$physical",
+				"$items":              items,
 			}
 
 			err = gosift.Track("$create_order", data)
