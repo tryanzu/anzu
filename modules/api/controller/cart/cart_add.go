@@ -2,7 +2,9 @@ package cart
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/fernandez14/go-siftscience"
 	"github.com/fernandez14/spartangeek-blacker/modules/cart"
+	"gopkg.in/mgo.v2/bson"
 )
 
 // Add Cart item from type & id
@@ -33,17 +35,12 @@ func (this API) Add(c *gin.Context) {
 		container := this.getCart(c)
 		{
 			var items []cart.CartItem
-			var cartItem cart.CartItem
 
 			err := container.Bind(&items)
 
 			if err != nil {
 				c.JSON(500, gin.H{"status": "error", "message": err.Error()})
 				return
-			}
-
-			attrs := map[string]interface{}{
-				"vendor": form.Vendor,
 			}
 
 			exists := false
@@ -53,7 +50,6 @@ func (this API) Add(c *gin.Context) {
 				if item.Id == product.Id.Hex() {
 					exists = true
 					items[index].IncQuantity(1)
-					cartItem = items[index]
 					break
 				}
 			}
@@ -70,18 +66,17 @@ func (this API) Add(c *gin.Context) {
 					Price: product.Price,
 					Type:  product.Type,
 					Quantity: 1,
-					Attributes: attrs,
+					Attributes: product.Attrs,
 				}
-				
+
 				items = append(items, item)
-				cartItem = item
 			}
 
 			go func() {
 
 				data := map[string]interface{}{
 					"$session_id": session_id,
-					"$item": this.generateSiftItem(cartItem, component),
+					"$item": this.generateSiftItem(product),
 				}
 
 				if signed_in {
@@ -104,6 +99,7 @@ func (this API) Add(c *gin.Context) {
 		}
 
 		c.JSON(200, gin.H{"status": "okay"})
+		return
 	}
 
 	c.JSON(400, gin.H{"status": "error", "message": "Malformed request."})

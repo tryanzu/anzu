@@ -1,18 +1,23 @@
 package cart
 
-func (this API) generateSiftItem(c CartComponentItem, component *components.ComponentModel) map[string]interface{} {
+import (
+	"github.com/fernandez14/spartangeek-blacker/modules/gcommerce"
+)
 
-	micros := int64((c.Price * 100) * 10000)
+func (this API) generateSiftItem(p *gcommerce.Product) map[string]interface{} {
+
+	micros := int64((p.Price * 100) * 10000)
+	manufacturer, _ := p.Attrs["manufacturer"].(string)
 
 	data := map[string]interface{}{
-		"$item_id": c.Id,
-		"$product_title": c.FullName,
+		"$item_id": p.Id.Hex(),
+		"$product_title": p.Name,
 		"$price": micros,
 		"$currency_code": "MXN",
-		"$brand": component.Manufacturer,
-		"$manufacturer": component.Manufacturer,
-		"$category": component.Type,
-		"$quantity": c.Quantity,
+		"$brand": manufacturer,
+		"$manufacturer": manufacturer,
+		"$category": p.Type + "-" + p.Category,
+		"$quantity": 1,
 	}
 
 	return data

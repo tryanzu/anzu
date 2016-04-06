@@ -4,6 +4,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/cart"
 	"github.com/fernandez14/spartangeek-blacker/modules/gcommerce"
 	"github.com/fernandez14/spartangeek-blacker/modules/components"
+	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/contrib/sessions"
 )
 

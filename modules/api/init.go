@@ -9,6 +9,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/posts"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/components"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/users"
+	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/cart"
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/olebedev/config"
@@ -36,6 +37,7 @@ type Module struct {
 	PostsFactory posts.API
 	Components   controller.ComponentAPI
 	Cart         controller.CartAPI
+	CartFactory  cart.API
 	Checkout     controller.CheckoutAPI
 	Customer     controller.CustomerAPI
 	Orders       controller.OrdersAPI
@@ -58,6 +60,7 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.PostsFactory},
 		&inject.Object{Value: &module.ComponentsFactory},
 		&inject.Object{Value: &module.UsersFactory},
+		&inject.Object{Value: &module.CartFactory},
 		&inject.Object{Value: &module.Votes},
 		&inject.Object{Value: &module.Users},
 		&inject.Object{Value: &module.Categories},
@@ -210,9 +213,9 @@ func (module *Module) Run() {
 			store.POST("/order", module.Store.PlaceOrder)
 
 			// Cart routes
-			store.GET("/cart", module.Cart.Get)
-			store.POST("/cart", module.Cart.Add)
-			store.DELETE("/cart/:id", module.Cart.Delete)
+			store.GET("/cart", module.CartFactory.Get)
+			store.POST("/cart", module.CartFactory.Add)
+			store.DELETE("/cart/:id", module.CartFactory.Delete)
 
 			// Store routes with auth
 			astore := store.Group("")
