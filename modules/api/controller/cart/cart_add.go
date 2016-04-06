@@ -32,20 +32,13 @@ func (this API) Add(c *gin.Context) {
 		// Initialize cart library
 		container := this.getCart(c)
 		{
-			var items []CartComponentItem
-			var cartItem CartComponentItem
+			var items []cart.CartItem
+			var cartItem cart.CartItem
 
 			err := container.Bind(&items)
 
 			if err != nil {
 				c.JSON(500, gin.H{"status": "error", "message": err.Error()})
-				return
-			}
-
-			price, err := component.GetVendorPrice(form.Vendor)
-
-			if err != nil {
-				c.JSON(400, gin.H{"message": "Invalid vendor, check id.", "status": "error"})
 				return
 			}
 
@@ -57,7 +50,7 @@ func (this API) Add(c *gin.Context) {
 
 			for index, item := range items {
 
-				if item.Id == component.Id.Hex() {
+				if item.Id == product.Id.Hex() {
 					exists = true
 					items[index].IncQuantity(1)
 					cartItem = items[index]
@@ -69,15 +62,17 @@ func (this API) Add(c *gin.Context) {
 
 			if !exists {
 
-				base := cart.CartItem{
-					Id: component.Id.Hex(),
-					Name: component.Name,
-					Price: price,
+				item := cart.CartItem{
+					Id: product.Id.Hex(),
+					Name: product.Name,
+					Description: product.Description,
+					Image: product.Image,
+					Price: product.Price,
+					Type:  product.Type,
 					Quantity: 1,
 					Attributes: attrs,
 				}
-
-				item := CartComponentItem{base, component.FullName, component.Image, component.Slug, component.Type}
+				
 				items = append(items, item)
 				cartItem = item
 			}

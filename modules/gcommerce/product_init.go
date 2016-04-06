@@ -1,4 +1,8 @@
-package products
+package gcommerce
+
+import (
+	"gopkg.in/mgo.v2/bson"
+)
 
 func (this *Product) Initialize() {
 	

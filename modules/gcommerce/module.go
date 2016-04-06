@@ -1,7 +1,6 @@
 package gcommerce
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/modules/gcommerce/products"
 	"github.com/fernandez14/spartangeek-blacker/modules/components"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/mail"
@@ -168,7 +167,7 @@ func (module *Module) One(where bson.M) (*Order, error) {
 	return order, nil
 }
 
-func (module *Module) Products() *products.Module {
+func (module *Module) Products() *Products {
 
-	return &products.Module{di: module}
+	return &Products{di: module}
 }

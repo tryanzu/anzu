@@ -1,10 +1,10 @@
-package products
+package gcommerce
 
 import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-func (this Module) GetById(id bson.ObjectId) (*Product, error) {
+func (this Products) GetById(id bson.ObjectId) (*Product, error) {
 
 	var model *Product
 
@@ -16,6 +16,7 @@ func (this Module) GetById(id bson.ObjectId) (*Product, error) {
 	}
 
 	model.SetDI(this.di)
+	model.Initialize()
 	
 	return model, nil
 }
