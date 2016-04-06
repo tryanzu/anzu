@@ -1,9 +1,9 @@
 package cart
 
 import (
-	"github.com/gin-gonic/gin"
 	"github.com/fernandez14/go-siftscience"
 	"github.com/fernandez14/spartangeek-blacker/modules/cart"
+	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -59,14 +59,14 @@ func (this API) Add(c *gin.Context) {
 			if !exists {
 
 				item := cart.CartItem{
-					Id: product.Id.Hex(),
-					Name: product.Name,
+					Id:          product.Id.Hex(),
+					Name:        product.Name,
 					Description: product.Description,
-					Image: product.Image,
-					Price: product.Price,
-					Type:  product.Type,
-					Quantity: 1,
-					Attributes: product.Attrs,
+					Image:       product.Image,
+					Price:       product.Price,
+					Type:        product.Type,
+					Quantity:    1,
+					Attributes:  product.Attrs,
 				}
 
 				items = append(items, item)
@@ -76,7 +76,7 @@ func (this API) Add(c *gin.Context) {
 
 				data := map[string]interface{}{
 					"$session_id": session_id,
-					"$item": this.generateSiftItem(product),
+					"$item":       this.generateSiftItem(product),
 				}
 
 				if signed_in {

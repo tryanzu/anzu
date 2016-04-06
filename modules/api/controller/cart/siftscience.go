@@ -10,14 +10,14 @@ func (this API) generateSiftItem(p *gcommerce.Product) map[string]interface{} {
 	manufacturer, _ := p.Attrs["manufacturer"].(string)
 
 	data := map[string]interface{}{
-		"$item_id": p.Id.Hex(),
+		"$item_id":       p.Id.Hex(),
 		"$product_title": p.Name,
-		"$price": micros,
+		"$price":         micros,
 		"$currency_code": "MXN",
-		"$brand": manufacturer,
-		"$manufacturer": manufacturer,
-		"$category": p.Type + "-" + p.Category,
-		"$quantity": 1,
+		"$brand":         manufacturer,
+		"$manufacturer":  manufacturer,
+		"$category":      p.Type + "-" + p.Category,
+		"$quantity":      1,
 	}
 
 	return data

@@ -1,9 +1,9 @@
 package cart
 
 import (
-	"github.com/gin-gonic/gin"
 	"github.com/fernandez14/go-siftscience"
 	"github.com/fernandez14/spartangeek-blacker/modules/cart"
+	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -61,7 +61,7 @@ func (this API) Delete(c *gin.Context) {
 
 					data := map[string]interface{}{
 						"$session_id": session_id,
-						"$item": this.generateSiftItem(product),
+						"$item":       this.generateSiftItem(product),
 					}
 
 					if signed_in {

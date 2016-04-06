@@ -2,10 +2,10 @@ package cart
 
 import (
 	"github.com/fernandez14/spartangeek-blacker/modules/cart"
-	"github.com/fernandez14/spartangeek-blacker/modules/gcommerce"
 	"github.com/fernandez14/spartangeek-blacker/modules/components"
-	"github.com/gin-gonic/gin"
+	"github.com/fernandez14/spartangeek-blacker/modules/gcommerce"
 	"github.com/gin-gonic/contrib/sessions"
+	"github.com/gin-gonic/gin"
 )
 
 type API struct {
@@ -24,6 +24,6 @@ func (this API) getCart(c *gin.Context) *cart.Cart {
 	return obj
 }
 
-type CartAddForm struct {	
+type CartAddForm struct {
 	Id string `json:"id" binding:"required"`
 }

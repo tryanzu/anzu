@@ -1,8 +1,8 @@
 package cart
 
 import (
-	"github.com/gin-gonic/gin"
 	"github.com/fernandez14/spartangeek-blacker/modules/cart"
+	"github.com/gin-gonic/gin"
 )
 
 func (this API) Get(c *gin.Context) {
