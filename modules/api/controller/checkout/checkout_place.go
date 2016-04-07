@@ -1,12 +1,21 @@
 package checkout 
 
+import (
+	"github.com/fernandez14/spartangeek-blacker/modules/cart"
+	"github.com/fernandez14/spartangeek-blacker/modules/gcommerce"
+	"github.com/fernandez14/spartangeek-blacker/modules/mail"
+	"github.com/fernandez14/spartangeek-blacker/modules/queue"
+	"github.com/gin-gonic/gin"
+	"gopkg.in/mgo.v2/bson"
+)
+
 func (this API) Place(c *gin.Context) {
 
 	var form CheckoutForm
 
 	cartContainer := this.getCartObject(c)
-	usr := c.MustGet("user_id")
-	userId := bson.ObjectIdHex(usr.(string))
+	id := c.MustGet("user_id")
+	user_id := bson.ObjectIdHex(id.(string))
 	session_id := c.MustGet("session_id").(string)
 
 	if c.Bind(&form) == nil {
@@ -32,7 +41,7 @@ func (this API) Place(c *gin.Context) {
 		errors := make([]CheckoutError, 0)
 
 		products := this.GCommerce.Products()
-		clist := map[string]*components.ComponentModel{}
+		plist := map[string]*gcommerce.Product{}
 
 		// Check items against stored prices
 		for index, item := range items {
@@ -54,59 +63,47 @@ func (this API) Place(c *gin.Context) {
 				continue
 			}
 
-			clist[id] = component
-			vendor, err := item.Attr("vendor")
+			plist[id] = product
 
-			if err != nil {
+			if item.GetPrice() != product.Price {
 
-				errors = append(errors, CheckoutError{
-					Type: ITEM_NO_SELLER,
-					Related: component_id,
-				})
-
-				// Remove from items
-				items = append(items[:index], items[index+1:]...)
-
-				continue
-			}
-
-			price := product.Price
-
-			if item.GetPrice() != price {
-
-				if item.GetPrice() > price {
+				if item.GetPrice() > product.Price {
 
 					errors = append(errors, CheckoutError{
 						Type: ITEM_CHEAPER,
-						Related: component_id,
+						Related: product_id,
 						Meta: map[string]interface{}{
 							"before": item.GetPrice(),
-							"after": price,
+							"after": product.Price,
 						},
 					})
 
-					item.SetPrice(price)
+					item.SetPrice(product.Price)
 
 					continue
 
-				} else if item.GetPrice() < price {
+				} else if item.GetPrice() < product.Price {
 
 					errors = append(errors, CheckoutError{
 						Type: ITEM_MORE_EXPENSIVE,
-						Related: component_id,
+						Related: product_id,
 						Meta: map[string]interface{}{
 							"before": item.GetPrice(),
-							"after": price,
+							"after": product.Price,
 						},
 					})
 
-					item.SetPrice(price)
+					item.SetPrice(product.Price)
 
 					continue
 				}
 			}
 
-			if component.Type == "case" {
+			if product.Shipping > 0 {
+
+				shipping_cost = shipping_cost + (product.Shipping * float64(item.GetQuantity()))
+
+			} else if product.Category == "case" {
 
 				shipping_cost = shipping_cost + (320.0 * float64(item.GetQuantity()))
 
@@ -133,7 +130,7 @@ func (this API) Place(c *gin.Context) {
 			return
 		}
 
-		customer := this.GCommerce.GetCustomerFromUser(userId)
+		customer := this.GCommerce.GetCustomerFromUser(user_id)
 
 		// Get a reference for the customer's address that will be used on the order
 		address, err := customer.Address(form.ShipTo)
@@ -158,27 +155,12 @@ func (this API) Place(c *gin.Context) {
 
 			id := item.Id
 			meta := map[string]interface{}{
-				"related":    "components",
+				"related":    "product",
 				"related_id": bson.ObjectIdHex(id),
 				"cart":       item,
 			}
 
-			description := ""
-			image := ""
-
-			if c, exists := clist[id]; exists {
-
-				description = c.Manufacturer + " / " +  c.PartNumber
-				image = c.Image
-			}
-
-			name := item.FullName
-
-			if name == "" {
-				name = item.GetName()
-			}
-
-			order.Add(name, description, image, item.GetPrice(), item.GetQuantity(), meta)
+			order.Add(item.Name, item.Description, item.Image, item.GetPrice(), item.GetQuantity(), meta)
 		}
 
 		// Setup shipping information
@@ -210,7 +192,7 @@ func (this API) Place(c *gin.Context) {
 		// After checkout procedures
 		mailing := this.Mail
 		{
-			usr, err := this.User.Get(userId)
+			usr, err := this.User.Get(user_id)
 
 			if err != nil {
 				panic(err)
@@ -270,7 +252,7 @@ func (this API) Place(c *gin.Context) {
 			}(order.Id)
 
 			// Clean up cart items
-			cartContainer.Save(make([]CartComponentItem, 0))
+			cartContainer.Save(make([]cart.CartItem, 0))
 		}
 
 

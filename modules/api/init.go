@@ -10,6 +10,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/components"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/users"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/cart"
+	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/checkout"
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/olebedev/config"
@@ -36,9 +37,8 @@ type Module struct {
 	Mail         controller.MailAPI
 	PostsFactory posts.API
 	Components   controller.ComponentAPI
-	Cart         controller.CartAPI
 	CartFactory  cart.API
-	Checkout     controller.CheckoutAPI
+	Checkout     checkout.API
 	Customer     controller.CustomerAPI
 	Orders       controller.OrdersAPI
 	Owners       controller.OwnersAPI
@@ -61,6 +61,7 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.ComponentsFactory},
 		&inject.Object{Value: &module.UsersFactory},
 		&inject.Object{Value: &module.CartFactory},
+		&inject.Object{Value: &module.Checkout},
 		&inject.Object{Value: &module.Votes},
 		&inject.Object{Value: &module.Users},
 		&inject.Object{Value: &module.Categories},
@@ -76,7 +77,6 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.BuildNotes},
 		&inject.Object{Value: &module.Mail},
 		&inject.Object{Value: &module.Components},
-		&inject.Object{Value: &module.Cart},
 		&inject.Object{Value: &module.Checkout},
 		&inject.Object{Value: &module.Customer},
 		&inject.Object{Value: &module.Orders},
