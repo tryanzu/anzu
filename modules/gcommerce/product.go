@@ -11,10 +11,12 @@ type Product struct {
 	Description string                 `bson:"description" json:"description"`
 	Slug        string                 `bson:"slug" json:"slug"`
 	Image       string                 `bson:"image" json:"image"`
+	Images      []string               `bson:"images" json:"images"`
 	Type        string                 `bson:"type" json:"type"`
 	Category    string                 `bson:"category" json:"category"`
 	CategoryId  bson.ObjectId          `bson:"category_id,omitempty" json:"category_id,omitempty"`
 	Price       float64                `bson:"price" json:"price"`
+	Shipping    float64                `bson:"shipping_cost" json:"shipping_cost"`
 	Attrs       map[string]interface{} `bson:"attributes" json:"attributes"`
 	Created     time.Time              `bson:"created_at" json:"created_at"`
 	Updated     time.Time              `bson:"updated_at" json:"updated_at"`
