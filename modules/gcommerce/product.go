@@ -17,6 +17,8 @@ type Product struct {
 	CategoryId  bson.ObjectId          `bson:"category_id,omitempty" json:"category_id,omitempty"`
 	Price       float64                `bson:"price" json:"price"`
 	Shipping    float64                `bson:"shipping_cost" json:"shipping_cost"`
+	Search      string 				   `bson:"search" json:"search"`
+	Relevance   int 				   `bson:"relevance" json:"relevance"`
 	Attrs       map[string]interface{} `bson:"attributes" json:"attributes"`
 	Created     time.Time              `bson:"created_at" json:"created_at"`
 	Updated     time.Time              `bson:"updated_at" json:"updated_at"`
