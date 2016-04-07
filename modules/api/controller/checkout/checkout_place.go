@@ -1,4 +1,4 @@
-package checkout 
+package checkout
 
 import (
 	"github.com/fernandez14/spartangeek-blacker/modules/cart"
@@ -53,7 +53,7 @@ func (this API) Place(c *gin.Context) {
 			if err != nil {
 
 				errors = append(errors, CheckoutError{
-					Type: ITEM_NOT_FOUND,
+					Type:    ITEM_NOT_FOUND,
 					Related: product_id,
 				})
 
@@ -70,11 +70,11 @@ func (this API) Place(c *gin.Context) {
 				if item.GetPrice() > product.Price {
 
 					errors = append(errors, CheckoutError{
-						Type: ITEM_CHEAPER,
+						Type:    ITEM_CHEAPER,
 						Related: product_id,
 						Meta: map[string]interface{}{
 							"before": item.GetPrice(),
-							"after": product.Price,
+							"after":  product.Price,
 						},
 					})
 
@@ -85,11 +85,11 @@ func (this API) Place(c *gin.Context) {
 				} else if item.GetPrice() < product.Price {
 
 					errors = append(errors, CheckoutError{
-						Type: ITEM_MORE_EXPENSIVE,
+						Type:    ITEM_MORE_EXPENSIVE,
 						Related: product_id,
 						Meta: map[string]interface{}{
 							"before": item.GetPrice(),
-							"after": product.Price,
+							"after":  product.Price,
 						},
 					})
 
@@ -181,7 +181,6 @@ func (this API) Place(c *gin.Context) {
 			return
 		}
 
-
 		err = order.Checkout()
 
 		if err != nil {
@@ -210,8 +209,8 @@ func (this API) Place(c *gin.Context) {
 			}
 
 			compose := mail.Mail{
-				Template: template,
-				FromName: "Spartan Geek",
+				Template:  template,
+				FromName:  "Spartan Geek",
 				FromEmail: "pedidos@spartangeek.com",
 				Recipient: []mail.MailRecipient{
 					{
@@ -224,18 +223,18 @@ func (this API) Place(c *gin.Context) {
 					},
 				},
 				Variables: map[string]interface{}{
-					"name": usr.Name(),
-					"payment": paymentType,
-					"line1": address.Line1(),
-					"line2": address.Line2(),
-					"line3": address.Extra(),
+					"name":           usr.Name(),
+					"payment":        paymentType,
+					"line1":          address.Line1(),
+					"line2":          address.Line2(),
+					"line3":          address.Extra(),
 					"total_products": order.GetOriginalTotal() - order.Shipping.OPrice,
 					"total_shipping": order.Shipping.OPrice,
-					"subtotal": order.GetOriginalTotal(),
-					"commision": order.GetGatewayCommision(),
-					"total": order.Total,
-					"items": order.Items,
-					"reference": order.Reference,
+					"subtotal":       order.GetOriginalTotal(),
+					"commision":      order.GetGatewayCommision(),
+					"total":          order.Total,
+					"items":          order.Items,
+					"reference":      order.Reference,
 				},
 			}
 
@@ -254,7 +253,6 @@ func (this API) Place(c *gin.Context) {
 			// Clean up cart items
 			cartContainer.Save(make([]cart.CartItem, 0))
 		}
-
 
 		c.JSON(200, gin.H{"status": "okay"})
 		return
