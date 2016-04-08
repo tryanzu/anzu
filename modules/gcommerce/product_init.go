@@ -93,10 +93,10 @@ func (this *Product) InitializeMassdrop() {
 
 			for index, c := range this.Massdrop.Checkpoints {
 
-				if reservations >= c.Ends  {
+				if reservations >= c.Starts  {
 
 					this.Massdrop.Checkpoints[index].Done = true
-					this.Massdrop.Deadline.Add(time.Duration(c.Timespan) * time.Hour)
+					this.Massdrop.Deadline = this.Massdrop.Deadline.Add(time.Duration(c.Timespan) * time.Hour)
 					this.Massdrop.Price = c.Price
 
 					count := 0
