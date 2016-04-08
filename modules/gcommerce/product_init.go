@@ -109,7 +109,7 @@ func (this *Product) InitializeMassdrop() {
 
 						count = count + 1
 
-						if count == c.Ends {
+						if count == c.Starts {
 
 							activity := MassdropActivity{
 								Type: "checkpoint",
