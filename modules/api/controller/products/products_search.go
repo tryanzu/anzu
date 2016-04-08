@@ -26,9 +26,14 @@ func (this API) Search(c *gin.Context) {
 		offset = oq
 	}
 
+	products := this.GCommerce.Products()
 	start := time.Now()
-	ls, aggregation, count := this.Components.List(limit, offset, query, kind, in_store)
+	ls, facets, count, err := products.GetList(limit, offset, query, category, kind)
+	if err != nil {
+		panic(err)
+	}
+
 	elapsed := time.Since(start)
 
-	c.JSON(200, gin.H{"limit": limit, "offset": offset, "facets": aggregation, "results": ls, "total": count, "elapsed": elapsed/time.Millisecond})
+	c.JSON(200, gin.H{"limit": limit, "offset": offset, "facets": facets, "results": ls, "total": count, "elapsed": elapsed/time.Millisecond})
 }

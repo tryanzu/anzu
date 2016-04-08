@@ -47,6 +47,13 @@ func (module *Module) Get(find interface{}) (*ComponentModel, error) {
 			return nil, exceptions.NotFound{"Invalid component finder. Not found."}
 		}
 
+	case *ComponentModel: 
+
+		component := find.(*ComponentModel)
+		component.SetDI(context)
+
+		return component, nil	
+
 	default:
 		panic("Unkown argument")
 	}

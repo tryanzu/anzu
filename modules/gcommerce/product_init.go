@@ -66,7 +66,7 @@ func (this Products) InitializeList(list []*Product) {
 	if len(component_ids) > 0 {
 
 		var primitives []interface{}
-		var components map[string]*components.ComponentModel
+		components_map := make(map[string]*components.ComponentModel)
 
 		database := this.di.Mongo.Database
 		err := database.C("components").Find(bson.M{"_id": bson.M{"$in": component_ids}}).All(&primitives)
@@ -78,7 +78,6 @@ func (this Products) InitializeList(list []*Product) {
 		// Use primitives to generate components map
 		for _, component := range primitives {
 
-
 			// Marshal the data inside the generic model
 			encoded, err := bson.Marshal(component)
 
@@ -86,13 +85,23 @@ func (this Products) InitializeList(list []*Product) {
 				panic(err)
 			}
 
-			c, err := this.di.Components.Get(encoded)
+			var model *components.ComponentModel
+
+			err = bson.Unmarshal(encoded, &model)
 
 			if err != nil {
 				panic(err)
 			}
 
-			components[c.Id.Hex()] = c
+			model.SetGeneric(encoded)
+
+			c, err := this.di.Components.Get(model)
+
+			if err != nil {
+				panic(err)
+			}
+
+			components_map[c.Id.Hex()] = c
 		}
 
 		for index, product := range list {
@@ -101,7 +110,7 @@ func (this Products) InitializeList(list []*Product) {
 
 				if component_id, exists := product.Attrs["component_id"].(bson.ObjectId); exists {
 					
-					if component, ref_exists := components[component_id.Hex()]; ref_exists {
+					if component, ref_exists := components_map[component_id.Hex()]; ref_exists {
 
 						list[index].ComponentBind(component)
 					}

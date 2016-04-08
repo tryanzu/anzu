@@ -11,6 +11,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/users"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/cart"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/checkout"
+	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/products"
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/olebedev/config"
@@ -39,6 +40,7 @@ type Module struct {
 	Components   controller.ComponentAPI
 	CartFactory  cart.API
 	Checkout     checkout.API
+	Products     products.API
 	Customer     controller.CustomerAPI
 	Orders       controller.OrdersAPI
 	Owners       controller.OwnersAPI
@@ -62,6 +64,7 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.UsersFactory},
 		&inject.Object{Value: &module.CartFactory},
 		&inject.Object{Value: &module.Checkout},
+		&inject.Object{Value: &module.Products},
 		&inject.Object{Value: &module.Votes},
 		&inject.Object{Value: &module.Users},
 		&inject.Object{Value: &module.Categories},
@@ -77,7 +80,6 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.BuildNotes},
 		&inject.Object{Value: &module.Mail},
 		&inject.Object{Value: &module.Components},
-		&inject.Object{Value: &module.Checkout},
 		&inject.Object{Value: &module.Customer},
 		&inject.Object{Value: &module.Orders},
 		&inject.Object{Value: &module.Owners},
@@ -171,6 +173,7 @@ func (module *Module) Run() {
 		v1.GET("/feed", module.Posts.FeedGet)
 		v1.GET("/post", module.Posts.FeedGet)
 		v1.GET("/search/posts", module.PostsFactory.Search)
+		v1.GET("/search/products", module.Products.Search)
 		v1.GET("/posts/:id", module.Posts.PostsGetOne)
 		v1.GET("/posts/:id/comments", module.PostsFactory.GetPostComments)
 		v1.GET("/posts/:id/light", module.Posts.GetLightweight)

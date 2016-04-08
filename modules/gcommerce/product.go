@@ -26,6 +26,11 @@ type Product struct {
 	di *Module
 }
 
+type ProductAggregation struct {
+	Type  string `bson:"_id" json:"type"`
+	Count int    `bson:"count" json:"count"`
+}
+
 func (this *Product) SetDI(i *Module) {
 	this.di = i
 }
