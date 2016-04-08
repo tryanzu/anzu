@@ -21,6 +21,23 @@ func (this Products) GetById(id bson.ObjectId) (*Product, error) {
 	return model, nil
 }
 
+func (this Products) GetByBson(query bson.M) (*Product, error) {
+
+	var model *Product
+
+	database := this.di.Mongo.Database
+	err := database.C("gcommerce_products").Find(query).One(&model)
+
+	if err != nil {
+		return nil, err
+	}
+
+	model.SetDI(this.di)
+	model.Initialize()
+	
+	return model, nil
+}
+
 func (this Products) GetList(limit, offset int, search, category, kind string) ([]*Product, []ProductAggregation, int, error) {
 
 	list := make([]*Product, 0)
