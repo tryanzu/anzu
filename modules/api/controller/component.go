@@ -13,7 +13,7 @@ type ComponentAPI struct {
 	Components *components.Module `inject:""`
 	Feed       *feed.FeedModule   `inject:""`
 	User       *user.Module       `inject:""`
-	GCommerce  *gcommerce.Module       `inject:""`
+	GCommerce  *gcommerce.Module  `inject:""`
 }
 
 // Get component by slug

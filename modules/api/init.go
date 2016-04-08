@@ -172,12 +172,15 @@ func (module *Module) Run() {
 		// Post routes
 		v1.GET("/feed", module.Posts.FeedGet)
 		v1.GET("/post", module.Posts.FeedGet)
-		v1.GET("/search/posts", module.PostsFactory.Search)
-		v1.GET("/search/products", module.Products.Search)
 		v1.GET("/posts/:id", module.Posts.PostsGetOne)
 		v1.GET("/posts/:id/comments", module.PostsFactory.GetPostComments)
 		v1.GET("/posts/:id/light", module.Posts.GetLightweight)
 		v1.GET("/post/s/:id", module.Posts.PostsGetOne)
+
+		// Search routes
+		v1.GET("/search/posts", module.PostsFactory.Search)
+		v1.GET("/search/products", module.Products.Search)
+		v1.GET("/search/components", module.ComponentsFactory.Search)
 
 		// // Election routes
 		v1.POST("/election/:id", module.Elections.ElectionAddOption)
@@ -202,7 +205,6 @@ func (module *Module) Run() {
 		v1.GET("/part", module.Parts.GetPartTypes)
 		v1.GET("/part/:type/manufacturers", module.Parts.GetPartManufacturers)
 		v1.GET("/part/:type/models", module.Parts.GetPartManufacturerModels)
-		v1.GET("/search/components", module.ComponentsFactory.Search)
 		v1.GET("/component/:id", module.Components.Get)
 		v1.GET("/component/:id/posts", module.Components.GetPosts)
 
@@ -219,6 +221,9 @@ func (module *Module) Run() {
 			store.GET("/cart", module.CartFactory.Get)
 			store.POST("/cart", module.CartFactory.Add)
 			store.DELETE("/cart/:id", module.CartFactory.Delete)
+
+			// Products routes
+			store.GET("/product/:id", module.Products.Get)
 
 			// Store routes with auth
 			astore := store.Group("")

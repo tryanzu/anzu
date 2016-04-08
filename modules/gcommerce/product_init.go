@@ -25,6 +25,19 @@ func (this *Product) Initialize() {
 	}
 }
 
+func (this *Product) InitializeMassdrop() {
+
+	var model *Massdrop
+	database := this.di.Mongo.Database
+
+
+	err := database.C("gcommerce_massdrop").Find(bson.M{"product_id": this.Id}).One(&model)
+
+	if err == nil {
+		this.Massdrop = model
+	}
+}
+
 // Use Component pointer to fulfill product fields
 func (this *Product) ComponentBind(component *components.ComponentModel) {
 
