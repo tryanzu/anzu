@@ -151,6 +151,44 @@ func (module *Module) Get(where bson.M, limit, offset int) []Order {
 	return list
 }
 
+func (module *Module) JoinUsers(list []bson.ObjectId) (map[bson.ObjectId]Customer, map[bson.ObjectId]user.UserSimple) {
+
+	var customers []Customer
+	var users []user.UserSimple
+	var user_ids []bson.ObjectId
+
+	database := module.Mongo.Database
+	err := database.C("customers").Find(bson.M{"_id": bson.M{"$in": list}}).All(&customers)
+
+	if err != nil {
+		panic(err)
+	}
+
+	for _, customer := range customers {
+		user_ids = append(user_ids, customer.UserId)
+	}
+
+	err = database.C("users").Find(bson.M{"_id": bson.M{"$in": user_ids}}).Select(user.UserSimpleFields).All(&users)
+
+	if err != nil {
+		panic(err)
+	}
+
+	customer_map := map[bson.ObjectId]Customer{}
+
+	for _, customer := range customers {
+		customer_map[customer.Id] = customer
+	}
+
+	users_map := map[bson.ObjectId]user.UserSimple{}
+
+	for _, usr := range users {
+		users_map[usr.Id] = usr
+	}
+
+	return customer_map, users_map
+}
+
 func (module *Module) One(where bson.M) (*Order, error) {
 
 	var order *Order

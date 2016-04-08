@@ -3,6 +3,8 @@ package gcommerce
 import (
 	"gopkg.in/mgo.v2/bson"
 	"github.com/fernandez14/spartangeek-blacker/modules/components"
+
+	"sort"
 )
 
 // Initialize Product model struct (single one)
@@ -34,7 +36,99 @@ func (this *Product) InitializeMassdrop() {
 	err := database.C("gcommerce_massdrop").Find(bson.M{"product_id": this.Id}).One(&model)
 
 	if err == nil {
+
 		this.Massdrop = model
+
+		var transactions []MassdropTransaction
+		var activities []MassdropActivity
+
+		err := database.C("gcommerce_massdrop_transactions").Find(bson.M{"massdrop_id": model.Id}).Sort("-created_at").All(&transactions)
+
+		if err != nil {
+			panic(err)
+		}
+
+		if len(transactions) > 0 {
+
+			var customers []bson.ObjectId
+
+			for _, t := range transactions {
+				customers = append(customers, t.CustomerId)
+			}
+
+			customers_map, users_map := this.di.JoinUsers(customers)
+
+			var reservations int = 0
+			var interested int = 0
+
+			for _, t := range transactions {
+
+				if t.Status == MASSDROP_STATUS_COMPLETED {
+
+					// User information
+					customer := customers_map[t.CustomerId]
+					usr := users_map[customer.UserId]
+
+					activity := MassdropActivity{
+						Type: t.Type,
+						Created: t.Created,
+						Attrs: map[string]interface{}{
+							"user": usr,
+						},
+					}
+
+					activities = append(activities, activity)
+
+					if t.Type == MASSDROP_TRANS_RESERVATION {
+						reservations = reservations + 1
+					} else if t.Type == MASSDROP_TRANS_INSTERESTED {
+						interested = interested + 1
+					}
+				} 
+			}
+
+			// First activities sorting
+			sort.Sort(MassdropByCreated(activities))
+
+			for index, c := range this.Massdrop.Checkpoints {
+
+				if reservations >= c.Ends  {
+
+					this.Massdrop.Checkpoints[index].Done = true
+
+					count := 0
+
+					for _, act := range activities {
+
+						if act.Type != MASSDROP_TRANS_RESERVATION {
+							continue
+						} 
+
+						count = count + 1
+
+						if count == c.Ends {
+
+							activity := MassdropActivity{
+								Type: "checkpoint",
+								Created: act.Created,
+								Attrs: map[string]interface{}{
+									"step": c.Step,
+								},
+							}
+
+							activities = append(activities, activity)
+							break
+						}
+					}
+				}
+			}
+
+			sort.Sort(MassdropByCreated(activities))
+
+			this.Massdrop.Activities = activities
+			this.Massdrop.Reservations = reservations
+			this.Massdrop.Interested = interested
+		}
 	}
 }
 
