@@ -5,6 +5,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/components"
 
 	"sort"
+	"time"
 )
 
 // Initialize Product model struct (single one)
@@ -95,6 +96,8 @@ func (this *Product) InitializeMassdrop() {
 				if reservations >= c.Ends  {
 
 					this.Massdrop.Checkpoints[index].Done = true
+					this.Massdrop.Deadline.Add(time.Duration(c.Timespan) * time.Hour)
+					this.Massdrop.Price = c.Price
 
 					count := 0
 
