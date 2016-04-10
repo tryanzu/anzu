@@ -30,6 +30,7 @@ type Product struct {
 const MASSDROP_TRANS_RESERVATION = "reservation"
 const MASSDROP_TRANS_INSTERESTED = "interested"
 const MASSDROP_STATUS_COMPLETED = "completed"
+const MASSDROP_STATUS_REMOVED = "removed"
 
 type Massdrop struct {
 	Id          bson.ObjectId         `bson:"_id,omitempty" json:"id"`
@@ -44,6 +45,7 @@ type Massdrop struct {
 	Activities  []MassdropActivity    `bson:"-" json:"activities"`
 	Reservations int  `bson:"-" json:"count_reservations"`
 	Interested   int  `bson:"-" json:"count_interested"`
+	Current      string  `bson:"-" json:"current,omitempty"`
 }
 
 type MassdropCheckpoint struct {
