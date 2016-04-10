@@ -20,178 +20,41 @@ func (this API) Massdrop(c *gin.Context) {
 	if c.Bind(&form) == nil {
 
 		products := this.GCommerce.Products()
-		product, err := products.GetById(form.MassdropId)
+		product, err := products.GetById(form.ProductId)
 
 		if err != nil {
-			c.JSON(400, gin.H{"message": "Invalid massdrop_id, can't find product", "error": "not-found", "status": "error"})
+			c.JSON(400, gin.H{"message": "Invalid product_id, can't find product", "error": "not-found", "status": "error"})
 			return
 		}
 
-		var items []cart.CartItem
+		// Load Massdrop information (if exists)
+		product.InitializeMassdrop()
 
-		// Initialize cart library
-		err := cartContainer.Bind(&items)
-
-		if err != nil || len(items) == 0 {
-
-			if err != nil {
-				c.JSON(500, gin.H{"message": err.Error(), "status": "error"})
-			} else {
-				c.JSON(400, gin.H{"message": "No items in cart.", "status": "error"})
-			}
-
+		if product.Massdrop == nil {
+			c.JSON(400, gin.H{"message": "Invalid product_id, can't checkout massdrop for product", "error": "invalid-massdrop", "status": "error"})
 			return
 		}
 
-		shipping_cost := 0.0
-		item_count := 0
-		errors := make([]CheckoutError, 0)
-
-		products := this.GCommerce.Products()
-		plist := map[string]*gcommerce.Product{}
-
-		// Check items against stored prices
-		for index, item := range items {
-
-			id := item.Id
-			product_id := bson.ObjectIdHex(id)
-			product, err := products.GetById(product_id)
-
-			if err != nil {
-
-				errors = append(errors, CheckoutError{
-					Type:    ITEM_NOT_FOUND,
-					Related: product_id,
-				})
-
-				// Remove from items
-				items = append(items[:index], items[index+1:]...)
-
-				continue
-			}
-
-			plist[id] = product
-
-			if item.GetPrice() != product.Price {
-
-				if item.GetPrice() > product.Price {
-
-					errors = append(errors, CheckoutError{
-						Type:    ITEM_CHEAPER,
-						Related: product_id,
-						Meta: map[string]interface{}{
-							"before": item.GetPrice(),
-							"after":  product.Price,
-						},
-					})
-
-					item.SetPrice(product.Price)
-
-					continue
-
-				} else if item.GetPrice() < product.Price {
-
-					errors = append(errors, CheckoutError{
-						Type:    ITEM_MORE_EXPENSIVE,
-						Related: product_id,
-						Meta: map[string]interface{}{
-							"before": item.GetPrice(),
-							"after":  product.Price,
-						},
-					})
-
-					item.SetPrice(product.Price)
-
-					continue
-				}
-			}
-
-			if product.Shipping > 0 {
-
-				shipping_cost = shipping_cost + (product.Shipping * float64(item.GetQuantity()))
-
-			} else if product.Category == "case" {
-
-				shipping_cost = shipping_cost + (320.0 * float64(item.GetQuantity()))
-
-			} else {
-
-				for i := 0; i < item.GetQuantity(); i++ {
-
-					if item_count == 0 {
-						shipping_cost = shipping_cost + 139.0
-					} else {
-						shipping_cost = shipping_cost + 60.0
-					}
-
-					item_count = item_count + 1
-				}
-			}
+		if product.Massdrop.Reserve <= 0 {
+			c.JSON(400, gin.H{"message": "Invalid product_id, can't checkout massdrop for product", "error": "invalid-massdrop-reserve", "status": "error"})
+			return
 		}
 
-		if len(errors) > 0 {
-
-			cartContainer.Save(items)
-
-			c.JSON(409, gin.H{"status": "error", "list": errors})
+		if form.Quantity <= 0 {
+			c.JSON(400, gin.H{"message": "Invalid quantity, can't checkout massdrop for product", "error": "invalid-quantity", "status": "error"})
 			return
 		}
 
 		customer := this.GCommerce.GetCustomerFromUser(user_id)
 
-		// Get a reference for the customer's address that will be used on the order
-		address, err := customer.Address(form.ShipTo)
-
-		if err != nil {
-			c.JSON(400, gin.H{"message": "Invalid ship_to parameter.", "status": "error"})
-			return
-		}
-
 		// Get a reference for the customer's new order
 		meta := form.Meta
 		meta["session_id"] = session_id
 
-		order, err := customer.NewOrder(form.Gateway, meta)
+		order, transaction, err := customer.MassdropTransaction(product, form.Quantity, form.Gateway, meta)
 
 		if err != nil {
-			c.JSON(400, gin.H{"message": err.Error(), "key": err.Error(), "status": "error", "order_id": order.Id})
-			return
-		}
-
-		for _, item := range items {
-
-			id := item.Id
-			meta := map[string]interface{}{
-				"related":    "product",
-				"related_id": bson.ObjectIdHex(id),
-				"cart":       item,
-			}
-
-			order.Add(item.Name, item.Description, item.Image, item.GetPrice(), item.GetQuantity(), meta)
-		}
-
-		// Setup shipping information
-		order.Ship(shipping_cost, "generic", address)
-
-		// Match calculated total against frontend total
-		total := order.GetTotal()
-
-		if total != form.Total {
-			c.JSON(400, gin.H{"message": "Invalid total parameter.", "key": "bad-total", "status": "error", "shipping": shipping_cost, "total": total})
-			return
-		}
-
-		err = order.Save()
-
-		if err != nil {
-			c.JSON(400, gin.H{"message": err.Error(), "key": err.Error(), "status": "error"})
-			return
-		}
-
-		err = order.Checkout()
-
-		if err != nil {
-			c.JSON(400, gin.H{"message": err.Error(), "key": err.Error(), "status": "error"})
+			c.JSON(400, gin.H{"message": err.Error(), "error": err.Error(), "status": "error", "order_id": order.Id})
 			return
 		}
 
@@ -205,14 +68,10 @@ func (this API) Massdrop(c *gin.Context) {
 			}
 
 			var paymentType string
-			var template int
+			var template int = 549841
 
 			if form.Gateway == "offline" {
-				paymentType = "Transferencia o Deposito"
-				template = 324721
-			} else if form.Gateway == "stripe" {
-				paymentType = "Pago en linea"
-				template = 252541
+				template = 549941
 			}
 
 			compose := mail.Mail{
@@ -231,23 +90,13 @@ func (this API) Massdrop(c *gin.Context) {
 				},
 				Variables: map[string]interface{}{
 					"name":           usr.Name(),
-					"payment":        paymentType,
-					"line1":          address.Line1(),
-					"line2":          address.Line2(),
-					"line3":          address.Extra(),
-					"total_products": order.GetOriginalTotal() - order.Shipping.OPrice,
-					"total_shipping": order.Shipping.OPrice,
-					"subtotal":       order.GetOriginalTotal(),
-					"commision":      order.GetGatewayCommision(),
-					"total":          order.Total,
-					"items":          order.Items,
 					"reference":      order.Reference,
 				},
 			}
 
 			go mailing.Send(compose)
 
-			go func(id bson.ObjectId) {
+			/*go func(id bson.ObjectId) {
 
 				err := queue.PushWDelay("gcommerce", "payment-reminder", map[string]interface{}{"id": id.Hex()}, 3600*24*2)
 
@@ -255,10 +104,7 @@ func (this API) Massdrop(c *gin.Context) {
 					panic(err)
 				}
 
-			}(order.Id)
-
-			// Clean up cart items
-			cartContainer.Save(make([]cart.CartItem, 0))
+			}(order.Id)*/
 		}
 
 		c.JSON(200, gin.H{"status": "okay"})
