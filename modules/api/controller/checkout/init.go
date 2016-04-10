@@ -45,6 +45,13 @@ type CheckoutForm struct {
 	Meta    map[string]interface{} `json:"meta"`
 }
 
+type MassdropForm struct {
+	Gateway   string                 `json:"gateway" binding:"required"`
+	ProductId bson.ObjectId          `json:"product_id" binding:"required"`
+	Total     float64                `json:"total" binding:"required"`
+	Meta      map[string]interface{} `json:"meta"`
+}
+
 type CheckoutError struct {
 	Type    string                 `json:"type"`
 	Related bson.ObjectId          `json:"related_id"`

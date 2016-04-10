@@ -11,14 +11,21 @@ import (
 
 func (this API) Massdrop(c *gin.Context) {
 
-	var form CheckoutForm
+	var form MassdropForm
 
-	cartContainer := this.getCartObject(c)
 	id := c.MustGet("user_id")
 	user_id := bson.ObjectIdHex(id.(string))
 	session_id := c.MustGet("session_id").(string)
 
 	if c.Bind(&form) == nil {
+
+		products := this.GCommerce.Products()
+		product, err := products.GetById(form.MassdropId)
+
+		if err != nil {
+			c.JSON(400, gin.H{"message": "Invalid massdrop_id, can't find product", "error": "not-found", "status": "error"})
+			return
+		}
 
 		var items []cart.CartItem
 
@@ -258,5 +265,5 @@ func (this API) Massdrop(c *gin.Context) {
 		return
 	}
 
-	c.JSON(400, gin.H{"message": "Malformed request, check order docs.", "status": "error"})
+	c.JSON(400, gin.H{"message": "Malformed request, check checkout docs.", "status": "error"})
 }

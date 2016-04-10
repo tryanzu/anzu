@@ -77,6 +77,8 @@ type MassdropTransaction struct {
 	Attrs       map[string]interface{} `bson:"attributes" json:"attributes"`
 	Created     time.Time      `bson:"created_at" json:"created_at"`
 	Updated     time.Time      `bson:"updated_at" json:"updated_at"`
+
+	di *Module
 }
 
 type ProductAggregation struct {
