@@ -28,7 +28,7 @@ func (this API) Get(c *gin.Context) {
 	if _, signed_in := c.Get("token"); signed_in {
 
 		user_str := c.MustGet("user_id")
-		user_id  := bson.ObjectIdHex(user_str.(string))
+		user_id := bson.ObjectIdHex(user_str.(string))
 
 		product.UserMassdrop(user_id)
 	}

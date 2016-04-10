@@ -156,7 +156,9 @@ func (this *Order) Save() error {
 		return errors.New("internal-error")
 	}
 
-	if this.Gateway == "stripe" {
+	_, skip_siftscience := this.Meta["skip_siftscience"]
+
+	if this.Gateway == "stripe" && !skip_siftscience {
 
 		token, exists := this.Meta["token"].(string)
 
