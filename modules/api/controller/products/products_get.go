@@ -25,5 +25,13 @@ func (this API) Get(c *gin.Context) {
 	// Load Massdrop information (if exists)
 	product.InitializeMassdrop()
 
+	if _, signed_in := c.Get("token"); signed_in {
+
+		user_str := c.MustGet("user_id")
+		user_id  := bson.ObjectIdHex(user_str.(string))
+
+		product.UserMassdrop(user_id)
+	}
+
 	c.JSON(200, product)
 }

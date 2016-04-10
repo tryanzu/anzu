@@ -233,6 +233,9 @@ func (module *Module) Run() {
 				astore.POST("/checkout", module.Checkout.Place)
 				astore.POST("/checkout/massdrop", module.Checkout.Massdrop)
 
+				// Massdrop insterested
+				store.PUT("/product/:id/massdrop", module.Products.Massdrop)
+
 				// Customer routes
 				astore.GET("/customer", module.Customer.Get)
 				astore.POST("/customer/address", module.Customer.CreateAddress)

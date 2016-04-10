@@ -24,7 +24,7 @@ func (this *MassdropTransaction) Save() error {
 func (this *Product) MassdropInterested(user_id bson.ObjectId) bool {
 
 	if this.Massdrop == nil {
-		return
+		return false
 	}
 
 	var model MassdropTransaction
@@ -63,7 +63,7 @@ func (this *Product) MassdropInterested(user_id bson.ObjectId) bool {
 	}
 }
 
-func (this *Product) UserMassdrop(user_id bson.ObjectId) bool {
+func (this *Product) UserMassdrop(user_id bson.ObjectId) {
 
 	if this.Massdrop == nil {
 		return
