@@ -231,6 +231,7 @@ func (module *Module) Run() {
 			astore.Use(module.Middlewares.NeedAuthorization())
 			{
 				astore.POST("/checkout", module.Checkout.Place)
+				astore.POST("/checkout/massdrop", module.Checkout.Massdrop)
 
 				// Customer routes
 				astore.GET("/customer", module.Customer.Get)

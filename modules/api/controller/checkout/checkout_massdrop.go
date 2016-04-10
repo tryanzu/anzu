@@ -1,10 +1,7 @@
 package checkout
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/modules/cart"
-	"github.com/fernandez14/spartangeek-blacker/modules/gcommerce"
 	"github.com/fernandez14/spartangeek-blacker/modules/mail"
-	"github.com/fernandez14/spartangeek-blacker/modules/queue"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -54,7 +51,7 @@ func (this API) Massdrop(c *gin.Context) {
 		order, transaction, err := customer.MassdropTransaction(product, form.Quantity, form.Gateway, meta)
 
 		if err != nil {
-			c.JSON(400, gin.H{"message": err.Error(), "error": err.Error(), "status": "error", "order_id": order.Id})
+			c.JSON(400, gin.H{"message": err.Error(), "error": err.Error(), "status": "error", "order_id": order.Id, "transaction_id": transaction.Id})
 			return
 		}
 
@@ -67,7 +64,6 @@ func (this API) Massdrop(c *gin.Context) {
 				panic(err)
 			}
 
-			var paymentType string
 			var template int = 549841
 
 			if form.Gateway == "offline" {
