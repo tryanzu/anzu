@@ -80,7 +80,15 @@ func (this *Product) InitializeMassdrop() {
 					activities = append(activities, activity)
 
 					if t.Type == MASSDROP_TRANS_RESERVATION {
-						reservations = reservations + 1
+
+						quantity, qe := t.Attrs["quantity"].(int)
+
+						if !qe {
+							quantity = 1
+						}
+
+						reservations = reservations + quantity
+
 					} else if t.Type == MASSDROP_TRANS_INSTERESTED {
 						interested = interested + 1
 					}

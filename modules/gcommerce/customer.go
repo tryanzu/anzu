@@ -236,6 +236,7 @@ func (this *Customer) MassdropTransaction(product *Product, q int, gateway_name 
 		Status:      MASSDROP_STATUS_COMPLETED,
 		Attrs:       map[string]interface{}{
 			"order_id": order.Id,
+			"quantity": q,
 		},
 		Created:     time.Now(),
 		Updated:     time.Now(),
