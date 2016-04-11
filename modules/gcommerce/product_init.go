@@ -143,6 +143,12 @@ func (this *Product) InitializeMassdrop() {
 
 			sort.Sort(MassdropByCreated(activities))
 
+			// Limit to 10 activities - TODO: use param
+			if len(activities) > 10 {
+
+				activities = activities[0:9]
+			}
+
 			this.Massdrop.Activities = activities
 			this.Massdrop.Reservations = reservations
 			this.Massdrop.Interested = interested
