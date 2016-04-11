@@ -74,7 +74,7 @@ func (this *Product) UserMassdrop(user_id bson.ObjectId) {
 
 	database := this.di.Mongo.Database
 	customer := this.di.GetCustomerFromUser(user_id)
-	err := database.C("gcommerce_massdrop_transactions").Find(bson.M{"massdrop_id": this.Massdrop.Id, "customer_id": customer.Id, "status": MASSDROP_STATUS_COMPLETED}).One(&model)
+	err := database.C("gcommerce_massdrop_transactions").Find(bson.M{"massdrop_id": this.Massdrop.Id, "customer_id": customer.Id, "status": MASSDROP_STATUS_COMPLETED}).Sort("-created_at").One(&model)
 
 	if err == nil {
 		status = model.Type
