@@ -25,6 +25,12 @@ func (this ProductAPI) Legion(c *gin.Context) {
 		return
 	}
 
+	if slug == "faq" {
+
+		this.FAQ(c)
+		return 
+	}
+	
 	products := this.GCommerce.Products()
 	product, err := products.GetByBson(bson.M{"slug": slug})
 

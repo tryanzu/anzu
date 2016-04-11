@@ -97,7 +97,6 @@ func (module *Module) Run() {
 	router.GET("/componente/:slug", module.Components.MigrateOld)
 	router.GET("/componente/:slug/", module.Components.MigrateOld)
 	router.GET("/compra-en-legion/:slug", module.Products.Legion)
-	router.GET("/compra-en-legion/:slug/faq", module.Products.FAQ)
 	router.GET("/", module.General.Landing)
 
 	// Run over the 3014 port
