@@ -2,8 +2,8 @@ package gcommerce
 
 import (
 	"errors"
-	"time"
 	"fmt"
+	"time"
 
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
@@ -172,3 +172,79 @@ func (this *Customer) NewOrder(gateway_name string, meta map[string]interface{})
 
 	return order, nil
 }
+
+func (this *Customer) MassdropTransaction(product *Product, q int, gateway_name string, meta map[string]interface{}) (*Order, *MassdropTransaction, error) {
+
+	if product.Massdrop == nil {
+		return nil, nil, errors.New("Can't make a massdrop transaction using this product.")
+	}
+
+	meta["skip_siftscience"] = true
+	meta["addressless"] = true
+
+	t := time.Now()
+
+	reference := t.Format("20060102-1504") + "-MASSD-" + helpers.StrCapRandom(5)
+	order := &Order{
+		Id:        bson.NewObjectId(),
+		Reference: reference,
+		Status:    ORDER_AWAITING,
+		Statuses:  make([]Status, 0),
+		UserId:    this.Id,
+		Items:     make([]Item, 0),
+		Total:     0,
+		Gateway:   gateway_name,
+		Meta:      meta,
+		Created:   time.Now(),
+		Updated:   time.Now(),
+	}
+
+	order.SetDI(this.di)
+
+	// Add reservation as an item
+	item_name := "Reservación de producto en legión ("+product.Name+")"
+	item_meta := map[string]interface{}{
+		"related": "massdrop_product",
+		"related_id": product.Id,
+	}
+
+	order.Add(item_name, product.Description, product.Image, product.Massdrop.Reserve, q, item_meta)
+
+	err := order.Save()
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	err = order.Checkout()
+
+	if err != nil {
+		return nil, nil, err
+	}
+	
+	var transactionType string = "reservation"
+
+	if gateway_name == "offline" {
+		transactionType = MASSDROP_TRANS_INSTERESTED 
+	}
+
+	transaction := &MassdropTransaction{
+		Id:          bson.NewObjectId(),
+		MassdropId:  product.Massdrop.Id,
+		CustomerId:  this.Id,
+		Type:        transactionType,         
+		Status:      MASSDROP_STATUS_COMPLETED,
+		Attrs:       map[string]interface{}{
+			"order_id": order.Id,
+			"quantity": q,
+		},
+		Created:     time.Now(),
+		Updated:     time.Now(),
+	}
+
+	transaction.SetDI(this.di)
+	transaction.Save()
+
+	return order, transaction, nil
+}
+

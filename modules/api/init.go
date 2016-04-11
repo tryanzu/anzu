@@ -9,6 +9,9 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/posts"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/components"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/users"
+	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/cart"
+	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/checkout"
+	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/products"
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/olebedev/config"
@@ -35,8 +38,9 @@ type Module struct {
 	Mail         controller.MailAPI
 	PostsFactory posts.API
 	Components   controller.ComponentAPI
-	Cart         controller.CartAPI
-	Checkout     controller.CheckoutAPI
+	CartFactory  cart.API
+	Checkout     checkout.API
+	Products     products.API
 	Customer     controller.CustomerAPI
 	Orders       controller.OrdersAPI
 	Owners       controller.OwnersAPI
@@ -58,6 +62,9 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.PostsFactory},
 		&inject.Object{Value: &module.ComponentsFactory},
 		&inject.Object{Value: &module.UsersFactory},
+		&inject.Object{Value: &module.CartFactory},
+		&inject.Object{Value: &module.Checkout},
+		&inject.Object{Value: &module.Products},
 		&inject.Object{Value: &module.Votes},
 		&inject.Object{Value: &module.Users},
 		&inject.Object{Value: &module.Categories},
@@ -73,8 +80,6 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.BuildNotes},
 		&inject.Object{Value: &module.Mail},
 		&inject.Object{Value: &module.Components},
-		&inject.Object{Value: &module.Cart},
-		&inject.Object{Value: &module.Checkout},
 		&inject.Object{Value: &module.Customer},
 		&inject.Object{Value: &module.Orders},
 		&inject.Object{Value: &module.Owners},
@@ -167,11 +172,15 @@ func (module *Module) Run() {
 		// Post routes
 		v1.GET("/feed", module.Posts.FeedGet)
 		v1.GET("/post", module.Posts.FeedGet)
-		v1.GET("/search/posts", module.PostsFactory.Search)
 		v1.GET("/posts/:id", module.Posts.PostsGetOne)
 		v1.GET("/posts/:id/comments", module.PostsFactory.GetPostComments)
 		v1.GET("/posts/:id/light", module.Posts.GetLightweight)
 		v1.GET("/post/s/:id", module.Posts.PostsGetOne)
+
+		// Search routes
+		v1.GET("/search/posts", module.PostsFactory.Search)
+		v1.GET("/search/products", module.Products.Search)
+		v1.GET("/search/components", module.ComponentsFactory.Search)
 
 		// // Election routes
 		v1.POST("/election/:id", module.Elections.ElectionAddOption)
@@ -196,7 +205,6 @@ func (module *Module) Run() {
 		v1.GET("/part", module.Parts.GetPartTypes)
 		v1.GET("/part/:type/manufacturers", module.Parts.GetPartManufacturers)
 		v1.GET("/part/:type/models", module.Parts.GetPartManufacturerModels)
-		v1.GET("/search/components", module.ComponentsFactory.Search)
 		v1.GET("/component/:id", module.Components.Get)
 		v1.GET("/component/:id/posts", module.Components.GetPosts)
 
@@ -210,9 +218,12 @@ func (module *Module) Run() {
 			store.POST("/order", module.Store.PlaceOrder)
 
 			// Cart routes
-			store.GET("/cart", module.Cart.Get)
-			store.POST("/cart", module.Cart.Add)
-			store.DELETE("/cart/:id", module.Cart.Delete)
+			store.GET("/cart", module.CartFactory.Get)
+			store.POST("/cart", module.CartFactory.Add)
+			store.DELETE("/cart/:id", module.CartFactory.Delete)
+
+			// Products routes
+			store.GET("/product/:id", module.Products.Get)
 
 			// Store routes with auth
 			astore := store.Group("")
@@ -220,6 +231,10 @@ func (module *Module) Run() {
 			astore.Use(module.Middlewares.NeedAuthorization())
 			{
 				astore.POST("/checkout", module.Checkout.Place)
+				astore.POST("/checkout/massdrop", module.Checkout.Massdrop)
+
+				// Massdrop insterested
+				store.PUT("/product/:id/massdrop", module.Products.Massdrop)
 
 				// Customer routes
 				astore.GET("/customer", module.Customer.Get)

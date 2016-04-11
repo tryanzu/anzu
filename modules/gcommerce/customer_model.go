@@ -13,7 +13,7 @@ type Customer struct {
 	Updated time.Time     `bson:"updated_at" json:"updated_at"`
 
 	di   *Module
-	User *user.One `bson:"-" json:"user"` 
+	User *user.One `bson:"-" json:"user"`
 
 	Addresses []CustomerAddress `bson:"-" json:"addresses"`
 }
