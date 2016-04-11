@@ -138,7 +138,6 @@ func (this *Product) InitializeMassdrop() {
 			}
 
 			if lastCheckpoint.Starts <= interested {
-
 				this.Massdrop.Active = false
 			}
 
