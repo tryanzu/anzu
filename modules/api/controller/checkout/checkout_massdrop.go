@@ -4,6 +4,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
+	"github.com/dustin/go-humanize"
 )
 
 func (this API) Massdrop(c *gin.Context) {
@@ -85,8 +86,11 @@ func (this API) Massdrop(c *gin.Context) {
 					},
 				},
 				Variables: map[string]interface{}{
-					"name":           usr.Name(),
-					"reference":      order.Reference,
+					"name":      usr.Name(),
+					"reference": order.Reference,
+					"price":     product.Massdrop.Reserve,
+					"quantity":  form.Quantity,
+					"total":     humanize.FormatFloat("#,###.##", product.Massdrop.Reserve * float64(form.Quantity)),
 				},
 			}
 
