@@ -132,12 +132,12 @@ func (this *Product) InitializeMassdrop() {
 
 							activities = append(activities, activity)
 							break
-						}
+	 					}
 					}
 				}
 			}
 
-			if lastCheckpoint.Starts <= interested || !this.Massdrop.Deadline.Before(time.Now()) {
+			if lastCheckpoint.Starts <= interested || this.Massdrop.Deadline.Before(time.Now()) {
 				this.Massdrop.Active = false
 			}
 
