@@ -38,6 +38,11 @@ func (this API) Massdrop(c *gin.Context) {
 			return
 		}
 
+		if product.Massdrop.Active == false {
+			c.JSON(400, gin.H{"message": "Invalid product_id, can't checkout massdrop for product", "error": "massdrop-finished", "status": "error"})
+			return
+		}
+
 		if form.Quantity <= 0 {
 			c.JSON(400, gin.H{"message": "Invalid quantity, can't checkout massdrop for product", "error": "invalid-quantity", "status": "error"})
 			return
