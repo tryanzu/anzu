@@ -57,3 +57,16 @@ func (this ProductAPI) Legion(c *gin.Context) {
 	c.Header("Content-Type", "text/html; charset=utf-8")
 	c.String(200, page)
 }
+
+func (this ProductAPI) FAQ(c *gin.Context) {
+	
+	var page string = this.Page
+
+	page = strings.Replace(page, "SpartanGeek.com | Comunidad de tecnología, geeks y más", "SpartanGeek.com | Compra en Legión | Preguntas frecuentes", 1)
+	page = strings.Replace(page, "{{ page.title }}", "SpartanGeek | Compra en Legión | Preguntas frecuentes", 1)
+	page = strings.Replace(page, "{{ page.description }}", "Ofertas de componentes para PC en México. Comprar en Legión es la nueva forma de hacer compras grupales y alcanzar los mejores precios.", 2)
+	page = strings.Replace(page, "{{ page.image }}", "http://spartangeek.com/images/default-post.jpg", 1)
+
+	c.Header("Content-Type", "text/html; charset=utf-8")
+	c.String(200, page)
+}
