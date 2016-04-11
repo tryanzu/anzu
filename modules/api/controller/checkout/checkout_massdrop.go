@@ -47,7 +47,6 @@ func (this API) Massdrop(c *gin.Context) {
 		// Get a reference for the customer's new order
 		meta := form.Meta
 		meta["session_id"] = session_id
-		meta["skip_siftscience"] = true
 
 		order, transaction, err := customer.MassdropTransaction(product, form.Quantity, form.Gateway, meta)
 

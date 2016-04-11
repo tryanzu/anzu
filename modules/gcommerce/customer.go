@@ -180,6 +180,7 @@ func (this *Customer) MassdropTransaction(product *Product, q int, gateway_name 
 	}
 
 	meta["skip_siftscience"] = true
+	meta["addressless"] = true
 
 	t := time.Now()
 
