@@ -183,6 +183,8 @@ func (this *Order) Save() error {
 				"$zipcode":   caddress.Address.PostalCode,
 			}
 
+			products := this.di.Products()
+
 			for _, item := range this.Items {
 
 				item_id, is_valid := item.Meta["related_id"].(bson.ObjectId)
@@ -190,18 +192,24 @@ func (this *Order) Save() error {
 				if is_valid {
 
 					item_micros := int64((item.OPrice * 100) * 10000)
-					component, err := this.di.Components.Get(item_id)
+					product, err := products.GetById(item_id)
 
 					if err == nil {
+
+						manufacturer, mexists := product.Attrs["manufacturer"].(string)
+
+						if !mexists {
+							manufacturer = "unknown"
+						}
 
 						items = append(items, map[string]interface{}{
 							"$item_id":       item_id.Hex(),
 							"$product_title": item.Name,
 							"$price":         item_micros,
 							"$currency_code": "MXN",
-							"$brand":         component.Manufacturer,
-							"$manufacturer":  component.Manufacturer,
-							"$category":      component.Type,
+							"$brand":         manufacturer,
+							"$manufacturer":  manufacturer,
+							"$category":      product.Category,
 							"$quantity":      item.Quantity,
 						})
 					}
