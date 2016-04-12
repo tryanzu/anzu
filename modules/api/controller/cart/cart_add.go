@@ -66,7 +66,7 @@ func (this API) Add(c *gin.Context) {
 					Price:       product.Price,
 					Type:        product.Type,
 					Quantity:    1,
-					Attributes:  product.Attrs,
+					Attributes:  map[string]interface{}{},
 				}
 
 				items = append(items, item)

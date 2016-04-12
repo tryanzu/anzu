@@ -3,6 +3,7 @@ package cart
 import (
 	"encoding/json"
 	"github.com/gin-gonic/contrib/sessions"
+	"fmt"
 )
 
 type GinGonicSession struct {
@@ -42,6 +43,8 @@ func (gcs GinGonicSession) Save(data interface{}) error {
 
 	session.Set("cart", string(encoded))
 	session.Save()
+
+	fmt.Printf("%v\n", session.Get("cart").(string))
 
 	return nil
 }
