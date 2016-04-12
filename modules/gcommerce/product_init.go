@@ -97,12 +97,8 @@ func (this *Product) InitializeMassdrop() {
 
 			// First activities sorting
 			sort.Sort(MassdropByCreated(activities))
-
-			var lastCheckpoint MassdropCheckpoint
-
+			
 			for index, c := range this.Massdrop.Checkpoints {
-
-				lastCheckpoint = c
 
 				if reservations >= c.Starts  {
 
@@ -137,7 +133,7 @@ func (this *Product) InitializeMassdrop() {
 				}
 			}
 
-			if lastCheckpoint.Starts <= interested || this.Massdrop.Deadline.Before(time.Now()) {
+			if this.Massdrop.Deadline.Before(time.Now()) {
 				this.Massdrop.Active = false
 			}
 
