@@ -21,13 +21,24 @@ func (this *MassdropTransaction) Save() error {
 	return err
 }
 
+func (this *MassdropTransaction) CastToReservation() error {
+
+	database := this.di.Mongo.Database
+
+	// Perform the save of the order once we've got here
+	err := database.C("gcommerce_massdrop_transactions").Update(bson.M{"_id": this.Id}, bson.M{"$set": bson.M{"status": MASSDROP_STATUS_COMPLETED, "type": MASSDROP_TRANS_RESERVATION}})
+
+	return err
+}
+
+
 func (this *Product) MassdropInterested(user_id bson.ObjectId) bool {
 
 	if this.Massdrop == nil {
 		return false
 	}
 
-	var model MassdropTransaction
+	var model *MassdropTransaction
 
 	database := this.di.Mongo.Database
 	customer := this.di.GetCustomerFromUser(user_id)

@@ -29,6 +29,33 @@ func (this *Order) ChangeStatus(name string) {
 
 	database := this.di.Mongo.Database
 
+	is_massdrop := false
+
+	for _, item := range this.Items {
+
+		if related, exists := item.Meta["related"].(string); exists {
+
+			if related == "massdrop_product" {
+				
+				is_massdrop = true
+			}
+		}
+	}
+
+	// If there's a massdrop product in order and it goes from awaiting to confirmed then update possible massdrop transaction
+	if is_massdrop && this.Status == ORDER_AWAITING && name == ORDER_CONFIRMED {
+
+		var transaction *MassdropTransaction
+
+		err := database.C("gcommerce_massdrop_transactions").Find(bson.M{"customer_id": this.UserId, "type": "interested", "attributes.order_id": this.Id}).One(&transaction)
+
+		if err == nil {
+
+			transaction.SetDI(this.di)
+			transaction.CastToReservation()
+		}
+	}
+
 	status := Status{
 		this.Status,
 		make(map[string]interface{}),
