@@ -17,14 +17,14 @@ type Product struct {
 	CategoryId  bson.ObjectId          `bson:"category_id,omitempty" json:"category_id,omitempty"`
 	Price       float64                `bson:"price" json:"price"`
 	Shipping    float64                `bson:"shipping_cost" json:"shipping_cost"`
-	Search      string 				   `bson:"search" json:"search"`
-	Relevance   int 				   `bson:"relevance" json:"relevance"`
+	Search      string                 `bson:"search" json:"search"`
+	Relevance   int                    `bson:"relevance" json:"relevance"`
 	Attrs       map[string]interface{} `bson:"attributes" json:"attributes"`
 	Created     time.Time              `bson:"created_at" json:"created_at"`
 	Updated     time.Time              `bson:"updated_at" json:"updated_at"`
 
-	di *Module
-	Massdrop    *Massdrop              `bson:"massdrop,omitempty" json:"massdrop,omitempty"`
+	di       *Module
+	Massdrop *Massdrop `bson:"massdrop,omitempty" json:"massdrop,omitempty"`
 }
 
 const MASSDROP_TRANS_RESERVATION = "reservation"
@@ -33,19 +33,19 @@ const MASSDROP_STATUS_COMPLETED = "completed"
 const MASSDROP_STATUS_REMOVED = "removed"
 
 type Massdrop struct {
-	Id          bson.ObjectId         `bson:"_id,omitempty" json:"id"`
-	ProductId   bson.ObjectId         `bson:"product_id" json:"product_id"`
-	Deadline    time.Time             `bson:"deadline" json:"deadline"`
-	Price       float64               `bson:"price" json:"price"`
-	Reserve     float64               `bson:"reserve_price" json:"reserve_price"`
-	Active      bool                  `bson:"active" json:"active"`
-	Checkpoints []MassdropCheckpoint  `bson:"checkpoints" json:"checkpoints"`
+	Id          bson.ObjectId        `bson:"_id,omitempty" json:"id"`
+	ProductId   bson.ObjectId        `bson:"product_id" json:"product_id"`
+	Deadline    time.Time            `bson:"deadline" json:"deadline"`
+	Price       float64              `bson:"price" json:"price"`
+	Reserve     float64              `bson:"reserve_price" json:"reserve_price"`
+	Active      bool                 `bson:"active" json:"active"`
+	Checkpoints []MassdropCheckpoint `bson:"checkpoints" json:"checkpoints"`
 
 	// Runtime generated data
-	Activities  []MassdropActivity    `bson:"-" json:"activities"`
-	Reservations int  `bson:"-" json:"count_reservations"`
-	Interested   int  `bson:"-" json:"count_interested"`
-	Current      string  `bson:"-" json:"current,omitempty"`
+	Activities   []MassdropActivity `bson:"-" json:"activities"`
+	Reservations int                `bson:"-" json:"count_reservations"`
+	Interested   int                `bson:"-" json:"count_interested"`
+	Current      string             `bson:"-" json:"current,omitempty"`
 }
 
 type MassdropCheckpoint struct {
@@ -58,9 +58,9 @@ type MassdropCheckpoint struct {
 }
 
 type MassdropActivity struct {
-	Type        string  	           `bson:"type" json:"type"`
-	Attrs       map[string]interface{} `bson:"attributes" json:"attributes"`
-	Created     time.Time              `bson:"created_at" json:"created_at"`
+	Type    string                 `bson:"type" json:"type"`
+	Attrs   map[string]interface{} `bson:"attributes" json:"attributes"`
+	Created time.Time              `bson:"created_at" json:"created_at"`
 }
 
 // ByCommentCreatedAt implements sort.Interface for []ElectionOption based on Created field
@@ -71,14 +71,14 @@ func (a MassdropByCreated) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a MassdropByCreated) Less(i, j int) bool { return !a[i].Created.Before(a[j].Created) }
 
 type MassdropTransaction struct {
-	Id          bson.ObjectId  `bson:"_id,omitempty" json:"id"`
-	MassdropId  bson.ObjectId  `bson:"massdrop_id" json:"massdrop_id"`
-	CustomerId  bson.ObjectId  `bson:"customer_id" json:"customer_id"` 
-	Type        string  	   `bson:"type" json:"type"`
-	Status      string  	   `bson:"status" json:"status"`
-	Attrs       map[string]interface{} `bson:"attributes" json:"attributes"`
-	Created     time.Time      `bson:"created_at" json:"created_at"`
-	Updated     time.Time      `bson:"updated_at" json:"updated_at"`
+	Id         bson.ObjectId          `bson:"_id,omitempty" json:"id"`
+	MassdropId bson.ObjectId          `bson:"massdrop_id" json:"massdrop_id"`
+	CustomerId bson.ObjectId          `bson:"customer_id" json:"customer_id"`
+	Type       string                 `bson:"type" json:"type"`
+	Status     string                 `bson:"status" json:"status"`
+	Attrs      map[string]interface{} `bson:"attributes" json:"attributes"`
+	Created    time.Time              `bson:"created_at" json:"created_at"`
+	Updated    time.Time              `bson:"updated_at" json:"updated_at"`
 
 	di *Module
 }

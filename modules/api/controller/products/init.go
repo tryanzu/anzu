@@ -13,3 +13,7 @@ type API struct {
 	User       *user.Module       `inject:""`
 	GCommerce  *gcommerce.Module  `inject:""`
 }
+
+type MassdropForm struct {
+	Reference string `json:"reference"`
+}

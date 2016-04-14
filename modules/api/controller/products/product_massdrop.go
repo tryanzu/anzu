@@ -32,8 +32,22 @@ func (this API) Massdrop(c *gin.Context) {
 		c.JSON(400, gin.H{"message": "Invalid request, no massdrop available.", "status": "error"})
 		return
 	}
-	
-	toggle := product.MassdropInterested(user_id)
 
-	c.JSON(200, gin.H{"status": "okay", "interested": toggle})
+	var form MassdropForm
+
+	if c.Bind(&form) == nil {
+
+		toggle, err := product.MassdropInterested(user_id, form.Reference)
+
+		if err != nil {
+
+			c.JSON(400, gin.H{"message": err.Error(), "status": "error"})
+			return
+		}
+
+		c.JSON(200, gin.H{"status": "okay", "interested": toggle})
+		return
+	}
+
+	c.JSON(400, gin.H{"message": "Invalid request, no massdrop available.", "status": "error"})
 }

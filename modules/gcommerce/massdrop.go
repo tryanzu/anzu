@@ -3,6 +3,7 @@ package gcommerce
 import (
 	"gopkg.in/mgo.v2/bson"
 
+	"errors"
 	"time"
 )
 
@@ -31,11 +32,10 @@ func (this *MassdropTransaction) CastToReservation() error {
 	return err
 }
 
-
-func (this *Product) MassdropInterested(user_id bson.ObjectId) bool {
+func (this *Product) MassdropInterested(user_id bson.ObjectId, reference string) (bool, error) {
 
 	if this.Massdrop == nil {
-		return false
+		return false, nil
 	}
 
 	var model *MassdropTransaction
@@ -49,28 +49,35 @@ func (this *Product) MassdropInterested(user_id bson.ObjectId) bool {
 		err := database.C("gcommerce_massdrop_transactions").Update(bson.M{"_id": model.Id}, bson.M{"$set": bson.M{"status": MASSDROP_STATUS_REMOVED, "updated_at": time.Now()}})
 
 		if err != nil {
-			panic(err)
+			return false, err
 		}
 
-		return false
+		return false, nil
 
 	} else {
 
+		if len(reference) == 0 {
+
+			return false, errors.New("Invalid reference, must have one")
+		}
+
 		transaction := &MassdropTransaction{
-			Id:          bson.NewObjectId(),
-			MassdropId:  this.Massdrop.Id,
-			CustomerId:  customer.Id,
-			Type:        MASSDROP_TRANS_INSTERESTED,         
-			Status:      MASSDROP_STATUS_COMPLETED,
-			Attrs:       map[string]interface{}{},
-			Created:     time.Now(),
-			Updated:     time.Now(),
+			Id:         bson.NewObjectId(),
+			MassdropId: this.Massdrop.Id,
+			CustomerId: customer.Id,
+			Type:       MASSDROP_TRANS_INSTERESTED,
+			Status:     MASSDROP_STATUS_COMPLETED,
+			Attrs: map[string]interface{}{
+				"reference": reference,
+			},
+			Created: time.Now(),
+			Updated: time.Now(),
 		}
 
 		transaction.SetDI(this.di)
 		transaction.Save()
 
-		return true
+		return true, nil
 	}
 }
 
