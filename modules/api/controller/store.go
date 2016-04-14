@@ -60,7 +60,7 @@ func (self StoreAPI) Orders(c *gin.Context) {
 	if err != nil {
 		offset = 0
 	}
-	
+
 	search := c.Query("search")
 	orders := self.Store.GetSortedOrders(limit, offset, search)
 
@@ -91,11 +91,34 @@ func (self StoreAPI) One(c *gin.Context) {
 
 	// Load assets
 	order.LoadAssets()
+	order.LoadDuplicates()
 
 	data := order.Data()
 	data.RelatedUsers = order.MatchUsers()
 
 	c.JSON(200, data)
+}
+
+func (self StoreAPI) Ignore(c *gin.Context) {
+
+	id := c.Param("id")
+
+	if bson.IsObjectIdHex(id) == false {
+		c.JSON(400, gin.H{"status": "error", "message": "Can't perform action. Invalid id."})
+		return
+	}
+
+	order, err := self.Store.Order(bson.ObjectIdHex(id))
+
+	if err != nil {
+		c.JSON(404, gin.H{"status": "error", "message": "Order not found."})
+		return
+	}
+
+	// Mark as ignored
+	order.Ignore()
+
+	c.JSON(200, gin.H{"status": "okay"})
 }
 
 // Use one of the predefined answers to answer an order

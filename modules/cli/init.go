@@ -41,7 +41,7 @@ func (module Module) Run(name string) {
 		"codes-fix":   module.Codes,
 		"index-posts": module.IndexAlgolia,
 		"index-components": module.IndexComponentsAlgolia,
-		"send-confirmations": module.ConfirmationEmails,	
+		"send-confirmations": module.ConfirmationEmails,
 		"replace-url": module.ReplaceURL,
 		"test-transmit": module.TestSocket,
 		"first-newsletter": module.FirstNewsletter,
@@ -97,7 +97,7 @@ func (module Module) TestSocket() {
 	carrierParams := map[string]interface{}{
 		"fire": "new-post",
 		"category": "549da59c6461740097000000",
-	} 
+	}
 
 	carrier.Emit("feed", "action", carrierParams)
 
@@ -139,7 +139,7 @@ func (module Module) ReplaceURL() {
 		content  = strings.Replace(post.Content, "http://assets.spartangeek.com", "https://s3-us-west-1.amazonaws.com/spartan-board", -1)
 		content  = strings.Replace(post.Content, "http://s3-us-west-1.amazonaws.com/spartan-board", "https://s3-us-west-1.amazonaws.com/spartan-board", -1)
 		updates["content"] = content
-		
+
 
 		for index, comment := range post.Comments.Set {
 
@@ -148,7 +148,7 @@ func (module Module) ReplaceURL() {
 			content := strings.Replace(comment.Content, "https://assets.spartangeek.com", "https://s3-us-west-1.amazonaws.com/spartan-board", -1)
 			content  = strings.Replace(comment.Content, "http://assets.spartangeek.com", "https://s3-us-west-1.amazonaws.com/spartan-board", -1)
 			content  = strings.Replace(comment.Content, "http://s3-us-west-1.amazonaws.com/spartan-board", "https://s3-us-west-1.amazonaws.com/spartan-board", -1)
-		
+
 
 			updates["comments.set." + comment_index + ".content"] = content
 		}
@@ -259,13 +259,13 @@ func (module Module) ConfirmationEmails() {
 	database := module.Mongo.Database
 
 	// Get all users
-	iter := database.C("users").Find(bson.M{"validated": false}).Iter()
+	iter := database.C("users").Find(bson.M{"validated": false, "username": "Carlos_Ed"}).Iter()
 
 	for iter.Next(&usr) {
 
 		usr_copy := &usr
 		usr_obj, err := module.User.Get(usr_copy)
-			
+
 		if err == nil {
 
 			// Send the confirmation email

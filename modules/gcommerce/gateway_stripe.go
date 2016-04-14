@@ -1,6 +1,7 @@
 package gcommerce
 
 import (
+	"github.com/fernandez14/go-siftscience"
 	"github.com/stripe/stripe-go"
 	"github.com/stripe/stripe-go/charge"
 	"gopkg.in/mgo.v2/bson"
@@ -43,32 +44,52 @@ func (this *GatewayStripe) Charge(amount float64) error {
 		return errors.New("no-reference")
 	}
 
+	session_id, exists := this.meta["session_id"].(string)
+
+	if !exists {
+		return errors.New("no-session-id")
+	}
+
 	token, exists := this.meta["token"].(string)
 
 	if !exists {
 		return errors.New("invalid-token")
 	}
 
+	var address *CustomerAddress
+	var order_address Address
+
+	_, adl := this.meta["addressless"]
+
+	customer := this.order.GetCustomer()
+	usr := customer.GetUser()
+	micros := int64((amount * 100) * 10000)
 	cents := uint64(amount * 100)
-	address := this.order.GetRelatedAddress()
-	order_address := this.order.Shipping.Address
+	
 
 	chargeParams := &stripe.ChargeParams{
 		Amount:   cents,
 		Currency: "mxn",
 		Desc:     "Pago del pedido #" + reference,
-		Shipping: &stripe.ShippingDetails{
-		    Name: address.Recipient,
-		    Phone: address.Phone,
-		    Address: stripe.Address{
-		      Line1: order_address.Line1,
-		      Line2: order_address.Line2,
-		      City: order_address.City,
-		      Country: order_address.Country,
-		      State: order_address.State,
-		      Zip: order_address.PostalCode,
-		    },
-		},
+	}
+
+	if !adl {
+
+		address = this.order.GetRelatedAddress()
+		order_address = this.order.Shipping.Address
+
+		chargeParams.Shipping = &stripe.ShippingDetails{
+			Name:  address.Recipient,
+			Phone: address.Phone,
+			Address: stripe.Address{
+				Line1:   order_address.Line1,
+				Line2:   order_address.Line2,
+				City:    order_address.City,
+				Country: order_address.Country,
+				State:   order_address.State,
+				Zip:     order_address.PostalCode,
+			},
+		}
 	}
 
 	chargeParams.SetSource(token)
@@ -84,9 +105,52 @@ func (this *GatewayStripe) Charge(amount float64) error {
 		Updated:  time.Now(),
 	}
 
+	siftTransaction := map[string]interface{}{
+		"$session_id":       session_id,
+		"$user_id":          usr.Data().Id.Hex(),
+		"$user_email":       usr.Email(),
+		"$transaction_type": "$sale",
+		"$amount":           micros,
+		"$currency_code":    "MXN",
+		"$order_id":         reference,
+		"$transaction_id":   ch.ID,
+		"$payment_method": map[string]interface{}{
+			"$payment_type":    "$credit_card",
+			"$payment_gateway": "$stripe",
+			"$stripe_token":    token,
+		},
+	}
+
+	if !adl {
+
+		// Siftscience transaction
+		siftAddress := map[string]interface{}{
+			"$name":      address.Recipient,
+			"$phone":     address.Phone,
+			"$address_1": address.Line1(),
+			"$address_2": address.Line2(),
+			"$city":      order_address.City,
+			"$region":    order_address.State,
+			"$country":   "MX",
+			"$zipcode":   order_address.PostalCode,
+		}
+
+
+		siftTransaction["$billing_address"] = siftAddress
+		siftTransaction["$shipping_address"] = siftAddress
+
+	}
+
 	if err != nil {
 
 		stripeErr := err.(*stripe.Error)
+
+		siftTransaction["$transaction_status"] = "$failure"
+		err := gosift.Track("$transaction", siftTransaction)
+
+		if err != nil {
+			panic(err)
+		}
 
 		transaction.Error = stripeErr
 		database.C("gcommerce_transactions").Insert(transaction)
@@ -129,6 +193,13 @@ func (this *GatewayStripe) Charge(amount float64) error {
 		default:
 			return errors.New("gateway-error")
 		}
+	}
+
+	siftTransaction["$transaction_status"] = "$success"
+	err = gosift.Track("$transaction", siftTransaction)
+
+	if err != nil {
+		panic(err)
 	}
 
 	status := Status{

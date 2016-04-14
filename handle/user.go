@@ -1,19 +1,21 @@
 package handle
 
 import (
-	"github.com/satori/go.uuid"
 	"crypto/sha256"
 	"encoding/hex"
 	"github.com/CloudCom/fireauth"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
+	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/fernandez14/spartangeek-blacker/modules/security"
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
+	"github.com/fernandez14/go-siftscience"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
+	"github.com/gin-gonic/contrib/sessions"
 	"github.com/kennygrant/sanitize"
 	"github.com/mitchellh/goamz/s3"
 	"github.com/olebedev/config"
@@ -30,6 +32,7 @@ import (
 )
 
 type UserAPI struct {
+	Errors        *exceptions.ExceptionsModule `inject:""`
 	DataService   *mongo.Service   `inject:""`
 	CacheService  *goredis.Redis   `inject:""`
 	ConfigService *config.Config   `inject:""`
@@ -211,7 +214,6 @@ func (di *UserAPI) UserGetByToken(c *gin.Context) {
 	trusted := di.Security.TrustUserIP(c.ClientIP(), usr)
 
 	if !trusted {
-
 		c.JSON(403, gin.H{"status": "error", "message": "Not trusted."})
 		return
 	}
@@ -222,64 +224,19 @@ func (di *UserAPI) UserGetByToken(c *gin.Context) {
 		usr.TrackUserSignin(c.ClientIP())
 
 		// Does daily login calculations
-		di.Gaming.Get(usr).DailyLogin()
+		g := di.Gaming.Get(usr)
 
+		g.DailyLogin()
+		g.Sync()
 	}(usr)
 
+	session_id := c.MustGet("session_id").(string)
+
+	data := usr.Data()
+	data.SessionId = session_id
+
 	// Alright, go back and send the user info
-	c.JSON(200, usr.Data())
-}
-
-func (di *UserAPI) UserGetToken(c *gin.Context) {
-
-	// Get the database interface from the DI
-	database := di.DataService.Database
-
-	// Get the query parameters
-	qs := c.Request.URL.Query()
-
-	// Get the email or the username or the id and its password
-	email, password := qs.Get("email"), qs.Get("password")
-
-	collection := database.C("users")
-
-	user := model.User{}
-
-	// Try to fetch the user using email param though
-	err := collection.Find(bson.M{"email": email}).One(&user)
-
-	if err != nil {
-
-		c.JSON(400, gin.H{"status": "error", "message": "Couldnt found user with that email", "code": 400})
-		return
-	}
-
-	// Incorrect password
-	password_encrypted := []byte(password)
-	sha256 := sha256.New()
-	sha256.Write(password_encrypted)
-	md := sha256.Sum(nil)
-	hash := hex.EncodeToString(md)
-
-	if user.Password != hash {
-
-		c.JSON(400, gin.H{"status": "error", "message": "Credentials are not correct", "code": 400})
-		return
-	}
-
-	// Generate user token
-	uuid := uuid.NewV4()
-	token := &model.UserToken{
-		UserId:  user.Id,
-		Token:   uuid.String(),
-		Closed:  false,
-		Created: time.Now(),
-		Updated: time.Now(),
-	}
-
-	err = database.C("tokens").Insert(token)
-
-	c.JSON(200, token)
+	c.JSON(200, data)
 }
 
 func (di UserAPI) UserGetJwtToken(c *gin.Context) {
@@ -299,7 +256,6 @@ func (di UserAPI) UserGetJwtToken(c *gin.Context) {
 	usr, err := di.User.Get(bson.M{"email": email})
 
 	if err != nil {
-
 		c.JSON(400, gin.H{"status": "error", "message": "Couldnt get user."})
 		return
 	}
@@ -312,7 +268,6 @@ func (di UserAPI) UserGetJwtToken(c *gin.Context) {
 	hash := hex.EncodeToString(md)
 
 	if usr.Data().Password != hash {
-
 		c.JSON(400, gin.H{"status": "error", "message": "Credentials are not correct", "code": 400})
 		return
 	}
@@ -325,6 +280,9 @@ func (di UserAPI) UserGetJwtToken(c *gin.Context) {
 		return
 	}
 
+	session_id := c.MustGet("session_id").(string)
+
+	go di.trackSiftScienceLogin(usr.Data().Id.Hex(), session_id, true)
 
 	// Generate JWT with the information about the user
 	token, firebase := di.generateUserToken(usr.Data().Id)
@@ -338,7 +296,7 @@ func (di UserAPI) UserGetJwtToken(c *gin.Context) {
 		go di.Collector.Activity(model.Activity{UserId: bson.ObjectIdHex(user_id.(string)), Event: "user-view", RelatedId: usr.Data().Id})
 	}
 
-	c.JSON(200, gin.H{"status": "okay", "token": token, "firebase": firebase})
+	c.JSON(200, gin.H{"status": "okay", "token": token, "session_id": session_id, "firebase": firebase})
 }
 
 func (di UserAPI) UserGetTokenFacebook(c *gin.Context) {
@@ -360,6 +318,7 @@ func (di UserAPI) UserGetTokenFacebook(c *gin.Context) {
 		facebook_id = facebook["id"]
 	}
 
+	session_id := c.MustGet("session_id").(string)
 	usr, err := di.User.Get(bson.M{"facebook.id": facebook_id})
 
 	// Create a new user
@@ -393,16 +352,50 @@ func (di UserAPI) UserGetTokenFacebook(c *gin.Context) {
 		}
 
 		if email, exists := facebook["email"]; exists {
-
 			_ = usr.Update(map[string]interface{}{"facebook": facebook, "email": email.(string)})
 		}
 
+		go di.trackSiftScienceLogin(id.Hex(), session_id, true)
 	}
 
 	// Generate JWT with the information about the user
 	token, firebase := di.generateUserToken(id)
 
-	c.JSON(200, gin.H{"status": "okay", "token": token, "firebase": firebase})
+	c.JSON(200, gin.H{"status": "okay", "token": token, "firebase": firebase, "session_id": session_id})
+}
+
+func (this UserAPI) UserLogout(c *gin.Context) {
+
+	id, signed_in := c.Get("user_id")
+
+	if signed_in {
+
+		user_id := id.(string)
+
+		go func() {
+
+			defer this.Errors.Recover()
+
+			err := gosift.Track("$logout", map[string]interface{}{
+				"$user_id": user_id,
+			})
+
+			if err != nil {
+				panic(err)
+			}
+		}()
+
+		bucket := sessions.Default(c)
+
+		// Clear bucket
+		bucket.Clear()
+		bucket.Save()
+
+		c.JSON(200, gin.H{"status": "okay"})
+		return
+	}
+
+	c.JSON(400, gin.H{"status": "error", "message": "Bad request, no user id."})
 }
 
 func (di *UserAPI) UserUpdateProfileAvatar(c *gin.Context) {
@@ -540,15 +533,14 @@ func (di *UserAPI) UserUpdateProfile(c *gin.Context) {
 				set["description"] = description
 			}
 
-			if profileUpdate.Password != "" && profileUpdate.OPassword != "" && len([]rune(profileUpdate.Password)) > 3 {
+			if profileUpdate.Password != "" {
 
-				password := helpers.Sha256(profileUpdate.Password)
-				opassword := helpers.Sha256(profileUpdate.OPassword)
-
-				if opassword != user.Password {
-					c.JSON(400, gin.H{"status": "error", "message": "Can't allow password update."})
+				if len([]rune(profileUpdate.Password)) < 4 {
+					c.JSON(400, gin.H{"status": "error", "message": "Can't allow password update, too short."})
 					return
 				}
+
+				password := helpers.Sha256(profileUpdate.Password)
 
 				set["password"] = password
 			}
@@ -803,4 +795,25 @@ func (di *UserAPI) generateUserToken(id bson.ObjectId) (string, string) {
 	}
 
 	return tokenString, firebase_token
+}
+
+func (di *UserAPI) trackSiftScienceLogin(user_id, session_id string, success bool) {
+
+	defer di.Errors.Recover()
+
+	status := "$success"
+
+	if !success {
+		status = "$failure"
+	}
+
+	err := gosift.Track("$login", map[string]interface{}{
+		"$user_id": user_id,
+		"$session_id": session_id,
+		"$login_status": status,
+	})
+
+	if err != nil {
+		panic(err)
+	}
 }

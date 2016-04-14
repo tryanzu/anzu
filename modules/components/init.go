@@ -15,8 +15,8 @@ func Boot() *Module {
 }
 
 type Module struct {
-	Mongo  *mongo.Service `inject:""`
-	Search *search.Module `inject:""`
+	Mongo     *mongo.Service `inject:""`
+	Search    *search.Module `inject:""`
 }
 
 func (module *Module) Get(find interface{}) (*ComponentModel, error) {
@@ -46,6 +46,13 @@ func (module *Module) Get(find interface{}) (*ComponentModel, error) {
 
 			return nil, exceptions.NotFound{"Invalid component finder. Not found."}
 		}
+
+	case *ComponentModel: 
+
+		component := find.(*ComponentModel)
+		component.SetDI(context)
+
+		return component, nil	
 
 	default:
 		panic("Unkown argument")

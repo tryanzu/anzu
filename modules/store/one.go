@@ -6,6 +6,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/fernandez14/spartangeek-blacker/modules/assets"
 	"gopkg.in/mgo.v2/bson"
+
 	"time"
 	"strings"
 )
@@ -67,6 +68,28 @@ func (self *One) PushAnswer(text, kind string) {
 
 			mailing.Send(compose)
 		}()
+	}
+}
+
+func (self *One) LoadDuplicates() {
+
+	list := make([]OrderModel, 0)
+	database := self.di.Mongo.Database
+
+	where := []bson.M{{"user.email": self.data.User.Email}}
+
+	if self.data.User.Ip != "" {
+		where = append(where, bson.M{"user.ip": self.data.User.Ip})
+	}
+
+	err := database.C("orders").Find(bson.M{"$or": where}).All(&list)
+
+	if err != nil {
+		panic(err)
+	}
+
+	if len(list) > 0 {
+		self.data.Duplicates = list
 	}
 }
 
@@ -277,6 +300,16 @@ func (self *One) Touch() {
 	database := self.di.Mongo.Database
 
 	err := database.C("orders").Update(bson.M{"_id": self.data.Id}, bson.M{"$set": bson.M{"unreaded": false}})
+
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (self *One) Ignore() {
+
+	database := self.di.Mongo.Database
+	err := database.C("orders").Update(bson.M{"_id": self.data.Id}, bson.M{"$set": bson.M{"deleted_at": time.Now()}})
 
 	if err != nil {
 		panic(err)

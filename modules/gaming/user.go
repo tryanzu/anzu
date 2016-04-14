@@ -64,13 +64,13 @@ func (self *User) SyncToLevel(reset bool) {
 					fact_set["gaming.tribute"] = rule.Tribute
 					user.Gaming.Tribute = rule.Tribute
 				}
-				
+
 				// Update the user gamification facts
 				err := database.C("users").Update(bson.M{"_id": user.Id}, bson.M{"$set": fact_set})
- 		 
- 				if err != nil {	
+
+ 				if err != nil {
  					panic(err)
- 				}		 				
+ 				}
 
 				// Runtime update
 				self.user.RUpdate(user)
@@ -219,4 +219,15 @@ func (self *User) SyncRealtimeFirebase(data user.UserGaming) {
 
 	// Update the gaming part
 	self.di.Firebase.Set(userPath+"/gaming", data, nil)
+}
+
+func (self *User) Sync() {
+
+	defer self.di.Errors.Recover()
+
+	id := self.user.Data().Id.Hex()
+	validated := self.user.Data().Validated
+
+	// Sync user stuff
+	self.di.Firebase.Set("users/" + id + "/validated", validated, nil)
 }

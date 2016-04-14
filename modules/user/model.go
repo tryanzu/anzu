@@ -18,13 +18,14 @@ type User struct {
 	Image            string                 `bson:"image" json:"image,omitempty"`
 	Roles            []UserRole             `bson:"roles" json:"roles,omitempty"`
 	Permissions      []string               `bson:"permissions" json:"permissions,omitempty"`
-	
+
 	Notifications    interface{}            `bson:"notifications,omitempty" json:"notifications,omitempty"`
 	Profile          map[string]interface{} `bson:"profile,omitempty" json:"profile,omitempty"`
 	Gaming           UserGaming             `bson:"gaming,omitempty" json:"gaming,omitempty"`
-	
+
 	Version          string                 `bson:"version,omitempty" json:"version,omitempty"`
 	Validated        bool                   `bson:"validated" json:"validated"`
+	SiftAccount      bool                   `bson:"siftscience" json:"siftscience"`
 	Banned           bool                   `bson:"banned" json:"banned"`
 	Created          time.Time              `bson:"created_at" json:"created_at"`
 
@@ -43,6 +44,7 @@ type UserPrivate struct {
 	Stats            UserStats              `bson:"stats,omitempty" json:"stats,omitempty"`
 	ReferralCode     string                 `bson:"ref_code,omitempty" json:"ref_code"`
 	VerificationCode string                 `bson:"ver_code,omitempty" json:"ver_code"`
+	SessionId        string                 `bson:"-" json:"session_id"`
 	Updated          time.Time              `bson:"updated_at" json:"updated_at"`
 	Gamificated      time.Time              `bson:"gamificated_at" json:"gamificated_at"`
 }
@@ -200,7 +202,7 @@ type OwnModel struct {
 	UserId     bson.ObjectId `bson:"user_id" json:"user_id"`
 	RelatedId  bson.ObjectId `bson:"related_id" json:"related_id"`
 	Related    string        `bson:"related" json:"related"`
-	Type       string        `bson:"type" json:"type"`     
+	Type       string        `bson:"type" json:"type"`
 	Created    time.Time     `bson:"created_at" json:"created_at"`
 }
 

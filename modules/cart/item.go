@@ -15,11 +15,15 @@ type ItemFoundation interface {
 }
 
 type CartItem struct {
-	Id         string                 `json:"id"`
-	Name       string                 `json:"name"`
-	Price      float64                `json:"price"`
-	Quantity   int                    `json:"quantity"`
-	Attributes map[string]interface{} `json:"attrs"`
+	Id          string                 `json:"id"`
+	Name        string                 `json:"name"`
+	Description string                 `json:"description"`
+	Image       string                 `json:"image"`
+	Price       float64                `json:"price"`
+	Quantity    int                    `json:"quantity"`
+	Type        string				   `json:"type"`
+	Category    string				   `json:"category"`
+	Attributes  map[string]interface{} `json:"attrs"`
 }
 
 func (item *CartItem) GetId() string {

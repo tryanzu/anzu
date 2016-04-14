@@ -96,7 +96,7 @@ type ComponentStorageModel struct {
 }
 
 type ComponentTypeCountModel struct {
-	Type      string `bson:"_id" json:"type"`
+	Type      string `bson:"_id" json:"category"`
 	Count     int    `bson:"count" json:"count"`
 }
 

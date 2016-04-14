@@ -33,9 +33,10 @@ func (module *Module) GetNote(id bson.ObjectId) (*BuildResponseModel, error) {
 	return one, nil
 }
 
-func (module *Module) CreateNote(title, content string, price int) error {
+func (module *Module) CreateNote(title, content string, price int) (bson.ObjectId, error) {
 
 	note := &BuildResponseModel{
+		Id: bson.NewObjectId(),
 		Title: title,
 		Content: content,
 		Price: price,
@@ -44,7 +45,7 @@ func (module *Module) CreateNote(title, content string, price int) error {
 	database := module.Mongo.Database
 	err := database.C("builds_responses").Insert(note)
 
-	return err
+	return note.Id, err
 }
 
 func (module *Module) UpdateNote(id bson.ObjectId, title, content string, price int) error {

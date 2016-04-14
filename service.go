@@ -28,6 +28,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/transmit"
 	"github.com/fernandez14/spartangeek-blacker/modules/search"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
+	"github.com/fernandez14/go-siftscience"
 	"github.com/getsentry/raven-go"
 	"github.com/mitchellh/goamz/aws"
 	"github.com/mitchellh/goamz/s3"
@@ -84,6 +85,7 @@ func main() {
 		panic(err)
 	}
 
+	gosift.ApiKey = string_value(configService.String("ecommerce.siftscience.api_key"))
 	gcommerceService := gcommerce.Boot(string_value(configService.String("ecommerce.stripe.secret")))
 	searchConfig, err := configService.Get("algolia")
 
@@ -116,7 +118,7 @@ func main() {
 	// Implementations will be fullfilled manually
 	firebaseBroadcaster := notifications.FirebaseBroadcaster{Firebase: firebaseService}
 	broadcaster := interfaces.NotificationBroadcaster(firebaseBroadcaster)
-	
+
 	// Provide graph with service instances
 	err = g.Provide(
 		&inject.Object{Value: configService, Complete: true},
@@ -233,7 +235,7 @@ func main() {
 	var cmdRunRoutine = &cobra.Command{
 		Use:   "run [routine]",
 		Short: "Run cli routine",
-		Long: `Run specified routine 
+		Long: `Run specified routine
 		from cli module`,
 		Run: func(cmd *cobra.Command, args []string) {
 
@@ -250,7 +252,7 @@ func main() {
 	var cmdWorkerRoutine = &cobra.Command{
 		Use:   "worker [queue]",
 		Short: "Starts worker for certain queue",
-		Long: `Starts a worker daemon to 
+		Long: `Starts a worker daemon to
 		proccess jobs from certain IronMQ queue`,
 		Run: func(cmd *cobra.Command, args []string) {
 
@@ -258,7 +260,7 @@ func main() {
 			queueModule.Populate(g)
 			queueModule.Listen(args[0])
 		},
-	}	
+	}
 
 	var cmdSyncRanking = &cobra.Command{
 		Use:   "sync-ranking",

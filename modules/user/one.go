@@ -3,6 +3,7 @@ package user
 import (
 	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
+	"github.com/fernandez14/go-siftscience"
 	"gopkg.in/mgo.v2/bson"
 
 	"time"
@@ -238,6 +239,41 @@ func (self *One) SendConfirmationEmail() {
 	}
 
 	mailing.Send(compose)
+}
+
+func (self *One) SiftScienceBackfill() {
+
+	defer self.di.Errors.Recover()
+
+	ms := self.data.Created.Unix() * 1000
+	data := map[string]interface{}{
+		"$time": ms,
+		"$user_id": self.data.Id.Hex(),
+		"$user_email": self.Email(),
+		"$name": self.data.UserName,
+	}
+
+	if self.data.Facebook != nil {
+
+		fb := self.data.Facebook.(bson.M)
+
+		if _, exists := fb["id"]; exists {
+			data["$social_sign_on_type"] = "$facebook"
+		}
+	}
+
+	err := gosift.Track("$create_account", data)
+
+	if err != nil {
+		panic(err)
+	}
+
+	database := self.di.Mongo.Database
+	err = database.C("users").Update(bson.M{"_id": self.data.Id}, bson.M{"$set": bson.M{"siftscience": true}})
+
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (self *One) SendRecoveryEmail() {

@@ -379,115 +379,118 @@ func (self *Post) Attach(entity interface{}) {
 // Use algolia to index the post
 func (self *Post) Index() {
 
-	post := self.data
+	if false {
+		
+		post := self.data
 
-	if post.Category.Hex() != "" {
+		if post.Category.Hex() != "" {
 
-		index := self.di.Search.Get("board")
-		category := self.Category()
-		user, err := self.di.User.Get(post.UserId)
+			index := self.di.Search.Get("board")
+			category := self.Category()
+			user, err := self.di.User.Get(post.UserId)
 
-		if err != nil {
-			panic(err)
-		}
+			if err != nil {
+				panic(err)
+			}
 
-		// Some data we do use on searches
-		user_data := user.Data()
-		tribute := post.Votes.Up
-		shit := post.Votes.Down
+			// Some data we do use on searches
+			user_data := user.Data()
+			tribute := post.Votes.Up
+			shit := post.Votes.Down
 
-		for _, comment := range post.Comments.Set {
+			for _, comment := range post.Comments.Set {
 
-			tribute = tribute + comment.Votes.Up
-			shit = shit + comment.Votes.Down
-		}
+				tribute = tribute + comment.Votes.Up
+				shit = shit + comment.Votes.Down
+			}
 
-		components := make([]string, 0)
+			components := make([]string, 0)
 
-		// If the post is a recommendations post then reflect to get the components
-		if post.Type == "recommendations" {
+			// If the post is a recommendations post then reflect to get the components
+			if post.Type == "recommendations" {
 
-			bindable := reflect.ValueOf(&post.Components).Elem()
+				bindable := reflect.ValueOf(&post.Components).Elem()
 
-			for i := 0; i < bindable.NumField(); i++ {
+				for i := 0; i < bindable.NumField(); i++ {
 
-				field := bindable.Field(i).Interface()
+					field := bindable.Field(i).Interface()
 
-				switch field.(type) {
-				case model.Component:
+					switch field.(type) {
+					case model.Component:
 
-					component := field.(model.Component)
+						component := field.(model.Component)
 
-					if component.Content != "" {
+						if component.Content != "" {
 
-						components = append(components, component.Content)
+							components = append(components, component.Content)
+						}
+
+					default:
+						continue
 					}
-
-				default:
-					continue
 				}
 			}
-		}
 
-		reached, viewed := self.GetReachViews(post.Id)
-		total := reached + viewed
-		final_rate := 0.0
+			reached, viewed := self.GetReachViews(post.Id)
+			total := reached + viewed
+			final_rate := 0.0
 
-		if total > 101 {
+			if total > 101 {
 
-			if reached == 0 {
+				if reached == 0 {
 
-				reached = 1
+					reached = 1
+				}
+
+				if viewed == 0 {
+
+					viewed = 1
+				}
+
+				view_rate := 100.0 / float64(reached) * float64(viewed)
+				comment_rate := 100.0 / float64(viewed) * float64(post.Comments.Count)
+				final_rate = (view_rate + comment_rate) / 2.0
 			}
 
-			if viewed == 0 {
-
-				viewed = 1
+			item := AlgoliaPostModel{
+				Id:       post.Id.Hex(),
+				Title:    post.Title,
+				Content:  post.Content,
+				Slug:     post.Slug,
+				Comments: post.Comments.Count,
+				User: AlgoliaUserModel{
+					Id:       user_data.Id.Hex(),
+					Username: user_data.UserName,
+					Image:    user_data.Image,
+					Email:    user_data.Email,
+				},
+				Category: AlgoliaCategoryModel{
+					Id:   post.Category.Hex(),
+					Name: category.Name,
+				},
+				Popularity: final_rate,
+				Created:    post.Created.Unix(),
+				Components: components,
 			}
 
-			view_rate := 100.0 / float64(reached) * float64(viewed)
-			comment_rate := 100.0 / float64(viewed) * float64(post.Comments.Count)
-			final_rate = (view_rate + comment_rate) / 2.0
-		}
+			var json_object interface{}
+			json_data, err := json.Marshal(item)
 
-		item := AlgoliaPostModel{
-			Id:       post.Id.Hex(),
-			Title:    post.Title,
-			Content:  post.Content,
-			Slug:     post.Slug,
-			Comments: post.Comments.Count,
-			User: AlgoliaUserModel{
-				Id:       user_data.Id.Hex(),
-				Username: user_data.UserName,
-				Image:    user_data.Image,
-				Email:    user_data.Email,
-			},
-			Category: AlgoliaCategoryModel{
-				Id:   post.Category.Hex(),
-				Name: category.Name,
-			},
-			Popularity: final_rate,
-			Created:    post.Created.Unix(),
-			Components: components,
-		}
+			if err != nil {
+				panic(err)
+			}
 
-		var json_object interface{}
-		json_data, err := json.Marshal(item)
+			err = json.Unmarshal(json_data, &json_object)
 
-		if err != nil {
-			panic(err)
-		}
+			if err != nil {
+				panic(err)
+			}
 
-		err = json.Unmarshal(json_data, &json_object)
+			_, err = index.UpdateObject(json_object)
 
-		if err != nil {
-			panic(err)
-		}
-
-		_, err = index.UpdateObject(json_object)
-
-		if err != nil {
-			panic(err)
+			if err != nil {
+				panic(err)
+			}
 		}
 	}
 }

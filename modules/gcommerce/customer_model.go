@@ -1,6 +1,7 @@
 package gcommerce
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"gopkg.in/mgo.v2/bson"
 	"time"
 )
@@ -11,7 +12,8 @@ type Customer struct {
 	Created time.Time     `bson:"created_at" json:"created_at"`
 	Updated time.Time     `bson:"updated_at" json:"updated_at"`
 
-	di *Module
+	di   *Module
+	User *user.One `bson:"-" json:"user"`
 
 	Addresses []CustomerAddress `bson:"-" json:"addresses"`
 }

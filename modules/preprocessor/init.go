@@ -17,6 +17,7 @@ type Module struct {
 	Posts        controller.PostAPI
 	Components   controller.ComponentAPI
 	General      controller.GeneralAPI
+	Products     controller.ProductAPI
 }
 
 type ModuleDI struct {
@@ -31,6 +32,7 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.Posts},
 		&inject.Object{Value: &module.Components},
 		&inject.Object{Value: &module.General},
+		&inject.Object{Value: &module.Products},
 	)
 
 	if err != nil {
@@ -73,6 +75,7 @@ func (module *Module) Run() {
 	module.Posts.Page = base
 	module.Components.Page = base
 	module.General.Page = base
+	module.Products.Page = base
 
 	// Start gin classic middlewares
 	router := gin.Default()
@@ -93,6 +96,7 @@ func (module *Module) Run() {
 	router.GET("/componentes/:type/:slug/", module.Components.Get)
 	router.GET("/componente/:slug", module.Components.MigrateOld)
 	router.GET("/componente/:slug/", module.Components.MigrateOld)
+	router.GET("/compra-en-legion/:slug", module.Products.Legion)
 	router.GET("/", module.General.Landing)
 
 	// Run over the 3014 port
