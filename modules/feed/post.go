@@ -355,22 +355,18 @@ func (self *Post) GetCategory() model.Category {
 // Get comment object
 func (self *Post) Comment(index int) (*Comment, error) {
 
-	if len(self.Comments.Set) < index {
+	var comment *Comment
 
+	database := self.di.Mongo.Database
+	err := database.C("comments").Find(bson.M{"post_id": self.Id, "position": index, "deleted_at": bson.M{"$exists": false}}).One(&comment)
+
+	if err != nil {
 		return nil, exceptions.OutOfBounds{"Invalid comment index"}
 	}
 
-	for _, c := range self.Comments.Set {
+	comment.SetDI(self)
 
-		if c.Position == index {
-
-			comment := &c
-			comment.SetDI(self)
-			return comment, nil
-		}
-	}
-
-	return nil, exceptions.OutOfBounds{"Invalid comment position"}
+	return comment, nil
 }
 
 // Attach related entity to post

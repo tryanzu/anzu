@@ -31,23 +31,19 @@ func (this API) MarkCommentAsAnswer(c *gin.Context) {
 	user_str_id := c.MustGet("user_id")
 	user_id := bson.ObjectIdHex(user_str_id.(string))
 	user := this.Acl.User(user_id)
-
 	post, err := this.Feed.Post(id)
 
 	if err != nil {
-
 		c.JSON(404, gin.H{"status": "error", "message": "Post not found."})
 		return
 	}
 
-	if user.CanSolvePost(post.Data()) == false {
-
+	if user.CanSolvePost(post) == false {
 		c.JSON(400, gin.H{"message": "Can't update post. Insufficient permissions", "status": "error"})
 		return
 	}
 
-	if post.Data().Solved == true {
-
+	if post.Solved == true {
 		c.JSON(400, gin.H{"status": "error", "message": "Already solved."})
 		return
 	}

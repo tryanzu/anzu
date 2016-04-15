@@ -1,7 +1,6 @@
 package posts
 
 import (
-    "github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
@@ -9,9 +8,9 @@ import (
 
 func (this API) Get(c *gin.Context) {
 
-    var kind string
-    var post *feed.Post
-    var err error
+	var kind string
+	var post *feed.Post
+	var err error
 
 	id := c.Params.ByName("id")
 
@@ -28,55 +27,53 @@ func (this API) Get(c *gin.Context) {
 		return
 	}
 
-    if kind == "id" {
-        post, err = this.Feed.Post(bson.ObjectIdHex(id))
-    } else {
-        post, err = this.Feed.Post(bson.M{"slug": id})
-    }
+	if kind == "id" {
+		post, err = this.Feed.Post(bson.ObjectIdHex(id))
+	} else {
+		post, err = this.Feed.Post(bson.M{"slug": id})
+	}
 
-    if err != nil {
-        c.JSON(404, gin.H{"message": "Couldnt found post with that slug.", "status": "error"})
+	if err != nil {
+		c.JSON(404, gin.H{"message": "Couldnt found post with that slug.", "status": "error"})
 		return
-    }
+	}
 
-    // Needed data loading to show post
-    post.LoadComments(-10, 0)
-    post.LoadUsers()
+	// Needed data loading to show post
+	post.LoadComments(-10, 0)
+	post.LoadUsers()
 
-    _, signed_in := c.Get("token")
+	_, signed_in := c.Get("token")
 
-    if signed_in {
+	if signed_in {
 
-        user_str_id := c.MustGet("user_id")
-        user_id := bson.ObjectIdHex(user_str_id.(string))
+		user_str_id := c.MustGet("user_id")
+		user_id := bson.ObjectIdHex(user_str_id.(string))
 
-        post.LoadVotes(user_id)
+		post.LoadVotes(user_id)
 
-        go func(post model.Post, user_id string, signed_in bool) {
+		go func(post *feed.Post, user_id string, signed_in bool) {
 
-    		defer this.Errors.Recover()
+			defer this.Errors.Recover()
 
-    		post_module, _ := this.Feed.Post(post)
+			if signed_in {
 
-    		if signed_in {
+				by := bson.ObjectIdHex(user_id)
 
-    			by := bson.ObjectIdHex(user_id)
+				post.Viewed(by)
+			}
 
-    			post_module.Viewed(by)
-    		}
+			post.UpdateRate()
 
-    		post_module.UpdateRate()
+			// Trigger gamification events (if needed)
+			this.Gaming.Post(post).Review()
 
-    		// Trigger gamification events (if needed)
-    		this.Gaming.Post(post_module).Review()
+		}(post, user_str_id.(string), signed_in)
+	}
 
-    	}(post.Data(), user_str_id.(string), signed_in)
-    }
+	data := post.Data()
 
-    data := post.Data()
-
-    true_count := this.Feed.TrueCommentCount(data.Id)
-    data.Comments.Total = true_count
+	true_count := this.Feed.TrueCommentCount(data.Id)
+	data.Comments.Total = true_count
 
 	c.JSON(200, data)
 }
