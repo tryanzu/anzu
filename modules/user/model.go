@@ -8,79 +8,80 @@ import (
 )
 
 type User struct {
-	Id               bson.ObjectId          `bson:"_id,omitempty" json:"id"`
-	FirstName        string                 `bson:"first_name" json:"first_name"`
-	LastName         string                 `bson:"last_name" json:"last_name"`
-	UserName         string                 `bson:"username" json:"username"`
-	UserNameSlug     string                 `bson:"username_slug" json:"username_slug"`
-	NameChanges      int                    `bson:"name_changes" json:"name_changes"`
-	Description      string                 `bson:"description" json:"description,omitempty"`
-	Image            string                 `bson:"image" json:"image,omitempty"`
-	Roles            []UserRole             `bson:"roles" json:"roles,omitempty"`
-	Permissions      []string               `bson:"permissions" json:"permissions,omitempty"`
+	Id           bson.ObjectId `bson:"_id,omitempty" json:"id"`
+	FirstName    string        `bson:"first_name" json:"first_name"`
+	LastName     string        `bson:"last_name" json:"last_name"`
+	UserName     string        `bson:"username" json:"username"`
+	UserNameSlug string        `bson:"username_slug" json:"username_slug"`
+	NameChanges  int           `bson:"name_changes" json:"name_changes"`
+	Description  string        `bson:"description" json:"description,omitempty"`
+	Image        string        `bson:"image" json:"image,omitempty"`
+	Roles        []UserRole    `bson:"roles" json:"roles,omitempty"`
+	Permissions  []string      `bson:"permissions" json:"permissions,omitempty"`
 
-	Notifications    interface{}            `bson:"notifications,omitempty" json:"notifications,omitempty"`
-	Profile          map[string]interface{} `bson:"profile,omitempty" json:"profile,omitempty"`
-	Gaming           UserGaming             `bson:"gaming,omitempty" json:"gaming,omitempty"`
+	Notifications interface{}            `bson:"notifications,omitempty" json:"notifications,omitempty"`
+	Profile       map[string]interface{} `bson:"profile,omitempty" json:"profile,omitempty"`
+	Gaming        UserGaming             `bson:"gaming,omitempty" json:"gaming,omitempty"`
 
-	Version          string                 `bson:"version,omitempty" json:"version,omitempty"`
-	Validated        bool                   `bson:"validated" json:"validated"`
-	SiftAccount      bool                   `bson:"siftscience" json:"siftscience"`
-	Banned           bool                   `bson:"banned" json:"banned"`
-	Created          time.Time              `bson:"created_at" json:"created_at"`
+	Version     string    `bson:"version,omitempty" json:"version,omitempty"`
+	Validated   bool      `bson:"validated" json:"validated"`
+	SiftAccount bool      `bson:"siftscience" json:"siftscience"`
+	Banned      bool      `bson:"banned" json:"banned"`
+	Created     time.Time `bson:"created_at" json:"created_at"`
 
 	// Runtime generated
-	Referrals        ReferralsModel         `bson:"-" json:"referrals,omitempty"`
-	Components       []OwnedComponent       `bson:"-" json:"components,omitempty"`
+	Referrals  ReferralsModel   `bson:"-" json:"referrals,omitempty"`
+	Components []OwnedComponent `bson:"-" json:"components,omitempty"`
 }
 
 type UserPrivate struct {
-	User `bson:",inline"`
-	Password         string                 `bson:"password" json:"-"`
-	Step             int                    `bson:"step,omitempty" json:"step"`
-	Email            string                 `bson:"email" json:"email,omitempty"`
-	Categories       []bson.ObjectId        `bson:"categories,omitempty" json:"categories,omitempty"`
-	Facebook         interface{}            `bson:"facebook,omitempty" json:"facebook,omitempty"`
-	Stats            UserStats              `bson:"stats,omitempty" json:"stats,omitempty"`
-	ReferralCode     string                 `bson:"ref_code,omitempty" json:"ref_code"`
-	VerificationCode string                 `bson:"ver_code,omitempty" json:"ver_code"`
-	SessionId        string                 `bson:"-" json:"session_id"`
-	Updated          time.Time              `bson:"updated_at" json:"updated_at"`
-	Gamificated      time.Time              `bson:"gamificated_at" json:"gamificated_at"`
+	User             `bson:",inline"`
+	Password         string          `bson:"password" json:"-"`
+	Step             int             `bson:"step,omitempty" json:"step"`
+	Email            string          `bson:"email" json:"email,omitempty"`
+	Categories       []bson.ObjectId `bson:"categories,omitempty" json:"categories,omitempty"`
+	Facebook         interface{}     `bson:"facebook,omitempty" json:"facebook,omitempty"`
+	Stats            UserStats       `bson:"stats,omitempty" json:"stats,omitempty"`
+	ReferralCode     string          `bson:"ref_code,omitempty" json:"ref_code"`
+	VerificationCode string          `bson:"ver_code,omitempty" json:"ver_code"`
+	SessionId        string          `bson:"-" json:"session_id"`
+	Updated          time.Time       `bson:"updated_at" json:"updated_at"`
+	Gamificated      time.Time       `bson:"gamificated_at" json:"gamificated_at"`
 }
 
 type UserSimple struct {
-	Id               bson.ObjectId          `bson:"_id,omitempty" json:"id"`
-	UserName         string                 `bson:"username" json:"username"`
-	UserNameSlug     string                 `bson:"username_slug" json:"username_slug"`
-	Image            string                 `bson:"image" json:"image,omitempty"`
-	Gaming           UserGaming             `bson:"gaming,omitempty" json:"gaming,omitempty"`
-	Created          time.Time              `bson:"created_at" json:"created_at"`
-	Updated          time.Time              `bson:"updated_at" json:"updated_at"`
+	Id           bson.ObjectId `bson:"_id,omitempty" json:"id"`
+	UserName     string        `bson:"username" json:"username"`
+	UserNameSlug string        `bson:"username_slug" json:"username_slug"`
+	Image        string        `bson:"image" json:"image,omitempty"`
+	Description  string        `bson:"description" json:"description"`
+	Gaming       UserGaming    `bson:"gaming,omitempty" json:"gaming,omitempty"`
+	Created      time.Time     `bson:"created_at" json:"created_at"`
+	Updated      time.Time     `bson:"updated_at" json:"updated_at"`
 }
 
 type UserRecoveryToken struct {
-	Id               bson.ObjectId          `bson:"_id,omitempty" json:"id"`
-	Token            string                 `bson:"token" json:"token"`
-	UserId           bson.ObjectId          `bson:"user_id" json:"user_id"`
-	Used  		     bool               	`bson:"used" json:"used"`
-	Created          time.Time              `bson:"created_at" json:"created_at"`
-	Updated          time.Time              `bson:"updated_at" json:"updated_at"`
+	Id      bson.ObjectId `bson:"_id,omitempty" json:"id"`
+	Token   string        `bson:"token" json:"token"`
+	UserId  bson.ObjectId `bson:"user_id" json:"user_id"`
+	Used    bool          `bson:"used" json:"used"`
+	Created time.Time     `bson:"created_at" json:"created_at"`
+	Updated time.Time     `bson:"updated_at" json:"updated_at"`
 }
 
-var UserSimpleFields bson.M = bson.M{"id": 1, "username": 1, "username_slug": 1, "image": 1, "gaming": 1, "created_at": 1, "updated_at": 1}
+var UserSimpleFields bson.M = bson.M{"id": 1, "username": 1, "username_slug": 1, "description": 1, "image": 1, "gaming": 1, "created_at": 1, "updated_at": 1}
 
 type UserBasic struct {
-	Id               bson.ObjectId          `bson:"_id,omitempty" json:"id"`
-	UserName         string                 `bson:"username" json:"username"`
-	UserNameSlug     string                 `bson:"username_slug" json:"username_slug"`
-	Email            string                 `bson:"email" json:"email,omitempty"`
-	Facebook         interface{}            `bson:"facebook,omitempty" json:"facebook,omitempty"`
-	Gaming           UserGaming             `bson:"gaming,omitempty" json:"gaming,omitempty"`
-	Validated        bool                   `bson:"validated" json:"validated"`
-	Banned           bool                   `bson:"banned" json:"banned"`
-	Created          time.Time              `bson:"created_at" json:"created_at"`
-	Updated          time.Time              `bson:"updated_at" json:"updated_at"`
+	Id           bson.ObjectId `bson:"_id,omitempty" json:"id"`
+	UserName     string        `bson:"username" json:"username"`
+	UserNameSlug string        `bson:"username_slug" json:"username_slug"`
+	Email        string        `bson:"email" json:"email,omitempty"`
+	Facebook     interface{}   `bson:"facebook,omitempty" json:"facebook,omitempty"`
+	Gaming       UserGaming    `bson:"gaming,omitempty" json:"gaming,omitempty"`
+	Validated    bool          `bson:"validated" json:"validated"`
+	Banned       bool          `bson:"banned" json:"banned"`
+	Created      time.Time     `bson:"created_at" json:"created_at"`
+	Updated      time.Time     `bson:"updated_at" json:"updated_at"`
 }
 
 type UserRole struct {
@@ -164,15 +165,15 @@ type UserSubscribeForm struct {
 }
 
 type UserId struct {
-	Id   bson.ObjectId `bson:"_id,omitempty" json:"id"`
+	Id bson.ObjectId `bson:"_id,omitempty" json:"id"`
 }
 
 type ViewModel struct {
-	Id      bson.ObjectId `bson:"_id,omitempty" json:"id"`
-	UserId  bson.ObjectId `bson:"user_id" json:"user_id"`
-	Related string        `bson:"related" json:"related"`
+	Id        bson.ObjectId `bson:"_id,omitempty" json:"id"`
+	UserId    bson.ObjectId `bson:"user_id" json:"user_id"`
+	Related   string        `bson:"related" json:"related"`
 	RelatedId bson.ObjectId `bson:"related_id" json:"related_id"`
-	Created time.Time     `bson:"created_at" json:"created_at"`
+	Created   time.Time     `bson:"created_at" json:"created_at"`
 }
 
 type CheckinModel struct {
@@ -198,16 +199,16 @@ type ReferralsModel struct {
 }
 
 type OwnModel struct {
-	Id         bson.ObjectId `bson:"_id,omitempty" json:"id"`
-	UserId     bson.ObjectId `bson:"user_id" json:"user_id"`
-	RelatedId  bson.ObjectId `bson:"related_id" json:"related_id"`
-	Related    string        `bson:"related" json:"related"`
-	Type       string        `bson:"type" json:"type"`
-	Created    time.Time     `bson:"created_at" json:"created_at"`
+	Id        bson.ObjectId `bson:"_id,omitempty" json:"id"`
+	UserId    bson.ObjectId `bson:"user_id" json:"user_id"`
+	RelatedId bson.ObjectId `bson:"related_id" json:"related_id"`
+	Related   string        `bson:"related" json:"related"`
+	Type      string        `bson:"type" json:"type"`
+	Created   time.Time     `bson:"created_at" json:"created_at"`
 }
 
 type OwnRelationship struct {
-	Type    string `bson:"-" json:"type"`
+	Type    string    `bson:"-" json:"type"`
 	Created time.Time `bson:"-" json:"created_at"`
 }
 

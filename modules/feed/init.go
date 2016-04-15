@@ -1,10 +1,9 @@
 package feed
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
-	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/fernandez14/spartangeek-blacker/modules/search"
+	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/xuyu/goredis"
 	"gopkg.in/mgo.v2/bson"
@@ -70,31 +69,29 @@ func (module *FeedModule) SearchPosts(content string) ([]SearchPostModel, int) {
 	return posts, count
 }
 
+// Get post model pointer with DI available
 func (self *FeedModule) Post(post interface{}) (*Post, error) {
-
-	module := self
 
 	switch post.(type) {
 	case bson.ObjectId:
 
-		this := model.Post{}
+		var this *Post
 		database := self.Mongo.Database
 
 		// Use user module reference to get the user and then create the user gaming instance
 		err := database.C("posts").FindId(post.(bson.ObjectId)).One(&this)
 
 		if err != nil {
-
 			return nil, exceptions.NotFound{"Invalid post id. Not found."}
 		}
 
-		post_object := &Post{data: this, di: module}
+		this.SetDI(self)
 
-		return post_object, nil
+		return this, nil
 
 	case bson.M:
 
-		this := model.Post{}
+		var this *Post
 		database := self.Mongo.Database
 
 		// Use user module reference to get the user and then create the user gaming instance
@@ -104,16 +101,16 @@ func (self *FeedModule) Post(post interface{}) (*Post, error) {
 			return nil, exceptions.NotFound{"Invalid post id. Not found."}
 		}
 
-		post_object := &Post{data: this, di: module}
+		this.SetDI(self)
 
-		return post_object, nil
+		return this, nil
 
-	case model.Post:
+	case *Post:
 
-		this := post.(model.Post)
-		post_object := &Post{data: this, di: module}
+		this := post.(*Post)
+		this.SetDI(self)
 
-		return post_object, nil
+		return this, nil
 
 	default:
 		panic("Unkown argument")
@@ -237,28 +234,23 @@ func (module *FeedModule) FulfillBestAnswer(list []LightPostModel) []LightPostMo
 
 func (module *FeedModule) TrueCommentCount(id bson.ObjectId) int {
 
-	var count PostCommentCountModel
+	var count int
+
 	database := module.Mongo.Database
-
-	pipe := database.C("posts").Pipe([]bson.M{
-		{"$match": bson.M{"_id": id}},
-		{"$project": bson.M{"count": bson.M{"$size": "$comments.set"}}},
-	})
-
-	err := pipe.One(&count)
+	count, err := database.C("comments").Find(bson.M{"post_id": id}).Count()
 
 	if err != nil {
-		return 0
+		panic(err)
 	}
 
-	return count.Count
+	return count
 }
 
 func (module *FeedModule) Posts(limit, offset int) List {
 
 	list := List{
 		module: module,
-		limit: limit,
+		limit:  limit,
 		offset: offset,
 	}
 

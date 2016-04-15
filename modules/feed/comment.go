@@ -1,28 +1,52 @@
 package feed
 
-import(
-	"github.com/fernandez14/spartangeek-blacker/model"
+import (
 	"gopkg.in/mgo.v2/bson"
-	"strconv"
+
+	"time"
 )
 
 type Comment struct {
-	post    *Post
-	comment model.Comment
-	index   int
+	Id       bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
+	PostId   bson.ObjectId `bson:"post_id" json:"post_id"`
+	UserId   bson.ObjectId `bson:"user_id" json:"user_id"`
+	Votes    Votes         `bson:"votes" json:"votes"`
+	User     interface{}   `bson:"-" json:"author,omitempty"`
+	Position int           `bson:"position" json:"position"`
+	Liked    int           `bson:"-" json:"liked,omitempty"`
+	Content  string        `bson:"content" json:"content"`
+	Chosen   bool          `bson:"chosen,omitempty" json:"chosen,omitempty"`
+	Created  time.Time     `bson:"created_at" json:"created_at"`
+	Deleted  time.Time     `bson:"deleted_at,omit" json:"deleted_at"`
+
+	// Runtime generated pointers
+	post *Post
 }
 
-func (self Comment) MarkAsAnswer() {
+type Comments struct {
+	Count  int       `bson:"count" json:"count"`
+	Total  int       `bson:"-" json:"total"`
+	Answer *Comment  `bson:"-" json:"answer,omitempty"`
+	Set    []Comment `bson:"set" json:"set"`
+}
+
+func (self *Comment) SetDI(o *Post) {
+	self.post = o
+}
+
+func (self *Comment) MarkAsAnswer() {
 
 	// Get database instance
 	database := self.post.DI().Mongo.Database
-	id := self.post.Data().Id
-
-	// Record position on set
-	position := "comments.set." + strconv.Itoa(self.index) + ".chosen"
 
 	// Update straight forward
-	err := database.C("posts").Update(bson.M{"_id": id}, bson.M{"$set": bson.M{position: true, "solved": true}})
+	err := database.C("comments").Update(bson.M{"_id": self.Id}, bson.M{"$set": bson.M{"chosen": true}})
+
+	if err != nil {
+		panic(err)
+	}
+
+	err = database.C("posts").Update(bson.M{"_id": self.PostId}, bson.M{"$set": bson.M{"solved": true}})
 
 	if err != nil {
 		panic(err)
