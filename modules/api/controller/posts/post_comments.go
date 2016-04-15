@@ -31,7 +31,7 @@ func (this API) GetPostComments(c *gin.Context) {
 
 	limitC, err := strconv.Atoi(limitQuery)
 
-	if err != nil || limitC <= 0 {
+	if err != nil {
 		c.JSON(400, gin.H{"message": "Invalid request, limit not valid.", "status": "error"})
 		return
 	}

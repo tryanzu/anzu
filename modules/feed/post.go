@@ -1,10 +1,10 @@
 package feed
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
-	"github.com/fernandez14/spartangeek-blacker/modules/components"
-	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/fernandez14/spartangeek-blacker/model"
+	"github.com/fernandez14/spartangeek-blacker/modules/components"
+	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
+	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"gopkg.in/mgo.v2/bson"
 
 	"encoding/json"
@@ -196,7 +196,6 @@ func (self *Post) LoadVotes(user_id bson.ObjectId) {
 	}
 }
 
-
 // Collects the post views
 func (self *Post) Viewed(user_id bson.ObjectId) {
 
@@ -270,6 +269,10 @@ func (self *Post) Data() model.Post {
 	return self.data
 }
 
+func (self *Post) IsLocked() {
+	return self.data.Locked
+}
+
 func (self *Post) DI() *FeedModule {
 	return self.di
 }
@@ -340,9 +343,9 @@ func (self *Post) Comment(index int) (*Comment, error) {
 	}
 
 	comment := &Comment{
-		post: self,
+		post:    self,
 		comment: self.data.Comments.Set[index],
-		index: index,
+		index:   index,
 	}
 
 	return comment, nil
@@ -380,7 +383,7 @@ func (self *Post) Attach(entity interface{}) {
 func (self *Post) Index() {
 
 	if false {
-		
+
 		post := self.data
 
 		if post.Category.Hex() != "" {
