@@ -41,6 +41,14 @@ func (this *Customer) CleanCart() error {
 	return err
 }
 
+func (this *Customer) UpdateTaxData(rfc, name string) error {
+
+	database := this.di.Mongo.Database
+	err := database.C("customers").Update(bson.M{"_id": this.Id}, bson.M{"$set": bson.M{"taxes.rfc": rfc, "taxes.name": name}})
+
+	return err
+}
+
 func (this *Customer) GetUser() *user.One {
 
 	if this.User == nil {

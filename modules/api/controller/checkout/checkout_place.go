@@ -161,6 +161,12 @@ func (this API) Place(c *gin.Context) {
 			return
 		}
 
+		if rfc, exists := meta["rfc"].(string); exists {
+			if fiscal_ref, fe := meta["razon_social"].(string); fe {
+				customer.UpdateTaxData(rfc, fiscal_ref)
+			}
+		}
+
 		for _, item := range items {
 
 			id := item.Id

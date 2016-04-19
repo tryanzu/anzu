@@ -1,14 +1,14 @@
 package store
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/modules/assets"
+	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
-	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
-	"github.com/fernandez14/spartangeek-blacker/modules/assets"
 	"gopkg.in/mgo.v2/bson"
 
-	"time"
 	"strings"
+	"time"
 )
 
 type One struct {
@@ -24,12 +24,10 @@ func (self *One) Data() *OrderModel {
 func (self *One) PushAnswer(text, kind string) {
 
 	if kind != "text" && kind != "note" {
-
 		return
 	}
 
 	database := self.di.Mongo.Database
-
 	message := MessageModel{
 		Content: text,
 		Type:    kind,
@@ -60,7 +58,7 @@ func (self *One) PushAnswer(text, kind string) {
 					},
 				},
 				FromEmail: "pc@spartangeek.com",
-				FromName: "Drak Spartan",
+				FromName:  "Drak Spartan",
 				Variables: map[string]interface{}{
 					"content": text,
 				},
@@ -101,9 +99,9 @@ func (self *One) LoadAssets() {
 
 	for _, msg := range self.data.Messages {
 
- 		if !msg.RelatedId.Valid() {
- 			continue
- 		}
+		if !msg.RelatedId.Valid() {
+			continue
+		}
 
 		if duplicated, _ := helpers.InArray(msg.RelatedId, list); !duplicated {
 
@@ -155,7 +153,7 @@ func (self *One) PushTag(tag string) {
 
 	database := self.di.Mongo.Database
 	item := TagModel{
-		Name: tag,
+		Name:    tag,
 		Created: time.Now(),
 	}
 
@@ -170,12 +168,12 @@ func (self *One) PushActivity(name, description string, due_at time.Time) {
 
 	database := self.di.Mongo.Database
 	activity := ActivityModel{
-		Name: name,
+		Name:        name,
 		Description: description,
-		Done: false,
-		Due: due_at,
-		Created: time.Now(),
-		Updated: time.Now(),
+		Done:        false,
+		Due:         due_at,
+		Created:     time.Now(),
+		Updated:     time.Now(),
 	}
 
 	err := database.C("orders").Update(bson.M{"_id": self.data.Id}, bson.M{"$push": bson.M{"activities": activity}})
@@ -190,11 +188,11 @@ func (self *One) PushInboundAnswer(text string, mail bson.ObjectId) {
 	database := self.di.Mongo.Database
 
 	message := MessageModel{
-		Content: text,
-		Type:    "inbound",
+		Content:   text,
+		Type:      "inbound",
 		RelatedId: mail,
-		Created: time.Now(),
-		Updated: time.Now(),
+		Created:   time.Now(),
+		Updated:   time.Now(),
 	}
 
 	err := database.C("orders").Update(bson.M{"_id": self.data.Id}, bson.M{"$push": bson.M{"messages": message}, "$set": bson.M{"unreaded": true, "updated_at": time.Now()}})
@@ -218,7 +216,7 @@ func (self *One) Stage(name string) {
 	current := self.data.Pipeline.Step
 
 	if current > 0 {
-		current = current-1
+		current = current - 1
 	}
 
 	target := 0
@@ -232,7 +230,7 @@ func (self *One) Stage(name string) {
 	}
 
 	named := steps[target]
-	err := database.C("orders").Update(bson.M{"_id": self.data.Id}, bson.M{"$set": bson.M{"pipeline.step": target+1, "pipeline.current": named, "pipeline.updated_at": time.Now(), "updated_at": time.Now()}})
+	err := database.C("orders").Update(bson.M{"_id": self.data.Id}, bson.M{"$set": bson.M{"pipeline.step": target + 1, "pipeline.current": named, "pipeline.updated_at": time.Now(), "updated_at": time.Now()}})
 
 	if err != nil {
 		panic(err)
@@ -259,7 +257,7 @@ func (self *One) MatchUsers() []user.UserBasic {
 
 			duplicated, _ := helpers.InArray(checkin.UserId, users_id)
 
-			if ! duplicated {
+			if !duplicated {
 
 				users_id = append(users_id, checkin.UserId)
 			}
@@ -268,10 +266,10 @@ func (self *One) MatchUsers() []user.UserBasic {
 		var users []user.UserBasic
 
 		err = database.C("users").Find(bson.M{"$or": []bson.M{
-				{"_id": bson.M{"$in": users_id}},
-				{"email": self.data.User.Email},
-				{"facebook.email": self.data.User.Email},
-			}}).Select(bson.M{"_id": 1, "username": 1, "username_slug": 1, "email": 1, "gaming": 1, "facebook": 1, "validated": 1, "banned": 1, "created_at": 1, "updated_at": 1}).All(&users)
+			{"_id": bson.M{"$in": users_id}},
+			{"email": self.data.User.Email},
+			{"facebook.email": self.data.User.Email},
+		}}).Select(bson.M{"_id": 1, "username": 1, "username_slug": 1, "email": 1, "gaming": 1, "facebook": 1, "validated": 1, "banned": 1, "created_at": 1, "updated_at": 1}).All(&users)
 
 		if err != nil {
 			panic(err)
@@ -283,9 +281,9 @@ func (self *One) MatchUsers() []user.UserBasic {
 	var users []user.UserBasic
 
 	err := database.C("users").Find(bson.M{"$or": []bson.M{
-			{"email": self.data.User.Email},
-			{"facebook.email": self.data.User.Email},
-		}}).Select(bson.M{"_id": 1, "username": 1, "username_slug": 1, "email": 1, "facebook": 1, "validated": 1, "banned": 1, "created_at": 1, "updated_at": 1}).All(&users)
+		{"email": self.data.User.Email},
+		{"facebook.email": self.data.User.Email},
+	}}).Select(bson.M{"_id": 1, "username": 1, "username_slug": 1, "email": 1, "facebook": 1, "validated": 1, "banned": 1, "created_at": 1, "updated_at": 1}).All(&users)
 
 	if err != nil {
 		panic(err)
