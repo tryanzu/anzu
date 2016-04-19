@@ -38,11 +38,12 @@ func (this API) getCartObject(c *gin.Context) *cart.Cart {
 }
 
 type CheckoutForm struct {
-	Gateway string                 `json:"gateway" binding:"required"`
-	ShipTo  bson.ObjectId          `json:"ship_to" binding:"required"`
-	Order   bson.ObjectId          `json:"order_id"`
-	Total   float64                `json:"total" binding:"required"`
-	Meta    map[string]interface{} `json:"meta"`
+	Gateway    string                 `json:"gateway" binding:"required"`
+	ShipMethod string                 `json:"ship_method" binding:"required"`
+	ShipTo     bson.ObjectId          `json:"ship_to"`
+	Order      bson.ObjectId          `json:"order_id"`
+	Total      float64                `json:"total" binding:"required"`
+	Meta       map[string]interface{} `json:"meta"`
 }
 
 type MassdropForm struct {

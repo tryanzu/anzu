@@ -57,15 +57,14 @@ func (this *GatewayStripe) Charge(amount float64) error {
 	}
 
 	var address *CustomerAddress
-	var order_address Address
+	var order_address *Address
 
-	_, adl := this.meta["addressless"]
+	_, addressless := this.meta["addressless"]
 
 	customer := this.order.GetCustomer()
 	usr := customer.GetUser()
 	micros := int64((amount * 100) * 10000)
 	cents := uint64(amount * 100)
-	
 
 	chargeParams := &stripe.ChargeParams{
 		Amount:   cents,
@@ -73,7 +72,7 @@ func (this *GatewayStripe) Charge(amount float64) error {
 		Desc:     "Pago del pedido #" + reference,
 	}
 
-	if !adl {
+	if !addressless {
 
 		address = this.order.GetRelatedAddress()
 		order_address = this.order.Shipping.Address
@@ -121,7 +120,7 @@ func (this *GatewayStripe) Charge(amount float64) error {
 		},
 	}
 
-	if !adl {
+	if !addressless {
 
 		// Siftscience transaction
 		siftAddress := map[string]interface{}{
@@ -134,7 +133,6 @@ func (this *GatewayStripe) Charge(amount float64) error {
 			"$country":   "MX",
 			"$zipcode":   order_address.PostalCode,
 		}
-
 
 		siftTransaction["$billing_address"] = siftAddress
 		siftTransaction["$shipping_address"] = siftAddress

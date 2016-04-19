@@ -26,7 +26,7 @@ type Order struct {
 	UserId bson.ObjectId `bson:"customer_id" json:"customer_id"`
 
 	// Information about the shipping
-	Shipping Shipping `bson:"shipping" json:"shipping"`
+	Shipping *Shipping `bson:"shipping,omitempty" json:"shipping,omitempty"`
 
 	// Information about the order itself
 	Items   []Item                 `bson:"items" json:"items"`
@@ -67,7 +67,7 @@ type Shipping struct {
 	Price   float64                `bson:"price" json:"price"`
 	OPrice  float64                `bson:"original_price" json:"original_price"`
 	Meta    map[string]interface{} `bson:"meta" json:"meta"`
-	Address Address                `bson:"address" json:"address"`
+	Address *Address               `bson:"address,omitempty" json:"address,omitempty"`
 }
 
 type Address struct {

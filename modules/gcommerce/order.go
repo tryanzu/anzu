@@ -36,7 +36,7 @@ func (this *Order) ChangeStatus(name string) {
 		if related, exists := item.Meta["related"].(string); exists {
 
 			if related == "massdrop_product" {
-				
+
 				is_massdrop = true
 			}
 		}
@@ -82,24 +82,33 @@ func (this *Order) Add(name, description, image string, price float64, q int, me
 
 func (this *Order) Ship(price float64, name string, address *CustomerAddress) {
 
+	this.Shipping = &Shipping{}
+
 	gateway_price := this.gateway.ModifyPrice(price)
 
 	this.Shipping.OPrice = price
 	this.Shipping.Price = gateway_price
 	this.Shipping.Type = name
-	this.Shipping.Address = address.Address
 
-	// Save the address reference in case we need it
-	this.Shipping.Meta = map[string]interface{}{
-		"related_id": address.Id,
+	if address != nil {
+
+		this.Shipping.Address = &address.Address
+
+		// Save the address reference in case we need it
+		this.Shipping.Meta = map[string]interface{}{
+			"related_id": address.Id,
+		}
+
+		// Use the address once
+		address.UseOnce()
+		this.CustomerAdress = address
+	} else {
+
+		this.Meta["addressless"] = true
 	}
-
-	// Use the address once
-	address.UseOnce()
 
 	this.Total = this.Total + gateway_price
 	this.OTotal = this.OTotal + price
-	this.CustomerAdress = address
 }
 
 func (this *Order) GetRelatedAddress() *CustomerAddress {

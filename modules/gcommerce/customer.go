@@ -33,6 +33,14 @@ func (this *Customer) GetCart() ([]Cart, error) {
 	return items, nil
 }
 
+func (this *Customer) CleanCart() error {
+
+	database := this.di.Mongo.Database
+	err := database.C("gcommerce_cart_items").Update(bson.M{"customer_id": this.Id, "deleted_at": bson.M{"$exists": false}}, bson.M{"$set": bson.M{"deleted_at": time.Now()}})
+
+	return err
+}
+
 func (this *Customer) GetUser() *user.One {
 
 	if this.User == nil {
