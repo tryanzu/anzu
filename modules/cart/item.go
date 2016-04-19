@@ -21,9 +21,9 @@ type CartItem struct {
 	Image       string                 `json:"image"`
 	Price       float64                `json:"price"`
 	Quantity    int                    `json:"quantity"`
-	Type        string				   `json:"type"`
-	Category    string				   `json:"category"`
-	Attributes  map[string]interface{} `json:"attrs"`
+	Type        string                 `json:"type"`
+	Category    string                 `json:"category"`
+	Attributes  map[string]interface{} `bson:"attrs" json:"attrs"`
 }
 
 func (item *CartItem) GetId() string {
