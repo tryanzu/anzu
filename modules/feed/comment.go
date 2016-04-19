@@ -17,7 +17,7 @@ type Comment struct {
 	Content  string        `bson:"content" json:"content"`
 	Chosen   bool          `bson:"chosen,omitempty" json:"chosen,omitempty"`
 	Created  time.Time     `bson:"created_at" json:"created_at"`
-	Deleted  time.Time     `bson:"deleted_at,omit" json:"deleted_at"`
+	Deleted  time.Time     `bson:"deleted_at,omitempty" json:"deleted_at"`
 
 	// Runtime generated pointers
 	post *Post

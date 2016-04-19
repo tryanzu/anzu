@@ -1,5 +1,11 @@
 package comments
 
+import (
+	"github.com/fernandez14/spartangeek-blacker/modules/feed"
+	"github.com/gin-gonic/gin"
+	"gopkg.in/mgo.v2/bson"
+)
+
 func (this API) Add(c *gin.Context) {
 
 	var comment CommentForm
@@ -8,12 +14,17 @@ func (this API) Add(c *gin.Context) {
 
 	id := c.Params.ByName("id")
 
-	if bson.IsObjectIdHex(is) == false {
+	if bson.IsObjectIdHex(id) == false {
 		c.JSON(400, gin.H{"message": "Invalid request, id not valid.", "status": "error"})
 		return
 	}
 
 	post, err = this.Feed.Post(bson.ObjectIdHex(id))
+
+	if err != nil {
+		c.JSON(404, gin.H{"status": "error", "message": "Post not found."})
+		return
+	}
 
 	user_str := c.MustGet("user_id")
 	user_id := bson.ObjectIdHex(user_str.(string))
@@ -25,19 +36,16 @@ func (this API) Add(c *gin.Context) {
 			return
 		}
 
-		if post.Lock == true {
-			c.JSON(403, gin.H{"status": "error", "message": "Commnets now allowed at all."})
-			return
-		}
-
-		votes := model.Votes{
+		votes := feed.Votes{
 			Up:   0,
 			Down: 0,
 		}
 
 		// Html sanitize
 		content := html.EscapeString(comment.Content)
-		comment := model.Comment{
+		comment := feed.Comment{
+			Id:      bson.NewObjectId(),
+			PostId:  post.Id,
 			UserId:  user_bson_id,
 			Votes:   votes,
 			Content: content,

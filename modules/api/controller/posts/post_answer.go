@@ -23,7 +23,6 @@ func (this API) MarkCommentAsAnswer(c *gin.Context) {
 	comment_index, err := strconv.Atoi(comment_pos)
 
 	if err != nil {
-
 		c.JSON(400, gin.H{"message": "Invalid request, comment index not valid.", "status": "error"})
 		return
 	}
