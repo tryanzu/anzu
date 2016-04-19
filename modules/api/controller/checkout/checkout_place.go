@@ -173,8 +173,6 @@ func (this API) Place(c *gin.Context) {
 			order.Add(item.Name, item.Description, item.Image, item.GetPrice(), item.GetQuantity(), meta)
 		}
 
-		var address *gcommerce.CustomerAddress
-
 		if shipMethod == "generic" {
 
 			if !form.ShipTo.Valid() {
@@ -257,10 +255,10 @@ func (this API) Place(c *gin.Context) {
 				"reference":      order.Reference,
 			}
 
-			if address != nil {
-				vars["line1"] = address.Line1()
-				vars["line2"] = address.Line2()
-				vars["line3"] = address.Extra()
+			if order.CustomerAdress != nil {
+				vars["line1"] = order.CustomerAdress.Line1()
+				vars["line2"] = order.CustomerAdress.Line2()
+				vars["line3"] = order.CustomerAdress.Extra()
 			}
 
 			compose := mail.Mail{

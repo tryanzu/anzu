@@ -105,6 +105,7 @@ func (this *Order) Ship(price float64, name string, address *CustomerAddress) {
 	} else {
 
 		this.Meta["addressless"] = true
+		this.Meta["skip_siftscience"] = true
 	}
 
 	this.Total = this.Total + gateway_price
