@@ -4,33 +4,33 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/components"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
-	"strings"
-	"net/http"
 	"html"
+	"net/http"
+	"strings"
 )
 
 type ComponentAPI struct {
 	Components *components.Module `inject:""`
-	Page string
+	Page       string
 }
 
 func (this ComponentAPI) Get(c *gin.Context) {
-	
+
 	slug := c.Param("slug")
 	kind := c.Param("type")
 
-	if kind == "tienda" {
+	if kind == "tienda" || kind == "checkout" {
 		this.Landing(c)
 		return
 	}
 
-    if slug == "" {
+	if slug == "" {
 
 		// Post not found, url hacked
 		c.Redirect(http.StatusMovedPermanently, "/")
 		return
 	}
-	
+
 	component, err := this.Components.Get(bson.M{"slug": slug})
 
 	if err != nil {
@@ -43,28 +43,28 @@ func (this ComponentAPI) Get(c *gin.Context) {
 	if kind != component.Type {
 
 		var url string = "/componentes/" + component.Type + "/" + component.Slug
-	    
+
 		c.Redirect(http.StatusMovedPermanently, url)
 		return
 	}
-    
-    var name string = html.EscapeString(component.FullName)
-    
-    if name == "" {
-        name = html.EscapeString(component.Name)    
-    }
-    
-    var description string = html.EscapeString("Especificaciones y características del " + name + " y precios en tiendas. Comentarios de usuarios, ratings y preguntas.")
+
+	var name string = html.EscapeString(component.FullName)
+
+	if name == "" {
+		name = html.EscapeString(component.Name)
+	}
+
+	var description string = html.EscapeString("Especificaciones y características del " + name + " y precios en tiendas. Comentarios de usuarios, ratings y preguntas.")
 	var page string = this.Page
 
-	page = strings.Replace(page, "SpartanGeek.com | Comunidad de tecnología, geeks y más", "SpartanGeek.com | Componentes | " + name , 1)
+	page = strings.Replace(page, "SpartanGeek.com | Comunidad de tecnología, geeks y más", "SpartanGeek.com | Componentes | "+name, 1)
 	page = strings.Replace(page, "{{ page.title }}", name, 1)
 	page = strings.Replace(page, "{{ page.description }}", description, 2)
 
 	if len(component.Image) > 0 {
 
 		// First post image
-		page = strings.Replace(page, "{{ page.image }}", "https://assets.spartangeek.com/components/" + component.Image, 1)
+		page = strings.Replace(page, "{{ page.image }}", "https://assets.spartangeek.com/components/"+component.Image, 1)
 
 	} else {
 
@@ -77,16 +77,16 @@ func (this ComponentAPI) Get(c *gin.Context) {
 }
 
 func (this ComponentAPI) MigrateOld(c *gin.Context) {
-	
+
 	slug := c.Param("slug")
 
-    if slug == "" {
+	if slug == "" {
 
 		// Post not found, url hacked
 		c.Redirect(http.StatusMovedPermanently, "/")
 		return
 	}
-	
+
 	component, err := this.Components.Get(bson.M{"slug": slug})
 
 	if err != nil {
@@ -97,13 +97,13 @@ func (this ComponentAPI) MigrateOld(c *gin.Context) {
 	}
 
 	var url string = "/componentes/" + component.Type + "/" + component.Slug
-    
+
 	c.Redirect(http.StatusMovedPermanently, url)
 	return
 }
 
 func (this ComponentAPI) Landing(c *gin.Context) {
-	
+
 	var page string = this.Page
 
 	page = strings.Replace(page, "SpartanGeek.com | Comunidad de tecnología, geeks y más", "Tienda de Componentes, PCs, Hardware y Tecnología | SpartanGeek.com", 1)
