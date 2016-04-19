@@ -207,7 +207,7 @@ func (this API) Place(c *gin.Context) {
 		total := order.GetTotal()
 
 		if total != form.Total {
-			c.JSON(400, gin.H{"message": "Invalid total parameter.", "key": "bad-total", "status": "error", "shipping": shipping_cost, "total": total})
+			c.JSON(400, gin.H{"message": "Invalid total parameter.", "key": "bad-total", "status": "error", "shipping": order.Shipping.Price, "total": total})
 			return
 		}
 
