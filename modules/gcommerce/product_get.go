@@ -124,8 +124,8 @@ func (this Products) GetMassdrops(limit, offset int) []MassdropFoundation {
 	var insterested_map map[string]int = make(map[string]int)
 	var reservation_map map[string]int = make(map[string]int)
 
-	err = database.C("gcommerce_massdrop").Pipe([]bson.M{
-		{"$match": bson.M{"_id": bson.M{"$in": ids}, "status": "completed"}},
+	err = database.C("gcommerce_massdrop_transactions").Pipe([]bson.M{
+		{"$match": bson.M{"massdrop_id": bson.M{"$in": ids}, "status": "completed"}},
 		{"$group": bson.M{"_id": bson.M{"massdrop_id": "$massdrop_id", "type": "$type"}, "count": bson.M{"$sum": 1}}},
 	}).All(&aggregation)
 
@@ -136,7 +136,7 @@ func (this Products) GetMassdrops(limit, offset int) []MassdropFoundation {
 	for _, a := range aggregation {
 		id := a.Id.MassdropID.Hex()
 
-		if a.Id.Type == "insterested" {
+		if a.Id.Type == "interested" {
 			insterested_map[id] = a.Count
 		} else if a.Id.Type == "reservation" {
 			reservation_map[id] = a.Count
@@ -173,6 +173,7 @@ func (this Products) GetMassdrops(limit, offset int) []MassdropFoundation {
 		}
 
 		list[index].Name = mp.Name
+		list[index].Slug = mp.Slug
 		list[index].Reservations = reservations
 		list[index].Interested = interested
 	}

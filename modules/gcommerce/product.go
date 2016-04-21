@@ -45,6 +45,7 @@ type MassdropFoundation struct {
 
 	// Runtime generated data
 	Name         string `bson:"-" json:"name,omitempty"`
+	Slug         string `bson:"-" json:"slug,omitempty"`
 	Current      string `bson:"-" json:"current,omitempty"`
 	Reservations int    `bson:"-" json:"count_reservations"`
 	Interested   int    `bson:"-" json:"count_interested"`
