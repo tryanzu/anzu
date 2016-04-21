@@ -32,20 +32,32 @@ const MASSDROP_TRANS_INSTERESTED = "interested"
 const MASSDROP_STATUS_COMPLETED = "completed"
 const MASSDROP_STATUS_REMOVED = "removed"
 
-type Massdrop struct {
+type MassdropFoundation struct {
 	Id          bson.ObjectId        `bson:"_id,omitempty" json:"id"`
 	ProductId   bson.ObjectId        `bson:"product_id" json:"product_id"`
 	Deadline    time.Time            `bson:"deadline" json:"deadline"`
 	Price       float64              `bson:"price" json:"price"`
 	Reserve     float64              `bson:"reserve_price" json:"reserve_price"`
 	Active      bool                 `bson:"active" json:"active"`
+	Shipping    time.Time            `bson:"shipping_date" json:"shipping_date"`
+	CoverSmall  string               `bson:"cover_small" json:"cover_small"`
 	Checkpoints []MassdropCheckpoint `bson:"checkpoints" json:"checkpoints"`
 
 	// Runtime generated data
-	Activities   []MassdropActivity `bson:"-" json:"activities"`
-	Reservations int                `bson:"-" json:"count_reservations"`
-	Interested   int                `bson:"-" json:"count_interested"`
-	Current      string             `bson:"-" json:"current,omitempty"`
+	Name         string `bson:"-" json:"name,omitempty"`
+	Current      string `bson:"-" json:"current,omitempty"`
+	Reservations int    `bson:"-" json:"count_reservations"`
+	Interested   int    `bson:"-" json:"count_interested"`
+}
+
+type Massdrop struct {
+	MassdropFoundation `bson:",inline"`
+	Cover              string               `bson:"cover" json:"cover"`
+	Content            string               `bson:"content" json:"content"`
+	Checkpoints        []MassdropCheckpoint `bson:"checkpoints" json:"checkpoints"`
+
+	// Runtime generated data
+	Activities []MassdropActivity `bson:"-" json:"activities"`
 }
 
 type MassdropCheckpoint struct {
@@ -81,6 +93,15 @@ type MassdropTransaction struct {
 	Updated    time.Time              `bson:"updated_at" json:"updated_at"`
 
 	di *Module
+}
+
+type MassdropAggregation struct {
+	Id struct {
+		MassdropID bson.ObjectId `bson:"massdrop_id" json:"massdrop_id"`
+		Type       string        `bson:"type" json:"type"`
+	} `bson:"_id" json:"_id"`
+
+	Count int `bson:"count" json:"count"`
 }
 
 type ProductAggregation struct {

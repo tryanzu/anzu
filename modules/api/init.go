@@ -6,12 +6,13 @@ import (
 	"github.com/facebookgo/inject"
 	"github.com/fernandez14/spartangeek-blacker/handle"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller"
-	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/posts"
-	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/components"
-	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/users"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/cart"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/checkout"
+	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/components"
+	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/massdrop"
+	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/posts"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/products"
+	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/users"
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/olebedev/config"
@@ -19,32 +20,33 @@ import (
 )
 
 type Module struct {
-	Dependencies ModuleDI
-	Posts        handle.PostAPI
-	Votes        handle.VoteAPI
-	Users        handle.UserAPI
-	Categories   handle.CategoryAPI
-	Elections    handle.ElectionAPI
-	Comments     handle.CommentAPI
-	Parts        handle.PartAPI
-	Stats        handle.StatAPI
-	Middlewares  handle.MiddlewareAPI
-	Collector    handle.CollectorAPI
-	Sitemap      handle.SitemapAPI
-	Acl          handle.AclAPI
-	Gaming       handle.GamingAPI
-	Store        controller.StoreAPI
-	BuildNotes   controller.BuildNotesAPI
-	Mail         controller.MailAPI
-	PostsFactory posts.API
-	Components   controller.ComponentAPI
-	CartFactory  cart.API
-	Checkout     checkout.API
-	Products     products.API
-	Customer     controller.CustomerAPI
-	Orders       controller.OrdersAPI
-	Owners       controller.OwnersAPI
-	Lead         controller.LeadAPI
+	Dependencies      ModuleDI
+	Posts             handle.PostAPI
+	Votes             handle.VoteAPI
+	Users             handle.UserAPI
+	Categories        handle.CategoryAPI
+	Elections         handle.ElectionAPI
+	Comments          handle.CommentAPI
+	Parts             handle.PartAPI
+	Stats             handle.StatAPI
+	Middlewares       handle.MiddlewareAPI
+	Collector         handle.CollectorAPI
+	Sitemap           handle.SitemapAPI
+	Acl               handle.AclAPI
+	Gaming            handle.GamingAPI
+	Store             controller.StoreAPI
+	BuildNotes        controller.BuildNotesAPI
+	Mail              controller.MailAPI
+	PostsFactory      posts.API
+	Components        controller.ComponentAPI
+	CartFactory       cart.API
+	Checkout          checkout.API
+	Products          products.API
+	Massdrop          massdrop.API
+	Customer          controller.CustomerAPI
+	Orders            controller.OrdersAPI
+	Owners            controller.OwnersAPI
+	Lead              controller.LeadAPI
 	ComponentsFactory components.API
 	UsersFactory      users.API
 }
@@ -80,6 +82,7 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.BuildNotes},
 		&inject.Object{Value: &module.Mail},
 		&inject.Object{Value: &module.Components},
+		&inject.Object{Value: &module.Massdrop},
 		&inject.Object{Value: &module.Customer},
 		&inject.Object{Value: &module.Orders},
 		&inject.Object{Value: &module.Owners},
@@ -181,6 +184,9 @@ func (module *Module) Run() {
 		v1.GET("/search/posts", module.PostsFactory.Search)
 		v1.GET("/search/products", module.Products.Search)
 		v1.GET("/search/components", module.ComponentsFactory.Search)
+
+		// Massdrop routes
+		v1.GET("/massdrop", module.Massdrop.Get)
 
 		// // Election routes
 		v1.POST("/election/:id", module.Elections.ElectionAddOption)
