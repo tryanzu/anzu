@@ -2,6 +2,8 @@ package gcommerce
 
 import (
 	"gopkg.in/mgo.v2/bson"
+
+	"time"
 )
 
 func (this Products) GetById(id bson.ObjectId) (*Product, error) {
@@ -185,7 +187,7 @@ func (this Products) GetMassdrops(limit, offset int) []MassdropFoundation {
 			if reservations >= checkpoint.Starts {
 				list[index].Checkpoints[ci].Done = true
 				list[index].Price = checkpoint.Price
-				list[index].Deadline = list[index].Deadline.Add(time.Duration(c.Timespan) * time.Hour)
+				list[index].Deadline = list[index].Deadline.Add(time.Duration(checkpoint.Timespan) * time.Hour)
 			}
 		}
 	}
