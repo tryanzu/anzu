@@ -176,6 +176,18 @@ func (this Products) GetMassdrops(limit, offset int) []MassdropFoundation {
 		list[index].Slug = mp.Slug
 		list[index].Reservations = reservations
 		list[index].Interested = interested
+
+		// Keep starting price
+		list[index].StartingPrice = m.Price
+
+		for ci, checkpoint := range m.Checkpoints {
+
+			if reservations >= checkpoint.Starts {
+				list[index].Checkpoints[ci].Done = true
+				list[index].Price = checkpoint.Price
+				list[index].Deadline = list[index].Deadline.Add(time.Duration(c.Timespan) * time.Hour)
+			}
+		}
 	}
 
 	return list
