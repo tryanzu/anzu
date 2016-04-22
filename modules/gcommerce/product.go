@@ -52,10 +52,25 @@ type MassdropFoundation struct {
 }
 
 type Massdrop struct {
-	MassdropFoundation `bson:",inline"`
-	Cover              string               `bson:"cover" json:"cover"`
-	Content            string               `bson:"content" json:"content"`
-	Checkpoints        []MassdropCheckpoint `bson:"checkpoints" json:"checkpoints"`
+	Id          bson.ObjectId        `bson:"_id,omitempty" json:"id"`
+	ProductId   bson.ObjectId        `bson:"product_id" json:"product_id"`
+	Deadline    time.Time            `bson:"deadline" json:"deadline"`
+	Price       float64              `bson:"price" json:"price"`
+	Reserve     float64              `bson:"reserve_price" json:"reserve_price"`
+	Active      bool                 `bson:"active" json:"active"`
+	Shipping    time.Time            `bson:"shipping_date" json:"shipping_date"`
+	CoverSmall  string               `bson:"cover_small" json:"cover_small"`
+	Checkpoints []MassdropCheckpoint `bson:"checkpoints" json:"checkpoints"`
+
+	// Runtime generated data
+	Name         string `bson:"-" json:"name,omitempty"`
+	Slug         string `bson:"-" json:"slug,omitempty"`
+	Current      string `bson:"-" json:"current,omitempty"`
+	Reservations int    `bson:"-" json:"count_reservations"`
+	Interested   int    `bson:"-" json:"count_interested"`
+
+	Cover   string `bson:"cover" json:"cover"`
+	Content string `bson:"content" json:"content"`
 
 	// Runtime generated data
 	Activities []MassdropActivity `bson:"-" json:"activities"`
