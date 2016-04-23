@@ -19,6 +19,7 @@ type Product struct {
 	Shipping    float64                `bson:"shipping_cost" json:"shipping_cost"`
 	Search      string                 `bson:"search" json:"search"`
 	Relevance   int                    `bson:"relevance" json:"relevance"`
+	Stock       int                    `bson:"stock" json:"stock"`
 	Attrs       map[string]interface{} `bson:"attributes" json:"attributes"`
 	Created     time.Time              `bson:"created_at" json:"created_at"`
 	Updated     time.Time              `bson:"updated_at" json:"updated_at"`
