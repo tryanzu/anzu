@@ -45,7 +45,7 @@ func (this Products) GetList(limit, offset int, search, category, kind string) (
 	list := make([]*Product, 0)
 	facets := make([]ProductAggregation, 0)
 
-	query := bson.M{}
+	query := bson.M{"stock": bson.M{"$ne": 0}}
 	fields := bson.M{}
 
 	if kind != "" {
