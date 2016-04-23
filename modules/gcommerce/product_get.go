@@ -89,7 +89,6 @@ func (this Products) GetList(limit, offset int, search, category, kind string) (
 	}
 
 	// Remove type from aggregation since its not needed
-	delete(query, "type")
 	delete(query, "category")
 
 	err = database.C("gcommerce_products").Pipe([]bson.M{
