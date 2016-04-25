@@ -1,12 +1,15 @@
 package store
 
 import (
+	"github.com/fernandez14/go-enlacefiscal"
 	"github.com/fernandez14/spartangeek-blacker/modules/assets"
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"gopkg.in/mgo.v2/bson"
 
+	"io/ioutil"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -290,7 +293,6 @@ func (self *One) MatchUsers() []user.UserBasic {
 	}
 
 	return users
-
 }
 
 func (self *One) Touch() {
@@ -312,4 +314,68 @@ func (self *One) Ignore() {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func (self *One) EmitInvoice(name, rfc string, total float64) {
+
+	config, err := self.di.Config.Get("invoicing")
+
+	if err != nil {
+		panic(err)
+	}
+
+	apiUser, err := config.String("username")
+
+	if err != nil {
+		panic(err)
+	}
+
+	apiPass, err := config.String("password")
+
+	if err != nil {
+		panic(err)
+	}
+
+	rfcOrigin, err := config.String("rfc")
+
+	if err != nil {
+		panic(err)
+	}
+
+	series, err := config.String("series")
+
+	if err != nil {
+		panic(err)
+	}
+
+	folioPath, err := config.String("folio")
+
+	if err != nil {
+		panic(err)
+	}
+
+	folioContent, err := ioutil.ReadFile(folioPath)
+
+	if err != nil {
+		panic(err)
+	}
+
+	folio, err := strconv.Atoi(string(folioContent))
+
+	if err != nil {
+		panic(err)
+	}
+
+	api := efiscal.API{apiUser, apiPass, false}
+	invoice := api.Invoice(rfcOrigin, series, strconv.Itoa(folio))
+
+	invoice.AddItem(Item{
+		Quantity:    1,
+		Value:       total,
+		Unit:        "producto",
+		Description: "PC de Alto Rendimiento",
+	})
+	invoice.TransferIVA(16)
+	invoice.SetPayment(&efiscal.PAY_ONE_TIME_TRANSFER)
+	invoice.SetReceiver(&efiscal.Receiver{rfc, name})
 }

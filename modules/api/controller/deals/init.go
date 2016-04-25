@@ -6,6 +6,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/gcommerce"
 	"github.com/fernandez14/spartangeek-blacker/modules/store"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type API struct {
@@ -17,7 +18,8 @@ type API struct {
 }
 
 type InvoiceForm struct {
-	Total float64 `json:"total" binding:"required"`
-	RFC   string  `json:"rfc" binding:"required"`
-	Name  string  `json:"fiscal_name" binding:"required"`
+	Id    bson.ObjectId `json:"id" binding:"required"`
+	Total float64       `json:"total" binding:"required"`
+	RFC   string        `json:"rfc" binding:"required"`
+	Name  string        `json:"fiscal_name" binding:"required"`
 }
