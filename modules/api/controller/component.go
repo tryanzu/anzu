@@ -3,8 +3,8 @@ package controller
 import (
 	"github.com/fernandez14/spartangeek-blacker/modules/components"
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
-	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/fernandez14/spartangeek-blacker/modules/gcommerce"
+	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -72,8 +72,12 @@ func (this ComponentAPI) Get(c *gin.Context) {
 		data["product_id"] = product.Id.Hex()
 	}
 
+	data["category"] = data["type"]
+
+	delete(data, "type")
+
 	data["stats"] = map[string]interface{}{
-		"component": component.GetAggregatedUsrVotes("component"),
+		"component":     component.GetAggregatedUsrVotes("component"),
 		"component-buy": component.GetAggregatedUsrVotes("component-buy"),
 	}
 
@@ -148,7 +152,7 @@ func (this ComponentAPI) DeletePrice(c *gin.Context) {
 	component.DeletePrice()
 
 	c.JSON(200, gin.H{"status": "okay"})
-	
+
 }
 
 type ComponentPriceUpdateForm struct {
