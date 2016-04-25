@@ -15,8 +15,8 @@ func Boot() *Module {
 }
 
 type Module struct {
-	Mongo     *mongo.Service `inject:""`
-	Search    *search.Module `inject:""`
+	Mongo  *mongo.Service `inject:""`
+	Search *search.Module `inject:""`
 }
 
 func (module *Module) Get(find interface{}) (*ComponentModel, error) {
@@ -47,12 +47,12 @@ func (module *Module) Get(find interface{}) (*ComponentModel, error) {
 			return nil, exceptions.NotFound{"Invalid component finder. Not found."}
 		}
 
-	case *ComponentModel: 
+	case *ComponentModel:
 
 		component := find.(*ComponentModel)
 		component.SetDI(context)
 
-		return component, nil	
+		return component, nil
 
 	default:
 		panic("Unkown argument")
@@ -82,7 +82,7 @@ func (module *Module) Get(find interface{}) (*ComponentModel, error) {
 func (module *Module) List(limit, offset int, search, kind string, activated bool) ([]Component, []ComponentTypeCountModel, int) {
 
 	components := make([]Component, 0)
-	facets   := make([]ComponentTypeCountModel, 0)
+	facets := make([]ComponentTypeCountModel, 0)
 	database := module.Mongo.Database
 
 	// Fields to retrieve
@@ -112,7 +112,7 @@ func (module *Module) List(limit, offset int, search, kind string, activated boo
 		}
 	} else {
 
-		err := database.C("components").Find(query).Select(fields).Limit(limit).Skip(offset).All(&components)
+		err := database.C("components").Find(query).Select(fields).Limit(limit).Sort("-activated").Skip(offset).All(&components)
 
 		if err != nil {
 			panic(err)
