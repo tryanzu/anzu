@@ -9,6 +9,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/cart"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/checkout"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/components"
+	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/deals"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/massdrop"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/posts"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/products"
@@ -43,6 +44,7 @@ type Module struct {
 	Checkout          checkout.API
 	Products          products.API
 	Massdrop          massdrop.API
+	Deals             deals.API
 	Customer          controller.CustomerAPI
 	Orders            controller.OrdersAPI
 	Owners            controller.OwnersAPI
@@ -86,6 +88,7 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.Customer},
 		&inject.Object{Value: &module.Orders},
 		&inject.Object{Value: &module.Owners},
+		&inject.Object{Value: &module.Deals},
 		&inject.Object{Value: &module.Lead},
 	)
 
@@ -220,7 +223,6 @@ func (module *Module) Run() {
 		// Store routes
 		store := v1.Group("/store")
 		{
-
 			store.POST("/order", module.Store.PlaceOrder)
 
 			// Cart routes
@@ -299,6 +301,8 @@ func (module *Module) Run() {
 					store.POST("/order/:id/send-confirmation", module.Orders.SendOrderConfirmation)
 					store.PUT("/order/:id/status", module.Orders.ChangeStatus)
 				}
+
+				backoffice.POST("/deals/invoice", module.Deals.GenerateInvoice)
 
 				backoffice.GET("/order", module.Store.Orders)
 				backoffice.GET("/order/:id", module.Store.One)
