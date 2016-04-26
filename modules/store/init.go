@@ -43,6 +43,7 @@ func (module *Module) Order(id bson.ObjectId) (*One, error) {
 	}
 
 	one := &One{data: model, di: module}
+	one.LoadInvoice()
 
 	return one, nil
 }
