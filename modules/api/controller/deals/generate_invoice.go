@@ -18,7 +18,7 @@ func (this API) GenerateInvoice(c *gin.Context) {
 			return
 		}
 
-		invoice, err := order.EmitInvoice(form.Name, form.RFC, form.Total)
+		invoice, err := order.EmitInvoice(form.Name, form.RFC, form.Mail, form.Total)
 
 		if err != nil {
 			c.JSON(400, gin.H{"status": "error", "message": err.Error()})

@@ -152,6 +152,18 @@ func (self *One) LoadAssets() {
 	self.data.Messages = messages
 }
 
+func (self *One) LoadInvoice() {
+
+	var invoice Invoice
+
+	database := self.di.Mongo.Database
+	err := database.C("invoices").Find(bson.M{"deal_id": self.data.Id}).One(&invoice)
+
+	if err == nil {
+		self.data.Invoice = &invoice
+	}
+}
+
 func (self *One) PushTag(tag string) {
 
 	database := self.di.Mongo.Database
@@ -316,7 +328,7 @@ func (self *One) Ignore() {
 	}
 }
 
-func (self *One) EmitInvoice(name, rfc string, total float64) {
+func (self *One) EmitInvoice(name, rfc, email string, total float64) (map[string]interface{}, error) {
 
 	config, err := self.di.Config.Get("invoicing")
 
@@ -366,16 +378,50 @@ func (self *One) EmitInvoice(name, rfc string, total float64) {
 		panic(err)
 	}
 
-	api := efiscal.API{apiUser, apiPass, false}
+	api := efiscal.Boot(apiUser, apiPass, false)
 	invoice := api.Invoice(rfcOrigin, series, strconv.Itoa(folio))
 
-	invoice.AddItem(Item{
+	invoice.AddItem(efiscal.Item{
 		Quantity:    1,
 		Value:       total,
-		Unit:        "producto",
+		Unit:        "pc",
 		Description: "PC de Alto Rendimiento",
 	})
 	invoice.TransferIVA(16)
 	invoice.SetPayment(&efiscal.PAY_ONE_TIME_TRANSFER)
 	invoice.SetReceiver(&efiscal.Receiver{rfc, name})
+	invoice.SendMail([]string{email})
+
+	data, err := api.Sign(invoice)
+
+	if err == nil {
+
+		database := self.di.Mongo.Database
+		record := &Invoice{
+			Id:     bson.NewObjectId(),
+			DealId: self.Data().Id,
+			Assets: InvoiceAssets{
+				PDF: "",
+				XML: "",
+			},
+			Meta:    data,
+			Created: time.Now(),
+			Updated: time.Now(),
+		}
+
+		err := database.C("invoices").Insert(record)
+
+		if err != nil {
+			panic(err)
+		}
+
+		newFolio := strconv.Itoa(folio + 1)
+		err = ioutil.WriteFile(folioPath, []byte(newFolio), 0644)
+
+		if err != nil {
+			return data, err
+		}
+	}
+
+	return data, err
 }

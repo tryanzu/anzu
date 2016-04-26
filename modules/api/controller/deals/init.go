@@ -22,4 +22,5 @@ type InvoiceForm struct {
 	Total float64       `json:"total" binding:"required"`
 	RFC   string        `json:"rfc" binding:"required"`
 	Name  string        `json:"fiscal_name" binding:"required"`
+	Mail  string        `json:"mail_to" binding:"required"`
 }
