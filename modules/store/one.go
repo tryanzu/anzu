@@ -328,7 +328,7 @@ func (self *One) Ignore() {
 	}
 }
 
-func (self *One) EmitInvoice(name, rfc, email string, total float64) (map[string]interface{}, error) {
+func (self *One) EmitInvoice(name, rfc, email string, total float64) (*Invoice, error) {
 
 	config, err := self.di.Config.Get("invoicing")
 
@@ -378,7 +378,7 @@ func (self *One) EmitInvoice(name, rfc, email string, total float64) (map[string
 		panic(err)
 	}
 
-	api := efiscal.Boot(apiUser, apiPass, false)
+	api := efiscal.Boot(apiUser, apiPass, true)
 	invoice := api.Invoice(rfcOrigin, series, strconv.Itoa(folio))
 
 	invoice.AddItem(efiscal.Item{
@@ -394,10 +394,12 @@ func (self *One) EmitInvoice(name, rfc, email string, total float64) (map[string
 
 	data, err := api.Sign(invoice)
 
+	var record *Invoice
+
 	if err == nil {
 
 		database := self.di.Mongo.Database
-		record := &Invoice{
+		record = &Invoice{
 			Id:     bson.NewObjectId(),
 			DealId: self.Data().Id,
 			Assets: InvoiceAssets{
@@ -419,9 +421,9 @@ func (self *One) EmitInvoice(name, rfc, email string, total float64) (map[string
 		err = ioutil.WriteFile(folioPath, []byte(newFolio), 0644)
 
 		if err != nil {
-			return data, err
+			return record, err
 		}
 	}
 
-	return data, err
+	return record, err
 }
