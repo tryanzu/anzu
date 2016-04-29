@@ -258,9 +258,14 @@ func (module Module) ConfirmationEmails() {
 
 	// Get all users
 	from := time.Now()
-	from.Add(-time.Duration(time.Hour * 24 * 10))
+	from = from.Add(-time.Duration(time.Hour * 24 * 10))
 
-	iter := database.C("users").Find(bson.M{"validated": false, "gamificated_at": bson.M{"$gte": from}, "created_at": bson.M{"$lte": from}}).Iter()
+	query := database.C("users").Find(bson.M{"validated": false, "gamificated_at": bson.M{"$gt": from}, "created_at": bson.M{"$lt": from}})
+	count, _ := query.Count()
+
+	fmt.Printf("Found %v at %v\n", count, from)
+
+	iter := query.Iter()
 
 	for iter.Next(&usr) {
 
