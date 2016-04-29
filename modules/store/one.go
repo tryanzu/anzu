@@ -389,7 +389,7 @@ func (self *One) EmitInvoice(name, rfc, email string, total float64) (*Invoice, 
 	})
 	invoice.TransferIVA(16)
 	invoice.SetPayment(&efiscal.PAY_ONE_TIME_TRANSFER)
-	invoice.SetReceiver(&efiscal.Receiver{rfc, name})
+	invoice.SetReceiver(&efiscal.Receiver{rfc, name, nil})
 	invoice.SendMail([]string{email})
 
 	data, err := api.Sign(invoice)

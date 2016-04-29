@@ -7,12 +7,14 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/components"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
+	"github.com/fernandez14/spartangeek-blacker/modules/gcommerce"
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/fernandez14/spartangeek-blacker/modules/search"
 	"github.com/fernandez14/spartangeek-blacker/modules/transmit"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
+	"github.com/olebedev/config"
 	"gopkg.in/mgo.v2/bson"
 	"log"
 	"reflect"
@@ -23,13 +25,15 @@ import (
 )
 
 type Module struct {
-	Mongo    *mongo.Service               `inject:""`
-	Search   *search.Module               `inject:""`
-	Errors   *exceptions.ExceptionsModule `inject:""`
-	User     *user.Module                 `inject:""`
-	Feed     *feed.FeedModule             `inject:""`
-	Transmit *transmit.Sender             `inject:""`
-	Mail     *mail.Module                 `inject:""`
+	Mongo     *mongo.Service               `inject:""`
+	Search    *search.Module               `inject:""`
+	Errors    *exceptions.ExceptionsModule `inject:""`
+	User      *user.Module                 `inject:""`
+	Feed      *feed.FeedModule             `inject:""`
+	Transmit  *transmit.Sender             `inject:""`
+	Mail      *mail.Module                 `inject:""`
+	GCommerce *gcommerce.Module            `inject:""`
+	Config    *config.Config               `inject:""`
 }
 
 type fn func()
@@ -45,6 +49,8 @@ func (module Module) Run(name string) {
 		"replace-url":        module.ReplaceURL,
 		"test-transmit":      module.TestSocket,
 		"first-newsletter":   module.FirstNewsletter,
+		"massdrop-invoicing": module.GenerateMassdropInvoices,
+		"custom-invoicing":   module.GenerateCustomInvoice,
 	}
 
 	if handler, exists := commands[name]; exists {
