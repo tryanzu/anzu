@@ -127,7 +127,7 @@ func (module Module) GenerateCustomInvoice() {
 		panic(err)
 	}
 
-	api := efiscal.Boot(apiUser, apiPass, false)
+	api := efiscal.Boot(apiUser, apiPass, true)
 	invoice := api.Invoice(rfcOrigin, series, strconv.Itoa(folio))
 
 	receiver := &efiscal.Receiver{
@@ -154,7 +154,7 @@ func (module Module) GenerateCustomInvoice() {
 	invoice.TransferIVA(16)
 	invoice.SetPayment(&efiscal.PAY_ONE_TIME_TRANSFER)
 	invoice.SetReceiver(receiver)
-	invoice.SendMail([]string{"facturas_comparateca@outlook.com"})
+	invoice.SendMail([]string{"silveriovaldezcuevas@gmail.com", "alberto.villa@spartangeek.com", "facturas_comparateca@outlook.com"})
 
 	data, err := api.Sign(invoice)
 
