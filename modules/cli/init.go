@@ -4,22 +4,22 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/fernandez14/spartangeek-blacker/model"
+	"github.com/fernandez14/spartangeek-blacker/modules/components"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
-	"github.com/fernandez14/spartangeek-blacker/modules/components"
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
-	"github.com/fernandez14/spartangeek-blacker/modules/user"
+	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/fernandez14/spartangeek-blacker/modules/search"
 	"github.com/fernandez14/spartangeek-blacker/modules/transmit"
-	"github.com/fernandez14/spartangeek-blacker/modules/mail"
+	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"gopkg.in/mgo.v2/bson"
 	"log"
 	"reflect"
 	"regexp"
 	"strconv"
-	"time"
 	"strings"
+	"time"
 )
 
 type Module struct {
@@ -37,14 +37,14 @@ type fn func()
 func (module Module) Run(name string) {
 
 	commands := map[string]fn{
-		"slug-fix":    module.SlugFix,
-		"codes-fix":   module.Codes,
-		"index-posts": module.IndexAlgolia,
-		"index-components": module.IndexComponentsAlgolia,
+		"slug-fix":           module.SlugFix,
+		"codes-fix":          module.Codes,
+		"index-posts":        module.IndexAlgolia,
+		"index-components":   module.IndexComponentsAlgolia,
 		"send-confirmations": module.ConfirmationEmails,
-		"replace-url": module.ReplaceURL,
-		"test-transmit": module.TestSocket,
-		"first-newsletter": module.FirstNewsletter,
+		"replace-url":        module.ReplaceURL,
+		"test-transmit":      module.TestSocket,
+		"first-newsletter":   module.FirstNewsletter,
 	}
 
 	if handler, exists := commands[name]; exists {
@@ -75,7 +75,7 @@ func (module Module) FirstNewsletter() {
 			gamificated := usr.Gamificated
 			since := time.Since(gamificated)
 
-			if since.Hours() < float64(60.0 * 24.0 * 20) {
+			if since.Hours() < float64(60.0*24.0*20) {
 				database.C("newsletter").Update(bson.M{"_id": news.Id}, bson.M{"$set": bson.M{"old": false}})
 				fmt.Printf("-")
 				continue
@@ -95,7 +95,7 @@ func (module Module) TestSocket() {
 	carrier := module.Transmit
 
 	carrierParams := map[string]interface{}{
-		"fire": "new-post",
+		"fire":     "new-post",
 		"category": "549da59c6461740097000000",
 	}
 
@@ -117,8 +117,8 @@ func (module Module) ReplaceURL() {
 	for iter.Next(&usr) {
 
 		image := strings.Replace(usr.Image, "http://s3-us-west-1.amazonaws.com/spartan-board", "https://s3-us-west-1.amazonaws.com/spartan-board", -1)
-		image  = strings.Replace(usr.Image, "http://assets.spartangeek.com", "https://s3-us-west-1.amazonaws.com/spartan-board", -1)
-		image  = strings.Replace(usr.Image, "https://assets.spartangeek.com", "https://s3-us-west-1.amazonaws.com/spartan-board", -1)
+		image = strings.Replace(usr.Image, "http://assets.spartangeek.com", "https://s3-us-west-1.amazonaws.com/spartan-board", -1)
+		image = strings.Replace(usr.Image, "https://assets.spartangeek.com", "https://s3-us-west-1.amazonaws.com/spartan-board", -1)
 		err := database.C("users").Update(bson.M{"_id": usr.Id}, bson.M{"$set": bson.M{"image": image}})
 
 		if err != nil {
@@ -136,21 +136,19 @@ func (module Module) ReplaceURL() {
 		updates := bson.M{}
 
 		content := strings.Replace(post.Content, "https://assets.spartangeek.com", "https://s3-us-west-1.amazonaws.com/spartan-board", -1)
-		content  = strings.Replace(post.Content, "http://assets.spartangeek.com", "https://s3-us-west-1.amazonaws.com/spartan-board", -1)
-		content  = strings.Replace(post.Content, "http://s3-us-west-1.amazonaws.com/spartan-board", "https://s3-us-west-1.amazonaws.com/spartan-board", -1)
+		content = strings.Replace(post.Content, "http://assets.spartangeek.com", "https://s3-us-west-1.amazonaws.com/spartan-board", -1)
+		content = strings.Replace(post.Content, "http://s3-us-west-1.amazonaws.com/spartan-board", "https://s3-us-west-1.amazonaws.com/spartan-board", -1)
 		updates["content"] = content
-
 
 		for index, comment := range post.Comments.Set {
 
 			comment_index := strconv.Itoa(index)
 
 			content := strings.Replace(comment.Content, "https://assets.spartangeek.com", "https://s3-us-west-1.amazonaws.com/spartan-board", -1)
-			content  = strings.Replace(comment.Content, "http://assets.spartangeek.com", "https://s3-us-west-1.amazonaws.com/spartan-board", -1)
-			content  = strings.Replace(comment.Content, "http://s3-us-west-1.amazonaws.com/spartan-board", "https://s3-us-west-1.amazonaws.com/spartan-board", -1)
+			content = strings.Replace(comment.Content, "http://assets.spartangeek.com", "https://s3-us-west-1.amazonaws.com/spartan-board", -1)
+			content = strings.Replace(comment.Content, "http://s3-us-west-1.amazonaws.com/spartan-board", "https://s3-us-west-1.amazonaws.com/spartan-board", -1)
 
-
-			updates["comments.set." + comment_index + ".content"] = content
+			updates["comments.set."+comment_index+".content"] = content
 		}
 
 		if len(updates) > 0 {
@@ -259,7 +257,10 @@ func (module Module) ConfirmationEmails() {
 	database := module.Mongo.Database
 
 	// Get all users
-	iter := database.C("users").Find(bson.M{"validated": false, "username": "Carlos_Ed"}).Iter()
+	from := time.Now()
+	from.Add(-time.Duration(time.Hour * 24 * 10))
+
+	iter := database.C("users").Find(bson.M{"validated": false, "gamificated_at": bson.M{"$gte": from}, "created_at": bson.M{"$lte": from}}).Iter()
 
 	for iter.Next(&usr) {
 
@@ -515,14 +516,14 @@ func (module Module) IndexComponentsAlgolia() {
 
 			full_name, full_name_exists := component["full_name"]
 
-			if ! full_name_exists {
+			if !full_name_exists {
 
 				full_name = name
 			}
 
 			image, image_exists := component["image"]
 
-			if ! image_exists {
+			if !image_exists {
 
 				image = ""
 			}
@@ -534,13 +535,13 @@ func (module Module) IndexComponentsAlgolia() {
 				slug := component["slug"].(string)
 
 				item := components.AlgoliaComponentModel{
-					Id: id.Hex(),
-					Name: name.(string),
+					Id:       id.Hex(),
+					Name:     name.(string),
 					FullName: full_name.(string),
-					Part: part_number.(string),
-					Slug: slug,
-					Image: image.(string),
-					Type: component["type"].(string),
+					Part:     part_number.(string),
+					Slug:     slug,
+					Image:    image.(string),
+					Type:     component["type"].(string),
 				}
 
 				fmt.Printf("+")
