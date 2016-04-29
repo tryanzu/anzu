@@ -14,7 +14,7 @@ type Lead struct {
 
 type Invoice struct {
 	Id      bson.ObjectId          `bson:"_id,omitempty" json:"id"`
-	DealId  bson.ObjectId          `bson:"deal_id" json:"deal_id"`
+	DealId  bson.ObjectId          `bson:"deal_id,omitempty" json:"deal_id,omitempty"`
 	Assets  InvoiceAssets          `bson:"assets" json:"assets"`
 	Meta    map[string]interface{} `bson:"meta" json:"meta"`
 	Created time.Time              `bson:"created_at" json:"created_at"`
