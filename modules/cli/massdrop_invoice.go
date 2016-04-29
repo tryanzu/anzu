@@ -77,6 +77,27 @@ func (module Module) GenerateMassdropInvoices() {
 	}
 }
 
+func (module Module) GenerateCustomInvoices() {
+
+	var n string
+
+	fmt.Println("How many?")
+	fmt.Scanln(&n)
+
+	many, err := strconv.Atoi(n)
+
+	if err != nil {
+		fmt.Println("Could not read number from input")
+		return
+	}
+
+	for i := 0; i < many; i++ {
+
+		fmt.Println("Generating " + strconv.Itoa(i))
+		module.GenerateCustomInvoice()
+	}
+}
+
 func (module Module) GenerateCustomInvoice() {
 
 	config, err := module.Config.Get("invoicing")
@@ -186,5 +207,8 @@ func (module Module) GenerateCustomInvoice() {
 		if err != nil {
 			panic(err)
 		}
+	} else {
+
+		panic(err)
 	}
 }
