@@ -51,6 +51,7 @@ func (module Module) Run(name string) {
 		"first-newsletter":   module.FirstNewsletter,
 		"massdrop-invoicing": module.GenerateMassdropInvoices,
 		"custom-invoicing":   module.GenerateCustomInvoice,
+		"custom-invoices":    module.GenerateCustomInvoices,
 	}
 
 	if handler, exists := commands[name]; exists {
