@@ -1,5 +1,5 @@
 hash: 6224273f05f2a295265decf685fcbdd49a136bafb918230fad720278db2d41bb
-updated: 2016-04-30T17:41:49.419242903-05:00
+updated: 2016-04-30T17:48:31.222886719-05:00
 imports:
 - name: collectd.org
   version: 9fc824c70f713ea0f058a07b49a4c563ef2a3b98
@@ -117,7 +117,6 @@ imports:
   - postmark
 - name: github.com/howeyc/gopass
   version: 66487b23f2880ba32e185121d2cd51a338ea069a
-  repo: https://github.com/howeyc/gopass
 - name: github.com/influxdata/usage-client
   version: 475977e68d79883d9c8d67131c84e4241523f452
 - name: github.com/influxdb/influxdb

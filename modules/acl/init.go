@@ -10,9 +10,9 @@ import (
 )
 
 type Module struct {
-	Map   *gorbac.RBAC
-	Mongo *mongo.Service `inject:""`
-	Rules map[string]AclRole
+	Map         *gorbac.RBAC
+	Mongo       *mongo.Service `inject:""`
+	Rules       map[string]AclRole
 	Permissions map[string]gorbac.Permission
 }
 
@@ -56,7 +56,7 @@ func Boot(file string) *Module {
 
 		for _, p := range rules.Permissions {
 			module.Permissions[p] = gorbac.NewStdPermission(p)
-			role.Assign(module.Permissions[p])
+			role.AssignPermission(module.Permissions[p])
 		}
 
 		// Populate map with permissions
