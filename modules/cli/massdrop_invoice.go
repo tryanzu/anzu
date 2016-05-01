@@ -151,6 +151,11 @@ func (module Module) GenerateCustomInvoice() {
 	api := efiscal.Boot(apiUser, apiPass, true)
 	invoice := api.Invoice(rfcOrigin, series, strconv.Itoa(folio))
 
+	emitted := time.Now()
+	emitted.Add(-time.Duration(time.Hour * 24))
+
+	invoice.Emitted = efiscal.JSONTime(emitted)
+
 	receiver := &efiscal.Receiver{
 		"VACS840206QC7",
 		"SILVERIO VALDEZ CUEVAS",
