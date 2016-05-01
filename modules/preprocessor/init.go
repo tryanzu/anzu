@@ -96,7 +96,7 @@ func (module *Module) Run() {
 	router.GET("/componentes/:type/:slug/", module.Components.Get)
 	router.GET("/componente/:slug", module.Components.MigrateOld)
 	router.GET("/componente/:slug/", module.Components.MigrateOld)
-	router.GET("/compra-en-legion", module.Products.ByPass)
+	router.GET("/compra-en-legion", module.Products.Landing)
 	router.GET("/compra-en-legion/:slug", module.Products.Legion)
 	router.GET("/", module.General.Landing)
 
