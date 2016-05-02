@@ -25,6 +25,7 @@ type Product struct {
 	Updated     time.Time              `bson:"updated_at" json:"updated_at"`
 
 	di       *Module
+	userId   bson.ObjectId
 	Massdrop *Massdrop `bson:"massdrop,omitempty" json:"massdrop,omitempty"`
 }
 

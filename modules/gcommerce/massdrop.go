@@ -1,7 +1,6 @@
 package gcommerce
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"gopkg.in/mgo.v2/bson"
 
 	"errors"
@@ -93,25 +92,12 @@ func (this *Product) UserMassdrop(user_id bson.ObjectId) {
 
 	database := this.di.Mongo.Database
 	customer := this.di.GetCustomerFromUser(user_id)
-	acl := this.di.Acl.User(user_id)
 	err := database.C("gcommerce_massdrop_transactions").Find(bson.M{"massdrop_id": this.Massdrop.Id, "customer_id": customer.Id, "status": MASSDROP_STATUS_COMPLETED}).Sort("-created_at").One(&model)
 
 	if err == nil {
 		status = model.Type
 	} else {
 		status = "none"
-	}
-
-	if acl.Can("sensitive-data") && this.Massdrop.usersList != nil {
-
-		umap := this.Massdrop.usersList.(map[bson.ObjectId]user.UserBasic)
-		list := []user.UserBasic{}
-
-		for _, u := range umap {
-			list = append(list, u)
-		}
-
-		this.Massdrop.Users = list
 	}
 
 	this.Massdrop.Current = status

@@ -28,12 +28,26 @@ func (this *Product) Initialize() {
 	}
 }
 
+func (this *Product) ShareRequesterUserId(id bson.ObjectId) {
+	this.userId = id
+}
+
 func (this *Product) InitializeMassdrop() {
 
 	var model *Massdrop
 	database := this.di.Mongo.Database
 
 	err := database.C("gcommerce_massdrop").Find(bson.M{"product_id": this.Id}).One(&model)
+	extended := false
+
+	if this.userId.Valid() {
+
+		acl := this.di.Acl.User(this.userId)
+
+		if acl.Can("sensitive-data") {
+			extended = true
+		}
+	}
 
 	if err == nil {
 
@@ -41,6 +55,7 @@ func (this *Product) InitializeMassdrop() {
 
 		var transactions []MassdropTransaction
 		var activities []MassdropActivity
+		var users []map[string]interface{}
 
 		err := database.C("gcommerce_massdrop_transactions").Find(bson.M{"massdrop_id": model.Id}).Sort("-created_at").All(&transactions)
 
@@ -61,21 +76,52 @@ func (this *Product) InitializeMassdrop() {
 			var reservations int = 0
 			var interested int = 0
 
-			this.Massdrop.usersList = users_map
-
 			for _, t := range transactions {
 
 				if t.Status == MASSDROP_STATUS_COMPLETED {
 
 					// User information
 					customer := customers_map[t.CustomerId]
-					usr := users_map[customer.UserId].ToSimple()
+					usr := users_map[customer.UserId]
+					email := usr.Email
+
+					if len(email) == 0 {
+
+						if usr.Facebook != nil {
+
+							facebook := usr.Facebook.(bson.M)
+
+							if mail, exists := facebook["email"]; exists {
+								email = mail.(string)
+							}
+						}
+					}
+
+					reference := ""
+
+					if str, exists := t.Attrs["reference"]; exists {
+						reference = str.(string)
+					}
+
+					user_node := map[string]interface{}{
+						"id":            usr.Id,
+						"username":      usr.UserName,
+						"username_slug": usr.UserNameSlug,
+						"type":          t.Type,
+					}
+
+					if extended {
+						user_node["email"] = email
+						user_node["contact_input"] = reference
+
+						users = append(users, user_node)
+					}
 
 					activity := MassdropActivity{
 						Type:    t.Type,
 						Created: t.Created,
 						Attrs: map[string]interface{}{
-							"user": usr,
+							"user": user_node,
 						},
 					}
 
@@ -133,6 +179,10 @@ func (this *Product) InitializeMassdrop() {
 						}
 					}
 				}
+			}
+
+			if len(users) > 0 {
+				this.Massdrop.Users = users
 			}
 
 			if this.Massdrop.Deadline.Before(time.Now()) {
