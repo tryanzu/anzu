@@ -107,6 +107,7 @@ func (this *Product) InitializeMassdrop() {
 						"id":            usr.Id,
 						"username":      usr.UserName,
 						"username_slug": usr.UserNameSlug,
+						"image":         usr.Image,
 						"type":          t.Type,
 					}
 
