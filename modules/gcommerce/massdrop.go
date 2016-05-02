@@ -42,7 +42,7 @@ func (this *Product) MassdropInterested(user_id bson.ObjectId, reference string)
 
 	database := this.di.Mongo.Database
 	customer := this.di.GetCustomerFromUser(user_id)
-	err := database.C("gcommerce_massdrop_transactions").Find(bson.M{"massdrop_id": this.Massdrop.Id, "customer_id": customer.Id, "status": MASSDROP_STATUS_COMPLETED}).One(&model)
+	err := database.C("gcommerce_massdrop_transactions").Find(bson.M{"massdrop_id": this.Massdrop.Id, "customer_id": customer.Id, "type": MASSDROP_TRANS_INSTERESTED, "status": MASSDROP_STATUS_COMPLETED}).One(&model)
 
 	if err == nil {
 
