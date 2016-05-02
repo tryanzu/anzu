@@ -65,17 +65,20 @@ type Massdrop struct {
 	Checkpoints []MassdropCheckpoint `bson:"checkpoints" json:"checkpoints"`
 
 	// Runtime generated data
-	Name         string `bson:"-" json:"name,omitempty"`
-	Slug         string `bson:"-" json:"slug,omitempty"`
-	Current      string `bson:"-" json:"current,omitempty"`
-	Reservations int    `bson:"-" json:"count_reservations"`
-	Interested   int    `bson:"-" json:"count_interested"`
+	Name         string      `bson:"-" json:"name,omitempty"`
+	Slug         string      `bson:"-" json:"slug,omitempty"`
+	Current      string      `bson:"-" json:"current,omitempty"`
+	Reservations int         `bson:"-" json:"count_reservations"`
+	Interested   int         `bson:"-" json:"count_interested"`
+	Users        interface{} `bson:"-" json:"users,omitempty"`
 
 	Cover   string `bson:"cover" json:"cover"`
 	Content string `bson:"content" json:"content"`
 
 	// Runtime generated data
 	Activities []MassdropActivity `bson:"-" json:"activities"`
+
+	usersList interface{} `bson:"-" json:"-"`
 }
 
 type MassdropCheckpoint struct {

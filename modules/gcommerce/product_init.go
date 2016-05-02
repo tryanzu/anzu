@@ -1,8 +1,8 @@
 package gcommerce
 
 import (
-	"gopkg.in/mgo.v2/bson"
 	"github.com/fernandez14/spartangeek-blacker/modules/components"
+	"gopkg.in/mgo.v2/bson"
 
 	"sort"
 	"time"
@@ -10,7 +10,7 @@ import (
 
 // Initialize Product model struct (single one)
 func (this *Product) Initialize() {
-	
+
 	// Load component if needed
 	if this.Type == "component" {
 
@@ -61,16 +61,18 @@ func (this *Product) InitializeMassdrop() {
 			var reservations int = 0
 			var interested int = 0
 
+			this.Massdrop.usersList = users_map
+
 			for _, t := range transactions {
 
 				if t.Status == MASSDROP_STATUS_COMPLETED {
 
 					// User information
 					customer := customers_map[t.CustomerId]
-					usr := users_map[customer.UserId]
+					usr := users_map[customer.UserId].ToSimple()
 
 					activity := MassdropActivity{
-						Type: t.Type,
+						Type:    t.Type,
 						Created: t.Created,
 						Attrs: map[string]interface{}{
 							"user": usr,
@@ -92,15 +94,15 @@ func (this *Product) InitializeMassdrop() {
 					} else if t.Type == MASSDROP_TRANS_INSTERESTED {
 						interested = interested + 1
 					}
-				} 
+				}
 			}
 
 			// First activities sorting
 			sort.Sort(MassdropByCreated(activities))
-			
+
 			for index, c := range this.Massdrop.Checkpoints {
 
-				if reservations >= c.Starts  {
+				if reservations >= c.Starts {
 
 					this.Massdrop.Checkpoints[index].Done = true
 					this.Massdrop.Deadline = this.Massdrop.Deadline.Add(time.Duration(c.Timespan) * time.Hour)
@@ -112,14 +114,14 @@ func (this *Product) InitializeMassdrop() {
 
 						if act.Type != MASSDROP_TRANS_RESERVATION {
 							continue
-						} 
+						}
 
 						count = count + 1
 
 						if count == c.Starts {
 
 							activity := MassdropActivity{
-								Type: "checkpoint",
+								Type:    "checkpoint",
 								Created: act.Created,
 								Attrs: map[string]interface{}{
 									"step": c.Step,
@@ -128,7 +130,7 @@ func (this *Product) InitializeMassdrop() {
 
 							activities = append(activities, activity)
 							break
-	 					}
+						}
 					}
 				}
 			}
@@ -236,7 +238,7 @@ func (this Products) InitializeList(list []*Product) {
 			if product.Type == "component" {
 
 				if component_id, exists := product.Attrs["component_id"].(bson.ObjectId); exists {
-					
+
 					if component, ref_exists := components_map[component_id.Hex()]; ref_exists {
 
 						list[index].ComponentBind(component)
