@@ -69,7 +69,7 @@ type UserRecoveryToken struct {
 }
 
 var UserSimpleFields bson.M = bson.M{"id": 1, "username": 1, "username_slug": 1, "image": 1, "gaming": 1, "created_at": 1, "updated_at": 1}
-var UserBasicFields bson.M = bson.M{"id": 1, "username": 1, "facebook": 1, "validated": 1, "banned": 1, "username_slug": 1, "image": 1, "gaming": 1, "created_at": 1, "updated_at": 1}
+var UserBasicFields bson.M = bson.M{"id": 1, "username": 1, "facebook": 1, "email": 1, "validated": 1, "banned": 1, "username_slug": 1, "image": 1, "gaming": 1, "created_at": 1, "updated_at": 1}
 
 type UserBasic struct {
 	Id           bson.ObjectId `bson:"_id,omitempty" json:"id"`
