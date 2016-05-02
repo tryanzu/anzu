@@ -57,7 +57,7 @@ func (this *Product) InitializeMassdrop() {
 		var activities []MassdropActivity
 		var users []map[string]interface{}
 
-		err := database.C("gcommerce_massdrop_transactions").Find(bson.M{"massdrop_id": model.Id}).Sort("-created_at").All(&transactions)
+		err := database.C("gcommerce_massdrop_transactions").Find(bson.M{"massdrop_id": model.Id}).Sort("-updated_at").All(&transactions)
 
 		if err != nil {
 			panic(err)
@@ -120,7 +120,7 @@ func (this *Product) InitializeMassdrop() {
 
 					activity := MassdropActivity{
 						Type:    t.Type,
-						Created: t.Created,
+						Created: t.Updated,
 						Attrs: map[string]interface{}{
 							"user": user_node,
 						},
