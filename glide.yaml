@@ -1,5 +1,5 @@
 package: github.com/fernandez14/spartangeek-blacker
-ignore: 
+ignore:
 - github.com/fernandez14/spartangeek-blacker
 import:
 - package: github.com/CloudCom/fireauth
@@ -56,3 +56,6 @@ import:
 - package: gopkg.in/mgo.v2
   subpackages:
   - bson
+- package: github.com/dustin/go-humanize
+- package: github.com/fernandez14/go-enlacefiscal
+- package: github.com/fernandez14/go-siftscience

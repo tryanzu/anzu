@@ -69,12 +69,14 @@ type UserRecoveryToken struct {
 	Updated time.Time     `bson:"updated_at" json:"updated_at"`
 }
 
-var UserSimpleFields bson.M = bson.M{"id": 1, "username": 1, "username_slug": 1, "description": 1, "image": 1, "gaming": 1, "created_at": 1, "updated_at": 1}
+var UserSimpleFields bson.M = bson.M{"id": 1, "username": 1, "username_slug": 1, "image": 1, "gaming": 1, "created_at": 1, "updated_at": 1}
+var UserBasicFields bson.M = bson.M{"id": 1, "username": 1, "facebook": 1, "email": 1, "validated": 1, "banned": 1, "username_slug": 1, "image": 1, "gaming": 1, "created_at": 1, "updated_at": 1}
 
 type UserBasic struct {
 	Id           bson.ObjectId `bson:"_id,omitempty" json:"id"`
 	UserName     string        `bson:"username" json:"username"`
 	UserNameSlug string        `bson:"username_slug" json:"username_slug"`
+	Image        string        `bson:"image" json:"image,omitempty"`
 	Email        string        `bson:"email" json:"email,omitempty"`
 	Facebook     interface{}   `bson:"facebook,omitempty" json:"facebook,omitempty"`
 	Gaming       UserGaming    `bson:"gaming,omitempty" json:"gaming,omitempty"`
@@ -82,6 +84,10 @@ type UserBasic struct {
 	Banned       bool          `bson:"banned" json:"banned"`
 	Created      time.Time     `bson:"created_at" json:"created_at"`
 	Updated      time.Time     `bson:"updated_at" json:"updated_at"`
+}
+
+func (u UserBasic) ToSimple() UserSimple {
+	return UserSimple{u.Id, u.UserName, u.UserNameSlug, u.Image, u.Gaming, u.Created, u.Updated}
 }
 
 type UserRole struct {

@@ -1,14 +1,17 @@
 package store
 
 import (
+	"github.com/fernandez14/go-enlacefiscal"
+	"github.com/fernandez14/spartangeek-blacker/modules/assets"
+	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
-	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
-	"github.com/fernandez14/spartangeek-blacker/modules/assets"
 	"gopkg.in/mgo.v2/bson"
 
-	"time"
+	"io/ioutil"
+	"strconv"
 	"strings"
+	"time"
 )
 
 type One struct {
@@ -24,12 +27,10 @@ func (self *One) Data() *OrderModel {
 func (self *One) PushAnswer(text, kind string) {
 
 	if kind != "text" && kind != "note" {
-
 		return
 	}
 
 	database := self.di.Mongo.Database
-
 	message := MessageModel{
 		Content: text,
 		Type:    kind,
@@ -60,7 +61,7 @@ func (self *One) PushAnswer(text, kind string) {
 					},
 				},
 				FromEmail: "pc@spartangeek.com",
-				FromName: "Drak Spartan",
+				FromName:  "Drak Spartan",
 				Variables: map[string]interface{}{
 					"content": text,
 				},
@@ -101,9 +102,9 @@ func (self *One) LoadAssets() {
 
 	for _, msg := range self.data.Messages {
 
- 		if !msg.RelatedId.Valid() {
- 			continue
- 		}
+		if !msg.RelatedId.Valid() {
+			continue
+		}
 
 		if duplicated, _ := helpers.InArray(msg.RelatedId, list); !duplicated {
 
@@ -151,11 +152,23 @@ func (self *One) LoadAssets() {
 	self.data.Messages = messages
 }
 
+func (self *One) LoadInvoice() {
+
+	var invoice Invoice
+
+	database := self.di.Mongo.Database
+	err := database.C("invoices").Find(bson.M{"deal_id": self.data.Id}).One(&invoice)
+
+	if err == nil {
+		self.data.Invoice = &invoice
+	}
+}
+
 func (self *One) PushTag(tag string) {
 
 	database := self.di.Mongo.Database
 	item := TagModel{
-		Name: tag,
+		Name:    tag,
 		Created: time.Now(),
 	}
 
@@ -170,12 +183,12 @@ func (self *One) PushActivity(name, description string, due_at time.Time) {
 
 	database := self.di.Mongo.Database
 	activity := ActivityModel{
-		Name: name,
+		Name:        name,
 		Description: description,
-		Done: false,
-		Due: due_at,
-		Created: time.Now(),
-		Updated: time.Now(),
+		Done:        false,
+		Due:         due_at,
+		Created:     time.Now(),
+		Updated:     time.Now(),
 	}
 
 	err := database.C("orders").Update(bson.M{"_id": self.data.Id}, bson.M{"$push": bson.M{"activities": activity}})
@@ -190,11 +203,11 @@ func (self *One) PushInboundAnswer(text string, mail bson.ObjectId) {
 	database := self.di.Mongo.Database
 
 	message := MessageModel{
-		Content: text,
-		Type:    "inbound",
+		Content:   text,
+		Type:      "inbound",
 		RelatedId: mail,
-		Created: time.Now(),
-		Updated: time.Now(),
+		Created:   time.Now(),
+		Updated:   time.Now(),
 	}
 
 	err := database.C("orders").Update(bson.M{"_id": self.data.Id}, bson.M{"$push": bson.M{"messages": message}, "$set": bson.M{"unreaded": true, "updated_at": time.Now()}})
@@ -218,7 +231,7 @@ func (self *One) Stage(name string) {
 	current := self.data.Pipeline.Step
 
 	if current > 0 {
-		current = current-1
+		current = current - 1
 	}
 
 	target := 0
@@ -232,7 +245,7 @@ func (self *One) Stage(name string) {
 	}
 
 	named := steps[target]
-	err := database.C("orders").Update(bson.M{"_id": self.data.Id}, bson.M{"$set": bson.M{"pipeline.step": target+1, "pipeline.current": named, "pipeline.updated_at": time.Now(), "updated_at": time.Now()}})
+	err := database.C("orders").Update(bson.M{"_id": self.data.Id}, bson.M{"$set": bson.M{"pipeline.step": target + 1, "pipeline.current": named, "pipeline.updated_at": time.Now(), "updated_at": time.Now()}})
 
 	if err != nil {
 		panic(err)
@@ -259,7 +272,7 @@ func (self *One) MatchUsers() []user.UserBasic {
 
 			duplicated, _ := helpers.InArray(checkin.UserId, users_id)
 
-			if ! duplicated {
+			if !duplicated {
 
 				users_id = append(users_id, checkin.UserId)
 			}
@@ -268,10 +281,10 @@ func (self *One) MatchUsers() []user.UserBasic {
 		var users []user.UserBasic
 
 		err = database.C("users").Find(bson.M{"$or": []bson.M{
-				{"_id": bson.M{"$in": users_id}},
-				{"email": self.data.User.Email},
-				{"facebook.email": self.data.User.Email},
-			}}).Select(bson.M{"_id": 1, "username": 1, "username_slug": 1, "email": 1, "gaming": 1, "facebook": 1, "validated": 1, "banned": 1, "created_at": 1, "updated_at": 1}).All(&users)
+			{"_id": bson.M{"$in": users_id}},
+			{"email": self.data.User.Email},
+			{"facebook.email": self.data.User.Email},
+		}}).Select(bson.M{"_id": 1, "username": 1, "username_slug": 1, "email": 1, "gaming": 1, "facebook": 1, "validated": 1, "banned": 1, "created_at": 1, "updated_at": 1}).All(&users)
 
 		if err != nil {
 			panic(err)
@@ -283,16 +296,15 @@ func (self *One) MatchUsers() []user.UserBasic {
 	var users []user.UserBasic
 
 	err := database.C("users").Find(bson.M{"$or": []bson.M{
-			{"email": self.data.User.Email},
-			{"facebook.email": self.data.User.Email},
-		}}).Select(bson.M{"_id": 1, "username": 1, "username_slug": 1, "email": 1, "facebook": 1, "validated": 1, "banned": 1, "created_at": 1, "updated_at": 1}).All(&users)
+		{"email": self.data.User.Email},
+		{"facebook.email": self.data.User.Email},
+	}}).Select(bson.M{"_id": 1, "username": 1, "username_slug": 1, "email": 1, "facebook": 1, "validated": 1, "banned": 1, "created_at": 1, "updated_at": 1}).All(&users)
 
 	if err != nil {
 		panic(err)
 	}
 
 	return users
-
 }
 
 func (self *One) Touch() {
@@ -314,4 +326,104 @@ func (self *One) Ignore() {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func (self *One) EmitInvoice(name, rfc, email string, total float64) (*Invoice, error) {
+
+	config, err := self.di.Config.Get("invoicing")
+
+	if err != nil {
+		panic(err)
+	}
+
+	apiUser, err := config.String("username")
+
+	if err != nil {
+		panic(err)
+	}
+
+	apiPass, err := config.String("password")
+
+	if err != nil {
+		panic(err)
+	}
+
+	rfcOrigin, err := config.String("rfc")
+
+	if err != nil {
+		panic(err)
+	}
+
+	series, err := config.String("series")
+
+	if err != nil {
+		panic(err)
+	}
+
+	folioPath, err := config.String("folio")
+
+	if err != nil {
+		panic(err)
+	}
+
+	folioContent, err := ioutil.ReadFile(folioPath)
+
+	if err != nil {
+		panic(err)
+	}
+
+	folio, err := strconv.Atoi(string(folioContent))
+
+	if err != nil {
+		panic(err)
+	}
+
+	api := efiscal.Boot(apiUser, apiPass, true)
+	invoice := api.Invoice(rfcOrigin, series, strconv.Itoa(folio))
+
+	invoice.AddItem(efiscal.Item{
+		Quantity:    1,
+		Value:       total,
+		Unit:        "pc",
+		Description: "PC de Alto Rendimiento",
+	})
+	invoice.TransferIVA(16)
+	invoice.SetPayment(&efiscal.PAY_ONE_TIME_TRANSFER)
+	invoice.SetReceiver(&efiscal.Receiver{rfc, name, nil})
+	invoice.SendMail([]string{email, "facturas_comparateca@gmail.com"})
+
+	data, err := api.Sign(invoice)
+
+	var record *Invoice
+
+	if err == nil {
+
+		database := self.di.Mongo.Database
+		record = &Invoice{
+			Id:     bson.NewObjectId(),
+			DealId: self.Data().Id,
+			Assets: InvoiceAssets{
+				PDF: "",
+				XML: "",
+			},
+			Meta:    data,
+			Created: time.Now(),
+			Updated: time.Now(),
+		}
+
+		err := database.C("invoices").Insert(record)
+
+		if err != nil {
+			panic(err)
+		}
+
+		newFolio := strconv.Itoa(folio + 1)
+		err = ioutil.WriteFile(folioPath, []byte(newFolio), 0644)
+
+		if err != nil {
+			return record, err
+		}
+	}
+
+	return record, err
 }

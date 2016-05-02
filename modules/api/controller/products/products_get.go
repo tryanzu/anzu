@@ -22,14 +22,22 @@ func (this API) Get(c *gin.Context) {
 		return
 	}
 
-	// Load Massdrop information (if exists)
-	product.InitializeMassdrop()
+	var user_id bson.ObjectId
 
 	if _, signed_in := c.Get("token"); signed_in {
 
 		user_str := c.MustGet("user_id")
-		user_id := bson.ObjectIdHex(user_str.(string))
+		user_id = bson.ObjectIdHex(user_str.(string))
+	}
 
+	if user_id.Valid() {
+		product.ShareRequesterUserId(user_id)
+	}
+
+	// Load Massdrop information (if exists)
+	product.InitializeMassdrop()
+
+	if user_id.Valid() {
 		product.UserMassdrop(user_id)
 	}
 

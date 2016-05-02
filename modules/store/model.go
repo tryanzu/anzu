@@ -12,6 +12,20 @@ type Lead struct {
 	Created time.Time     `bson:"created_at" json:"created_at"`
 }
 
+type Invoice struct {
+	Id      bson.ObjectId          `bson:"_id,omitempty" json:"id"`
+	DealId  bson.ObjectId          `bson:"deal_id,omitempty" json:"deal_id,omitempty"`
+	Assets  InvoiceAssets          `bson:"assets" json:"assets"`
+	Meta    map[string]interface{} `bson:"meta" json:"meta"`
+	Created time.Time              `bson:"created_at" json:"created_at"`
+	Updated time.Time              `bson:"updated_at" json:"updated_at"`
+}
+
+type InvoiceAssets struct {
+	XML string `bson:"xml" json:"xml"`
+	PDF string `bson:"pdf" json:"pdf"`
+}
+
 type OrderModel struct {
 	Id         bson.ObjectId   `bson:"_id,omitempty" json:"id,omitempty"`
 	User       OrderUserModel  `bson:"user" json:"user"`
@@ -30,11 +44,12 @@ type OrderModel struct {
 	Pipeline   PipelineModel   `bson:"pipeline,omitempty" json:"pipeline"`
 	Lead       bool            `bson:"-" json:"lead"`
 	Created    time.Time       `bson:"created_at" json:"created_at"`
-	Updated   time.Time        `bson:"updated_at" json:"updated_at"`
+	Updated    time.Time       `bson:"updated_at" json:"updated_at"`
 
 	// Runtime generated and not persisted in database
-	RelatedUsers interface{} `bson:"-" json:"related_users,omitempty"`
-	Duplicates []OrderModel `bson:"-" json:"duplicates,omitempty"`
+	RelatedUsers interface{}  `bson:"-" json:"related_users,omitempty"`
+	Duplicates   []OrderModel `bson:"-" json:"duplicates,omitempty"`
+	Invoice      *Invoice     `bson:"-" json:"invoice,omitempty"`
 }
 
 type OrderUserModel struct {
@@ -45,12 +60,12 @@ type OrderUserModel struct {
 }
 
 type MessageModel struct {
-	Type      string        `bson:"type" json:"type"`
-	Content   string        `bson:"content" json:"content"`
-	RelatedId bson.ObjectId `bson:"related_id,omitempty" json:"related_id,omitempty"`
+	Type      string                 `bson:"type" json:"type"`
+	Content   string                 `bson:"content" json:"content"`
+	RelatedId bson.ObjectId          `bson:"related_id,omitempty" json:"related_id,omitempty"`
 	Meta      map[string]interface{} `bson:"-" json:"meta,omitempty"`
-	Created   time.Time     `bson:"created_at" json:"created_at"`
-	Updated   time.Time     `bson:"updated_at" json:"updated_at"`
+	Created   time.Time              `bson:"created_at" json:"created_at"`
+	Updated   time.Time              `bson:"updated_at" json:"updated_at"`
 }
 
 type ActivityModel struct {
@@ -63,8 +78,8 @@ type ActivityModel struct {
 }
 
 type TagModel struct {
-	Name    string        `bson:"name" json:"name"`
-	Created time.Time     `bson:"created_at" json:"created_at"`
+	Name    string    `bson:"name" json:"name"`
+	Created time.Time `bson:"created_at" json:"created_at"`
 }
 
 type PipelineModel struct {
@@ -81,10 +96,10 @@ type PipelineChangeModel struct {
 }
 
 type BuildResponseModel struct {
-	Id      bson.ObjectId  `bson:"_id,omitempty" json:"id,omitempty"`
-	Title   string         `bson:"title" json:"title"`
-	Content string         `bson:"content" json:"content"`
-	Price   int            `bson:"price,omitempty" json:"price,omitempty"`
+	Id      bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
+	Title   string        `bson:"title" json:"title"`
+	Content string        `bson:"content" json:"content"`
+	Price   int           `bson:"price,omitempty" json:"price,omitempty"`
 }
 
 type ByCreatedAt []MessageModel

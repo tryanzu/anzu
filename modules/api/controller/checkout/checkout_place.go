@@ -25,6 +25,15 @@ func (this API) Place(c *gin.Context) {
 		// Initialize cart library
 		err := cartContainer.Bind(&items)
 
+		customer := this.GCommerce.GetCustomerFromUser(user_id)
+		static, serr := customer.GetCart()
+
+		if len(static) > 0 && serr == nil {
+			for _, item := range static {
+				items = append(items, item.Item)
+			}
+		}
+
 		if err != nil || len(items) == 0 {
 
 			if err != nil {
@@ -38,6 +47,7 @@ func (this API) Place(c *gin.Context) {
 
 		shipping_cost := 0.0
 		item_count := 0
+		massdrop_enabled := false
 		errors := make([]CheckoutError, 0)
 
 		products := this.GCommerce.Products()
@@ -120,23 +130,23 @@ func (this API) Place(c *gin.Context) {
 					item_count = item_count + 1
 				}
 			}
+
+			if me, exists := item.Attributes["massdrop"].(bool); exists && me {
+				massdrop_enabled = true
+			}
 		}
 
 		if len(errors) > 0 {
-
 			cartContainer.Save(items)
 
 			c.JSON(409, gin.H{"status": "error", "list": errors})
 			return
 		}
 
-		customer := this.GCommerce.GetCustomerFromUser(user_id)
+		shipMethod := form.ShipMethod
 
-		// Get a reference for the customer's address that will be used on the order
-		address, err := customer.Address(form.ShipTo)
-
-		if err != nil {
-			c.JSON(400, gin.H{"message": "Invalid ship_to parameter.", "status": "error"})
+		if shipMethod != "pickup" && shipMethod != "generic" {
+			c.JSON(400, gin.H{"message": "Invalid ship_method parameter.", "status": "error"})
 			return
 		}
 
@@ -151,6 +161,12 @@ func (this API) Place(c *gin.Context) {
 			return
 		}
 
+		if rfc, exists := meta["rfc"].(string); exists {
+			if fiscal_ref, fe := meta["razon_social"].(string); fe {
+				customer.UpdateTaxData(rfc, fiscal_ref)
+			}
+		}
+
 		for _, item := range items {
 
 			id := item.Id
@@ -163,14 +179,39 @@ func (this API) Place(c *gin.Context) {
 			order.Add(item.Name, item.Description, item.Image, item.GetPrice(), item.GetQuantity(), meta)
 		}
 
-		// Setup shipping information
-		order.Ship(shipping_cost, "generic", address)
+		if shipMethod == "generic" {
+
+			if !form.ShipTo.Valid() {
+				c.JSON(400, gin.H{"message": "Invalid ship_to id parameter.", "status": "error"})
+				return
+			}
+
+			// Get a reference for the customer's address that will be used on the order
+			address, err := customer.Address(form.ShipTo)
+
+			if err != nil {
+				c.JSON(400, gin.H{"message": "Invalid ship_to parameter.", "status": "error"})
+				return
+			}
+
+			// Setup shipping information
+			order.Ship(shipping_cost, "generic", address)
+
+		} else if shipMethod == "pickup" {
+
+			if !massdrop_enabled {
+				c.JSON(400, gin.H{"message": "Pickup shipping not enabled.", "status": "error"})
+				return
+			}
+
+			order.Ship(0, "pickup", nil)
+		}
 
 		// Match calculated total against frontend total
 		total := order.GetTotal()
 
 		if total != form.Total {
-			c.JSON(400, gin.H{"message": "Invalid total parameter.", "key": "bad-total", "status": "error", "shipping": shipping_cost, "total": total})
+			c.JSON(400, gin.H{"message": "Invalid total parameter.", "key": "bad-total", "status": "error", "shipping": order.Shipping.Price, "total": total})
 			return
 		}
 
@@ -208,6 +249,24 @@ func (this API) Place(c *gin.Context) {
 				template = 252541
 			}
 
+			vars := map[string]interface{}{
+				"name":           usr.Name(),
+				"payment":        paymentType,
+				"total_products": order.GetOriginalTotal() - order.Shipping.OPrice,
+				"total_shipping": order.Shipping.OPrice,
+				"subtotal":       order.GetOriginalTotal(),
+				"commision":      order.GetGatewayCommision(),
+				"total":          order.Total,
+				"items":          order.Items,
+				"reference":      order.Reference,
+			}
+
+			if order.CustomerAdress != nil {
+				vars["line1"] = order.CustomerAdress.Line1()
+				vars["line2"] = order.CustomerAdress.Line2()
+				vars["line3"] = order.CustomerAdress.Extra()
+			}
+
 			compose := mail.Mail{
 				Template:  template,
 				FromName:  "Spartan Geek",
@@ -222,20 +281,7 @@ func (this API) Place(c *gin.Context) {
 						Email: "pedidos@spartangeek.com",
 					},
 				},
-				Variables: map[string]interface{}{
-					"name":           usr.Name(),
-					"payment":        paymentType,
-					"line1":          address.Line1(),
-					"line2":          address.Line2(),
-					"line3":          address.Extra(),
-					"total_products": order.GetOriginalTotal() - order.Shipping.OPrice,
-					"total_shipping": order.Shipping.OPrice,
-					"subtotal":       order.GetOriginalTotal(),
-					"commision":      order.GetGatewayCommision(),
-					"total":          order.Total,
-					"items":          order.Items,
-					"reference":      order.Reference,
-				},
+				Variables: vars,
 			}
 
 			go mailing.Send(compose)
@@ -252,6 +298,7 @@ func (this API) Place(c *gin.Context) {
 
 			// Clean up cart items
 			cartContainer.Save(make([]cart.CartItem, 0))
+			customer.CleanCart()
 		}
 
 		c.JSON(200, gin.H{"status": "okay"})

@@ -27,7 +27,7 @@ func (this *MassdropTransaction) CastToReservation() error {
 	database := this.di.Mongo.Database
 
 	// Perform the save of the order once we've got here
-	err := database.C("gcommerce_massdrop_transactions").Update(bson.M{"_id": this.Id}, bson.M{"$set": bson.M{"status": MASSDROP_STATUS_COMPLETED, "type": MASSDROP_TRANS_RESERVATION}})
+	err := database.C("gcommerce_massdrop_transactions").Update(bson.M{"_id": this.Id}, bson.M{"$set": bson.M{"status": MASSDROP_STATUS_COMPLETED, "type": MASSDROP_TRANS_RESERVATION, "updated_at": time.Now()}})
 
 	return err
 }
@@ -42,7 +42,7 @@ func (this *Product) MassdropInterested(user_id bson.ObjectId, reference string)
 
 	database := this.di.Mongo.Database
 	customer := this.di.GetCustomerFromUser(user_id)
-	err := database.C("gcommerce_massdrop_transactions").Find(bson.M{"massdrop_id": this.Massdrop.Id, "customer_id": customer.Id, "status": MASSDROP_STATUS_COMPLETED}).One(&model)
+	err := database.C("gcommerce_massdrop_transactions").Find(bson.M{"massdrop_id": this.Massdrop.Id, "customer_id": customer.Id, "type": MASSDROP_TRANS_INSTERESTED, "status": MASSDROP_STATUS_COMPLETED}).One(&model)
 
 	if err == nil {
 

@@ -12,7 +12,7 @@ type Component struct {
 	Slug         string              `bson:"slug" json:"slug"`
 	Source       string              `bson:"source" json:"source"`
 	External     float64             `bson:"external" json:"external"`
-	Type         string              `bson:"type" json:"type"`
+	Type         string              `bson:"type" json:"category"`
 	Image        string              `bson:"image" json:"image"`
 	PartNumber   string              `bson:"part_number" json:"part_number"`
 	Manufacturer string              `bson:"manufacturer" json:"manufacturer"`
@@ -24,10 +24,10 @@ var ComponentFields bson.M = bson.M{"_id": 1, "name": 1, "store": 1, "full_name"
 type ComponentModel struct {
 	Component `bson:",inline"`
 
-	Images       []string            `bson:"images" json:"images"`
-	Activated    bool                `bson:"activated" json:"activated"`
-	di           *Module
-	generic      []byte
+	Images    []string `bson:"images" json:"images"`
+	Activated bool     `bson:"activated" json:"activated"`
+	di        *Module
+	generic   []byte
 }
 
 type ComponentImageModel struct {
@@ -96,8 +96,8 @@ type ComponentStorageModel struct {
 }
 
 type ComponentTypeCountModel struct {
-	Type      string `bson:"_id" json:"category"`
-	Count     int    `bson:"count" json:"count"`
+	Type  string `bson:"_id" json:"category"`
+	Count int    `bson:"count" json:"count"`
 }
 
 type AlgoliaComponentModel struct {

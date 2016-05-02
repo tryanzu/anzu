@@ -1,10 +1,10 @@
 package checkout
 
 import (
+	"github.com/dustin/go-humanize"
 	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
-	"github.com/dustin/go-humanize"
 )
 
 func (this API) Massdrop(c *gin.Context) {
@@ -94,8 +94,10 @@ func (this API) Massdrop(c *gin.Context) {
 					"name":      usr.Name(),
 					"reference": order.Reference,
 					"price":     product.Massdrop.Reserve,
+					"slug":      product.Slug,
+					"pname":     product.Name,
 					"quantity":  form.Quantity,
-					"total":     humanize.FormatFloat("#,###.##", product.Massdrop.Reserve * float64(form.Quantity)),
+					"total":     humanize.FormatFloat("#,###.##", product.Massdrop.Reserve*float64(form.Quantity)),
 				},
 			}
 

@@ -4,12 +4,13 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
+	"github.com/olebedev/config"
 	"github.com/xuyu/goredis"
 	"gopkg.in/mgo.v2/bson"
-	
-	"time"
+
 	"strconv"
 	"strings"
+	"time"
 )
 
 func Boot() *Module {
@@ -24,6 +25,7 @@ type Module struct {
 	Errors *exceptions.ExceptionsModule `inject:""`
 	Redis  *goredis.Redis               `inject:""`
 	Mail   *mail.Module                 `inject:""`
+	Config *config.Config               `inject:""`
 }
 
 func (module *Module) Order(id bson.ObjectId) (*One, error) {
@@ -41,6 +43,7 @@ func (module *Module) Order(id bson.ObjectId) (*One, error) {
 	}
 
 	one := &One{data: model, di: module}
+	one.LoadInvoice()
 
 	return one, nil
 }
@@ -85,11 +88,11 @@ func (module *Module) GetSortedOrders(limit, skip int, search string) []OrderMod
 	var list []OrderModel
 
 	database := module.Mongo.Database
-	
+
 	clause := bson.M{"deleted_at": bson.M{"$exists": false}}
-	
+
 	if search != "" {
-		
+
 		n, err := strconv.Atoi(search)
 
 		if err != nil {
@@ -107,9 +110,9 @@ func (module *Module) GetSortedOrders(limit, skip int, search string) []OrderMod
 					"budget": n,
 				},
 			},
-		}	
+		}
 	}
-	
+
 	err := database.C("orders").Find(clause).Select(bson.M{"score": bson.M{"$meta": "textScore"}}).Sort("$textScore:score", "-updated_at").Limit(limit).Skip(skip).All(&list)
 
 	if err != nil {
@@ -126,7 +129,7 @@ func (module *Module) GetSortedOrders(limit, skip int, search string) []OrderMod
 	err = database.C("leads").Find(bson.M{"email": bson.M{"$in": mails}}).All(&leads)
 
 	if err == nil {
-		
+
 		for index, order := range list {
 
 			for _, lead := range leads {

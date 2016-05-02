@@ -1,14 +1,14 @@
 package preprocessor
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/handle"
+	"fmt"
 	"github.com/facebookgo/inject"
+	"github.com/fernandez14/spartangeek-blacker/handle"
 	"github.com/fernandez14/spartangeek-blacker/modules/preprocessor/controller"
 	"github.com/gin-gonic/gin"
 	"github.com/olebedev/config"
-	"os"
-	"fmt"
 	"io/ioutil"
+	"os"
 )
 
 type Module struct {
@@ -96,6 +96,7 @@ func (module *Module) Run() {
 	router.GET("/componentes/:type/:slug/", module.Components.Get)
 	router.GET("/componente/:slug", module.Components.MigrateOld)
 	router.GET("/componente/:slug/", module.Components.MigrateOld)
+	router.GET("/compra-en-legion", module.Products.Landing)
 	router.GET("/compra-en-legion/:slug", module.Products.Legion)
 	router.GET("/", module.General.Landing)
 

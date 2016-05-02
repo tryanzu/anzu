@@ -15,6 +15,40 @@ func (this *Customer) SetDI(di *Module) {
 	this.di = di
 }
 
+func (this *Customer) GetCart() ([]Cart, error) {
+
+	var items []Cart
+
+	database := this.di.Mongo.Database
+	err := database.C("gcommerce_cart_items").Find(bson.M{"customer_id": this.Id, "deleted_at": bson.M{"$exists": false}}).All(&items)
+
+	if err != nil {
+		return items, err
+	}
+
+	if len(items) == 0 {
+		return items, errors.New("No items for this user")
+	}
+
+	return items, nil
+}
+
+func (this *Customer) CleanCart() error {
+
+	database := this.di.Mongo.Database
+	err := database.C("gcommerce_cart_items").Update(bson.M{"customer_id": this.Id, "deleted_at": bson.M{"$exists": false}}, bson.M{"$set": bson.M{"deleted_at": time.Now()}})
+
+	return err
+}
+
+func (this *Customer) UpdateTaxData(rfc, name string) error {
+
+	database := this.di.Mongo.Database
+	err := database.C("customers").Update(bson.M{"_id": this.Id}, bson.M{"$set": bson.M{"taxes.rfc": rfc, "taxes.name": name}})
+
+	return err
+}
+
 func (this *Customer) GetUser() *user.One {
 
 	if this.User == nil {
@@ -202,9 +236,9 @@ func (this *Customer) MassdropTransaction(product *Product, q int, gateway_name 
 	order.SetDI(this.di)
 
 	// Add reservation as an item
-	item_name := "Reservación de producto en legión ("+product.Name+")"
+	item_name := "Reservación de producto en legión (" + product.Name + ")"
 	item_meta := map[string]interface{}{
-		"related": "massdrop_product",
+		"related":    "massdrop_product",
 		"related_id": product.Id,
 	}
 
@@ -221,25 +255,25 @@ func (this *Customer) MassdropTransaction(product *Product, q int, gateway_name 
 	if err != nil {
 		return nil, nil, err
 	}
-	
+
 	var transactionType string = "reservation"
 
 	if gateway_name == "offline" {
-		transactionType = MASSDROP_TRANS_INSTERESTED 
+		transactionType = MASSDROP_TRANS_INSTERESTED
 	}
 
 	transaction := &MassdropTransaction{
-		Id:          bson.NewObjectId(),
-		MassdropId:  product.Massdrop.Id,
-		CustomerId:  this.Id,
-		Type:        transactionType,         
-		Status:      MASSDROP_STATUS_COMPLETED,
-		Attrs:       map[string]interface{}{
+		Id:         bson.NewObjectId(),
+		MassdropId: product.Massdrop.Id,
+		CustomerId: this.Id,
+		Type:       transactionType,
+		Status:     MASSDROP_STATUS_COMPLETED,
+		Attrs: map[string]interface{}{
 			"order_id": order.Id,
 			"quantity": q,
 		},
-		Created:     time.Now(),
-		Updated:     time.Now(),
+		Created: time.Now(),
+		Updated: time.Now(),
 	}
 
 	transaction.SetDI(this.di)
@@ -247,4 +281,3 @@ func (this *Customer) MassdropTransaction(product *Product, q int, gateway_name 
 
 	return order, transaction, nil
 }
-

@@ -1,6 +1,7 @@
 package gcommerce
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/modules/acl"
 	"github.com/fernandez14/spartangeek-blacker/modules/components"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/mail"
@@ -44,6 +45,7 @@ type Module struct {
 	Mail       *mail.Module                 `inject:""`
 	User       *user.Module                 `inject:""`
 	Components *components.Module           `inject:""`
+	Acl        *acl.Module                  `inject:""`
 	StripeKey  string
 }
 
@@ -151,10 +153,10 @@ func (module *Module) Get(where bson.M, limit, offset int) []Order {
 	return list
 }
 
-func (module *Module) JoinUsers(list []bson.ObjectId) (map[bson.ObjectId]Customer, map[bson.ObjectId]user.UserSimple) {
+func (module *Module) JoinUsers(list []bson.ObjectId) (map[bson.ObjectId]Customer, map[bson.ObjectId]user.UserBasic) {
 
 	var customers []Customer
-	var users []user.UserSimple
+	var users []user.UserBasic
 	var user_ids []bson.ObjectId
 
 	database := module.Mongo.Database
@@ -168,7 +170,7 @@ func (module *Module) JoinUsers(list []bson.ObjectId) (map[bson.ObjectId]Custome
 		user_ids = append(user_ids, customer.UserId)
 	}
 
-	err = database.C("users").Find(bson.M{"_id": bson.M{"$in": user_ids}}).Select(user.UserSimpleFields).All(&users)
+	err = database.C("users").Find(bson.M{"_id": bson.M{"$in": user_ids}}).Select(user.UserBasicFields).All(&users)
 
 	if err != nil {
 		panic(err)
@@ -180,7 +182,7 @@ func (module *Module) JoinUsers(list []bson.ObjectId) (map[bson.ObjectId]Custome
 		customer_map[customer.Id] = customer
 	}
 
-	users_map := map[bson.ObjectId]user.UserSimple{}
+	users_map := map[bson.ObjectId]user.UserBasic{}
 
 	for _, usr := range users {
 		users_map[usr.Id] = usr
