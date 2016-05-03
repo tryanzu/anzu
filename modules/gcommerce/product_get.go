@@ -189,6 +189,11 @@ func (this Products) GetMassdrops(limit, offset int) []MassdropFoundation {
 				list[index].Deadline = list[index].Deadline.Add(time.Duration(checkpoint.Timespan) * time.Hour)
 			}
 		}
+
+		// Deactivate massdrop when deadline has been reached
+		if list[index].Deadline.Before(time.Now()) {
+			list[index].Active = false
+		}
 	}
 
 	return list
