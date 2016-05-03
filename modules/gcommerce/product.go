@@ -55,15 +55,16 @@ type MassdropFoundation struct {
 }
 
 type Massdrop struct {
-	Id          bson.ObjectId        `bson:"_id,omitempty" json:"id"`
-	ProductId   bson.ObjectId        `bson:"product_id" json:"product_id"`
-	Deadline    time.Time            `bson:"deadline" json:"deadline"`
-	Price       float64              `bson:"price" json:"price"`
-	Reserve     float64              `bson:"reserve_price" json:"reserve_price"`
-	Active      bool                 `bson:"active" json:"active"`
-	Shipping    time.Time            `bson:"shipping_date" json:"shipping_date"`
-	CoverSmall  string               `bson:"cover_small" json:"cover_small"`
-	Checkpoints []MassdropCheckpoint `bson:"checkpoints" json:"checkpoints"`
+	Id            bson.ObjectId        `bson:"_id,omitempty" json:"id"`
+	ProductId     bson.ObjectId        `bson:"product_id" json:"product_id"`
+	Deadline      time.Time            `bson:"deadline" json:"deadline"`
+	Price         float64              `bson:"price" json:"price"`
+	StartingPrice float64              `bson:"price" json:"starting_price"`
+	Reserve       float64              `bson:"reserve_price" json:"reserve_price"`
+	Active        bool                 `bson:"active" json:"active"`
+	Shipping      time.Time            `bson:"shipping_date" json:"shipping_date"`
+	CoverSmall    string               `bson:"cover_small" json:"cover_small"`
+	Checkpoints   []MassdropCheckpoint `bson:"checkpoints" json:"checkpoints"`
 
 	// Runtime generated data
 	Name         string      `bson:"-" json:"name,omitempty"`
