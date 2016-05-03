@@ -77,7 +77,8 @@ type Massdrop struct {
 	Content string `bson:"content" json:"content"`
 
 	// Runtime generated data
-	Activities []MassdropActivity `bson:"-" json:"activities"`
+	Activities    []MassdropActivity `bson:"-" json:"activities"`
+	StartingPrice float64            `bson:"-" json:"starting_price"`
 
 	usersList interface{} `bson:"-" json:"-"`
 }

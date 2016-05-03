@@ -57,6 +57,9 @@ func (this *Product) InitializeMassdrop() {
 		var activities []MassdropActivity
 		var users []map[string]interface{}
 
+		// Don´t forget to keep the starting price at anytime
+		this.Massdrop.StartingPrice = this.Massdrop.Price
+
 		err := database.C("gcommerce_massdrop_transactions").Find(bson.M{"massdrop_id": model.Id}).Sort("-updated_at").All(&transactions)
 
 		if err != nil {
