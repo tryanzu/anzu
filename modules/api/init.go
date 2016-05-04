@@ -165,6 +165,10 @@ func (module *Module) Run() {
 			c.String(200, c.ClientIP())
 		})
 
+		v1.GET("/panic-now", func(c *gin.Context) {
+			panic("now blacker panics")
+		})
+
 		v1.POST("/subscribe", module.Users.UserSubscribe)
 		v1.POST("/leads", module.Lead.Post)
 
