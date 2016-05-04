@@ -160,6 +160,11 @@ func (module *Module) Run() {
 
 	v1.Use(module.Middlewares.Authorization())
 	{
+		v1.GET("/panic-now", func(c *gin.Context) {
+
+			panic("panic is just an illusion")
+		})
+
 		v1.GET("/whoami", func(c *gin.Context) {
 
 			c.String(200, c.ClientIP())
