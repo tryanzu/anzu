@@ -8,6 +8,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"gopkg.in/mgo.v2/bson"
 
+	"html"
 	"strconv"
 	"time"
 )
@@ -98,6 +99,84 @@ func (self *Post) LoadComments(take, skip int) {
 			self.Comments.Answer = &ca
 		}
 	}
+}
+
+// Push Comment on the post
+func (self *Post) PushComment(c string, user_id bson.ObjectId) {
+
+	c = html.EscapeString(c)
+	pos := self.GetCommentCount() + 1
+
+	comment := &Comment{
+		Id:     bson.NewObjectId(),
+		PostId: self.Id,
+		UserId: user_id,
+		Votes: Votes{
+			Up:   0,
+			Down: 0,
+		},
+		Content:  c,
+		Position: pos,
+		Created:  time.Now(),
+	}
+
+	// Use content module to run processors chain
+	content := self.di.Content
+	content.Parse(comment)
+
+	// Publish comment
+	database := self.di.Mongo.Database
+	err := database.C("comments").Insert(comment)
+
+	if err != nil {
+		panic(err)
+	}
+
+	err = database.C("posts").Update(bson.M{"_id": self.Id}, bson.M{"$set": bson.M{"updated_at": time.Now()}, "$inc": bson.M{"comments.count": 1}})
+
+	if err != nil {
+		panic(err)
+	}
+
+	// Ensure user is participating
+	self.PushUser(user_id)
+
+	if self.UserId != user_id {
+
+		go func(post *Post, comment *Comment, user_id bson.ObjectId) {
+
+			// Tell the new comment for gamification
+			post.DI().Gaming.Get(user_id).Did("comment")
+
+			// Notify the author about this comment
+			post.DI().Notifications.Comment(post, comment, user_id)
+
+		}(self, comment, user_id)
+	}
+}
+
+// Push new user to the participants list
+func (p *Post) PushUser(user_id bson.ObjectId) bool {
+
+	pushed := false
+
+	for _, u := range p.Users {
+
+		if u == user_id {
+			pushed = true
+		}
+	}
+
+	if !pushed {
+		database := p.di.Mongo.Database
+		err := database.C("posts").Update(bson.M{"_id": p.Id}, bson.M{"$push": bson.M{"users": user_id}})
+
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	return pushed
 }
 
 // Eager load users for post entities
@@ -367,6 +446,11 @@ func (self *Post) Comment(index int) (*Comment, error) {
 	comment.SetDI(self)
 
 	return comment, nil
+}
+
+// Alias of TrueCommentCount
+func (self *Post) GetCommentCount() int {
+	return self.di.TrueCommentCount(self.Id)
 }
 
 // Attach related entity to post

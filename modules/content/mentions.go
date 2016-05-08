@@ -1,6 +1,7 @@
 package content
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/modules/feed"
 	"gopkg.in/mgo.v2/bson"
 
 	"regexp"
@@ -87,15 +88,58 @@ func (self Module) ParseContentMentions(o Parseable) bool {
 
 		o.UpdateContent(c)
 
-		// Async mentions notifying
-		go self.NotifyMentionsAsync(mentions)
+		// Asynchronously mentions notifying
+		go self.NotifyMentionsAsync(o, mentions)
 	}
 
 	o.OnParseFilterFinished("mentions")
 }
 
-func (self Module) NotifyMentionsAsync(ls []Mention) {
+func (self Module) NotifyMentionsAsync(o Parseable, ls []Mention) {
 
 	defer self.Errors.Recover()
 
+	database := self.Mongo.Database
+	entity := o.GetParseableMeta()
+
+	if related, exists := entity["type"].(string); exists {
+
+		if related_id, exists := entity["id"].(bson.ObjectId); exists {
+
+			var owner_id bson.ObjectId
+
+			switch (related) {
+			case "comment":
+
+				if comment, exists := entity["comment"].(*feed.Comment); exists {
+					owner_id = comment.UserId
+				}
+
+				break;
+			}
+
+			for _, to := range ls {
+
+				// If owner_id is valid don't notify the owner
+				if owner_id.Valid() && owner_id == to.UserId {
+					continue
+				}
+
+				sent, err := database.C("mentions").Find(bson.M{"related": related, "related_id": related_id, "user_id": to.UserId}).Count()
+
+				// Check if mention has been sent already before for this same entity
+				if err != nil || sent > 0 {
+					continue
+				}
+
+				
+			}
+
+		} else {
+			panic("NotifyMentionsAsync could not get parseable metadata id")
+		}
+
+	} else {
+		panic("NotifyMentionsAsync could not get parseable metadata type")
+	}
 }

@@ -16,4 +16,6 @@ func (self Module) Parse(o Parseable) error {
 	}
 
 	o.OnParseFinished()
+	
+	return nil
 }

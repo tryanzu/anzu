@@ -1,7 +1,10 @@
 package feed
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/modules/content"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
+	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
+	"github.com/fernandez14/spartangeek-blacker/modules/notifications"
 	"github.com/fernandez14/spartangeek-blacker/modules/search"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
@@ -12,11 +15,14 @@ import (
 var lightPostFields bson.M = bson.M{"_id": 1, "title": 1, "slug": 1, "solved": 1, "lock": 1, "category": 1, "user_id": 1, "pinned": 1, "created_at": 1, "updated_at": 1, "type": 1, "content": 1}
 
 type FeedModule struct {
-	Mongo        *mongo.Service               `inject:""`
-	Errors       *exceptions.ExceptionsModule `inject:""`
-	CacheService *goredis.Redis               `inject:""`
-	Search       *search.Module               `inject:""`
-	User         *user.Module                 `inject:""`
+	Mongo         *mongo.Service                     `inject:""`
+	Errors        *exceptions.ExceptionsModule       `inject:""`
+	Notifications *notifications.NotificationsModule `inject:""`
+	CacheService  *goredis.Redis                     `inject:""`
+	Search        *search.Module                     `inject:""`
+	User          *user.Module                       `inject:""`
+	Content       *content.Module                    `inject:""`
+	Gaming        *gaming.Module                     `inject:""`
 }
 
 func (module *FeedModule) SearchPosts(content string) ([]SearchPostModel, int) {

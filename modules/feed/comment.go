@@ -34,6 +34,32 @@ func (self *Comment) SetDI(o *Post) {
 	self.post = o
 }
 
+func (self *Comment) GetContent() string {
+	return self.Content
+}
+
+func (self *Comment) UpdateContent(c string) bool {
+	self.Content = c
+	return true
+}
+
+func (self *Comment) OnParseFilterFinished(module string) bool {
+	return true
+}
+
+func (self *Comment) OnParseFinished() bool {
+	return true
+}
+
+func (self *Comment) GetParseableMeta() map[string]interface{} {
+
+	return map[string]interface{}{
+		"id":      self.Id,
+		"type":    "comment",
+		"comment": self,
+	}
+}
+
 func (self *Comment) MarkAsAnswer() {
 
 	// Get database instance

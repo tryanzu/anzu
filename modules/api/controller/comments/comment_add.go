@@ -36,6 +36,8 @@ func (this API) Add(c *gin.Context) {
 			return
 		}
 
+		post.PushComment(comment.Content, user_bson_id)
+
 		votes := feed.Votes{
 			Up:   0,
 			Down: 0,
