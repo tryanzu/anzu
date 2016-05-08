@@ -5,17 +5,17 @@ import (
 	"encoding/hex"
 	"github.com/CloudCom/fireauth"
 	"github.com/dgrijalva/jwt-go"
-	"github.com/fernandez14/spartangeek-blacker/model"
-	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
-	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
-	"github.com/fernandez14/spartangeek-blacker/modules/user"
-	"github.com/fernandez14/spartangeek-blacker/modules/security"
-	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
-	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/fernandez14/go-siftscience"
+	"github.com/fernandez14/spartangeek-blacker/model"
+	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
+	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
+	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
+	"github.com/fernandez14/spartangeek-blacker/modules/security"
+	"github.com/fernandez14/spartangeek-blacker/modules/user"
+	"github.com/fernandez14/spartangeek-blacker/mongo"
+	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
-	"github.com/gin-gonic/contrib/sessions"
 	"github.com/kennygrant/sanitize"
 	"github.com/mitchellh/goamz/s3"
 	"github.com/olebedev/config"
@@ -33,14 +33,14 @@ import (
 
 type UserAPI struct {
 	Errors        *exceptions.ExceptionsModule `inject:""`
-	DataService   *mongo.Service   `inject:""`
-	CacheService  *goredis.Redis   `inject:""`
-	ConfigService *config.Config   `inject:""`
-	S3Bucket      *s3.Bucket       `inject:""`
-	User          *user.Module     `inject:""`
-	Gaming        *gaming.Module   `inject:""`
-	Security      *security.Module `inject:""`
-	Collector     CollectorAPI     `inject:"inline"`
+	DataService   *mongo.Service               `inject:""`
+	CacheService  *goredis.Redis               `inject:""`
+	ConfigService *config.Config               `inject:""`
+	S3Bucket      *s3.Bucket                   `inject:""`
+	User          *user.Module                 `inject:""`
+	Gaming        *gaming.Module               `inject:""`
+	Security      *security.Module             `inject:""`
+	Collector     CollectorAPI                 `inject:"inline"`
 }
 
 func (di *UserAPI) UserSubscribe(c *gin.Context) {
@@ -234,6 +234,10 @@ func (di *UserAPI) UserGetByToken(c *gin.Context) {
 
 	data := usr.Data()
 	data.SessionId = session_id
+
+	if len(data.Categories) == 0 {
+		data.Categories = make([]bson.ObjectId, 0)
+	}
 
 	// Alright, go back and send the user info
 	c.JSON(200, data)
@@ -582,7 +586,6 @@ func (di *UserAPI) UserRegisterAction(c *gin.Context) {
 
 	if c.BindWith(&form, binding.JSON) == nil {
 
-
 		// Get the user using its id
 		usr, err := di.User.SignUp(form.Email, form.UserName, form.Password, form.Referral)
 
@@ -808,8 +811,8 @@ func (di *UserAPI) trackSiftScienceLogin(user_id, session_id string, success boo
 	}
 
 	err := gosift.Track("$login", map[string]interface{}{
-		"$user_id": user_id,
-		"$session_id": session_id,
+		"$user_id":      user_id,
+		"$session_id":   session_id,
 		"$login_status": status,
 	})
 
