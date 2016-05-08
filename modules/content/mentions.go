@@ -1,7 +1,6 @@
 package content
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/modules/feed"
 	"gopkg.in/mgo.v2/bson"
 
 	"regexp"
@@ -108,14 +107,8 @@ func (self Module) NotifyMentionsAsync(o Parseable, ls []Mention) {
 
 			var owner_id bson.ObjectId
 
-			switch (related) {
-			case "comment":
-
-				if comment, exists := entity["comment"].(*feed.Comment); exists {
-					owner_id = comment.UserId
-				}
-
-				break;
+			if oid, exists := entity["owner_id"]; exists {
+				owner_id = oid.(bson.ObjectId)
 			}
 
 			for _, to := range ls {
@@ -132,7 +125,6 @@ func (self Module) NotifyMentionsAsync(o Parseable, ls []Mention) {
 					continue
 				}
 
-				
 			}
 
 		} else {
