@@ -23,7 +23,7 @@ func (self *NotificationsModule) Comment(post *feed.Post, comment *feed.Comment,
 	title := fmt.Sprintf("Nuevo comentario de **%s**", usr.Name())
 	message := post.Title
 
-	notification := &model.UserFirebaseNotification{
+	notification := model.UserFirebaseNotification{
 		UserId:       user_id,
 		RelatedId:    post.Id,
 		RelatedExtra: post.Slug,

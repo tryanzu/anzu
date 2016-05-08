@@ -38,34 +38,6 @@ func (this API) Add(c *gin.Context) {
 
 		post.PushComment(comment.Content, user_bson_id)
 
-		votes := feed.Votes{
-			Up:   0,
-			Down: 0,
-		}
-
-		// Html sanitize
-		content := html.EscapeString(comment.Content)
-		comment := feed.Comment{
-			Id:      bson.NewObjectId(),
-			PostId:  post.Id,
-			UserId:  user_bson_id,
-			Votes:   votes,
-			Content: content,
-			Created: time.Now(),
-		}
-
-		urls, _ := regexp.Compile(`http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+`)
-
-		var assets []string
-
-		assets = urls.FindAllString(content, -1)
-
-		for _, asset := range assets {
-
-			// Download the asset on other routine in order to non block the API request
-			go di.downloadAssetFromUrl(asset, post.Id)
-		}
-
 		// Update the post and push the comments
 		change := bson.M{"$push": bson.M{"comments.set": comment}, "$set": bson.M{"updated_at": time.Now()}, "$inc": bson.M{"comments.count": 1}}
 		err = database.C("posts").Update(bson.M{"_id": post.Id}, change)

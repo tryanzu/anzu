@@ -146,10 +146,10 @@ func (self *Post) PushComment(c string, user_id bson.ObjectId) {
 		go func(post *Post, comment *Comment, user_id bson.ObjectId) {
 
 			// Tell the new comment for gamification
-			post.DI().Gaming.Get(user_id).Did("comment")
+			//post.DI().Gaming.Get(user_id).Did("comment")
 
 			// Notify the author about this comment
-			post.DI().Notifications.Comment(post, comment, user_id)
+			//post.DI().Notifications.Comment(post, comment, user_id)
 
 		}(self, comment, user_id)
 	}

@@ -1,12 +1,12 @@
 package content
 
 import (
+	"github.com/mitchellh/goamz/s3"
 	"gopkg.in/mgo.v2/bson"
 
 	"crypto/md5"
 	"crypto/tls"
-	"errors"
-	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"path/filepath"
@@ -58,7 +58,7 @@ func (self Module) RegisterOwnAsset(remoteUrl string, o Parseable) *Asset {
 		Updated:  time.Now(),
 	}
 
-	database := module.Mongo.Database
+	database := self.Mongo.Database
 	err := database.C("remote_assets").Insert(asset)
 
 	if err != nil {
@@ -86,13 +86,13 @@ func (self Module) RegisterOwnAsset(remoteUrl string, o Parseable) *Asset {
 		// Download the file
 		response, err := client.Get(remoteUrl)
 		if err != nil {
-			return errors.New(fmt.Sprint("Error while downloading", remoteUrl, "-", err))
+			return
 		}
 
 		// Read all the bytes to the image
 		data, err := ioutil.ReadAll(response.Body)
 		if err != nil {
-			return errors.New(fmt.Sprint("Error while downloading", remoteUrl, "-", err))
+			return
 		}
 
 		// Detect the downloaded file type
@@ -106,7 +106,7 @@ func (self Module) RegisterOwnAsset(remoteUrl string, o Parseable) *Asset {
 			u, err := url.Parse(remoteUrl)
 
 			if err != nil {
-				return errors.New(fmt.Sprint("Error while parsing url", remoteUrl, "-", err))
+				return
 			}
 
 			extension = filepath.Ext(u.Path)

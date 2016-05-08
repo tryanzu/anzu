@@ -20,7 +20,7 @@ type Mention struct {
 func (self Module) ParseContentMentions(o Parseable) bool {
 
 	c := o.GetContent()
-	list = mention_regex.FindAllString(c, -1)
+	list := mention_regex.FindAllString(c, -1)
 
 	if len(list) > 0 {
 
@@ -48,7 +48,7 @@ func (self Module) ParseContentMentions(o Parseable) bool {
 
 				users = append(users, username)
 				possible[username] = Mention{
-					bson.ObjectId{},
+					bson.ObjectId(""),
 					username,
 					comment_index,
 					usr,
@@ -71,7 +71,7 @@ func (self Module) ParseContentMentions(o Parseable) bool {
 
 				if mention, exists := possible[usr.Username]; exists {
 
-					mention.Id = usr.Id
+					mention.UserId = usr.Id
 
 					tag := "[mention:" + usr.Id.Hex() + "]"
 
@@ -92,6 +92,8 @@ func (self Module) ParseContentMentions(o Parseable) bool {
 	}
 
 	o.OnParseFilterFinished("mentions")
+
+	return true
 }
 
 func (self Module) NotifyMentionsAsync(o Parseable, ls []Mention) {
