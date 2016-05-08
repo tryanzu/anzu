@@ -6,6 +6,8 @@ import (
 
 	"crypto/md5"
 	"crypto/tls"
+	"encoding/hex"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -85,18 +87,24 @@ func (self Module) RegisterOwnAsset(remoteUrl string, o Parseable) *Asset {
 
 		// Download the file
 		response, err := client.Get(remoteUrl)
+
 		if err != nil {
+			fmt.Println(err)
 			return
 		}
 
 		// Read all the bytes to the image
 		data, err := ioutil.ReadAll(response.Body)
+
 		if err != nil {
+			fmt.Println(err)
 			return
 		}
 
 		// Detect the downloaded file type
 		dataType := http.DetectContentType(data)
+
+		fmt.Printf("%v is %v \n", asset.Id.Hex(), dataType)
 
 		if dataType[0:5] == "image" {
 
@@ -106,6 +114,7 @@ func (self Module) RegisterOwnAsset(remoteUrl string, o Parseable) *Asset {
 			u, err := url.Parse(remoteUrl)
 
 			if err != nil {
+				fmt.Println(err)
 				return
 			}
 
@@ -124,13 +133,19 @@ func (self Module) RegisterOwnAsset(remoteUrl string, o Parseable) *Asset {
 			err = module.S3.Put(path, data, dataType, s3.ACL("public-read"))
 
 			if err != nil {
+				fmt.Println(err)
 				panic(err)
 			}
 
-			hash := md5.Sum(data)
+			hasher := md5.New()
+			hasher.Write(data)
+
+			hash := hex.EncodeToString(hasher.Sum(nil))
 
 			var ra Asset
 			err = database.C("remote_assets").Find(bson.M{"hash": hash}).One(&ra)
+
+			fmt.Printf("%v hash is %v and err is %v \n", asset.Id.Hex(), hash, err)
 
 			if err == nil {
 

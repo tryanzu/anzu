@@ -1,16 +1,13 @@
 package comments
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/modules/feed"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
 )
 
 func (this API) Add(c *gin.Context) {
 
-	var comment CommentForm
-	var post *feed.Post
-	var err error
+	var form CommentForm
 
 	id := c.Params.ByName("id")
 
@@ -19,7 +16,7 @@ func (this API) Add(c *gin.Context) {
 		return
 	}
 
-	post, err = this.Feed.Post(bson.ObjectIdHex(id))
+	post, err := this.Feed.Post(bson.ObjectIdHex(id))
 
 	if err != nil {
 		c.JSON(404, gin.H{"status": "error", "message": "Post not found."})
@@ -29,16 +26,16 @@ func (this API) Add(c *gin.Context) {
 	user_str := c.MustGet("user_id")
 	user_id := bson.ObjectIdHex(user_str.(string))
 
-	if c.BindWith(&comment, binding.JSON) == nil {
+	if c.Bind(&form) == nil {
 
 		if post.IsLocked() {
 			c.JSON(403, gin.H{"status": "error", "message": "Comments not longer allowed in this post."})
 			return
 		}
 
-		post.PushComment(comment.Content, user_bson_id)
+		comment := post.PushComment(form.Content, user_id)
 
-		// Update the post and push the comments
+		/*// Update the post and push the comments
 		change := bson.M{"$push": bson.M{"comments.set": comment}, "$set": bson.M{"updated_at": time.Now()}, "$inc": bson.M{"comments.count": 1}}
 		err = database.C("posts").Update(bson.M{"_id": post.Id}, change)
 
@@ -101,9 +98,9 @@ func (this API) Add(c *gin.Context) {
 
 			// Add the gamification contribution
 			go di.Gaming.Get(user_bson_id).Did("comment")
-		}
+		}*/
 
-		c.JSON(200, gin.H{"status": "okay", "message": comment.Content, "position": position})
+		c.JSON(200, gin.H{"status": "okay", "message": comment.Content, "position": comment.Position})
 		return
 	}
 

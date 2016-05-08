@@ -102,10 +102,10 @@ func (self *Post) LoadComments(take, skip int) {
 }
 
 // Push Comment on the post
-func (self *Post) PushComment(c string, user_id bson.ObjectId) {
+func (self *Post) PushComment(c string, user_id bson.ObjectId) *Comment {
 
 	c = html.EscapeString(c)
-	pos := self.GetCommentCount() + 1
+	pos := self.GetCommentCount()
 
 	comment := &Comment{
 		Id:     bson.NewObjectId(),
@@ -153,6 +153,8 @@ func (self *Post) PushComment(c string, user_id bson.ObjectId) {
 
 		}(self, comment, user_id)
 	}
+
+	return comment
 }
 
 // Push new user to the participants list

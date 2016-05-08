@@ -8,6 +8,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/cart"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/checkout"
+	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/comments"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/components"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/deals"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/massdrop"
@@ -28,6 +29,7 @@ type Module struct {
 	Categories        handle.CategoryAPI
 	Elections         handle.ElectionAPI
 	Comments          handle.CommentAPI
+	CommentsFactory   comments.API
 	Parts             handle.PartAPI
 	Stats             handle.StatAPI
 	Middlewares       handle.MiddlewareAPI
@@ -74,6 +76,7 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.Categories},
 		&inject.Object{Value: &module.Elections},
 		&inject.Object{Value: &module.Comments},
+		&inject.Object{Value: &module.CommentsFactory},
 		&inject.Object{Value: &module.Parts},
 		&inject.Object{Value: &module.Stats},
 		&inject.Object{Value: &module.Middlewares},
@@ -265,7 +268,7 @@ func (module *Module) Run() {
 			v1.GET("/auth/logout", module.Users.UserLogout)
 
 			// Comment routes
-			authorized.POST("/post/comment/:id", module.Comments.CommentAdd)
+			authorized.POST("/post/comment/:id", module.CommentsFactory.Add)
 			authorized.PUT("/post/comment/:id/:index", module.Comments.CommentUpdate)
 			authorized.DELETE("/post/comment/:id/:index", module.Comments.CommentDelete)
 
