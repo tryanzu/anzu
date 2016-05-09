@@ -5,6 +5,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/mitchellh/goamz/s3"
 	"github.com/olebedev/config"
+	"github.com/xuyu/goredis"
 )
 
 type Module struct {
@@ -12,4 +13,5 @@ type Module struct {
 	Errors *exceptions.ExceptionsModule `inject:""`
 	S3     *s3.Bucket                   `inject:""`
 	Config *config.Config               `inject:""`
+	Redis  *goredis.Redis               `inject:""`
 }

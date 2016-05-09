@@ -154,6 +154,9 @@ func (self *Post) PushComment(c string, user_id bson.ObjectId) *Comment {
 		}(self, comment, user_id)
 	}
 
+	// Finally parse tags in content for runtime usage
+	content.ParseTags(comment)
+
 	return comment
 }
 
