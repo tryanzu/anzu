@@ -41,10 +41,10 @@ type LightPostModel struct {
 	Category   bson.ObjectId `bson:"category" json:"category"`
 	UserId     bson.ObjectId `bson:"user_id,omitempty" json:"user_id,omitempty"`
 	Pinned     bool          `bson:"pinned,omitempty" json:"pinned,omitempty"`
-	IsQuestion bool          `bson:"is_question,omitempty" json:"is_question,omitempty"`
+	IsQuestion bool          `bson:"is_question,omitempty" json:"is_question"`
 	Solved     bool          `bson:"solved,omitempty" json:"solved,omitempty"`
 	Lock       bool          `bson:"lock" json:"lock"`
-	BestAnswer *CommentModel  `json:"best_answer,omitempty"`
+	BestAnswer *CommentModel `json:"best_answer,omitempty"`
 	Created    time.Time     `bson:"created_at" json:"created_at"`
 	Updated    time.Time     `bson:"updated_at" json:"updated_at"`
 }
@@ -67,24 +67,23 @@ type SearchPostModel struct {
 	Updated    time.Time     `bson:"updated_at" json:"updated_at"`
 }
 
-
 type CommentModel struct {
-	UserId   bson.ObjectId `bson:"user_id" json:"user_id"`
-	Votes    VotesModel    `bson:"votes" json:"votes"`
-	Content  string        `bson:"content" json:"content"`
-	Chosen   bool          `bson:"chosen,omitempty" json:"chosen,omitempty"`
-	Created  time.Time     `bson:"created_at" json:"created_at"`
-	Deleted  time.Time     `bson:"deleted_at" json:"deleted_at"`
+	UserId  bson.ObjectId `bson:"user_id" json:"user_id"`
+	Votes   VotesModel    `bson:"votes" json:"votes"`
+	Content string        `bson:"content" json:"content"`
+	Chosen  bool          `bson:"chosen,omitempty" json:"chosen,omitempty"`
+	Created time.Time     `bson:"created_at" json:"created_at"`
+	Deleted time.Time     `bson:"deleted_at" json:"deleted_at"`
 }
 
 type PostCommentModel struct {
-	Id       bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
-	Comment  CommentModel  `bson:"comment" json:"comment,omitempty"`
+	Id      bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
+	Comment CommentModel  `bson:"comment" json:"comment,omitempty"`
 }
 
 type PostCommentCountModel struct {
 	Id    bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
-	Count int  `bson:"count" json:"count"`
+	Count int           `bson:"count" json:"count"`
 }
 
 type VotesModel struct {

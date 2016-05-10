@@ -3,14 +3,14 @@ package feed
 import (
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
-	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/fernandez14/spartangeek-blacker/modules/search"
+	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/xuyu/goredis"
 	"gopkg.in/mgo.v2/bson"
 )
 
-var lightPostFields bson.M = bson.M{"_id": 1, "title": 1, "slug": 1, "solved": 1, "lock": 1, "category": 1, "user_id": 1, "pinned": 1, "created_at": 1, "updated_at": 1, "type": 1, "content": 1}
+var lightPostFields bson.M = bson.M{"_id": 1, "title": 1, "slug": 1, "solved": 1, "lock": 1, "category": 1, "is_question": 1, "user_id": 1, "pinned": 1, "created_at": 1, "updated_at": 1, "type": 1, "content": 1}
 
 type FeedModule struct {
 	Mongo        *mongo.Service               `inject:""`
@@ -112,8 +112,8 @@ func (module *FeedModule) LightPost(post interface{}) (*LightPost, error) {
 		scope := LightPostModel{}
 		database := module.Mongo.Database
 
-		// Use light post model 
-		err := database.C("posts").FindId(post.(bson.ObjectId)).Select(bson.M{"_id": 1, "title": 1, "slug": 1, "category": 1, "user_id": 1, "lock": 1, "pinned": 1, "created_at": 1, "updated_at": 1, "type": 1, "content": 1}).One(&scope)
+		// Use light post model
+		err := database.C("posts").FindId(post.(bson.ObjectId)).Select(lightPostFields).One(&scope)
 
 		if err != nil {
 
@@ -138,7 +138,7 @@ func (module *FeedModule) LightPosts(posts interface{}) ([]LightPostModel, error
 
 		database := module.Mongo.Database
 
-		// Use light post model 
+		// Use light post model
 		err := database.C("posts").Find(bson.M{"_id": bson.M{"$in": posts.([]bson.ObjectId)}}).Select(lightPostFields).All(&list)
 
 		if err != nil {
@@ -154,7 +154,7 @@ func (module *FeedModule) LightPosts(posts interface{}) ([]LightPostModel, error
 
 		database := module.Mongo.Database
 
-		// Use light post model 
+		// Use light post model
 		err := database.C("posts").Find(posts.(bson.M)).Select(lightPostFields).All(&list)
 
 		if err != nil {
@@ -242,7 +242,7 @@ func (module *FeedModule) Posts(limit, offset int) List {
 
 	list := List{
 		module: module,
-		limit: limit,
+		limit:  limit,
 		offset: offset,
 	}
 
