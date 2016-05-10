@@ -7,6 +7,7 @@ import (
 	"crypto/md5"
 	"crypto/tls"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -53,7 +54,7 @@ func (self Module) RegisterOwnAsset(remoteUrl string, o Parseable) *Asset {
 	asset := &Asset{
 		Id:       bson.NewObjectId(),
 		Original: remoteUrl,
-		Status:   "remote",
+		Status:   "awaiting",
 		Hosted:   "",
 		MD5:      "",
 		Created:  time.Now(),
@@ -80,6 +81,17 @@ func (self Module) RegisterOwnAsset(remoteUrl string, o Parseable) *Asset {
 			panic(err)
 		}
 
+		fail := func(msg error) {
+
+			fmt.Println(msg)
+
+			err := database.C("remote_assets").Update(bson.M{"_id": asset.Id}, bson.M{"$set": bson.M{"status": "remote", "hosted": "", "hash": ""}})
+
+			if err != nil {
+				panic(err)
+			}
+		}
+
 		tr := &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		}
@@ -89,7 +101,7 @@ func (self Module) RegisterOwnAsset(remoteUrl string, o Parseable) *Asset {
 		response, err := client.Get(remoteUrl)
 
 		if err != nil {
-			fmt.Println(err)
+			fail(err)
 			return
 		}
 
@@ -97,7 +109,7 @@ func (self Module) RegisterOwnAsset(remoteUrl string, o Parseable) *Asset {
 		data, err := ioutil.ReadAll(response.Body)
 
 		if err != nil {
-			fmt.Println(err)
+			fail(err)
 			return
 		}
 
@@ -114,7 +126,7 @@ func (self Module) RegisterOwnAsset(remoteUrl string, o Parseable) *Asset {
 			u, err := url.Parse(remoteUrl)
 
 			if err != nil {
-				fmt.Println(err)
+				fail(err)
 				return
 			}
 
@@ -133,7 +145,7 @@ func (self Module) RegisterOwnAsset(remoteUrl string, o Parseable) *Asset {
 			err = module.S3.Put(path, data, dataType, s3.ACL("public-read"))
 
 			if err != nil {
-				fmt.Println(err)
+				fail(err)
 				panic(err)
 			}
 
@@ -164,6 +176,8 @@ func (self Module) RegisterOwnAsset(remoteUrl string, o Parseable) *Asset {
 				}
 			}
 		}
+
+		fail(errors.New("Could not download from remote and self hold"))
 
 		response.Body.Close()
 
