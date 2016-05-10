@@ -93,6 +93,19 @@ func (this API) Update(c *gin.Context) {
 			if slug_exists > 0 {
 				slug = helpers.StrSlugRandom(postForm.Name)
 			}
+
+			go func(carrier *transmit.Sender, id bson.ObjectId) {
+
+				carrierParams := map[string]interface{}{
+					"fire":  "changed-title",
+					"id":    id.Hex(),
+					"title": postForm.Name,
+					"slug":  slug,
+				}
+
+				carrier.Emit("feed", "action", carrierParams)
+
+			}(this.Transmit, post.Id)
 		}
 
 		content := html.EscapeString(postForm.Content)
