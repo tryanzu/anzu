@@ -24,10 +24,10 @@ type Comment struct {
 }
 
 type Comments struct {
-	Count  int       `bson:"count" json:"count"`
-	Total  int       `bson:"-" json:"total"`
-	Answer *Comment  `bson:"-" json:"answer,omitempty"`
-	Set    []Comment `bson:"set" json:"set"`
+	Count  int        `bson:"count" json:"count"`
+	Total  int        `bson:"-" json:"total"`
+	Answer *Comment   `bson:"-" json:"answer,omitempty"`
+	Set    []*Comment `bson:"-" json:"set"`
 }
 
 func (self *Comment) SetDI(o *Post) {

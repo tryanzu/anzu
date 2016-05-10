@@ -51,10 +51,12 @@ func (self *Post) SetDI(di *FeedModule) {
 // Comments loading for post
 func (self *Post) LoadComments(take, skip int) {
 
-	var c []Comment
+	var c []*Comment
 	var limit int = take
 	var sort string
 
+	// Use content module to run processors chain
+	content := self.di.Content
 	database := self.di.Mongo.Database
 
 	if take > 0 {
@@ -72,6 +74,10 @@ func (self *Post) LoadComments(take, skip int) {
 
 	self.Comments.Set = c
 
+	for _, comment := range self.Comments.Set {
+		content.ParseTags(comment)
+	}
+
 	// Load the best answer if needed
 	if self.Solved == true && self.Comments.Answer == nil {
 
@@ -81,13 +87,13 @@ func (self *Post) LoadComments(take, skip int) {
 		for _, c := range self.Comments.Set {
 			if c.Chosen == true {
 				loaded = true
-				self.Comments.Answer = &c
+				self.Comments.Answer = c
 			}
 		}
 
 		if !loaded {
 
-			var ca Comment
+			var ca *Comment
 
 			// Load the chosen answer from Database
 			err := database.C("comments").Find(bson.M{"post_id": self.Id, "deleted_at": bson.M{"$exists": false}, "chosen": true}).One(&ca)
@@ -96,7 +102,8 @@ func (self *Post) LoadComments(take, skip int) {
 				panic(err)
 			}
 
-			self.Comments.Answer = &ca
+			content.ParseTags(ca)
+			self.Comments.Answer = ca
 		}
 	}
 }
