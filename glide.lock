@@ -1,5 +1,5 @@
 hash: 6224273f05f2a295265decf685fcbdd49a136bafb918230fad720278db2d41bb
-updated: 2016-04-30T17:48:31.222886719-05:00
+updated: 2016-05-10T16:55:14.471656946-05:00
 imports:
 - name: collectd.org
   version: 9fc824c70f713ea0f058a07b49a4c563ef2a3b98
@@ -34,7 +34,7 @@ imports:
 - name: github.com/codegangsta/inject
   version: 33e0aa1cb7c019ccc3fbe049a8262a6403d30504
 - name: github.com/codegangsta/negroni
-  version: c7477ad8e330bef55bf1ebe300cf8aa67c492d1b
+  version: fde5e16d32adc7ad637e9cd9ad21d4ebc6192535
 - name: github.com/coreos/go-etcd
   version: 003851be7bb0694fe3cc457a49529a19388ee7cf
 - name: github.com/cosn/firebase
@@ -52,7 +52,7 @@ imports:
 - name: github.com/dgryski/go-bitstream
   version: 27cd5973303fde7d914860be1ea4b927a6be0c92
 - name: github.com/dustin/go-humanize
-  version: 8929fe90cee4b2cb9deb468b51fb34eba64d1bf0
+  version: f3565c9525600a911af3bd34f8b535ea81b2a9e0
 - name: github.com/elazarl/go-bindata-assetfs
   version: 57eb5e1fc594ad4b0b1dbea7b286d299e0cb43c2
 - name: github.com/facebookgo/inject
@@ -120,7 +120,7 @@ imports:
 - name: github.com/influxdata/usage-client
   version: 475977e68d79883d9c8d67131c84e4241523f452
 - name: github.com/influxdb/influxdb
-  version: 8a070d35602bff6062fe88a98020284cab011fb6
+  version: 8353b0c20f000df197b6ca0fb8eb95090e1bb029
 - name: github.com/iron-io/iron_go3
   version: 4aec4b86e69b521ea83e4434e274630585b73b54
   subpackages:
@@ -146,7 +146,7 @@ imports:
 - name: github.com/kr/pty
   version: f7ee69f31298ecbe5d2b349c711e2547a617d398
 - name: github.com/kr/text
-  version: bb797dc4fb8320488f47bf11de07a733d7233e1f
+  version: 7cafcd837844e784b526369c9bce262804aebc60
 - name: github.com/magiconair/properties
   version: c265cfa48dda6474e208715ca93e987829f572f8
 - name: github.com/manucorporat/sse
@@ -156,7 +156,7 @@ imports:
 - name: github.com/matttproud/golang_protobuf_extensions
   version: c12348ce28de40eed0136aa2b644d0ee0650e56c
 - name: github.com/mikespook/gorbac
-  version: dbda763bd0bfb6eb82d731608d5a3824acb97d16
+  version: 020331115160ba2bdf58fc4027561c195ab9e75e
 - name: github.com/mitchellh/goamz
   version: caaaea8b30ee15616494ee68abd5d8ebbbef05cf
   subpackages:
@@ -187,7 +187,7 @@ imports:
 - name: github.com/prometheus/client_model
   version: fa8ad6fec33561be4280a8f0514318c79d7f6cb6
 - name: github.com/prometheus/common
-  version: 40456948a47496dc22168e6af39297a2f8fbf38c
+  version: dd586c1c5abb0be59e60f942c22af711a2008cb4
 - name: github.com/prometheus/procfs
   version: abf152e5f3e97f2fafac028d2cc06c1feb87ffa5
 - name: github.com/rakyll/statik
@@ -203,7 +203,7 @@ imports:
 - name: github.com/rs/xhandler
   version: d9d9599b6aaf6a058cb7b1f48291ded2cbd13390
 - name: github.com/russross/blackfriday
-  version: fc997ac2ba5819bbc83936fc6b10fb90adc5fa10
+  version: 2004188462c3946efefbdcd91aa83e49b4175bfb
 - name: github.com/satori/go.uuid
   version: e673fdd4dea8a7334adbbe7f57b7e4b00bdc5502
 - name: github.com/shurcooL/sanitized_anchor_name
@@ -219,7 +219,7 @@ imports:
 - name: github.com/spf13/pflag
   version: 7f60f83a2c81bc3c3c0d5297f61ddfa68da9d3b7
 - name: github.com/spf13/viper
-  version: f904a1790545169368e8d37badd19d1895d94f29
+  version: d8a428b8a30606e1d0b355d91edf282609ade1a6
 - name: github.com/stathat/go
   version: 91dfa3a59c5b233fef9a346a1460f6e2bc889d93
 - name: github.com/stretchr/objx
@@ -251,7 +251,7 @@ imports:
 - name: github.com/yvasiyarov/newrelic_platform_go
   version: db03d6dfd965ebc22dbfd910567c641b326ff055
 - name: github.com/zenazn/goji
-  version: 1925ec6302925f4760d7a11cc17036f44ec98d5b
+  version: 64eb34159fe53473206c2b3e70fe396a639452f2
 - name: golang.org/x/crypto
   version: 1f22c0103821b9390939b6776727195525381532
   subpackages:
