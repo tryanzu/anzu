@@ -35,6 +35,18 @@ func (this API) Add(c *gin.Context) {
 
 		comment := post.PushComment(form.Content, user_id)
 
+		go func(carrier *transmit.Sender, id bson.ObjectId, usrId bson.ObjectId) {
+
+			carrierParams := map[string]interface{}{
+				"fire":    "new-comment",
+				"id":      id.Hex(),
+				"user_id": usrId.Hex(),
+			}
+
+			carrier.Emit("feed", "action", carrierParams)
+
+		}(this.Transmit, post.Id, user_id)
+
 		/*// Update the post and push the comments
 		change := bson.M{"$push": bson.M{"comments.set": comment}, "$set": bson.M{"updated_at": time.Now()}, "$inc": bson.M{"comments.count": 1}}
 		err = database.C("posts").Update(bson.M{"_id": post.Id}, change)
