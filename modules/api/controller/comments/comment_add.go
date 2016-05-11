@@ -1,6 +1,7 @@
 package comments
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/modules/feed"
 	"github.com/fernandez14/spartangeek-blacker/modules/transmit"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
@@ -47,6 +48,19 @@ func (this API) Add(c *gin.Context) {
 			carrier.Emit("feed", "action", carrierParams)
 
 		}(this.Transmit, post.Id, user_id)
+
+		if post.UserId != user_id {
+
+			go func(post *feed.Post, comment *feed.Comment, user_id bson.ObjectId) {
+
+				// Tell the new comment for gamification
+				this.Gaming.Get(user_id).Did("comment")
+
+				// Notify the author about this comment
+				this.Notifications.Comment(post, comment, user_id)
+
+			}(post, comment, user_id)
+		}
 
 		/*// Update the post and push the comments
 		change := bson.M{"$push": bson.M{"comments.set": comment}, "$set": bson.M{"updated_at": time.Now()}, "$inc": bson.M{"comments.count": 1}}
