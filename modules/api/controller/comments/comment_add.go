@@ -1,6 +1,7 @@
 package comments
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/modules/transmit"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
 )
