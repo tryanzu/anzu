@@ -88,13 +88,13 @@ func (user *User) CanDeletePost(post *feed.Post) bool {
 }
 
 // Check if user can update comment
-func (user *User) CanUpdateComment(comment model.Comment, post model.Post) bool {
+func (user *User) CanUpdateComment(comment *feed.Comment, post *feed.Post) bool {
 
 	return user.isActionGranted(comment.UserId, post.Category, "edit-own-comments", "edit-board-comments", "edit-category-comments")
 }
 
 // Check if user can delete comment
-func (user *User) CanDeleteComment(comment model.Comment, post model.Post) bool {
+func (user *User) CanDeleteComment(comment *feed.Comment, post *feed.Post) bool {
 
 	return user.isActionGranted(comment.UserId, post.Category, "delete-own-comments", "delete-board-comments", "delete-category-comments")
 }
