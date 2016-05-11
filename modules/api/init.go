@@ -28,7 +28,6 @@ type Module struct {
 	Users             handle.UserAPI
 	Categories        handle.CategoryAPI
 	Elections         handle.ElectionAPI
-	Comments          handle.CommentAPI
 	CommentsFactory   comments.API
 	Parts             handle.PartAPI
 	Stats             handle.StatAPI
@@ -75,7 +74,6 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.Users},
 		&inject.Object{Value: &module.Categories},
 		&inject.Object{Value: &module.Elections},
-		&inject.Object{Value: &module.Comments},
 		&inject.Object{Value: &module.CommentsFactory},
 		&inject.Object{Value: &module.Parts},
 		&inject.Object{Value: &module.Stats},
@@ -274,8 +272,8 @@ func (module *Module) Run() {
 
 			// Comment routes
 			authorized.POST("/post/comment/:id", module.CommentsFactory.Add)
-			authorized.PUT("/post/comment/:id/:index", module.Comments.CommentUpdate)
-			authorized.DELETE("/post/comment/:id/:index", module.Comments.CommentDelete)
+			authorized.PUT("/post/comment/:id/:index", module.CommentsFactory.Update)
+			authorized.DELETE("/post/comment/:id/:index", module.CommentsFactory.Delete)
 
 			// Post routes
 			authorized.POST("/post", module.PostsFactory.Create)
