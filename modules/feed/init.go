@@ -185,6 +185,28 @@ func (module *FeedModule) LightPosts(posts interface{}) ([]LightPostModel, error
 	}
 }
 
+func (f *FeedModule) GetComment(id bson.ObjectId) (*Comment, error) {
+
+	var c *Comment
+
+	database := f.Mongo.Database
+	err := database.C("comments").FindId(id).One(&c)
+
+	if err != nil {
+		return nil, err
+	}
+
+	post, err := f.Post(c.PostId)
+
+	if err != nil {
+		return nil, err
+	}
+
+	c.SetDI(post)
+
+	return c, nil
+}
+
 func (module *FeedModule) FulfillBestAnswer(list []LightPostModel) []LightPostModel {
 
 	var ids []bson.ObjectId

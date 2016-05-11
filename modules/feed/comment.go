@@ -3,6 +3,7 @@ package feed
 import (
 	"gopkg.in/mgo.v2/bson"
 
+	"html"
 	"time"
 )
 
@@ -17,7 +18,6 @@ type Comment struct {
 	Content  string        `bson:"content" json:"content"`
 	Chosen   bool          `bson:"chosen,omitempty" json:"chosen,omitempty"`
 	Created  time.Time     `bson:"created_at" json:"created_at"`
-	Deleted  time.Time     `bson:"deleted_at,omitempty" json:"deleted_at"`
 
 	// Runtime generated pointers
 	post *Post
@@ -60,6 +60,10 @@ func (self *Comment) GetParseableMeta() map[string]interface{} {
 	}
 }
 
+func (self *Comment) GetPost() *Post {
+	return self.post
+}
+
 func (self *Comment) MarkAsAnswer() {
 
 	// Get database instance
@@ -76,5 +80,41 @@ func (self *Comment) MarkAsAnswer() {
 
 	if err != nil {
 		panic(err)
+	}
+}
+
+func (self *Comment) Delete() {
+
+	// Get database instance
+	database := self.post.DI().Mongo.Database
+
+	// Update straight forward
+	err := database.C("comments").Update(bson.M{"_id": self.Id}, bson.M{"$set": bson.M{"deleted_at": time.Now()}})
+
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (self *Comment) Update(c string) {
+
+	if len(c) > 0 {
+
+		self.Content = html.EscapeString(c)
+
+		// Use content module to run processors chain
+		database := self.post.DI().Mongo.Database
+		content := self.post.DI().Content
+		content.Parse(self)
+
+		// Update database with new content
+		err := database.C("comments").Update(bson.M{"_id": self.Id}, bson.M{"$set": bson.M{"content": self.Content, "updated_at": time.Now()}})
+
+		if err != nil {
+			panic(err)
+		}
+
+		// Finally parse the tags
+		content.ParseTags(self)
 	}
 }
