@@ -53,20 +53,21 @@ func (self *Post) LoadComments(take, skip int) {
 
 	var c []*Comment
 	var limit int = take
-	var sort string
+	var sortby string
 
 	// Use content module to run processors chain
 	content := self.di.Content
 	database := self.di.Mongo.Database
 
-	if take > 0 {
-		sort = "created_at"
+	if skip > 0 {
+		sortby = "created_at"
 	} else {
-		sort = "-created_at"
-		limit = -take
+		sortby = "-created_at"
+		skip = -skip
+		skip -= take
 	}
 
-	err := database.C("comments").Find(bson.M{"post_id": self.Id, "deleted_at": bson.M{"$exists": false}}).Sort(sort).Skip(skip).Limit(limit).All(&c)
+	err := database.C("comments").Find(bson.M{"post_id": self.Id, "deleted_at": bson.M{"$exists": false}}).Sort(sortby).Skip(skip).Limit(limit).All(&c)
 
 	if err != nil {
 		panic(err)

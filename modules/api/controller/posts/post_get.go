@@ -39,7 +39,7 @@ func (this API) Get(c *gin.Context) {
 	}
 
 	// Needed data loading to show post
-	post.LoadComments(-10, 0)
+	post.LoadComments(10, -10)
 	post.LoadUsers()
 
 	_, signed_in := c.Get("token")

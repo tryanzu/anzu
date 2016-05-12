@@ -30,6 +30,12 @@ type Comments struct {
 	Set    []*Comment `bson:"-" json:"set"`
 }
 
+type CSortByCreatedAt []*Comment
+
+func (a CSortByCreatedAt) Len() int           { return len(a) }
+func (a CSortByCreatedAt) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a CSortByCreatedAt) Less(i, j int) bool { return !a[i].Created.Before(a[j].Created) }
+
 func (self *Comment) SetDI(o *Post) {
 	self.post = o
 }

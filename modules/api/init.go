@@ -268,8 +268,8 @@ func (module *Module) Run() {
 
 			// Comment routes
 			authorized.POST("/post/comment/:id", module.CommentsFactory.Add)
-			authorized.PUT("/post/comment/:id/:index", module.CommentsFactory.Update)
-			authorized.DELETE("/post/comment/:id/:index", module.CommentsFactory.Delete)
+			authorized.PUT("/post/comment/:id", module.CommentsFactory.Update)
+			authorized.DELETE("/post/comment/:id", module.CommentsFactory.Delete)
 
 			// Post routes
 			authorized.POST("/post", module.PostsFactory.Create)
