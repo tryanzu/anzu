@@ -102,7 +102,7 @@ func (self *Comment) Delete() {
 	}
 
 	// Decrement count of comments
-	err = database.C("posts").Update(bson.M{"_id": self.PostId}, bson.M{"$inc": bson.M{"comments.set.count": -1}})
+	err = database.C("posts").Update(bson.M{"_id": self.PostId}, bson.M{"$inc": bson.M{"comments.count": -1}})
 
 	if err != nil {
 		panic(err)

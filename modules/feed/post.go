@@ -73,6 +73,11 @@ func (self *Post) LoadComments(take, skip int) {
 		panic(err)
 	}
 
+	if len(c) == 0 {
+		self.Comments.Set = make([]*Comment, 0)
+		return
+	}
+
 	self.Comments.Set = c
 
 	for _, comment := range self.Comments.Set {
