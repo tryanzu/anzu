@@ -57,7 +57,7 @@ func (this API) Add(c *gin.Context) {
 				this.Gaming.Get(user_id).Did("comment")
 
 				// Notify the author about this comment
-				this.Notifications.Comment(post, comment, user_id)
+				this.Notifications.Comment(post.Slug, post.Title, comment.Position, post.Id, post.UserId, user_id)
 
 			}(post, comment, user_id)
 		}

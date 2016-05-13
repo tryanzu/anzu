@@ -2,32 +2,31 @@ package notifications
 
 import (
 	"github.com/fernandez14/spartangeek-blacker/model"
-	"github.com/fernandez14/spartangeek-blacker/modules/feed"
 	"gopkg.in/mgo.v2/bson"
 
 	"fmt"
 	"time"
 )
 
-func (self *NotificationsModule) Comment(post *feed.Post, comment *feed.Comment, user_id bson.ObjectId) {
+func (self *NotificationsModule) Comment(post_slug, post_title string, position int, post_id, post_user, user_id bson.ObjectId) {
 
 	defer self.Errors.Recover()
 
 	usr, err := self.User.Get(user_id)
 
 	if err != nil {
-		panic(fmt.Sprintf("Could not get user while notifying comment (post_id: %v, user_id: %v, comment_id: %v)", post.Id, comment.Id, user_id))
+		panic(fmt.Sprintf("Could not get user while notifying comment (post_id: %v, user_id: %v, position: %v)", post_id, user_id, position))
 	}
 
 	// Construct the notification message
 	title := fmt.Sprintf("Nuevo comentario de **%s**", usr.Name())
-	message := post.Title
+	message := post_title
 
 	notification := model.UserFirebaseNotification{
-		UserId:       post.UserId,
-		RelatedId:    post.Id,
-		RelatedExtra: post.Slug,
-		Position:     comment.Position,
+		UserId:       post_user,
+		RelatedId:    post_id,
+		RelatedExtra: post_slug,
+		Position:     position,
 		Title:        title,
 		Text:         message,
 		Related:      "comment",

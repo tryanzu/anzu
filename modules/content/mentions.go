@@ -127,6 +127,7 @@ func (self Module) NotifyMentionsAsync(o Parseable, ls []Mention) {
 					continue
 				}
 
+				self.Notifications.Mention(entity, owner_id, to.UserId)
 			}
 
 		} else {

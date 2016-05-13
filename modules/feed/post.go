@@ -137,6 +137,8 @@ func (self *Post) PushComment(c string, user_id bson.ObjectId) *Comment {
 		Created:  time.Now(),
 	}
 
+	comment.SetDI(self)
+
 	// Use content module to run processors chain
 	content := self.di.Content
 	content.Parse(comment)

@@ -59,10 +59,19 @@ func (self *Comment) OnParseFinished() bool {
 
 func (self *Comment) GetParseableMeta() map[string]interface{} {
 
+	p := self.GetPost()
+
 	return map[string]interface{}{
-		"id":      self.Id,
-		"type":    "comment",
-		"comment": self,
+		"id":       self.Id,
+		"type":     "comment",
+		"position": self.Position,
+		"owner_id": self.UserId,
+		"comment":  self,
+		"post": map[string]interface{}{
+			"id":    p.Id,
+			"slug":  p.Slug,
+			"title": p.Title,
+		},
 	}
 }
 
