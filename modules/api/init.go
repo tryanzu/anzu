@@ -15,6 +15,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/posts"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/products"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/users"
+	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/votes"
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/olebedev/config"
@@ -25,6 +26,7 @@ type Module struct {
 	Dependencies      ModuleDI
 	Posts             handle.PostAPI
 	Votes             handle.VoteAPI
+	VotesFactory      votes.API
 	Users             handle.UserAPI
 	Categories        handle.CategoryAPI
 	Elections         handle.ElectionAPI
@@ -71,6 +73,7 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.Checkout},
 		&inject.Object{Value: &module.Products},
 		&inject.Object{Value: &module.Votes},
+		&inject.Object{Value: &module.VotesFactory},
 		&inject.Object{Value: &module.Users},
 		&inject.Object{Value: &module.Categories},
 		&inject.Object{Value: &module.Elections},
@@ -291,8 +294,8 @@ func (module *Module) Run() {
 			// Gamification routes
 			authorized.POST("/badges/buy/:id", module.Gaming.BuyBadge)
 
-			// // Votes routes
-			authorized.POST("/vote/comment/:id", module.Votes.VoteComment)
+			// Votes routes
+			authorized.POST("/vote/comment/:id", module.VotesFactory.Comment)
 			authorized.POST("/vote/component/:id", module.Votes.VoteComponent)
 			authorized.POST("/vote/post/:id", module.Votes.VotePost)
 
