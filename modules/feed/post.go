@@ -242,7 +242,7 @@ func (self *Post) LoadUsers() {
 
 		usersMap := make(map[bson.ObjectId]interface{})
 
-		for _, usr := range users {
+		for i, usr := range users {
 
 			if len(usr.Description) == 0 {
 				usr.Description = "Solo otro Spartan Geek más"
@@ -251,7 +251,10 @@ func (self *Post) LoadUsers() {
 			usersMap[usr.Id] = usr
 
 			if usr.Id == self.UserId {
-				self.Author = &usr
+
+				fmt.Println("User author is", usr.Id.Hex(), self.UserId.Hex())
+
+				self.Author = &users[i]
 			}
 
 			if self.Comments.Answer != nil && self.Comments.Answer.UserId == usr.Id {
