@@ -100,6 +100,13 @@ func (self *Comment) Delete() {
 	if err != nil {
 		panic(err)
 	}
+
+	// Decrement count of comments
+	err = database.C("posts").Update(bson.M{"_id": self.PostId}, bson.M{"$inc": bson.M{"comments.set.count": -1}})
+
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (self *Comment) Update(c string) {
