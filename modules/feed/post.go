@@ -8,6 +8,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"gopkg.in/mgo.v2/bson"
 
+	"fmt"
 	"html"
 	"strconv"
 	"time"
@@ -59,7 +60,7 @@ func (self *Post) LoadComments(take, skip int) {
 	content := self.di.Content
 	database := self.di.Mongo.Database
 
-	if skip > 0 {
+	if skip >= 0 {
 		sortby = "created_at"
 	} else {
 		sortby = "-created_at"
@@ -74,6 +75,9 @@ func (self *Post) LoadComments(take, skip int) {
 	}
 
 	if len(c) == 0 {
+
+		fmt.Println("No comments found", skip, limit, sortby)
+
 		self.Comments.Set = make([]*Comment, 0)
 		return
 	}

@@ -24,7 +24,7 @@ func (self *NotificationsModule) Comment(post *feed.Post, comment *feed.Comment,
 	message := post.Title
 
 	notification := model.UserFirebaseNotification{
-		UserId:       user_id,
+		UserId:       post.UserId,
 		RelatedId:    post.Id,
 		RelatedExtra: post.Slug,
 		Position:     comment.Position,
