@@ -218,16 +218,6 @@ func (this API) Create(c *gin.Context) {
 						usr := this.Gaming.Get(bson_id)
 						usr.Did("publish")
 					}
-
-					// Index post
-					post, err := this.Feed.Post(publish.Id)
-
-					if err != nil {
-						panic(err)
-					}
-
-					// Index the brand new post
-					post.Index()
 				}()
 
 				// Finished creating the post
@@ -300,16 +290,6 @@ func (this API) Create(c *gin.Context) {
 					usr := this.Gaming.Get(bson_id)
 					usr.Did("publish")
 				}
-
-				// Index post
-				post, err := this.Feed.Post(publish.Id)
-
-				if err != nil {
-					panic(err)
-				}
-
-				// Index the brand new post
-				post.Index()
 			}()
 
 			// Finished creating the post

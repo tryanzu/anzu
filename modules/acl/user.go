@@ -2,6 +2,7 @@ package acl
 
 import (
 	"github.com/fernandez14/spartangeek-blacker/model"
+	"github.com/fernandez14/spartangeek-blacker/modules/feed"
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -63,37 +64,37 @@ func (user *User) Can(permission string) bool {
 }
 
 // Check if user can update post
-func (user *User) CanUpdatePost(post model.Post) bool {
+func (user *User) CanUpdatePost(post *feed.Post) bool {
 
 	return user.isActionGranted(post.UserId, post.Category, "edit-own-posts", "edit-board-posts", "edit-category-posts")
 }
 
 // Check if user can solve post
-func (user *User) CanSolvePost(post model.Post) bool {
+func (user *User) CanSolvePost(post *feed.Post) bool {
 
 	return user.isActionGranted(post.UserId, post.Category, "solve-own-posts", "solve-board-posts", "solve-category-posts")
 }
 
 // Check if user can lock post
-func (user *User) CanLockPost(post model.Post) bool {
+func (user *User) CanLockPost(post *feed.Post) bool {
 
 	return user.isActionGranted(post.UserId, post.Category, "block-own-post-comments", "block-board-post-comments", "block-category-post-comments")
 }
 
 // Check if user can delete post
-func (user *User) CanDeletePost(post model.Post) bool {
+func (user *User) CanDeletePost(post *feed.Post) bool {
 
 	return user.isActionGranted(post.UserId, post.Category, "edit-own-posts", "edit-board-posts", "edit-category-posts")
 }
 
 // Check if user can update comment
-func (user *User) CanUpdateComment(comment model.Comment, post model.Post) bool {
+func (user *User) CanUpdateComment(comment *feed.Comment, post *feed.Post) bool {
 
 	return user.isActionGranted(comment.UserId, post.Category, "edit-own-comments", "edit-board-comments", "edit-category-comments")
 }
 
 // Check if user can delete comment
-func (user *User) CanDeleteComment(comment model.Comment, post model.Post) bool {
+func (user *User) CanDeleteComment(comment *feed.Comment, post *feed.Post) bool {
 
 	return user.isActionGranted(comment.UserId, post.Category, "delete-own-comments", "delete-board-comments", "delete-category-comments")
 }

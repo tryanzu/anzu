@@ -1,5 +1,6 @@
 package handle
 
+/*
 import (
 	"bytes"
 	"crypto/tls"
@@ -10,8 +11,8 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/acl"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
-	"github.com/fernandez14/spartangeek-blacker/modules/transmit"
 	"github.com/fernandez14/spartangeek-blacker/modules/notifications"
+	"github.com/fernandez14/spartangeek-blacker/modules/transmit"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/ftrvxmtrx/gravatar"
 	"github.com/gin-gonic/gin"
@@ -40,142 +41,6 @@ type CommentAPI struct {
 	Gaming        *gaming.Module                     `inject:""`
 	Acl           *acl.Module                        `inject:""`
 	Transmit      *transmit.Sender                   `inject:""`
-}
-
-func (di *CommentAPI) CommentAdd(c *gin.Context) {
-
-	// Get the database interface from the DI
-	database := di.DataService.Database
-
-	id := c.Params.ByName("id")
-
-	if bson.IsObjectIdHex(id) == false {
-
-		c.JSON(400, gin.H{"error": "Invalid request, no valid params.", "status": 701})
-		return
-	}
-
-	user_id := c.MustGet("user_id")
-	user_bson_id := bson.ObjectIdHex(user_id.(string))
-
-	var comment model.CommentForm
-
-	if c.BindWith(&comment, binding.JSON) == nil {
-
-		// Get the post using the slug
-		id := bson.ObjectIdHex(id)
-
-		var post model.Post
-
-		err := database.C("posts").FindId(id).One(&post)
-
-		if err != nil {
-
-			c.JSON(404, gin.H{"message": "Couldnt find the post", "status": "error"})
-			return
-		}
-
-		if post.Lock == true {
-			c.JSON(403, gin.H{"status": "error", "message": "Commnets now allowed at all."})
-			return
-		}
-
-		votes := model.Votes{
-			Up:   0,
-			Down: 0,
-		}
-
-		// Html sanitize
-		content := html.EscapeString(comment.Content)
-		comment := model.Comment{
-			UserId:  user_bson_id,
-			Votes:   votes,
-			Content: content,
-			Created: time.Now(),
-		}
-
-		urls, _ := regexp.Compile(`http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+`)
-
-		var assets []string
-
-		assets = urls.FindAllString(content, -1)
-
-		for _, asset := range assets {
-
-			// Download the asset on other routine in order to non block the API request
-			go di.downloadAssetFromUrl(asset, post.Id)
-		}
-
-		// Update the post and push the comments
-		change := bson.M{"$push": bson.M{"comments.set": comment}, "$set": bson.M{"updated_at": time.Now()}, "$inc": bson.M{"comments.count": 1}}
-		err = database.C("posts").Update(bson.M{"_id": post.Id}, change)
-
-		if err != nil {
-			panic(err)
-		}
-
-		position := strconv.Itoa(len(post.Comments.Set))
-
-		// Process the mentions. TODO - Determine race conditions
-		go di.Notifications.ParseContentMentions(notifications.MentionParseObject{
-			Type:          "comment",
-			RelatedNested: position,
-			Content:       comment.Content,
-			Title:         post.Title,
-			Author:        user_bson_id,
-			Post:          post,
-		})
-
-		go func(carrier *transmit.Sender, id bson.ObjectId, usrId bson.ObjectId) {
-
-			carrierParams := map[string]interface{}{
-				"fire": "new-comment",
-				"id": id.Hex(),
-				"user_id": usrId.Hex(),
-			} 
-
-			carrier.Emit("feed", "action", carrierParams)
-
-		}(di.Transmit, post.Id, user_bson_id)
-
-		// Check if we need to add participant
-		users := post.Users
-		need_add := true
-
-		for _, already_within := range users {
-
-			if already_within == user_bson_id {
-
-				need_add = false
-			}
-		}
-
-		if need_add == true {
-
-			// Add the user to the user list
-			change := bson.M{"$push": bson.M{"users": user_bson_id}}
-			err = database.C("posts").Update(bson.M{"_id": post.Id}, change)
-
-			if err != nil {
-				panic(err)
-			}
-		}
-
-		// Triggers when the author of the comment is not the post's author
-		if post.UserId != user_bson_id {
-
-			// Notify the post's author
-			go di.notifyCommentPostAuth(post, user_bson_id)
-
-			// Add the gamification contribution
-			go di.Gaming.Get(user_bson_id).Did("comment")
-		}
-
-		c.JSON(200, gin.H{"status": "okay", "message": comment.Content, "position": position})
-		return
-	}
-
-	c.JSON(401, gin.H{"error": "Not authorized.", "status": 704})
 }
 
 func (di *CommentAPI) CommentUpdate(c *gin.Context) {
@@ -253,9 +118,9 @@ func (di *CommentAPI) CommentUpdate(c *gin.Context) {
 		go func(carrier *transmit.Sender, id bson.ObjectId) {
 
 			carrierParams := map[string]interface{}{
-				"fire": "comment-updated",
+				"fire":  "comment-updated",
 				"index": comment_index,
-			} 
+			}
 
 			carrier.Emit("post", id.Hex(), carrierParams)
 
@@ -276,84 +141,6 @@ func (di *CommentAPI) CommentUpdate(c *gin.Context) {
 	}
 
 	c.JSON(401, gin.H{"error": "Not authorized.", "status": 704})
-}
-
-func (di *CommentAPI) CommentDelete(c *gin.Context) {
-
-	// Get the database interface from the DI
-	database := di.DataService.Database
-
-	id := c.Params.ByName("id")
-	index := c.Params.ByName("index")
-
-	if bson.IsObjectIdHex(id) == false {
-
-		c.JSON(400, gin.H{"error": "Invalid request, no valid params.", "status": 701})
-		return
-	}
-
-	user_id := c.MustGet("user_id")
-	user_bson_id := bson.ObjectIdHex(user_id.(string))
-
-	var post model.Post
-
-	// Get the post using the slug
-	bson_id := bson.ObjectIdHex(id)
-	err := database.C("posts").FindId(bson_id).One(&post)
-
-	if err != nil {
-
-		c.JSON(404, gin.H{"message": "Couldnt find the post", "status": "error"})
-		return
-	}
-
-	comment_index, err := strconv.Atoi(index)
-
-	if err != nil || len(post.Comments.Set)-1 < comment_index {
-
-		c.JSON(400, gin.H{"message": "Invalid request, no valid comment index.", "status": "error"})
-		return
-	}
-
-	comment := post.Comments.Set[comment_index]
-	user := di.Acl.User(user_bson_id)
-
-	if user.CanDeleteComment(comment, post) == false {
-
-		c.JSON(400, gin.H{"message": "Can't delete comment. Insufficient permissions.", "status": "error"})
-		return
-	}
-
-	// Database post comment path
-	comment_path := "comments.set." + index + ".deleted_at"
-
-	// Update the post and push the comments
-	err = database.C("posts").Update(bson.M{"_id": post.Id}, bson.M{"$set": bson.M{comment_path: time.Now()}, "$inc": bson.M{"comments.count": -1}})
-
-	if err != nil {
-		panic(err)
-	}
-
-	go func(carrier *transmit.Sender, id bson.ObjectId) {
-
-		carrierParams := map[string]interface{}{
-			"fire": "delete-comment",
-			"id": id.Hex(),
-		} 
-
-		carrier.Emit("feed", "action", carrierParams)
-
-		carrierParams = map[string]interface{}{
-			"fire": "delete-comment",
-			"index": comment_index,
-		} 
-
-		carrier.Emit("post", id.Hex(), carrierParams)
-
-	}(di.Transmit, post.Id)
-
-	c.JSON(200, gin.H{"status": "okay"})
-	return
 }
 
 func (di *CommentAPI) notifyCommentPostAuth(post model.Post, user_id bson.ObjectId) {
@@ -498,4 +285,4 @@ func (di *CommentAPI) downloadAssetFromUrl(from string, post_id bson.ObjectId) e
 	response.Body.Close()
 
 	return nil
-}
+}*/

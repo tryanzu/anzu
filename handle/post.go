@@ -58,7 +58,7 @@ func (di PostAPI) FeedGet(c *gin.Context) {
 	// Get the database interface from the DI
 	database := di.DataService.Database
 	redis := di.CacheService
-	
+
 	var feed []model.FeedPost
 	offset := 0
 	limit := 10
@@ -351,10 +351,10 @@ func (di PostAPI) FeedGet(c *gin.Context) {
 				}
 
 				post.Author = model.User{
-					Id:        postUser.Id,
-					UserName:  postUser.UserName,
-					Step:      authorLevel,
-					Image:     postUser.Image,
+					Id:       postUser.Id,
+					UserName: postUser.UserName,
+					Step:     authorLevel,
+					Image:    postUser.Image,
 				}
 			}
 		}
@@ -382,10 +382,10 @@ func (di PostAPI) GetLightweight(c *gin.Context) {
 
 		c.JSON(400, gin.H{"status": "error", "message": "Invalid user id."})
 		return
-	}	
+	}
 
 	post_id := bson.ObjectIdHex(id)
-	post, err := di.Feed.LightPost(post_id)
+	post, err := di.Feed.Post(post_id)
 
 	if err != nil {
 
@@ -749,8 +749,6 @@ func (di PostAPI) PostUploadAttachment(c *gin.Context) {
 
 func (di PostAPI) PostDelete(c *gin.Context) {
 
-	var post model.Post
-
 	// Get the database interface from the DI
 	database := di.DataService.Database
 
@@ -767,7 +765,7 @@ func (di PostAPI) PostDelete(c *gin.Context) {
 	user_id := c.MustGet("user_id")
 	user_bson_id := bson.ObjectIdHex(user_id.(string))
 	bson_id := bson.ObjectIdHex(id)
-	err := database.C("posts").FindId(bson_id).One(&post)
+	post, err := di.Feed.Post(bson_id)
 
 	if err != nil {
 
@@ -793,8 +791,8 @@ func (di PostAPI) PostDelete(c *gin.Context) {
 
 		carrierParams := map[string]interface{}{
 			"fire": "delete-post",
-			"id": id.Hex(),
-		} 
+			"id":   id.Hex(),
+		}
 
 		carrier.Emit("feed", "action", carrierParams)
 
@@ -804,19 +802,19 @@ func (di PostAPI) PostDelete(c *gin.Context) {
 }
 
 func (di PostAPI) syncUsersFeed(post *model.Post) {
-	
+
 	carrier := di.Transmit
 
 	// Recover from any panic even inside this goroutine
 	defer di.Errors.Recover()
 
 	carrierParams := map[string]interface{}{
-		"fire": "new-post",
+		"fire":     "new-post",
 		"category": post.Category.Hex(),
-		"user_id": post.UserId.Hex(),
-		"id": post.Id.Hex(),
-		"slug": post.Slug,
-	} 
+		"user_id":  post.UserId.Hex(),
+		"id":       post.Id.Hex(),
+		"slug":     post.Slug,
+	}
 
 	carrier.Emit("feed", "action", carrierParams)
 }

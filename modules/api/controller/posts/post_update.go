@@ -2,7 +2,6 @@ package posts
 
 import (
 	"github.com/fernandez14/spartangeek-blacker/model"
-	"github.com/fernandez14/spartangeek-blacker/modules/feed"
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/fernandez14/spartangeek-blacker/modules/transmit"
 	"github.com/gin-gonic/gin"
@@ -16,7 +15,6 @@ import (
 
 func (this API) Update(c *gin.Context) {
 
-	var post model.Post
 	var postForm model.PostForm
 
 	// Get the database interface from the DI
@@ -38,10 +36,9 @@ func (this API) Update(c *gin.Context) {
 		user_id := c.MustGet("user_id")
 		user_bson_id := bson.ObjectIdHex(user_id.(string))
 		bson_id := bson.ObjectIdHex(id)
-		err := database.C("posts").FindId(bson_id).One(&post)
+		post, err := this.Feed.Post(bson_id)
 
 		if err != nil {
-
 			c.JSON(404, gin.H{"message": "Couldnt find the post", "status": "error"})
 			return
 		}
@@ -72,7 +69,6 @@ func (this API) Update(c *gin.Context) {
 		}
 
 		if user.CanWrite(category) == false {
-
 			c.JSON(400, gin.H{"status": "error", "message": "Not enough permissions to write this category."})
 			return
 		}
@@ -207,19 +203,6 @@ func (this API) Update(c *gin.Context) {
 		}
 
 		err = database.C("posts").Update(bson.M{"_id": post.Id}, update_directive)
-
-		go func(id bson.ObjectId, module *feed.FeedModule) {
-
-			post, err := module.Post(id)
-
-			if err != nil {
-				panic(err)
-			}
-
-			// Index the brand new post
-			post.Index()
-
-		}(post.Id, this.Feed)
 
 		if err != nil {
 			panic(err)

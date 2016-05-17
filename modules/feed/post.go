@@ -1,20 +1,347 @@
 package feed
 
 import (
-	"encoding/json"
-	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
-	"github.com/fernandez14/spartangeek-blacker/modules/components"
-	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/fernandez14/spartangeek-blacker/model"
+	"github.com/fernandez14/spartangeek-blacker/modules/components"
+	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
+	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
+	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"gopkg.in/mgo.v2/bson"
-	"reflect"
+
+	"fmt"
+	"html"
 	"strconv"
 	"time"
 )
 
+// Post model refers to board posts
 type Post struct {
-	di   *FeedModule
-	data model.Post
+	Id                bson.ObjectId    `bson:"_id,omitempty" json:"id,omitempty"`
+	Title             string           `bson:"title" json:"title"`
+	Slug              string           `bson:"slug" json:"slug"`
+	Type              string           `bson:"type" json:"type"`
+	Content           string           `bson:"content" json:"content"`
+	Categories        []string         `bson:"categories" json:"categories"`
+	Category          bson.ObjectId    `bson:"category" json:"category"`
+	Comments          Comments         `bson:"comments" json:"comments"`
+	Author            *user.UserSimple `bson:"-" json:"author,omitempty"`
+	UserId            bson.ObjectId    `bson:"user_id,omitempty" json:"user_id,omitempty"`
+	Users             []bson.ObjectId  `bson:"users,omitempty" json:"users,omitempty"`
+	Votes             Votes            `bson:"votes" json:"votes"`
+	Components        Components       `bson:"components,omitempty" json:"components,omitempty"`
+	RelatedComponents []bson.ObjectId  `bson:"related_components,omitempty" json:"related_components,omitempty"`
+	Following         bool             `bson:"following,omitempty" json:"following,omitempty"`
+	Pinned            bool             `bson:"pinned,omitempty" json:"pinned,omitempty"`
+	Lock              bool             `bson:"lock" json:"lock"`
+	IsQuestion        bool             `bson:"is_question" json:"is_question"`
+	Solved            bool             `bson:"solved,omitempty" json:"solved,omitempty"`
+	Liked             int              `bson:"liked,omitempty" json:"liked,omitempty"`
+	Created           time.Time        `bson:"created_at" json:"created_at"`
+	Updated           time.Time        `bson:"updated_at" json:"updated_at"`
+	Deleted           time.Time        `bson:"deleted_at,omitempty" json:"deleted_at,omitempty"`
+
+	// Runtime generated pointers
+	di *FeedModule
+}
+
+// Set Dependency Injection pointer
+func (self *Post) SetDI(di *FeedModule) {
+	self.di = di
+}
+
+// Comments loading for post
+func (self *Post) LoadComments(take, skip int) {
+
+	var c []*Comment
+	var limit int = take
+	var sortby string
+
+	// Use content module to run processors chain
+	content := self.di.Content
+	database := self.di.Mongo.Database
+
+	if skip >= 0 {
+		sortby = "created_at"
+	} else {
+		sortby = "-created_at"
+		skip = -skip
+		skip -= take
+	}
+
+	err := database.C("comments").Find(bson.M{"post_id": self.Id, "deleted_at": bson.M{"$exists": false}}).Sort(sortby).Skip(skip).Limit(limit).All(&c)
+
+	if err != nil {
+		panic(err)
+	}
+
+	if len(c) == 0 {
+
+		fmt.Println("No comments found", skip, limit, sortby)
+
+		self.Comments.Set = make([]*Comment, 0)
+		return
+	}
+
+	self.Comments.Set = c
+
+	for _, comment := range self.Comments.Set {
+		content.ParseTags(comment)
+	}
+
+	// Load the best answer if needed
+	if self.Solved == true && self.Comments.Answer == nil {
+
+		loaded := false
+
+		// We may have the chosen answer within the loaded comments set
+		for _, c := range self.Comments.Set {
+			if c.Chosen == true {
+				loaded = true
+				self.Comments.Answer = c
+			}
+		}
+
+		if !loaded {
+
+			var ca *Comment
+
+			// Load the chosen answer from Database
+			err := database.C("comments").Find(bson.M{"post_id": self.Id, "deleted_at": bson.M{"$exists": false}, "chosen": true}).One(&ca)
+
+			if err != nil {
+				panic(err)
+			}
+
+			content.ParseTags(ca)
+			self.Comments.Answer = ca
+		}
+	}
+}
+
+// Comment loading by ID for post
+func (self *Post) LoadCommentById(id bson.ObjectId) error {
+
+	var c *Comment
+
+	// Use content module to run processors chain
+	content := self.di.Content
+	database := self.di.Mongo.Database
+	err := database.C("comments").Find(bson.M{"_id": id, "deleted_at": bson.M{"$exists": false}}).One(&c)
+
+	if err != nil {
+		self.Comments.Set = make([]*Comment, 0)
+		return err
+	}
+
+	self.Comments.Set = []*Comment{c}
+
+	for _, comment := range self.Comments.Set {
+		content.ParseTags(comment)
+	}
+
+	return nil
+}
+
+// Push Comment on the post
+func (self *Post) PushComment(c string, user_id bson.ObjectId) *Comment {
+
+	c = html.EscapeString(c)
+	pos := self.GetCommentCount()
+
+	comment := &Comment{
+		Id:     bson.NewObjectId(),
+		PostId: self.Id,
+		UserId: user_id,
+		Votes: Votes{
+			Up:   0,
+			Down: 0,
+		},
+		Content:  c,
+		Position: pos,
+		Created:  time.Now(),
+	}
+
+	comment.SetDI(self)
+
+	// Use content module to run processors chain
+	content := self.di.Content
+	content.Parse(comment)
+
+	// Publish comment
+	database := self.di.Mongo.Database
+	err := database.C("comments").Insert(comment)
+
+	if err != nil {
+		panic(err)
+	}
+
+	err = database.C("posts").Update(bson.M{"_id": self.Id}, bson.M{"$set": bson.M{"updated_at": time.Now()}, "$inc": bson.M{"comments.count": 1}})
+
+	if err != nil {
+		panic(err)
+	}
+
+	// Ensure user is participating
+	self.PushUser(user_id)
+
+	if self.UserId != user_id {
+
+		go func(post *Post, comment *Comment, user_id bson.ObjectId) {
+
+			// Tell the new comment for gamification
+			//post.DI().Gaming.Get(user_id).Did("comment")
+
+			// Notify the author about this comment
+			//post.DI().Notifications.Comment(post, comment, user_id)
+
+		}(self, comment, user_id)
+	}
+
+	// Finally parse tags in content for runtime usage
+	content.ParseTags(comment)
+
+	return comment
+}
+
+// Push new user to the participants list
+func (p *Post) PushUser(user_id bson.ObjectId) bool {
+
+	pushed := false
+
+	for _, u := range p.Users {
+
+		if u == user_id {
+			pushed = true
+		}
+	}
+
+	if !pushed {
+		database := p.di.Mongo.Database
+		err := database.C("posts").Update(bson.M{"_id": p.Id}, bson.M{"$push": bson.M{"users": user_id}})
+
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	return pushed
+}
+
+// Eager load users for post entities
+func (self *Post) LoadUsers() {
+
+	var list []bson.ObjectId
+	var users []user.UserSimple
+
+	// Check if author need to be loaded
+	if self.Author == nil {
+		list = append(list, self.UserId)
+	}
+
+	// Load comment set authors at runtime
+	if len(self.Comments.Set) > 0 {
+		for _, c := range self.Comments.Set {
+
+			// Do not repeat ids at the list
+			if exists, _ := helpers.InArray(c.UserId, list); !exists {
+				list = append(list, c.UserId)
+			}
+		}
+
+		// Best answer author
+		if self.Comments.Answer != nil {
+
+			if exists, _ := helpers.InArray(self.Comments.Answer.UserId, list); !exists {
+				list = append(list, self.Comments.Answer.UserId)
+			}
+		}
+	}
+
+	if len(list) > 0 {
+
+		database := self.di.Mongo.Database
+		err := database.C("users").Find(bson.M{"_id": bson.M{"$in": list}}).Select(user.UserSimpleFields).All(&users)
+
+		if err != nil {
+			panic(err)
+		}
+
+		usersMap := make(map[bson.ObjectId]interface{})
+
+		for i, usr := range users {
+
+			if len(usr.Description) == 0 {
+				usr.Description = "Solo otro Spartan Geek más"
+			}
+
+			usersMap[usr.Id] = usr
+
+			if usr.Id == self.UserId {
+
+				fmt.Println("User author is", usr.Id.Hex(), self.UserId.Hex())
+
+				self.Author = &users[i]
+			}
+
+			if self.Comments.Answer != nil && self.Comments.Answer.UserId == usr.Id {
+				self.Comments.Answer.User = usersMap[usr.Id]
+			}
+		}
+
+		for index, c := range self.Comments.Set {
+
+			if usr, exists := usersMap[c.UserId]; exists {
+
+				self.Comments.Set[index].User = usr
+			}
+		}
+	}
+}
+
+// Load voting status for certain user
+func (self *Post) LoadVotes(user_id bson.ObjectId) {
+
+	database := self.di.Mongo.Database
+
+	// Only when there's loaded comments on the post
+	if len(self.Comments.Set) > 0 {
+
+		var ls []bson.ObjectId
+		var comments []Vote
+
+		for _, c := range self.Comments.Set {
+
+			ls = append(ls, c.Id)
+		}
+
+		// Get votes given to post's comments
+		err := database.C("votes").Find(bson.M{"type": "comment", "related_id": bson.M{"$in": ls}, "user_id": user_id}).All(&comments)
+
+		if err != nil {
+			panic(err)
+		}
+
+		if len(comments) > 0 {
+
+			for index, c := range self.Comments.Set {
+
+				// Iterate over comment's votes to determine status
+				for _, v := range comments {
+
+					if v.RelatedId == c.Id {
+						self.Comments.Set[index].Liked = v.Value
+					}
+				}
+			}
+		}
+	}
+
+	var post Vote
+	err := database.C("votes").Find(bson.M{"type": "post", "related_id": self.Id, "user_id": user_id}).One(&post)
+
+	if err == nil {
+		self.Liked = post.Value
+	}
 }
 
 // Collects the post views
@@ -26,7 +353,7 @@ func (self *Post) Viewed(user_id bson.ObjectId) {
 	activity := model.Activity{
 		UserId:    user_id,
 		Event:     "post",
-		RelatedId: self.data.Id,
+		RelatedId: self.Id,
 		Created:   time.Now(),
 	}
 
@@ -37,11 +364,11 @@ func (self *Post) Viewed(user_id bson.ObjectId) {
 	}
 
 	// Increase the post views inside the cache service
-	viewed_count, _ := redis.Get("feed:count:post:" + self.data.Id.Hex())
+	viewed_count, _ := redis.Get("feed:count:post:" + self.Id.Hex())
 
 	if viewed_count != nil {
 
-		_, err := redis.Incr("feed:count:post:" + self.data.Id.Hex())
+		_, err := redis.Incr("feed:count:post:" + self.Id.Hex())
 
 		if err != nil {
 			panic(err)
@@ -49,7 +376,7 @@ func (self *Post) Viewed(user_id bson.ObjectId) {
 	} else {
 
 		// No need to get the numbers but to warm up cache
-		self.GetReachViews(self.data.Id)
+		self.GetReachViews(self.Id)
 	}
 }
 
@@ -63,7 +390,7 @@ func (self *Post) UpdateRate() {
 	zadd := make(map[string]float64)
 
 	// Get reach and views
-	reached, viewed := self.GetReachViews(self.data.Id)
+	reached, viewed := self.GetReachViews(self.Id)
 
 	total := reached + viewed
 
@@ -71,11 +398,11 @@ func (self *Post) UpdateRate() {
 
 		// Calculate the rates
 		view_rate := 100.0 / float64(reached) * float64(viewed)
-		comment_rate := 100.0 / float64(viewed) * float64(self.data.Comments.Count)
+		comment_rate := 100.0 / float64(viewed) * float64(self.Comments.Count)
 		final_rate := (view_rate + comment_rate) / 2.0
-		date := self.data.Created.Format("2006-01-02")
+		date := self.Created.Format("2006-01-02")
 
-		zadd[self.data.Id.Hex()] = final_rate
+		zadd[self.Id.Hex()] = final_rate
 
 		_, err := redis.ZAdd("feed:relevant:"+date, zadd)
 
@@ -86,15 +413,19 @@ func (self *Post) UpdateRate() {
 }
 
 // Get post data structure
-func (self *Post) Data() model.Post {
-	return self.data
+func (self *Post) Data() *Post {
+	return self
+}
+
+func (self *Post) IsLocked() bool {
+	return self.Lock
 }
 
 func (self *Post) DI() *FeedModule {
 	return self.di
 }
 
-// Internal method to get the post reach and views
+// Internal method to get the post reach and views - TODO: move this up in the hierarchy
 func (self *Post) GetReachViews(id bson.ObjectId) (int, int) {
 
 	var reached, viewed int
@@ -136,13 +467,13 @@ func (self *Post) GetReachViews(id bson.ObjectId) (int, int) {
 	return reached, viewed
 }
 
-// Get post category model
-func (self *Post) Category() model.Category {
+// Get post category model - TODO: determine usage cases
+func (self *Post) GetCategory() model.Category {
 
 	var category model.Category
 
 	database := self.di.Mongo.Database
-	err := database.C("categories").Find(bson.M{"_id": self.data.Category}).One(&category)
+	err := database.C("categories").Find(bson.M{"_id": self.Category}).One(&category)
 
 	if err != nil {
 		panic(err)
@@ -154,18 +485,23 @@ func (self *Post) Category() model.Category {
 // Get comment object
 func (self *Post) Comment(index int) (*Comment, error) {
 
-	if len(self.data.Comments.Set) < index {
+	var comment *Comment
 
+	database := self.di.Mongo.Database
+	err := database.C("comments").Find(bson.M{"post_id": self.Id, "position": index, "deleted_at": bson.M{"$exists": false}}).One(&comment)
+
+	if err != nil {
 		return nil, exceptions.OutOfBounds{"Invalid comment index"}
 	}
 
-	comment := &Comment{
-		post: self,
-		comment: self.data.Comments.Set[index],
-		index: index,
-	}
+	comment.SetDI(self)
 
 	return comment, nil
+}
+
+// Alias of TrueCommentCount
+func (self *Post) GetCommentCount() int {
+	return self.di.TrueCommentCount(self.Id)
 }
 
 // Attach related entity to post
@@ -180,11 +516,11 @@ func (self *Post) Attach(entity interface{}) {
 		id := component.Id
 
 		// Check if we need to relate the component
-		exists, _ := helpers.InArray(id, self.data.RelatedComponents)
+		exists, _ := helpers.InArray(id, self.RelatedComponents)
 
 		if !exists {
 
-			err := database.C("posts").Update(bson.M{"_id": self.data.Id}, bson.M{"$push": bson.M{"related_components": id}})
+			err := database.C("posts").Update(bson.M{"_id": self.Id}, bson.M{"$push": bson.M{"related_components": id}})
 
 			if err != nil {
 				panic(err)
@@ -193,124 +529,5 @@ func (self *Post) Attach(entity interface{}) {
 
 	default:
 		panic("Unkown argument")
-	}
-}
-
-// Use algolia to index the post
-func (self *Post) Index() {
-
-	if false {
-		
-		post := self.data
-
-		if post.Category.Hex() != "" {
-
-			index := self.di.Search.Get("board")
-			category := self.Category()
-			user, err := self.di.User.Get(post.UserId)
-
-			if err != nil {
-				panic(err)
-			}
-
-			// Some data we do use on searches
-			user_data := user.Data()
-			tribute := post.Votes.Up
-			shit := post.Votes.Down
-
-			for _, comment := range post.Comments.Set {
-
-				tribute = tribute + comment.Votes.Up
-				shit = shit + comment.Votes.Down
-			}
-
-			components := make([]string, 0)
-
-			// If the post is a recommendations post then reflect to get the components
-			if post.Type == "recommendations" {
-
-				bindable := reflect.ValueOf(&post.Components).Elem()
-
-				for i := 0; i < bindable.NumField(); i++ {
-
-					field := bindable.Field(i).Interface()
-
-					switch field.(type) {
-					case model.Component:
-
-						component := field.(model.Component)
-
-						if component.Content != "" {
-
-							components = append(components, component.Content)
-						}
-
-					default:
-						continue
-					}
-				}
-			}
-
-			reached, viewed := self.GetReachViews(post.Id)
-			total := reached + viewed
-			final_rate := 0.0
-
-			if total > 101 {
-
-				if reached == 0 {
-
-					reached = 1
-				}
-
-				if viewed == 0 {
-
-					viewed = 1
-				}
-
-				view_rate := 100.0 / float64(reached) * float64(viewed)
-				comment_rate := 100.0 / float64(viewed) * float64(post.Comments.Count)
-				final_rate = (view_rate + comment_rate) / 2.0
-			}
-
-			item := AlgoliaPostModel{
-				Id:       post.Id.Hex(),
-				Title:    post.Title,
-				Content:  post.Content,
-				Slug:     post.Slug,
-				Comments: post.Comments.Count,
-				User: AlgoliaUserModel{
-					Id:       user_data.Id.Hex(),
-					Username: user_data.UserName,
-					Image:    user_data.Image,
-					Email:    user_data.Email,
-				},
-				Category: AlgoliaCategoryModel{
-					Id:   post.Category.Hex(),
-					Name: category.Name,
-				},
-				Popularity: final_rate,
-				Created:    post.Created.Unix(),
-				Components: components,
-			}
-
-			var json_object interface{}
-			json_data, err := json.Marshal(item)
-
-			if err != nil {
-				panic(err)
-			}
-
-			err = json.Unmarshal(json_data, &json_object)
-
-			if err != nil {
-				panic(err)
-			}
-
-			_, err = index.UpdateObject(json_object)
-
-			if err != nil {
-				panic(err)
-			}
-		}
 	}
 }

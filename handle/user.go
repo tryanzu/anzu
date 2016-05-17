@@ -7,7 +7,9 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/fernandez14/go-siftscience"
 	"github.com/fernandez14/spartangeek-blacker/model"
+	"github.com/fernandez14/spartangeek-blacker/modules/content"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
+	"github.com/fernandez14/spartangeek-blacker/modules/feed"
 	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/fernandez14/spartangeek-blacker/modules/security"
@@ -38,6 +40,7 @@ type UserAPI struct {
 	ConfigService *config.Config               `inject:""`
 	S3Bucket      *s3.Bucket                   `inject:""`
 	User          *user.Module                 `inject:""`
+	Content       *content.Module              `inject:""`
 	Gaming        *gaming.Module               `inject:""`
 	Security      *security.Module             `inject:""`
 	Collector     CollectorAPI                 `inject:"inline"`
@@ -613,6 +616,7 @@ func (di *UserAPI) UserGetActivity(c *gin.Context) {
 
 	// Get the database interface from the DI
 	database := di.DataService.Database
+	content := di.Content
 	user_id := c.Param("id")
 	kind := c.Param("kind")
 	offset := 0
@@ -659,83 +663,74 @@ func (di *UserAPI) UserGetActivity(c *gin.Context) {
 	switch kind {
 	case "comments":
 
-		var commented_posts []model.PostCommentModel
-		var commented_count model.PostCommentCountModel
-
-		pipeline_line := []bson.M{
-			{
-				"$match": bson.M{"users": usr.Data().Id},
-			},
-			{
-				"$unwind": "$comments.set",
-			},
-			{
-				"$project": bson.M{"title": 1, "slug": 1, "comment": "$comments.set"},
-			},
-			{
-				"$match": bson.M{"comment.user_id": usr.Data().Id},
-			},
-			{
-				"$sort": bson.M{"comment.created_at": -1},
-			},
+		var comments []*feed.Comment
+		var posts []struct {
+			Id    bson.ObjectId `bson:"_id"`
+			Title string        `bson:"title"`
+			Slug  string        `bson:"slug"`
 		}
 
-		pipeline := database.C("posts").Pipe(append(pipeline_line,
-			[]bson.M{
-				{
-					"$limit": limit,
-				},
-				{
-					"$skip": offset,
-				},
-			}...,
-		))
+		posts_map := make(map[string]struct {
+			Id    bson.ObjectId `bson:"_id"`
+			Title string        `bson:"title"`
+			Slug  string        `bson:"slug"`
+		}, 0)
 
-		err := pipeline.All(&commented_posts)
+		err := database.C("comments").Find(bson.M{"user_id": usr.Data().Id, "deleted_at": bson.M{"$exists": false}}).Sort("-created_at").Limit(limit).Skip(offset).All(&comments)
 
 		if err != nil {
 			panic(err)
 		}
 
-		pipeline = database.C("posts").Pipe(append(pipeline_line,
-			[]bson.M{
-				{
-					"$group": bson.M{"_id": nil, "count": bson.M{"$sum": 1}},
-				},
-			}...,
-		))
+		var post_ids []bson.ObjectId
 
-		err = pipeline.One(&commented_count)
-
-		// No results from the aggregation
-		if err != nil {
-
-			commented_count = model.PostCommentCountModel{
-				Count: 0,
-			}
+		for _, c := range comments {
+			post_ids = append(post_ids, c.PostId)
 		}
 
-		for _, post := range commented_posts {
+		err = database.C("posts").Find(bson.M{"_id": bson.M{"$in": post_ids}}).Select(bson.M{"title": 1, "slug": 1}).All(&posts)
 
-			activity = append(activity, model.UserActivity{
-				Id:        post.Id,
-				Title:     post.Title,
-				Slug:      post.Slug,
-				Content:   post.Comment.Content,
-				Created:   post.Comment.Created,
-				Directive: "commented",
-				Author: map[string]string{
-					"id":    usr.Data().Id.Hex(),
-					"name":  usr.Data().UserName,
-					"email": usr.Data().Email,
-				},
-			})
+		if err != nil {
+			panic(err)
+		}
+
+		for _, p := range posts {
+			posts_map[p.Id.Hex()] = p
+		}
+
+		count, err := database.C("comments").Find(bson.M{"user_id": usr.Data().Id, "deleted_at": bson.M{"$exists": false}}).Count()
+
+		if err != nil {
+			panic(err)
+		}
+
+		for _, c := range comments {
+
+			post, exists := posts_map[c.PostId.Hex()]
+
+			if exists {
+
+				content.ParseTags(c)
+				activity = append(activity, model.UserActivity{
+					Id:        post.Id,
+					Title:     post.Title,
+					Slug:      post.Slug,
+					Content:   c.Content,
+					Created:   c.Created,
+					Directive: "commented",
+					Author: map[string]string{
+						"id":    usr.Data().Id.Hex(),
+						"name":  usr.Data().UserName,
+						"email": usr.Data().Email,
+					},
+				})
+			}
 		}
 
 		// Sort the full set of posts by the time they happened
 		sort.Sort(model.ByCreatedAt(activity))
 
-		c.JSON(200, gin.H{"count": commented_count.Count, "activity": activity})
+		c.JSON(200, gin.H{"count": count, "activity": activity})
 
 	default:
 

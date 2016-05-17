@@ -10,7 +10,11 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/mitchellh/goamz/s3"
 	"github.com/olebedev/config"
+
+	"regexp"
 )
+
+var legalSlug = regexp.MustCompile(`^([a-zA-Z0-9\-\.|/]+)$`)
 
 type API struct {
 	Feed       *feed.FeedModule             `inject:""`

@@ -4,11 +4,72 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"gopkg.in/mgo.v2/bson"
+
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
 )
+
+func (self *NotificationsModule) Mention(parseableMeta map[string]interface{}, user_id, target_user bson.ObjectId) {
+
+	defer self.Errors.Recover()
+
+	usr, err := self.User.Get(user_id)
+
+	if err != nil {
+		panic(fmt.Sprintf("Could not get user while notifying mention (user_id: %v, target_user: %v). It said: %v", user_id, target_user, err))
+	}
+
+	position, exists := parseableMeta["position"].(int)
+
+	if !exists {
+		panic(fmt.Sprintf("Position does not exists in parseable meta (%v)", parseableMeta))
+	}
+
+	post, exists := parseableMeta["post"].(map[string]interface{})
+
+	if !exists {
+		panic(fmt.Sprintf("Post does not exists in parseable meta (%v)", parseableMeta))
+	}
+
+	post_id, exists := post["id"].(bson.ObjectId)
+
+	if !exists {
+		panic(fmt.Sprintf("post_id does not exists in parseable meta (%v)", parseableMeta))
+	}
+
+	post_slug, exists := post["slug"].(string)
+
+	if !exists {
+		panic(fmt.Sprintf("post_slug does not exists in parseable meta (%v)", parseableMeta))
+	}
+
+	post_title, exists := post["title"].(string)
+
+	if !exists {
+		panic(fmt.Sprintf("post_title does not exists in parseable meta (%v)", parseableMeta))
+	}
+
+	notification := model.UserFirebaseNotification{
+		UserId:       target_user,
+		RelatedId:    post_id,
+		RelatedExtra: post_slug,
+		Position:     position,
+		Username:     usr.Name(),
+		Text:         post_title,
+		Related:      "mention",
+		Seen:         false,
+		Image:        usr.Data().Image,
+		Created:      time.Now(),
+		Updated:      time.Now(),
+	}
+
+	broadcaster := self.Broadcaster
+	broadcaster.Send(notification)
+
+}
 
 func (di *NotificationsModule) ParseContentMentions(obj MentionParseObject) {
 

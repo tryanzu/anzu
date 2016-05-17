@@ -8,12 +8,14 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/cart"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/checkout"
+	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/comments"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/components"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/deals"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/massdrop"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/posts"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/products"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/users"
+	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/votes"
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/olebedev/config"
@@ -24,10 +26,11 @@ type Module struct {
 	Dependencies      ModuleDI
 	Posts             handle.PostAPI
 	Votes             handle.VoteAPI
+	VotesFactory      votes.API
 	Users             handle.UserAPI
 	Categories        handle.CategoryAPI
 	Elections         handle.ElectionAPI
-	Comments          handle.CommentAPI
+	CommentsFactory   comments.API
 	Parts             handle.PartAPI
 	Stats             handle.StatAPI
 	Middlewares       handle.MiddlewareAPI
@@ -70,10 +73,11 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.Checkout},
 		&inject.Object{Value: &module.Products},
 		&inject.Object{Value: &module.Votes},
+		&inject.Object{Value: &module.VotesFactory},
 		&inject.Object{Value: &module.Users},
 		&inject.Object{Value: &module.Categories},
 		&inject.Object{Value: &module.Elections},
-		&inject.Object{Value: &module.Comments},
+		&inject.Object{Value: &module.CommentsFactory},
 		&inject.Object{Value: &module.Parts},
 		&inject.Object{Value: &module.Stats},
 		&inject.Object{Value: &module.Middlewares},
@@ -183,7 +187,8 @@ func (module *Module) Run() {
 		// Post routes
 		v1.GET("/feed", module.Posts.FeedGet)
 		v1.GET("/post", module.Posts.FeedGet)
-		v1.GET("/posts/:id", module.Posts.PostsGetOne)
+		v1.GET("/posts/:id", module.PostsFactory.Get)
+		v1.GET("/postss/:id", module.Posts.PostsGetOne)
 		v1.GET("/posts/:id/comments", module.PostsFactory.GetPostComments)
 		v1.GET("/posts/:id/light", module.Posts.GetLightweight)
 		v1.GET("/post/s/:id", module.Posts.PostsGetOne)
@@ -265,9 +270,9 @@ func (module *Module) Run() {
 			v1.GET("/auth/logout", module.Users.UserLogout)
 
 			// Comment routes
-			authorized.POST("/post/comment/:id", module.Comments.CommentAdd)
-			authorized.PUT("/post/comment/:id/:index", module.Comments.CommentUpdate)
-			authorized.DELETE("/post/comment/:id/:index", module.Comments.CommentDelete)
+			authorized.POST("/post/comment/:id", module.CommentsFactory.Add)
+			authorized.PUT("/post/comment/:id", module.CommentsFactory.Update)
+			authorized.DELETE("/post/comment/:id", module.CommentsFactory.Delete)
 
 			// Post routes
 			authorized.POST("/post", module.PostsFactory.Create)
@@ -289,8 +294,8 @@ func (module *Module) Run() {
 			// Gamification routes
 			authorized.POST("/badges/buy/:id", module.Gaming.BuyBadge)
 
-			// // Votes routes
-			authorized.POST("/vote/comment/:id", module.Votes.VoteComment)
+			// Votes routes
+			authorized.POST("/vote/comment/:id", module.VotesFactory.Comment)
 			authorized.POST("/vote/component/:id", module.Votes.VoteComponent)
 			authorized.POST("/vote/post/:id", module.Votes.VotePost)
 
