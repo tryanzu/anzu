@@ -53,7 +53,7 @@ func (module Module) Run(name string) {
 		"custom-invoicing":        module.GenerateCustomInvoice,
 		"custom-invoices":         module.GenerateCustomInvoices,
 		"migrate-comments":        module.MigrateDeletedComment,
-		"migrate-chosen-comments": module.MigrateChosenComment(),
+		"migrate-chosen-comments": module.MigrateChosenComment,
 	}
 
 	if handler, exists := commands[name]; exists {
