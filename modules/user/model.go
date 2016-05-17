@@ -54,6 +54,7 @@ type UserSimple struct {
 	Roles        []UserRole    `bson:"roles" json:"roles,omitempty"`
 	UserName     string        `bson:"username" json:"username"`
 	UserNameSlug string        `bson:"username_slug" json:"username_slug"`
+	Gaming       UserGaming    `bson:"gaming,omitempty" json:"gaming,omitempty"`
 	Image        string        `bson:"image" json:"image,omitempty"`
 	Description  string        `bson:"description" json:"description"`
 	Validated    bool          `bson:"validated" json:"validated"`
@@ -89,7 +90,7 @@ type UserBasic struct {
 }
 
 func (u UserBasic) ToSimple() UserSimple {
-	return UserSimple{u.Id, u.Roles, u.UserName, u.UserNameSlug, u.Image, u.Description, u.Validated, u.Created}
+	return UserSimple{u.Id, u.Roles, u.UserName, u.UserNameSlug, u.Gaming, u.Image, u.Description, u.Validated, u.Created}
 }
 
 type UserRole struct {
