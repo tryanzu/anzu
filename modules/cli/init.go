@@ -41,18 +41,19 @@ type fn func()
 func (module Module) Run(name string) {
 
 	commands := map[string]fn{
-		"slug-fix":           module.SlugFix,
-		"codes-fix":          module.Codes,
-		"index-posts":        module.IndexAlgolia,
-		"index-components":   module.IndexComponentsAlgolia,
-		"send-confirmations": module.ConfirmationEmails,
-		"replace-url":        module.ReplaceURL,
-		"test-transmit":      module.TestSocket,
-		"first-newsletter":   module.FirstNewsletter,
-		"massdrop-invoicing": module.GenerateMassdropInvoices,
-		"custom-invoicing":   module.GenerateCustomInvoice,
-		"custom-invoices":    module.GenerateCustomInvoices,
-		"migrate-comments":   module.MigrateDeletedComment,
+		"slug-fix":                module.SlugFix,
+		"codes-fix":               module.Codes,
+		"index-posts":             module.IndexAlgolia,
+		"index-components":        module.IndexComponentsAlgolia,
+		"send-confirmations":      module.ConfirmationEmails,
+		"replace-url":             module.ReplaceURL,
+		"test-transmit":           module.TestSocket,
+		"first-newsletter":        module.FirstNewsletter,
+		"massdrop-invoicing":      module.GenerateMassdropInvoices,
+		"custom-invoicing":        module.GenerateCustomInvoice,
+		"custom-invoices":         module.GenerateCustomInvoices,
+		"migrate-comments":        module.MigrateDeletedComment,
+		"migrate-chosen-comments": module.MigrateChosenComment(),
 	}
 
 	if handler, exists := commands[name]; exists {
@@ -249,6 +250,49 @@ func (module Module) MigrateDeletedComment() {
 	for pipeline.Next(&comment) {
 
 		err := database.C("comments").Update(bson.M{"post_id": comment.Id, "user_id": comment.Comment.UserId, "position": comment.Position}, bson.M{"$set": bson.M{"deleted_at": comment.Comment.Deleted}})
+
+		if err == nil {
+			fmt.Printf(".")
+		} else {
+			fmt.Printf("-")
+		}
+	}
+}
+
+func (module Module) MigrateChosenComment() {
+
+	var comment struct {
+		Id       bson.ObjectId `bson:"_id"`
+		Position int           `bson:"position"`
+		Title    string        `bson:"title"`
+		Comment  struct {
+			UserId bson.ObjectId `bson:"user_id"`
+			Chosen bool          `bson:"chosen"`
+		} `bson:"comment"`
+	}
+
+	database := module.Mongo.Database
+	from, _ := time.Parse(time.RFC3339, "2012-11-01T22:08:41+00:00")
+
+	// Get all users
+	pipeline := database.C("posts_backup").Pipe([]bson.M{
+		{
+			"$match": bson.M{"solved": true},
+		},
+		{
+			"$unwind": bson.M{"path": "$comments.set", "includeArrayIndex": "position"},
+		},
+		{
+			"$project": bson.M{"title": 1, "position": 1, "comment": "$comments.set"},
+		},
+		{
+			"$match": bson.M{"comment.chosen": true},
+		},
+	}).Iter()
+
+	for pipeline.Next(&comment) {
+
+		err := database.C("comments").Update(bson.M{"post_id": comment.Id, "user_id": comment.Comment.UserId, "position": comment.Position}, bson.M{"$set": bson.M{"chosen": true}})
 
 		if err == nil {
 			fmt.Printf(".")
