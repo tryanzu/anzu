@@ -41,19 +41,19 @@ type fn func()
 func (module Module) Run(name string) {
 
 	commands := map[string]fn{
-		"slug-fix":                module.SlugFix,
-		"codes-fix":               module.Codes,
-		"index-posts":             module.IndexAlgolia,
-		"index-components":        module.IndexComponentsAlgolia,
-		"send-confirmations":      module.ConfirmationEmails,
-		"replace-url":             module.ReplaceURL,
-		"test-transmit":           module.TestSocket,
-		"first-newsletter":        module.FirstNewsletter,
-		"massdrop-invoicing":      module.GenerateMassdropInvoices,
-		"custom-invoicing":        module.GenerateCustomInvoice,
-		"custom-invoices":         module.GenerateCustomInvoices,
-		"migrate-comments":        module.MigrateDeletedComment,
-		"migrate-chosen-comments": module.MigrateChosenComment,
+		"slug-fix":           module.SlugFix,
+		"codes-fix":          module.Codes,
+		"index-posts":        module.IndexAlgolia,
+		"index-components":   module.IndexComponentsAlgolia,
+		"send-confirmations": module.ConfirmationEmails,
+		"replace-url":        module.ReplaceURL,
+		"test-transmit":      module.TestSocket,
+		"first-newsletter":   module.FirstNewsletter,
+		"massdrop-invoicing": module.GenerateMassdropInvoices,
+		"custom-invoicing":   module.GenerateCustomInvoice,
+		"custom-invoices":    module.GenerateCustomInvoices,
+		"migrate-comments":   module.MigrateDeletedComment,
+		"migrate-ccomments":  module.MigrateChosenComment,
 	}
 
 	if handler, exists := commands[name]; exists {
@@ -261,6 +261,11 @@ func (module Module) MigrateDeletedComment() {
 
 func (module Module) MigrateChosenComment() {
 
+	var start string
+
+	fmt.Println("Press enter to begin migration...")
+	fmt.Scanln(&start)
+
 	var comment struct {
 		Id       bson.ObjectId `bson:"_id"`
 		Position int           `bson:"position"`
@@ -272,7 +277,6 @@ func (module Module) MigrateChosenComment() {
 	}
 
 	database := module.Mongo.Database
-	from, _ := time.Parse(time.RFC3339, "2012-11-01T22:08:41+00:00")
 
 	// Get all users
 	pipeline := database.C("posts_backup").Pipe([]bson.M{
