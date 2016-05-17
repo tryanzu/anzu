@@ -52,7 +52,7 @@ func (module Module) Run(name string) {
 		"massdrop-invoicing": module.GenerateMassdropInvoices,
 		"custom-invoicing":   module.GenerateCustomInvoice,
 		"custom-invoices":    module.GenerateCustomInvoices,
-		"migrate-comments":   module.MigrateDeletedCommentcl,
+		"migrate-comments":   module.MigrateDeletedComment,
 	}
 
 	if handler, exists := commands[name]; exists {
