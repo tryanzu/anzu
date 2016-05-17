@@ -5,6 +5,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 
 	"fmt"
+	"strconv"
 	"time"
 )
 
@@ -26,7 +27,7 @@ func (self *NotificationsModule) Comment(post_slug, post_title string, position 
 		UserId:       post_user,
 		RelatedId:    post_id,
 		RelatedExtra: post_slug,
-		Position:     position,
+		Position:     strconv.Itoa(position),
 		Title:        title,
 		Text:         message,
 		Related:      "comment",
