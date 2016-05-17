@@ -51,12 +51,13 @@ type UserPrivate struct {
 
 type UserSimple struct {
 	Id           bson.ObjectId `bson:"_id,omitempty" json:"id"`
+	Roles        []UserRole    `bson:"roles" json:"roles,omitempty"`
 	UserName     string        `bson:"username" json:"username"`
 	UserNameSlug string        `bson:"username_slug" json:"username_slug"`
 	Image        string        `bson:"image" json:"image,omitempty"`
 	Description  string        `bson:"description" json:"description"`
+	Validated    bool          `bson:"validated" json:"validated"`
 	Created      time.Time     `bson:"created_at" json:"created_at"`
-	Updated      time.Time     `bson:"updated_at" json:"updated_at"`
 }
 
 type UserRecoveryToken struct {
@@ -68,13 +69,14 @@ type UserRecoveryToken struct {
 	Updated time.Time     `bson:"updated_at" json:"updated_at"`
 }
 
-var UserSimpleFields bson.M = bson.M{"id": 1, "username": 1, "username_slug": 1, "image": 1, "created_at": 1, "updated_at": 1}
+var UserSimpleFields bson.M = bson.M{"id": 1, "username": 1, "username_slug": 1, "image": 1, "gaming.level": 1, "gaming.swords": 1, "roles": 1, "validated": 1, "created_at": 1}
 var UserBasicFields bson.M = bson.M{"id": 1, "username": 1, "facebook": 1, "email": 1, "validated": 1, "banned": 1, "username_slug": 1, "image": 1, "gaming": 1, "created_at": 1, "updated_at": 1}
 
 type UserBasic struct {
 	Id           bson.ObjectId `bson:"_id,omitempty" json:"id"`
 	UserName     string        `bson:"username" json:"username"`
 	UserNameSlug string        `bson:"username_slug" json:"username_slug"`
+	Roles        []UserRole    `bson:"roles" json:"roles,omitempty"`
 	Image        string        `bson:"image" json:"image,omitempty"`
 	Description  string        `bson:"description" json:"description"`
 	Email        string        `bson:"email" json:"email,omitempty"`
@@ -87,7 +89,7 @@ type UserBasic struct {
 }
 
 func (u UserBasic) ToSimple() UserSimple {
-	return UserSimple{u.Id, u.UserName, u.UserNameSlug, u.Image, u.Description, u.Created, u.Updated}
+	return UserSimple{u.Id, u.Roles, u.UserName, u.UserNameSlug, u.Image, u.Description, u.Validated, u.Created}
 }
 
 type UserRole struct {
@@ -101,9 +103,9 @@ type UserStats struct {
 
 type UserGaming struct {
 	Swords  int         `bson:"swords" json:"swords"`
-	Tribute int         `bson:"tribute" json:"tribute"`
-	Shit    int         `bson:"shit" json:"shit"`
-	Coins   int         `bson:"coins" json:"coins"`
+	Tribute int         `bson:"tribute,omitempty" json:"tribute,omitempty"`
+	Shit    int         `bson:"shit,omitempty" json:"shit,omitempty"`
+	Coins   int         `bson:"coins,omitempty" json:"coins,omitempty"`
 	Level   int         `bson:"level" json:"level"`
 	Badges  []UserBadge `bson:"badges,omitempty" json:"badges,omitempty"`
 }
