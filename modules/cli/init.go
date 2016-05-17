@@ -52,6 +52,7 @@ func (module Module) Run(name string) {
 		"massdrop-invoicing": module.GenerateMassdropInvoices,
 		"custom-invoicing":   module.GenerateCustomInvoice,
 		"custom-invoices":    module.GenerateCustomInvoices,
+		"migrate-comments":   module.MigrateDeletedCommentcl,
 	}
 
 	if handler, exists := commands[name]; exists {
@@ -214,6 +215,46 @@ func (module Module) SlugFix() {
 		}
 
 		fmt.Printf(".")
+	}
+}
+
+func (module Module) MigrateDeletedComment() {
+
+	var comment struct {
+		Id       bson.ObjectId `bson:"_id"`
+		Position int           `bson:"position"`
+		Title    string        `bson:"title"`
+		Comment  struct {
+			UserId  bson.ObjectId `bson:"user_id"`
+			Deleted time.Time     `bson:"deleted_at"`
+		} `bson:"comment"`
+	}
+
+	database := module.Mongo.Database
+	from, _ := time.Parse(time.RFC3339, "2012-11-01T22:08:41+00:00")
+
+	// Get all users
+	pipeline := database.C("posts_backup").Pipe([]bson.M{
+		{
+			"$unwind": bson.M{"path": "$comments.set", "includeArrayIndex": "position"},
+		},
+		{
+			"$project": bson.M{"title": 1, "position": 1, "comment": "$comments.set"},
+		},
+		{
+			"$match": bson.M{"comment.deleted_at": bson.M{"$gte": from}},
+		},
+	}).Iter()
+
+	for pipeline.Next(&comment) {
+
+		err := database.C("comments").Update(bson.M{"post_id": comment.Id, "user_id": comment.Comment.UserId, "position": comment.Position}, bson.M{"$set": bson.M{"deleted_at": comment.Comment.Deleted}})
+
+		if err == nil {
+			fmt.Printf(".")
+		} else {
+			fmt.Printf("-")
+		}
 	}
 }
 
