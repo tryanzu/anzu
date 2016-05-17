@@ -12,9 +12,11 @@ func (this API) GetPostComments(c *gin.Context) {
 	post_id := c.Param("id")
 	offsetQuery := c.Query("offset")
 	limitQuery := c.Query("limit")
+	commentStr := c.Query("id")
 
 	var offset int = 0
 	var limit int = 0
+	var cid bson.ObjectId
 
 	if bson.IsObjectIdHex(post_id) == false {
 		c.JSON(400, gin.H{"message": "Invalid request, id not valid.", "status": "error"})
@@ -24,16 +26,20 @@ func (this API) GetPostComments(c *gin.Context) {
 	id := bson.ObjectIdHex(post_id)
 	offsetC, err := strconv.Atoi(offsetQuery)
 
-	if err != nil {
+	if offsetQuery != "" && err != nil {
 		c.JSON(400, gin.H{"message": "Invalid request, offset not valid.", "status": "error"})
 		return
 	}
 
 	limitC, err := strconv.Atoi(limitQuery)
 
-	if err != nil {
+	if limitQuery != "" && err != nil {
 		c.JSON(400, gin.H{"message": "Invalid request, limit not valid.", "status": "error"})
 		return
+	}
+
+	if commentStr != "" && bson.IsObjectIdHex(commentStr) {
+		cid = bson.ObjectIdHex(commentStr)
 	}
 
 	offset = offsetC
@@ -47,7 +53,12 @@ func (this API) GetPostComments(c *gin.Context) {
 	}
 
 	// Needed data loading to show post
-	post.LoadComments(limit, offset)
+	if cid.Valid() {
+		post.LoadCommentById(cid)
+	} else {
+		post.LoadComments(limit, offset)
+	}
+
 	post.LoadUsers()
 
 	_, signed_in := c.Get("token")

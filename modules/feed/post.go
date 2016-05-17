@@ -118,6 +118,30 @@ func (self *Post) LoadComments(take, skip int) {
 	}
 }
 
+// Comment loading by ID for post
+func (self *Post) LoadCommentById(id bson.ObjectId) error {
+
+	var c *Comment
+
+	// Use content module to run processors chain
+	content := self.di.Content
+	database := self.di.Mongo.Database
+	err := database.C("comments").Find(bson.M{"_id": id, "deleted_at": bson.M{"$exists": false}}).One(&c)
+
+	if err != nil {
+		self.Comments.Set = make([]*Comment, 0)
+		return err
+	}
+
+	self.Comments.Set = []*Comment{c}
+
+	for _, comment := range self.Comments.Set {
+		content.ParseTags(comment)
+	}
+
+	return nil
+}
+
 // Push Comment on the post
 func (self *Post) PushComment(c string, user_id bson.ObjectId) *Comment {
 
