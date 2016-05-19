@@ -1,5 +1,5 @@
-hash: 6224273f05f2a295265decf685fcbdd49a136bafb918230fad720278db2d41bb
-updated: 2016-05-13T17:32:36.704547235-05:00
+hash: a3426f76e41f2e75a01e498a5f12dce1a066a107f898e12aca4dbf2c579f808d
+updated: 2016-05-18T20:35:26.181968857-05:00
 imports:
 - name: collectd.org
   version: 9fc824c70f713ea0f058a07b49a4c563ef2a3b98
@@ -147,6 +147,8 @@ imports:
   version: f7ee69f31298ecbe5d2b349c711e2547a617d398
 - name: github.com/kr/text
   version: 7cafcd837844e784b526369c9bce262804aebc60
+- name: github.com/leebenson/paypal
+  version: c3509b40ec2e4824dbbd2b8afe31012734f1eebc
 - name: github.com/magiconair/properties
   version: c265cfa48dda6474e208715ca93e987829f572f8
 - name: github.com/manucorporat/sse

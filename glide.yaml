@@ -59,3 +59,4 @@ import:
 - package: github.com/dustin/go-humanize
 - package: github.com/fernandez14/go-enlacefiscal
 - package: github.com/fernandez14/go-siftscience
+- package: github.com/leebenson/paypal
