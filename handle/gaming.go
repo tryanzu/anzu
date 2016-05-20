@@ -54,7 +54,7 @@ func (di *GamingAPI) BuyBadge(c *gin.Context) {
 	user := di.Gaming.Get(user_id)
 
 	// Get the badge we want to adquire
-	err := user.AcquireBadge(bson.ObjectIdHex(id))
+	err := user.AcquireBadge(bson.ObjectIdHex(id), true)
 
 	if err != nil {
 

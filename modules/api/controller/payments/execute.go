@@ -2,7 +2,6 @@ package payments
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/leebenson/paypal"
 	"gopkg.in/mgo.v2/bson"
 
 	"time"
@@ -23,9 +22,7 @@ func (this API) PaypalExecute(c *gin.Context) {
 			return
 		}
 
-		clientID := "ASkcCWSuhGXVNim-dfAJ9Zlxk41iLceeLLSv7_dvBZY-Dob1sGBVFaMgIUKaOyHb9TmjWXgV83xGGdK2"
-		secret := "EI25dmZt7iiw_BiybAs7p2_6YZN198ULXg7T9M87hokdDFEM2PKeHrle2hCTJANexJQoEgrBy11Rc0Nb"
-		client := paypal.NewClient(clientID, secret, paypal.APIBaseSandBox)
+		client := this.GetPaypalClient()
 		payment, err := client.ExecutePayment(m.PaymentId, m.PayerId, nil)
 
 		if err != nil {

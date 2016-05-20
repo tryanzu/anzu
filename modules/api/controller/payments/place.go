@@ -16,9 +16,12 @@ func (this API) Place(c *gin.Context) {
 	if c.Bind(&m) == nil {
 
 		database := this.Mongo.Database
-		clientID := "ASkcCWSuhGXVNim-dfAJ9Zlxk41iLceeLLSv7_dvBZY-Dob1sGBVFaMgIUKaOyHb9TmjWXgV83xGGdK2"
-		secret := "EI25dmZt7iiw_BiybAs7p2_6YZN198ULXg7T9M87hokdDFEM2PKeHrle2hCTJANexJQoEgrBy11Rc0Nb"
-		client := paypal.NewClient(clientID, secret, paypal.APIBaseSandBox)
+		client := this.GetPaypalClient()
+		baseUrl, err := this.Config.String("application.siteUrl")
+
+		if err != nil {
+			panic("Could not get siteUrl from config.")
+		}
 
 		payment := paypal.Payment{
 			Intent: "sale",
@@ -53,8 +56,8 @@ func (this API) Place(c *gin.Context) {
 				},
 			},
 			RedirectURLs: &paypal.RedirectURLs{
-				CancelURL: "https://spartangeek.com/donacion/fallida/",
-				ReturnURL: "https://spartangeek.com/donacion/exitosa/",
+				CancelURL: baseUrl + "/donacion/error/",
+				ReturnURL: baseUrl + "/donacion/exitosa/",
 			},
 		}
 

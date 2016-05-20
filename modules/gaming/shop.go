@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func (self *User) AcquireBadge(id bson.ObjectId) error {
+func (self *User) AcquireBadge(id bson.ObjectId, validation bool) error {
 
 	var badge BadgeModel
 
@@ -18,42 +18,44 @@ func (self *User) AcquireBadge(id bson.ObjectId) error {
 	err := database.C("badges").Find(bson.M{"_id": id}).One(&badge)
 
 	if err != nil {
-
 		return exceptions.NotFound{"Invalid badge id, not found."}
 	}
 
-	if badge.Type != "clothes" && badge.Type != "weapon" && badge.Type != "power" && badge.Type != "armour" {
+	if validation {
 
-		return exceptions.UnexpectedValue{"Not a valid type of badge to get acquired."}
-	}
+		if badge.Type != "clothes" && badge.Type != "weapon" && badge.Type != "power" && badge.Type != "armour" {
 
-	if badge.Coins > 0 && usr.Gaming.Coins < badge.Coins {
-
-		return exceptions.OutOfBounds{"Not enough coins to buy item."}
-	}
-
-	if badge.RequiredLevel > 0 && usr.Gaming.Level < badge.RequiredLevel {
-
-		return exceptions.OutOfBounds{"Not enough level."}
-	}
-
-	if badge.RequiredBadge.Valid() {
-
-		var user_valid bool = false
-
-		user_badges := usr.Gaming.Badges
-
-		for _, user_badge := range user_badges {
-
-			if user_badge.Id == badge.RequiredBadge {
-
-				user_valid = true
-			}
+			return exceptions.UnexpectedValue{"Not a valid type of badge to get acquired."}
 		}
 
-		if !user_valid {
+		if badge.Coins > 0 && usr.Gaming.Coins < badge.Coins {
 
-			return exceptions.OutOfBounds{"Don't have required badge."}
+			return exceptions.OutOfBounds{"Not enough coins to buy item."}
+		}
+
+		if badge.RequiredLevel > 0 && usr.Gaming.Level < badge.RequiredLevel {
+
+			return exceptions.OutOfBounds{"Not enough level."}
+		}
+
+		if badge.RequiredBadge.Valid() {
+
+			var user_valid bool = false
+
+			user_badges := usr.Gaming.Badges
+
+			for _, user_badge := range user_badges {
+
+				if user_badge.Id == badge.RequiredBadge {
+
+					user_valid = true
+				}
+			}
+
+			if !user_valid {
+
+				return exceptions.OutOfBounds{"Don't have required badge."}
+			}
 		}
 	}
 
