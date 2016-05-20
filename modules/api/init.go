@@ -274,6 +274,7 @@ func (module *Module) Run() {
 
 			// Payments routes
 			authorized.POST("/payments", module.Payments.Place)
+			authorized.POST("/payments/execute", module.Payments.PaypalExecute)
 
 			// Comment routes
 			authorized.POST("/post/comment/:id", module.CommentsFactory.Add)

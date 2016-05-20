@@ -23,3 +23,8 @@ type PlacePayload struct {
 	Amount      float64 `json:"amount" binding:"required"`
 	Description string  `json:"description" binding:"required"`
 }
+
+type ExecutePayload struct {
+	PaymentId string `json:"paymentID" binding:"required"`
+	PayerId   string `json:"payerID" binding:"required"`
+}

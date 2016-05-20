@@ -65,9 +65,13 @@ func (this API) Place(c *gin.Context) {
 			return
 		}
 
+		id := c.MustGet("user_id")
+		user_id := bson.ObjectIdHex(id.(string))
+
 		p := Payment{
 			Type:      m.Type,
 			Amount:    m.Amount,
+			UserId:    user_id,
 			Gateway:   "paypal",
 			GatewayId: dopayment.ID,
 			Meta:      dopayment,
@@ -102,6 +106,7 @@ func (this API) Place(c *gin.Context) {
 
 type Payment struct {
 	Id        bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
+	UserId    bson.ObjectId `bson:"user_id" json:"user_id"`
 	Type      string        `bson:"type" json:"type"`
 	Amount    float64       `bson:"amount" json:"amount"`
 	Gateway   string        `bson:"gateway" json:"gateway"`
