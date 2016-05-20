@@ -12,6 +12,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/components"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/deals"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/massdrop"
+	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/payments"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/posts"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/products"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/users"
@@ -54,6 +55,7 @@ type Module struct {
 	Lead              controller.LeadAPI
 	ComponentsFactory components.API
 	UsersFactory      users.API
+	Payments          payments.API
 }
 
 type ModuleDI struct {
@@ -94,6 +96,7 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.Owners},
 		&inject.Object{Value: &module.Deals},
 		&inject.Object{Value: &module.Lead},
+		&inject.Object{Value: &module.Payments},
 	)
 
 	if err != nil {
@@ -268,6 +271,9 @@ func (module *Module) Run() {
 		{
 			// Auth routes
 			v1.GET("/auth/logout", module.Users.UserLogout)
+
+			// Payments routes
+			authorized.POST("/payments", module.Payments.Place)
 
 			// Comment routes
 			authorized.POST("/post/comment/:id", module.CommentsFactory.Add)

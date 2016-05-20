@@ -2,10 +2,6 @@ package payments
 
 import (
 	"github.com/dustin/go-humanize"
-	"github.com/fernandez14/spartangeek-blacker/modules/cart"
-	"github.com/fernandez14/spartangeek-blacker/modules/gcommerce"
-	"github.com/fernandez14/spartangeek-blacker/modules/mail"
-	"github.com/fernandez14/spartangeek-blacker/modules/queue"
 	"github.com/gin-gonic/gin"
 	"github.com/leebenson/paypal"
 	"gopkg.in/mgo.v2/bson"
@@ -100,7 +96,7 @@ func (this API) Place(c *gin.Context) {
 			return
 		}
 
-		c.JSON(200, gin.H{"status": "okay", "response": gin.M{"approval_url": approval}})
+		c.JSON(200, gin.H{"status": "okay", "response": gin.H{"approval_url": approval}})
 	}
 }
 
