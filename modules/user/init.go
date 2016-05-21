@@ -77,7 +77,7 @@ func (module *Module) GetTopDonators() []map[string]interface{} {
 	var payments []payments.Payment
 
 	database := module.Mongo.Database
-	err := database.C("payments").Find(bson.M{"type": "donation"}).Sort("-amount").Limit(20).All(&payments)
+	err := database.C("payments").Find(bson.M{"type": "donation", "status": "confirmed"}).Sort("-amount").Limit(20).All(&payments)
 
 	if err != nil {
 		panic(err)
