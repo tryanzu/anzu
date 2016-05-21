@@ -108,8 +108,9 @@ func (module *Module) GetTopDonators() []map[string]interface{} {
 
 		usr := usersMap[p.UserId.Hex()]
 		data = append(data, map[string]interface{}{
-			"amount": p.Amount,
-			"user":   usr,
+			"created_at": p.Created,
+			"amount":     p.Amount,
+			"user":       usr,
 		})
 	}
 
