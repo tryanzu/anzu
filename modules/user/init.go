@@ -4,6 +4,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/fernandez14/spartangeek-blacker/modules/mail"
+	"github.com/fernandez14/spartangeek-blacker/modules/payments"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -21,9 +22,9 @@ func Boot() *Module {
 }
 
 type Module struct {
-	Mongo    *mongo.Service `inject:""`
-	Mail     *mail.Module   `inject:""`
-	Errors   *exceptions.ExceptionsModule `inject:""`
+	Mongo  *mongo.Service               `inject:""`
+	Mail   *mail.Module                 `inject:""`
+	Errors *exceptions.ExceptionsModule `inject:""`
 }
 
 // Gets an instance of a user
@@ -69,6 +70,50 @@ func (module *Module) Get(usr interface{}) (*One, error) {
 	}
 
 	return user, nil
+}
+
+func (module *Module) GetTopDonators() []map[string]interface{} {
+
+	var payments []payments.Payment
+
+	database := module.Mongo.Database
+	err := database.C("payments").Find(bson.M{"type": "donation"}).Sort("-amount").Limit(20).All(&payments)
+
+	if err != nil {
+		panic(err)
+	}
+
+	var list []bson.ObjectId
+
+	for _, p := range payments {
+		list = append(list, p.UserId)
+	}
+
+	var users []UserSimple
+
+	usersMap := map[string]UserSimple{}
+	err = database.C("users").Find(bson.M{"_id": bson.M{"$in": list}}).Select(UserSimpleFields).All(&users)
+
+	if err != nil {
+		panic(err)
+	}
+
+	for _, u := range users {
+		usersMap[u.Id.Hex()] = u
+	}
+
+	data := []map[string]interface{}{}
+
+	for _, p := range payments {
+
+		usr := usersMap[p.UserId.Hex()]
+		data = append(data, map[string]interface{}{
+			"amount": p.Amount,
+			"user":   usr,
+		})
+	}
+
+	return data
 }
 
 // Signup a user with email and username checks
@@ -139,20 +184,20 @@ func (module *Module) SignUp(email, username, password, referral string) (*One, 
 
 	usr := &UserPrivate{
 		User: User{
-			Id:               id,
-			UserName:         username,
-			UserNameSlug:     slug,
-			Description:      "",
-			Profile:          profile,
-			Created:          time.Now(),
-			Permissions:      make([]string, 0),
-			NameChanges:      1,
+			Id:           id,
+			UserName:     username,
+			UserNameSlug: slug,
+			Description:  "",
+			Profile:      profile,
+			Created:      time.Now(),
+			Permissions:  make([]string, 0),
+			NameChanges:  1,
 			Roles: []UserRole{
 				{
 					Name: "user",
 				},
 			},
-			Validated:        false,
+			Validated: false,
 		},
 		Password:         hash,
 		Email:            email,
@@ -226,20 +271,20 @@ func (module *Module) SignUpFacebook(facebook map[string]interface{}) (*One, err
 
 	usr := &UserPrivate{
 		User: User{
-			Id:               id,
-			UserName:         username,
-			UserNameSlug:     username,
-			Description:      "",
-			Profile:          profile,
-			Created:          time.Now(),
-			Permissions:      make([]string, 0),
-			NameChanges:      0,
+			Id:           id,
+			UserName:     username,
+			UserNameSlug: username,
+			Description:  "",
+			Profile:      profile,
+			Created:      time.Now(),
+			Permissions:  make([]string, 0),
+			NameChanges:  0,
 			Roles: []UserRole{
 				{
 					Name: "user",
 				},
 			},
-			Validated:        true,
+			Validated: true,
 		},
 		Password:         "",
 		Email:            email,
@@ -282,7 +327,7 @@ func (module *Module) GetUserFromRecoveryToken(token string) (*One, error) {
 
 	database := module.Mongo.Database
 	change := mgo.Change{
-		Update: bson.M{"$set": bson.M{"used": true, "updated_at": time.Now()}},
+		Update:    bson.M{"$set": bson.M{"used": true, "updated_at": time.Now()}},
 		ReturnNew: false,
 	}
 

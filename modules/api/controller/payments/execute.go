@@ -1,6 +1,7 @@
 package payments
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/modules/payments"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
 
@@ -14,7 +15,7 @@ func (this API) PaypalExecute(c *gin.Context) {
 
 	if c.Bind(&m) == nil {
 
-		var saved Payment
+		var saved payments.Payment
 		database := this.Mongo.Database
 		err := database.C("payments").Find(bson.M{"gateway": "paypal", "gateway_id": m.PaymentId}).One(&saved)
 

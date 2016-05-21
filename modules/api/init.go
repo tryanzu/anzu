@@ -177,6 +177,7 @@ func (module *Module) Run() {
 			c.String(200, c.ClientIP())
 		})
 
+		v1.GET("/payments/donators", module.Payments.GetTopDonators)
 		v1.POST("/subscribe", module.Users.UserSubscribe)
 		v1.POST("/leads", module.Lead.Post)
 
