@@ -2,6 +2,7 @@ package payments
 
 import (
 	"github.com/fernandez14/spartangeek-blacker/modules/components"
+	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
 	"github.com/fernandez14/spartangeek-blacker/modules/gcommerce"
 	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/fernandez14/spartangeek-blacker/modules/store"
@@ -12,6 +13,7 @@ import (
 )
 
 type API struct {
+	Gaming     *gaming.Module     `inject:""`
 	Config     *config.Config     `inject:""`
 	Store      *store.Module      `inject:""`
 	Components *components.Module `inject:""`
