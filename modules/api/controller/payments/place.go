@@ -16,7 +16,6 @@ func (this API) Place(c *gin.Context) {
 
 	if c.Bind(&m) == nil {
 
-		database := this.Mongo.Database
 		client := this.GetPaypalClient()
 		baseUrl, err := this.Config.String("application.siteUrl")
 
@@ -72,7 +71,7 @@ func (this API) Place(c *gin.Context) {
 		id := c.MustGet("user_id")
 		user_id := bson.ObjectIdHex(id.(string))
 
-		p := payments.Payment{
+		p := &payments.Payment{
 			Type:      m.Type,
 			Amount:    m.Amount,
 			UserId:    user_id,
@@ -84,7 +83,7 @@ func (this API) Place(c *gin.Context) {
 			Updated:   time.Now(),
 		}
 
-		err = database.C("payments").Insert(p)
+		err = this.Mongo.Save(p)
 
 		if err != nil {
 			c.JSON(400, gin.H{"status": "error", "error": "save-failed", "details": err})

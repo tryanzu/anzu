@@ -28,3 +28,14 @@ func NewService(connection string, name string) *Service {
 
 	return &Service{Session: session, Database: database, Name: name}
 }
+
+func (s *Service) Save(o SaveOp) error {
+
+	err := o.Save(s.Database)
+
+	return err
+}
+
+type SaveOp interface {
+	Save(*mgo.Database) error
+}

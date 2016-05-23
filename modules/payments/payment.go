@@ -1,6 +1,7 @@
 package payments
 
 import (
+	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 
 	"time"
@@ -17,4 +18,11 @@ type Payment struct {
 	Status    string        `bson:"status" json:"status"`
 	Created   time.Time     `bson:"created_at" json:"created_at"`
 	Updated   time.Time     `bson:"updated_at" json:"updated_at"`
+}
+
+func (p *Payment) Save(db *mgo.Database) error {
+
+	err := db.C("payments").Insert(p)
+
+	return err
 }
