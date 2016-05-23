@@ -23,6 +23,12 @@ type User struct {
 	Profile       map[string]interface{} `bson:"profile,omitempty" json:"profile,omitempty"`
 	Gaming        UserGaming             `bson:"gaming,omitempty" json:"gaming,omitempty"`
 
+	Phone       string `bson:"phone,omitempty" json:"phone"`
+	Country     string `bson:"country,omitempty" json:"country"`
+	OriginId    string `bson:"origin_id,omitempty" json:"origin_id"`
+	BattlenetId string `bson:"battlenet_id,omitempty" json:"battlenet_id"`
+	SteamId     string `bson:"steam_id,omitempty" json:"steam_id"`
+
 	Version     string    `bson:"version,omitempty" json:"version,omitempty"`
 	Validated   bool      `bson:"validated" json:"validated"`
 	SiftAccount bool      `bson:"siftscience" json:"siftscience"`

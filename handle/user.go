@@ -503,35 +503,35 @@ func (di *UserAPI) UserUpdateProfile(c *gin.Context) {
 
 	if err == nil {
 
-		var profileUpdate model.UserProfileForm
+		var form model.UserProfileForm
 
-		if c.BindWith(&profileUpdate, binding.JSON) == nil {
+		if c.BindWith(&form, binding.JSON) == nil {
 
 			set := bson.M{}
 
-			if profileUpdate.UserName != "" && user.NameChanges < 1 {
+			if form.UserName != "" && user.NameChanges < 1 {
 
 				valid_username, _ := regexp.Compile(`^[0-9a-zA-Z\-]{0,32}$`)
 
-				if valid_username.MatchString(profileUpdate.UserName) {
+				if valid_username.MatchString(form.UserName) {
 
 					// Generate a slug for the username
-					username_slug := sanitize.Path(sanitize.Accents(profileUpdate.UserName))
+					username_slug := sanitize.Path(sanitize.Accents(form.UserName))
 
 					// Check whether user exists
 					count, _ := database.C("users").Find(bson.M{"username_slug": username_slug}).Count()
 
 					if count == 0 {
-						set["username"] = profileUpdate.UserName
+						set["username"] = form.UserName
 						set["username_slug"] = username_slug
 						set["name_changes"] = user.NameChanges + 1
 					}
 				}
 			}
 
-			if profileUpdate.Description != "" {
+			if form.Description != "" {
 
-				description := profileUpdate.Description
+				description := form.Description
 
 				if len([]rune(description)) > 60 {
 					description = helpers.Truncate(description, 57) + "..."
@@ -540,14 +540,42 @@ func (di *UserAPI) UserUpdateProfile(c *gin.Context) {
 				set["description"] = description
 			}
 
-			if profileUpdate.Password != "" {
+			if form.Email != "" && user.Email != form.Email {
 
-				if len([]rune(profileUpdate.Password)) < 4 {
+				if !helpers.IsEmail(form.Email) {
+					c.JSON(400, gin.H{"status": "error", "message": "Invalid email address.", "details": "invalid-email", "fields": []string{"email"}})
+					return
+				}
+
+				_, err := di.User.Get(bson.M{"$or": []bson.M{
+					{"email": form.Email},
+					{"facebook.email": form.Email},
+				}})
+
+				if err == nil {
+					c.JSON(400, gin.H{"status": "error", "message": "Email already used.", "details": "repeated-email", "fields": []string{"email"}})
+					return
+				}
+
+				set["email"] = form.Email
+				set["ver_code"] = helpers.StrRandom(12)
+				set["validated"] = false
+			}
+
+			set["phone"] = form.Phone
+			set["battlenet_id"] = form.BattlenetId
+			set["steam_id"] = form.SteamId
+			set["origin_id"] = form.OriginId
+			set["country"] = form.Country
+
+			if form.Password != "" {
+
+				if len([]rune(form.Password)) < 4 {
 					c.JSON(400, gin.H{"status": "error", "message": "Can't allow password update, too short."})
 					return
 				}
 
-				password := helpers.Sha256(profileUpdate.Password)
+				password := helpers.Sha256(form.Password)
 
 				set["password"] = password
 			}
@@ -557,7 +585,16 @@ func (di *UserAPI) UserUpdateProfile(c *gin.Context) {
 			// Update the user profile with some godness
 			users_collection.Update(bson.M{"_id": user.Id}, bson.M{"$set": set})
 
-			c.JSON(200, gin.H{"message": "okay", "status": "okay", "code": 200})
+			if _, emailChanged := set["email"]; emailChanged {
+
+				usr, err := di.User.Get(user.Id)
+
+				if err == nil {
+					usr.SendConfirmationEmail()
+				}
+			}
+
+			c.JSON(200, gin.H{"status": "okay"})
 			return
 		}
 	}

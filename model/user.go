@@ -83,6 +83,14 @@ type UserProfileForm struct {
 	Description string `json:"description,omitempty"`
 	Password    string `json:"password,omitempty"`
 	OPassword   string `json:"old_password,omitempty"`
+
+	Email string `json:"email,omitempty"`
+
+	Phone       string `json:"phone,omitempty"`
+	Country     string `json:"country,omitempty"`
+	OriginId    string `json:"origin_id,omitempty"`
+	BattlenetId string `json:"battlenet_id,omitempty"`
+	SteamId     string `json:"steam_id,omitempty"`
 }
 
 type UserRegisterForm struct {
