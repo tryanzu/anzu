@@ -3,6 +3,8 @@ package payments
 import (
 	"github.com/dustin/go-humanize"
 	"github.com/leebenson/paypal"
+
+	"fmt"
 )
 
 type Paypal struct {
@@ -32,7 +34,7 @@ func (p *Paypal) SetOptions(o map[string]interface{}) {
 	}
 
 	if sd, exists := o["soft_description"]; exists {
-		p.SDescription = s.(string)
+		p.SDescription = sd.(string)
 	}
 
 	if c, exists := o["currency"]; exists {
@@ -75,7 +77,7 @@ func (p *Paypal) generateTransactions(total float64, products []Product) []paypa
 			Name:        p.GetName(),
 			Currency:    p.GetCurrency(),
 			Description: p.GetDescription(),
-			Price:       p.GetPrice(),
+			Price:       humanize.FormatFloat("###.##", p.GetPrice()),
 		})
 	}
 
@@ -90,63 +92,34 @@ func (p *Paypal) generateTransactions(total float64, products []Product) []paypa
 					Tax:      "3.00",
 				},*/
 			},
-			Description: m.Description,
+			Description: gdesc,
 			ItemList: &paypal.ItemList{
-				Items: []paypal.Item{
-					{
-						Quantity:    1,
-						Name:        m.Description,
-						Price:       humanize.FormatFloat("###.##", m.Amount),
-						Currency:    "MXN",
-						Description: m.Description,
-						/*Tax:         "16.00",*/
-					},
-				},
+				Items: items,
 			},
-			SoftDescriptor: "SPARTANGEEK.COM",
+			SoftDescriptor: sdesc,
 		},
 	}
+
+	return t
 }
 
 func (p *Paypal) Charge(c Create) error {
 
-	items := p.generateTransactions(c.Products)
+	t := p.generateTransactions(c.Total, c.Products)
+
 	payment := paypal.Payment{
 		Intent: "sale",
 		Payer: &paypal.Payer{
 			PaymentMethod: "paypal",
 		},
-		Transactions: []paypal.Transaction{
-			{
-				Amount: &paypal.Amount{
-					Currency: "MXN",
-					Total:    humanize.FormatFloat("###.##", m.Amount),
-					/*Details: &paypal.Details{
-						Shipping: "119.00",
-						Subtotal: "116.00",
-						Tax:      "3.00",
-					},*/
-				},
-				Description: m.Description,
-				ItemList: &paypal.ItemList{
-					Items: []paypal.Item{
-						{
-							Quantity:    1,
-							Name:        m.Description,
-							Price:       humanize.FormatFloat("###.##", m.Amount),
-							Currency:    "MXN",
-							Description: m.Description,
-							/*Tax:         "16.00",*/
-						},
-					},
-				},
-				SoftDescriptor: "SPARTANGEEK.COM",
-			},
-		},
+		Transactions: t,
 		RedirectURLs: &paypal.RedirectURLs{
-			CancelURL: baseUrl + "/donacion/error/",
-			ReturnURL: baseUrl + "/donacion/exitosa/",
+			CancelURL: p.CancelUrl,
+			ReturnURL: p.ReturnUrl,
 		},
 	}
 
+	fmt.Printf("%v\n", payment)
+
+	return nil
 }

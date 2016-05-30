@@ -10,8 +10,9 @@ func (m *Module) GetGateway(n string) Gateway {
 
 	switch n {
 	case "paypal":
-		return Paypal{}
+		return &Paypal{}
 	default:
 		panic("Unexpected gateway name.")
+		return nil
 	}
 }

@@ -1,5 +1,9 @@
 package payments
 
+import (
+	"gopkg.in/mgo.v2/bson"
+)
+
 const PAYMENT_DONATION string = "donation"
 const PAYMENT_ORDER string = "order"
 
@@ -14,7 +18,7 @@ type Create struct {
 }
 
 func (m *Module) Create(g Gateway) Create {
-	return Create{g}
+	return Create{G: g}
 }
 
 func (c *Create) SetUser(id bson.ObjectId) {
@@ -29,7 +33,7 @@ func (c *Create) SetProducts(ls []Product) {
 	c.Products = ls
 
 	for _, p := range ls {
-		c.Total += p.GetQuantity() * p.GetPrice()
+		c.Total += float64(p.GetQuantity()) * p.GetPrice()
 	}
 }
 
