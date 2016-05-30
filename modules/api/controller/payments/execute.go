@@ -1,17 +1,17 @@
 package payments
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/modules/payments"
+	//"github.com/fernandez14/spartangeek-blacker/modules/payments"
 	"github.com/gin-gonic/gin"
-	"gopkg.in/mgo.v2/bson"
-
-	"strconv"
-	"time"
+	//"gopkg.in/mgo.v2/bson"
+	//"strconv"
+	//"time"
 )
 
 func (this API) PaypalExecute(c *gin.Context) {
 
-	var m ExecutePayload
+	c.JSON(200, gin.H{"status": "okay"})
+	/*var m ExecutePayload
 
 	if c.Bind(&m) == nil {
 
@@ -68,5 +68,5 @@ func (this API) PaypalExecute(c *gin.Context) {
 		}
 
 		c.JSON(200, gin.H{"status": "okay", "response": payment})
-	}
+	}*/
 }

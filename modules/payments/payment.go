@@ -7,6 +7,11 @@ import (
 	"time"
 )
 
+const PAYMENT_ERROR = "error"
+const PAYMENT_SUCCESS = "confirmed"
+const PAYMENT_AWAITING = "awaiting"
+const PAYMENT_CREATED = "created"
+
 type Payment struct {
 	Id        bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
 	UserId    bson.ObjectId `bson:"user_id" json:"user_id"`
@@ -18,6 +23,24 @@ type Payment struct {
 	Status    string        `bson:"status" json:"status"`
 	Created   time.Time     `bson:"created_at" json:"created_at"`
 	Updated   time.Time     `bson:"updated_at" json:"updated_at"`
+
+	di *Module
+}
+
+func (p *Payment) SetDI(di *Module) {
+	p.di = di
+}
+
+func (p *Payment) CompletePurchase(d map[string]interface{}) (map[string]interface{}, error) {
+
+	if p.di == nil {
+		panic("No DI injected.")
+	}
+
+	g := p.di.GetGateway(p.Gateway)
+	res, err := g.CompletePurchase(p, d)
+
+	return res, err
 }
 
 func (p *Payment) Save(db *mgo.Database) error {

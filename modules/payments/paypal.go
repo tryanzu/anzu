@@ -3,11 +3,10 @@ package payments
 import (
 	"github.com/dustin/go-humanize"
 	"github.com/leebenson/paypal"
-
-	"fmt"
 )
 
 type Paypal struct {
+	Client       *paypal.Client
 	ReturnUrl    string
 	CancelUrl    string
 	Currency     string
@@ -20,6 +19,10 @@ func (p *Paypal) GetName() string {
 }
 
 func (p *Paypal) SetOptions(o map[string]interface{}) {
+
+	if client, exists := o["client"]; exists {
+		p.Client = client.(*paypal.Client)
+	}
 
 	if rurl, exists := o["return_url"]; exists {
 		p.ReturnUrl = rurl.(string)
@@ -103,7 +106,7 @@ func (p *Paypal) generateTransactions(total float64, products []Product) []paypa
 	return t
 }
 
-func (p *Paypal) Charge(c Create) error {
+func (p *Paypal) Purchase(pay *Payment, c *Create) (map[string]interface{}, error) {
 
 	t := p.generateTransactions(c.Total, c.Products)
 
@@ -119,7 +122,39 @@ func (p *Paypal) Charge(c Create) error {
 		},
 	}
 
-	fmt.Printf("%v\n", payment)
+	client := p.Client
 
-	return nil
+	if client == nil {
+		panic("Invalid paypal client pointer.")
+	}
+
+	response := map[string]interface{}{}
+	dopayment, err := client.CreatePayment(payment)
+
+	// Keep some data about the paypal transaction inside payment struct
+	pay.Meta = dopayment
+	pay.GatewayId = dopayment.ID
+
+	if err != nil {
+		pay.Status = PAYMENT_ERROR
+	} else {
+		pay.Status = PAYMENT_AWAITING
+
+		for _, l := range dopayment.Links {
+			if l.Rel == "approval_url" {
+				response["approval_url"] = l.Href
+			}
+		}
+	}
+
+	return response, err
+}
+
+func (p *Paypal) CompletePurchase(pay *Payment, data map[string]interface{}) (map[string]interface{}, error) {
+
+	if p.Client == nil {
+		panic("Can't complete purchase if paypal client is not setup.")
+	}
+
+	return data, nil
 }

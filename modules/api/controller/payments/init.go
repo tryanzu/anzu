@@ -9,7 +9,6 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/store"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
-	"github.com/leebenson/paypal"
 	"github.com/olebedev/config"
 )
 
@@ -25,35 +24,29 @@ type API struct {
 	User       *user.Module       `inject:""`
 }
 
-func (this API) GetPaypalClient() *paypal.Client {
+func (this API) GetPaypalGateway(options map[string]interface{}) *payments.Paypal {
 
-	clientID, err := this.Config.String("ecommerce.paypal.clientID")
-
-	if err != nil {
-		panic("Could not get config data to initialize paypal client. (cid)")
-	}
-
-	secret, err := this.Config.String("ecommerce.paypal.secret")
+	baseUrl, err := this.Config.String("application.siteUrl")
 
 	if err != nil {
-		panic("Could not get config data to initialize paypal client. (secret)")
+		panic("Could not get siteUrl from config.")
 	}
 
-	sandbox, err := this.Config.Bool("ecommerce.paypal.sandbox")
-
-	if err != nil {
-		panic("Could not get config data to initialize paypal client. (sd)")
+	gateway := this.Payments.GetGateway("paypal")
+	o := map[string]interface{}{
+		"return_url": baseUrl + "/donacion/exitosa/",
+		"cancel_url": baseUrl + "/donacion/error/",
+		"currency":   "MXN",
 	}
 
-	var r string = paypal.APIBaseSandBox
-
-	if !sandbox {
-		r = paypal.APIBaseLive
+	// Merge options
+	for key, value := range options {
+		o[key] = value
 	}
 
-	client := paypal.NewClient(clientID, secret, r)
+	gateway.SetOptions(o)
 
-	return client
+	return gateway.(*payments.Paypal)
 }
 
 type PlacePayload struct {
