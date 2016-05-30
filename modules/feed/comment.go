@@ -68,9 +68,10 @@ func (self *Comment) GetParseableMeta() map[string]interface{} {
 		"owner_id": self.UserId,
 		"comment":  self,
 		"post": map[string]interface{}{
-			"id":    p.Id,
-			"slug":  p.Slug,
-			"title": p.Title,
+			"id":      p.Id,
+			"user_id": p.UserId,
+			"slug":    p.Slug,
+			"title":   p.Title,
 		},
 	}
 }

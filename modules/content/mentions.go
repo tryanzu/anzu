@@ -108,15 +108,27 @@ func (self Module) NotifyMentionsAsync(o Parseable, ls []Mention) {
 		if related_id, exists := entity["id"].(bson.ObjectId); exists {
 
 			var owner_id bson.ObjectId
+			var post_owner bson.ObjectId
 
 			if oid, exists := entity["owner_id"]; exists {
 				owner_id = oid.(bson.ObjectId)
+			}
+
+			if p, exists := entity["post"].(map[string]interface{}); exists {
+				if uid, exists := p["user_id"]; exists {
+					post_owner = uid.(bson.ObjectId)
+				}
 			}
 
 			for _, to := range ls {
 
 				// If owner_id is valid don't notify the owner
 				if owner_id.Valid() && owner_id == to.UserId {
+					continue
+				}
+
+				// Ignore mentions to post_owner (if any)
+				if post_owner.Valid() && post_owner == to.UserId {
 					continue
 				}
 

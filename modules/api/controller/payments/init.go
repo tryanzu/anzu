@@ -5,6 +5,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
 	"github.com/fernandez14/spartangeek-blacker/modules/gcommerce"
 	"github.com/fernandez14/spartangeek-blacker/modules/mail"
+	"github.com/fernandez14/spartangeek-blacker/modules/payments"
 	"github.com/fernandez14/spartangeek-blacker/modules/store"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
@@ -18,6 +19,7 @@ type API struct {
 	Store      *store.Module      `inject:""`
 	Components *components.Module `inject:""`
 	GCommerce  *gcommerce.Module  `inject:""`
+	Payments   *payments.Module   `inject:""`
 	Mail       *mail.Module       `inject:""`
 	Mongo      *mongo.Service     `inject:""`
 	User       *user.Module       `inject:""`
