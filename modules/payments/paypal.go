@@ -156,5 +156,36 @@ func (p *Paypal) CompletePurchase(pay *Payment, data map[string]interface{}) (ma
 		panic("Can't complete purchase if paypal client is not setup.")
 	}
 
-	return data, nil
+	payerId, exists := data["payer_id"]
+
+	if !exists {
+		panic("Can't complete purchase without payer_id in options.")
+	}
+
+	do, err := p.Client.ExecutePayment(pay.GatewayId, payerId.(string), nil)
+	response := map[string]interface{}{}
+
+	if err == nil {
+
+		err := pay.UpdateStatus(PAYMENT_SUCCESS)
+
+		if err != nil {
+			panic(err)
+		}
+
+		for _, l := range do.Links {
+			if l.Rel == "self" {
+				response["self"] = l.Href
+			}
+		}
+	} else {
+
+		err := pay.UpdateStatus(PAYMENT_ERROR)
+
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	return response, err
 }

@@ -36,7 +36,7 @@ func (m *Module) Get(payment interface{}) (*Payment, error) {
 
 		var this *Payment
 		database := m.Mongo.Database
-		err := database.C("posts").Find(payment.(bson.M)).One(&this)
+		err := database.C("payments").Find(payment.(bson.M)).One(&this)
 
 		if err != nil {
 			return nil, exceptions.NotFound{"Invalid payment id. Not found."}

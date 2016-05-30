@@ -43,6 +43,22 @@ func (p *Payment) CompletePurchase(d map[string]interface{}) (map[string]interfa
 	return res, err
 }
 
+func (p *Payment) UpdateStatus(status string) error {
+
+	if p.di == nil {
+		panic("No DI injected.")
+	}
+
+	database := p.di.Mongo.Database
+	err := database.C("payments").Update(bson.M{"_id": p.Id}, bson.M{"$set": bson.M{"updated_at": time.Now(), "status": status}})
+
+	if err == nil {
+		p.Status = status
+	}
+
+	return err
+}
+
 func (p *Payment) Save(db *mgo.Database) error {
 
 	err := db.C("payments").Insert(p)
