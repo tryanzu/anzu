@@ -1,10 +1,5 @@
 package payments
 
-import (
-	"github.com/dustin/go-humanize"
-	"github.com/leebenson/paypal"
-)
-
 type Cash struct {
 	GenerateInvoice bool
 }
