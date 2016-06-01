@@ -76,8 +76,8 @@ type UserRecoveryToken struct {
 	Updated time.Time     `bson:"updated_at" json:"updated_at"`
 }
 
-var UserSimpleFields bson.M = bson.M{"id": 1, "username": 1, "username_slug": 1, "image": 1, "gaming.level": 1, "gaming.swords": 1, "roles": 1, "validated": 1, "created_at": 1}
-var UserBasicFields bson.M = bson.M{"id": 1, "username": 1, "facebook": 1, "email": 1, "validated": 1, "banned": 1, "username_slug": 1, "image": 1, "gaming": 1, "created_at": 1, "updated_at": 1}
+var UserSimpleFields bson.M = bson.M{"id": 1, "username": 1, "description": 1, "username_slug": 1, "image": 1, "gaming.level": 1, "gaming.swords": 1, "roles": 1, "validated": 1, "created_at": 1}
+var UserBasicFields bson.M = bson.M{"id": 1, "username": 1, "description": 1, "facebook": 1, "email": 1, "validated": 1, "banned": 1, "username_slug": 1, "image": 1, "gaming": 1, "created_at": 1, "updated_at": 1}
 
 type UserBasic struct {
 	Id           bson.ObjectId `bson:"_id,omitempty" json:"id"`
