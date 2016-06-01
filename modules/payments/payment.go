@@ -22,7 +22,7 @@ const (
 
 var paymentTypes = [...]string{"donation", "sale", "symbolic"}
 
-func (p PaymentType) String() {
+func (p PaymentType) String() string {
 	return paymentTypes[p]
 }
 

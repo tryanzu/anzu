@@ -34,6 +34,7 @@ import (
 	"github.com/olebedev/config"
 	"github.com/robfig/cron"
 	"github.com/spf13/cobra"
+	"github.com/stripe/stripe-go/client"
 	"github.com/xuyu/goredis"
 	"os"
 	"runtime"
@@ -156,6 +157,23 @@ func main() {
 		}
 
 		paymentGateways["paypal"] = paypalGateway
+	}
+
+	stripeConfig, err := configService.Get("ecommerce.stripe")
+	{
+		secret, err := stripeConfig.String("secret")
+
+		if err != nil {
+			panic("Could not get config data to initialize stripe client. (secret)")
+		}
+
+		stripeClient := &client.API{}
+		stripeClient.Init(secret, nil)
+		stripeGateway := &payments.Stripe{
+			Client: stripeClient,
+		}
+
+		paymentGateways["stripe"] = stripeGateway
 	}
 
 	p := payments.GetModule(paymentGateways)

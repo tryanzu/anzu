@@ -34,9 +34,7 @@ func (this *Order) ChangeStatus(name string) {
 	for _, item := range this.Items {
 
 		if related, exists := item.Meta["related"].(string); exists {
-
 			if related == "massdrop_product" {
-
 				is_massdrop = true
 			}
 		}
@@ -50,7 +48,6 @@ func (this *Order) ChangeStatus(name string) {
 		err := database.C("gcommerce_massdrop_transactions").Find(bson.M{"customer_id": this.UserId, "type": "interested", "attributes.order_id": this.Id}).One(&transaction)
 
 		if err == nil {
-
 			transaction.SetDI(this.di)
 			transaction.CastToReservation()
 		}
