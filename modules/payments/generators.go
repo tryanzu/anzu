@@ -47,7 +47,7 @@ func (c *Create) Purchase() (p *Payment, response map[string]interface{}, err er
 		Amount:  c.Total,
 		UserId:  c.UserId,
 		Gateway: c.G.GetName(),
-		Status:  "created",
+		Status:  PAYMENT_CREATED,
 		Created: time.Now(),
 		Updated: time.Now(),
 	}
