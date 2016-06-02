@@ -133,7 +133,10 @@ func (p *Paypal) Purchase(pay *Payment, c *Create) (map[string]interface{}, erro
 
 	// Keep some data about the paypal transaction inside payment struct
 	pay.Meta = dopayment
-	pay.GatewayId = dopayment.ID
+
+	if err == nil {
+		pay.GatewayId = dopayment.ID
+	}
 
 	if err != nil {
 		pay.Status = PAYMENT_ERROR

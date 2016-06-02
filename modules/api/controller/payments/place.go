@@ -31,7 +31,7 @@ func (this API) Place(c *gin.Context) {
 		})
 
 		transaction.SetUser(user_id)
-		transaction.SetIntent(m.Type)
+		transaction.SetIntent(payments.DONATION)
 		transaction.SetProducts(products)
 
 		payment, res, err := transaction.Purchase()

@@ -6,6 +6,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 
 	"errors"
+	"fmt"
 	"time"
 )
 
@@ -14,6 +15,10 @@ func (this *Order) SetDI(di *Module) {
 
 	this.di = di
 	this.gateway = this.di.Payments.GetGateway(this.Gateway)
+
+	fmt.Println("Setting DI for " + this.Id.Hex())
+	fmt.Println("Gateway: " + this.Gateway)
+	fmt.Println(this.Meta)
 
 	switch this.Gateway {
 	case "paypal":
@@ -30,6 +35,8 @@ func (this *Order) SetDI(di *Module) {
 				o[k] = v
 			}
 		}
+
+		this.gateway.SetOptions(o)
 	}
 }
 
@@ -187,31 +194,26 @@ func (this *Order) Checkout() (map[string]interface{}, error) {
 	})
 
 	transaction.SetUser(this.GetCustomer().UserId)
-	transaction.SetIntent(payments.SALE.String())
+	transaction.SetIntent(payments.SALE)
 	transaction.SetProducts(products)
+	transaction.SetRelated("order", this.Id)
 
 	payment, res, err := transaction.Purchase()
 
-	t := &Transaction{
+	/*t := &Transaction{
 		OrderId:  this.Id,
 		Gateway:  this.Gateway,
 		Response: res,
 		Created:  time.Now(),
 		Updated:  time.Now(),
-	}
+	}*/
 
 	if err != nil {
-		t.Error = err
+		//t.Error = err
 		this.ChangeStatus(ORDER_PAYMENT_ERROR)
 	}
 
 	derr := this.di.Mongo.Database.C("gcommerce_orders").Update(bson.M{"_id": this.Id}, bson.M{"$set": bson.M{"payment_id": payment.Id}})
-
-	if derr != nil {
-		panic(derr)
-	}
-
-	derr = this.di.Mongo.Database.C("gcommerce_transactions").Insert(t)
 
 	if derr != nil {
 		panic(derr)

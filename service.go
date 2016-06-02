@@ -176,6 +176,8 @@ func main() {
 		paymentGateways["stripe"] = stripeGateway
 	}
 
+	paymentGateways["offline"] = &payments.Offline{}
+
 	p := payments.GetModule(paymentGateways)
 
 	// Provide graph with service instances

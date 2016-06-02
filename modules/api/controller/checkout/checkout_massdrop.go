@@ -57,64 +57,67 @@ func (this API) Massdrop(c *gin.Context) {
 		res, order, transaction, err := customer.MassdropTransaction(product, form.Quantity, form.Gateway, meta)
 
 		if err != nil {
-			c.JSON(400, gin.H{"message": err.Error(), "error": err.Error(), "status": "error", "order_id": order.Id, "transaction_id": transaction.Id})
+			c.JSON(400, gin.H{"message": err.Error(), "error": err.Error(), "status": "error"})
 			return
 		}
 
-		// After checkout procedures
-		mailing := this.Mail
-		{
-			usr, err := this.User.Get(user_id)
+		if form.Gateway != "paypal" {
 
-			if err != nil {
-				panic(err)
-			}
-
-			var template int = 549841
-
-			if form.Gateway == "offline" {
-				template = 549941
-			}
-
-			compose := mail.Mail{
-				Template:  template,
-				FromName:  "Spartan Geek",
-				FromEmail: "pedidos@spartangeek.com",
-				Recipient: []mail.MailRecipient{
-					{
-						Name:  usr.Name(),
-						Email: usr.Email(),
-					},
-					{
-						Name:  "Equipo Spartan Geek",
-						Email: "pedidos@spartangeek.com",
-					},
-				},
-				Variables: map[string]interface{}{
-					"name":      usr.Name(),
-					"reference": order.Reference,
-					"price":     product.Massdrop.Reserve,
-					"slug":      product.Slug,
-					"pname":     product.Name,
-					"quantity":  form.Quantity,
-					"total":     humanize.FormatFloat("#,###.##", product.Massdrop.Reserve*float64(form.Quantity)),
-				},
-			}
-
-			go mailing.Send(compose)
-
-			/*go func(id bson.ObjectId) {
-
-				err := queue.PushWDelay("gcommerce", "payment-reminder", map[string]interface{}{"id": id.Hex()}, 3600*24*2)
+			// After checkout procedures
+			mailing := this.Mail
+			{
+				usr, err := this.User.Get(user_id)
 
 				if err != nil {
 					panic(err)
 				}
 
-			}(order.Id)*/
+				var template int = 549841
+
+				if form.Gateway == "offline" {
+					template = 549941
+				}
+
+				compose := mail.Mail{
+					Template:  template,
+					FromName:  "Spartan Geek",
+					FromEmail: "pedidos@spartangeek.com",
+					Recipient: []mail.MailRecipient{
+						{
+							Name:  usr.Name(),
+							Email: usr.Email(),
+						},
+						{
+							Name:  "Equipo Spartan Geek",
+							Email: "pedidos@spartangeek.com",
+						},
+					},
+					Variables: map[string]interface{}{
+						"name":      usr.Name(),
+						"reference": order.Reference,
+						"price":     product.Massdrop.Reserve,
+						"slug":      product.Slug,
+						"pname":     product.Name,
+						"quantity":  form.Quantity,
+						"total":     humanize.FormatFloat("#,###.##", product.Massdrop.Reserve*float64(form.Quantity)),
+					},
+				}
+
+				go mailing.Send(compose)
+
+				/*go func(id bson.ObjectId) {
+
+					err := queue.PushWDelay("gcommerce", "payment-reminder", map[string]interface{}{"id": id.Hex()}, 3600*24*2)
+
+					if err != nil {
+						panic(err)
+					}
+
+				}(order.Id)*/
+			}
 		}
 
-		c.JSON(200, gin.H{"status": "okay", "response": res})
+		c.JSON(200, gin.H{"status": "okay", "response": res, "transaction_id": transaction.Id})
 		return
 	}
 

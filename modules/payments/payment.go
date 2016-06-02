@@ -37,6 +37,8 @@ type Payment struct {
 	Status       string        `bson:"status" json:"status"`
 	InAccounting bool          `bson:"accounting" json:"in_accounting"`
 	InvoiceId    bson.ObjectId `bson:"invoice_id,omitempty" json:"invoice_id,omitempty"`
+	Related      string        `bson:"related,omitempty" json:"related,omitempty"`
+	RelatedId    bson.ObjectId `bson:"related_id,omitempty" json:"related_id,omitempty"`
 
 	Created time.Time `bson:"created_at" json:"created_at"`
 	Updated time.Time `bson:"updated_at" json:"updated_at"`

@@ -35,6 +35,15 @@ func (this API) PaypalExecute(c *gin.Context) {
 			return
 		}
 
+		if payment.Type == "sale" && payment.Related == "order" && payment.RelatedId.Valid() {
+
+			order, err := this.GCommerce.One(bson.M{"_id": payment.RelatedId})
+
+			if err == nil {
+				order.ChangeStatus("confirmed")
+			}
+		}
+
 		id := c.MustGet("user_id")
 		user_id := bson.ObjectIdHex(id.(string))
 		usr := this.Gaming.Get(user_id)

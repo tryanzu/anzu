@@ -276,7 +276,7 @@ func (this *Customer) MassdropTransaction(product *Product, q int, gateway_name 
 
 	var transactionType string = "reservation"
 
-	if gateway_name == "offline" {
+	if gateway_name == "offline" || gateway_name == "paypal" {
 		transactionType = MASSDROP_TRANS_INSTERESTED
 	}
 

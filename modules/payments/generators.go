@@ -28,8 +28,13 @@ func (c *Create) SetUser(id bson.ObjectId) {
 	c.UserId = id
 }
 
-func (c *Create) SetIntent(name string) {
-	c.Type = name
+func (c *Create) SetIntent(name PaymentType) {
+	c.Type = name.String()
+}
+
+func (c *Create) SetRelated(name string, id bson.ObjectId) {
+	c.Related = name
+	c.RelatedId = id
 }
 
 func (c *Create) SetProducts(ls []Product) {
@@ -43,6 +48,7 @@ func (c *Create) SetProducts(ls []Product) {
 func (c *Create) Purchase() (p *Payment, response map[string]interface{}, err error) {
 
 	p = &Payment{
+		Id:      bson.NewObjectId(),
 		Type:    c.Type,
 		Amount:  c.Total,
 		UserId:  c.UserId,
@@ -50,6 +56,11 @@ func (c *Create) Purchase() (p *Payment, response map[string]interface{}, err er
 		Status:  PAYMENT_CREATED,
 		Created: time.Now(),
 		Updated: time.Now(),
+	}
+
+	if c.Related != "" && c.RelatedId.Valid() {
+		p.Related = c.Related
+		p.RelatedId = c.RelatedId
 	}
 
 	response, err = c.G.Purchase(p, c)
