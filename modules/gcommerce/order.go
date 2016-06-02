@@ -1,10 +1,14 @@
 package gcommerce
 
 import (
-	"github.com/fernandez14/go-siftscience"
+	//"github.com/fernandez14/go-siftscience"
+	"github.com/dustin/go-humanize"
+	"github.com/fernandez14/spartangeek-blacker/modules/mail"
+	"github.com/fernandez14/spartangeek-blacker/modules/payments"
 	"gopkg.in/mgo.v2/bson"
 
 	"errors"
+	"fmt"
 	"time"
 )
 
@@ -12,32 +16,52 @@ import (
 func (this *Order) SetDI(di *Module) {
 
 	this.di = di
+	this.gateway = this.di.Payments.GetGateway(this.Gateway)
 
-	// Setup gateway
-	gateway, err := getGateway(this.Gateway)
+	fmt.Println("Setting DI for " + this.Id.Hex())
+	fmt.Println("Gateway: " + this.Gateway)
+	fmt.Println(this.Meta)
 
-	if err != nil {
-		panic(err)
+	switch this.Gateway {
+	case "paypal":
+
+		o := map[string]interface{}{
+			"currency":         "MXN",
+			"description":      "Orden #" + this.Reference,
+			"soft_description": "#" + this.Reference,
+		}
+
+		if parent, exists := this.Meta["paypal"]; exists {
+			paypal := parent.(map[string]interface{})
+			for k, v := range paypal {
+				o[k] = v
+			}
+		}
+
+		this.gateway.SetOptions(o)
 	}
-
-	this.gateway = gateway
-	this.gateway.SetDI(this.di)
-	this.gateway.SetOrder(this)
 }
 
 func (this *Order) ChangeStatus(name string) {
 
 	database := this.di.Mongo.Database
 
+	var massdropId bson.ObjectId
+	var massdropQ int
+
 	is_massdrop := false
 
 	for _, item := range this.Items {
 
 		if related, exists := item.Meta["related"].(string); exists {
-
 			if related == "massdrop_product" {
-
 				is_massdrop = true
+
+				if rid, exists := item.Meta["related_id"]; exists {
+					massdropId = rid.(bson.ObjectId)
+				}
+
+				massdropQ = item.Quantity
 			}
 		}
 	}
@@ -50,9 +74,10 @@ func (this *Order) ChangeStatus(name string) {
 		err := database.C("gcommerce_massdrop_transactions").Find(bson.M{"customer_id": this.UserId, "type": "interested", "attributes.order_id": this.Id}).One(&transaction)
 
 		if err == nil {
-
 			transaction.SetDI(this.di)
 			transaction.CastToReservation()
+
+			this.SendMassdropConfirmation(massdropId, massdropQ)
 		}
 	}
 
@@ -69,14 +94,78 @@ func (this *Order) ChangeStatus(name string) {
 	}
 }
 
+func (this *Order) SendMassdropConfirmation(productId bson.ObjectId, q int) {
+
+	products := this.di.Products()
+	product, err := products.GetById(productId)
+
+	if err != nil {
+		panic(err)
+	}
+
+	product.InitializeMassdrop()
+
+	if product.Massdrop == nil {
+		return
+	}
+
+	mailing := this.di.Mail
+	{
+		customer := this.GetCustomer()
+		usr, err := this.di.User.Get(customer.UserId)
+
+		if err != nil {
+			panic(err)
+		}
+
+		var template int = 549841
+
+		compose := mail.Mail{
+			Template:  template,
+			FromName:  "Spartan Geek",
+			FromEmail: "pedidos@spartangeek.com",
+			Recipient: []mail.MailRecipient{
+				{
+					Name:  usr.Name(),
+					Email: usr.Email(),
+				},
+				{
+					Name:  "Equipo Spartan Geek",
+					Email: "pedidos@spartangeek.com",
+				},
+			},
+			Variables: map[string]interface{}{
+				"name":      usr.Name(),
+				"reference": this.Reference,
+				"price":     product.Massdrop.Reserve,
+				"slug":      product.Slug,
+				"pname":     product.Name,
+				"quantity":  q,
+				"total":     humanize.FormatFloat("#,###.##", product.Massdrop.Reserve*float64(q)),
+			},
+		}
+
+		go mailing.Send(compose)
+
+		/*go func(id bson.ObjectId) {
+
+			err := queue.PushWDelay("gcommerce", "payment-reminder", map[string]interface{}{"id": id.Hex()}, 3600*24*2)
+
+			if err != nil {
+				panic(err)
+			}
+
+		}(order.Id)*/
+	}
+}
+
 func (this *Order) Add(name, description, image string, price float64, q int, meta map[string]interface{}) {
 
 	// Update price based on gateway
 	origin_price := price * float64(q)
-	gateway_price := this.gateway.ModifyPrice(price) * float64(q)
 
-	this.Items = append(this.Items, Item{name, image, description, gateway_price, origin_price, q, meta})
-	this.Total = this.Total + gateway_price
+	this.Items = append(this.Items, Item{name, image, description, origin_price, origin_price, q, meta})
+	this.Total = this.Total + origin_price
 	this.OTotal = this.OTotal + origin_price
 }
 
@@ -84,10 +173,8 @@ func (this *Order) Ship(price float64, name string, address *CustomerAddress) {
 
 	this.Shipping = &Shipping{}
 
-	gateway_price := this.gateway.ModifyPrice(price)
-
 	this.Shipping.OPrice = price
-	this.Shipping.Price = gateway_price
+	this.Shipping.Price = price
 	this.Shipping.Type = name
 
 	if address != nil {
@@ -108,7 +195,7 @@ func (this *Order) Ship(price float64, name string, address *CustomerAddress) {
 		this.Meta["skip_siftscience"] = true
 	}
 
-	this.Total = this.Total + gateway_price
+	this.Total = this.Total + price
 	this.OTotal = this.OTotal + price
 }
 
@@ -134,7 +221,12 @@ func (this *Order) GetRelatedAddress() *CustomerAddress {
 }
 
 func (this *Order) GetTotal() float64 {
-	return this.gateway.AdjustPrice(this.Total)
+
+	if comission, exists := comissions[this.Gateway]; exists {
+		return this.Total + comission(this.Total)
+	}
+
+	return this.Total
 }
 
 func (this *Order) GetOriginalTotal() float64 {
@@ -165,35 +257,62 @@ func (this *Order) GetCustomer() *Customer {
 	return this.Customer
 }
 
-func (this *Order) Checkout() error {
+func (this *Order) Checkout() (map[string]interface{}, error) {
 
-	// Meta stuff
-	meta := this.Meta
-	meta["reference"] = this.Reference
+	transaction := this.di.Payments.Create(this.gateway)
 
-	this.gateway.SetMeta(meta)
+	var products []payments.Product
 
-	// Charge the user
-	err := this.gateway.Charge(this.Total)
+	products = append(products, &payments.DigitalProduct{
+		Name:        "Pago del pedido #" + this.Reference,
+		Description: "#" + this.Reference,
+		Quantity:    1,
+		Price:       this.Total,
+		Currency:    "MXN",
+	})
 
-	return err
+	transaction.SetUser(this.GetCustomer().UserId)
+	transaction.SetIntent(payments.SALE)
+	transaction.SetProducts(products)
+	transaction.SetRelated("order", this.Id)
+
+	payment, res, err := transaction.Purchase()
+
+	/*t := &Transaction{
+		OrderId:  this.Id,
+		Gateway:  this.Gateway,
+		Response: res,
+		Created:  time.Now(),
+		Updated:  time.Now(),
+	}*/
+
+	if err != nil {
+		//t.Error = err
+		this.ChangeStatus(ORDER_PAYMENT_ERROR)
+	}
+
+	derr := this.di.Mongo.Database.C("gcommerce_orders").Update(bson.M{"_id": this.Id}, bson.M{"$set": bson.M{"payment_id": payment.Id}})
+
+	if derr != nil {
+		panic(derr)
+	}
+
+	return res, err
 }
 
 func (this *Order) Save() error {
 
-	database := this.di.Mongo.Database
-
 	// Global price mutators
-	this.Total = this.gateway.AdjustPrice(this.Total)
+	this.Total = this.GetTotal()
 
 	// Perform the save of the order once we've got here
-	err := database.C("gcommerce_orders").Insert(this)
+	err := this.di.Mongo.Database.C("gcommerce_orders").Insert(this)
 
 	if err != nil {
 		return errors.New("internal-error")
 	}
 
-	_, skip_siftscience := this.Meta["skip_siftscience"]
+	/*_, skip_siftscience := this.Meta["skip_siftscience"]
 
 	if this.Gateway == "stripe" && !skip_siftscience {
 
@@ -279,7 +398,7 @@ func (this *Order) Save() error {
 				return errors.New("internal-error")
 			}
 		}
-	}
+	}*/
 
 	return nil
 }

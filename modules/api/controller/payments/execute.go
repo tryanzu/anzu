@@ -4,9 +4,8 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/payments"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
-
-	"strconv"
-	"time"
+	//"strconv"
+	//"time"
 )
 
 func (this API) PaypalExecute(c *gin.Context) {
@@ -15,31 +14,34 @@ func (this API) PaypalExecute(c *gin.Context) {
 
 	if c.Bind(&m) == nil {
 
-		var saved payments.Payment
-		database := this.Mongo.Database
-		err := database.C("payments").Find(bson.M{"gateway": "paypal", "gateway_id": m.PaymentId}).One(&saved)
+		payment, err := this.Payments.Get(bson.M{"gateway": "paypal", "gateway_id": m.PaymentId})
 
 		if err != nil {
-			c.JSON(400, gin.H{"status": "error", "error": "not-found", "details": err})
+			c.JSON(400, gin.H{"status": "error", "error": "not-found", "payment_id": m.PaymentId, "details": err})
+			return
 		}
 
-		if saved.Status != "created" {
+		if payment.Status != payments.PAYMENT_AWAITING {
 			c.JSON(400, gin.H{"status": "error", "error": "invalid-action", "details": "Can't execute this payment."})
 			return
 		}
 
-		client := this.GetPaypalClient()
-		payment, err := client.ExecutePayment(m.PaymentId, m.PayerId, nil)
+		res, err := payment.CompletePurchase(map[string]interface{}{
+			"payer_id": m.PayerId,
+		})
 
 		if err != nil {
 			c.JSON(400, gin.H{"status": "error", "error": "execution-failed", "details": err})
 			return
 		}
 
-		err = database.C("payments").Update(bson.M{"_id": saved.Id}, bson.M{"$set": bson.M{"updated_at": time.Now(), "status": "confirmed"}})
+		if payment.Type == "sale" && payment.Related == "order" && payment.RelatedId.Valid() {
 
-		if err != nil {
-			panic(err)
+			order, err := this.GCommerce.One(bson.M{"_id": payment.RelatedId})
+
+			if err == nil {
+				order.ChangeStatus("confirmed")
+			}
 		}
 
 		id := c.MustGet("user_id")
@@ -50,13 +52,7 @@ func (this API) PaypalExecute(c *gin.Context) {
 			panic(err)
 		}
 
-		var total float64
-
-		total, err = strconv.ParseFloat(payment.Transactions[0].Amount.Total, 64)
-
-		if err != nil {
-			panic(err)
-		}
+		total := payment.Amount
 
 		// Gift user a badge - TODO: find better way for this matter
 		if total >= 50 && total < 200 {
@@ -67,6 +63,6 @@ func (this API) PaypalExecute(c *gin.Context) {
 			usr.AcquireBadge(bson.ObjectIdHex("55f0a951be6bceb9b3762c6e"), false)
 		}
 
-		c.JSON(200, gin.H{"status": "okay", "response": payment})
+		c.JSON(200, gin.H{"status": "okay", "response": res})
 	}
 }

@@ -35,7 +35,7 @@ func (this *GatewayStripe) Charge(amount float64) error {
 	database := this.di.Mongo.Database
 
 	// Setup stripe private key always
-	stripe.Key = this.di.StripeKey
+	//stripe.Key = this.di.StripeKey
 
 	// Check meta data integrity
 	reference, exists := this.meta["reference"].(string)
