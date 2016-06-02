@@ -2,6 +2,8 @@ package gcommerce
 
 import (
 	//"github.com/fernandez14/go-siftscience"
+	"github.com/dustin/go-humanize"
+	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/fernandez14/spartangeek-blacker/modules/payments"
 	"gopkg.in/mgo.v2/bson"
 
@@ -44,6 +46,9 @@ func (this *Order) ChangeStatus(name string) {
 
 	database := this.di.Mongo.Database
 
+	var massdropId bson.ObjectId
+	var massdropQ int
+
 	is_massdrop := false
 
 	for _, item := range this.Items {
@@ -51,6 +56,12 @@ func (this *Order) ChangeStatus(name string) {
 		if related, exists := item.Meta["related"].(string); exists {
 			if related == "massdrop_product" {
 				is_massdrop = true
+
+				if rid, exists := item.Meta["related_id"]; exists {
+					massdropId = rid.(bson.ObjectId)
+				}
+
+				massdropQ = item.Quantity
 			}
 		}
 	}
@@ -65,6 +76,8 @@ func (this *Order) ChangeStatus(name string) {
 		if err == nil {
 			transaction.SetDI(this.di)
 			transaction.CastToReservation()
+
+			this.SendMassdropConfirmation(massdropId, massdropQ)
 		}
 	}
 
@@ -78,6 +91,71 @@ func (this *Order) ChangeStatus(name string) {
 
 	if err != nil {
 		panic(err)
+	}
+}
+
+func (this *Order) SendMassdropConfirmation(productId bson.ObjectId, q int) {
+
+	products := this.di.Products()
+	product, err := products.GetById(productId)
+
+	if err != nil {
+		panic(err)
+	}
+
+	product.InitializeMassdrop()
+
+	if product.Massdrop == nil {
+		return
+	}
+
+	mailing := this.di.Mail
+	{
+		customer := this.GetCustomer()
+		usr, err := this.di.User.Get(customer.UserId)
+
+		if err != nil {
+			panic(err)
+		}
+
+		var template int = 549841
+
+		compose := mail.Mail{
+			Template:  template,
+			FromName:  "Spartan Geek",
+			FromEmail: "pedidos@spartangeek.com",
+			Recipient: []mail.MailRecipient{
+				{
+					Name:  usr.Name(),
+					Email: usr.Email(),
+				},
+				{
+					Name:  "Equipo Spartan Geek",
+					Email: "pedidos@spartangeek.com",
+				},
+			},
+			Variables: map[string]interface{}{
+				"name":      usr.Name(),
+				"reference": this.Reference,
+				"price":     product.Massdrop.Reserve,
+				"slug":      product.Slug,
+				"pname":     product.Name,
+				"quantity":  q,
+				"total":     humanize.FormatFloat("#,###.##", product.Massdrop.Reserve*float64(q)),
+			},
+		}
+
+		go mailing.Send(compose)
+
+		/*go func(id bson.ObjectId) {
+
+			err := queue.PushWDelay("gcommerce", "payment-reminder", map[string]interface{}{"id": id.Hex()}, 3600*24*2)
+
+			if err != nil {
+				panic(err)
+			}
+
+		}(order.Id)*/
 	}
 }
 
