@@ -207,14 +207,32 @@ func (this *Customer) NewOrder(gateway_name string, meta map[string]interface{})
 	return order, nil
 }
 
-func (this *Customer) MassdropTransaction(product *Product, q int, gateway_name string, meta map[string]interface{}) (*Order, *MassdropTransaction, error) {
+func (this *Customer) MassdropTransaction(product *Product, q int, gateway_name string, meta map[string]interface{}) (map[string]interface{}, *Order, *MassdropTransaction, error) {
+
+	var res map[string]interface{}
 
 	if product.Massdrop == nil {
-		return nil, nil, errors.New("Can't make a massdrop transaction using this product.")
+		return res, nil, nil, errors.New("Can't make a massdrop transaction using this product.")
 	}
 
 	meta["skip_siftscience"] = true
 	meta["addressless"] = true
+
+	switch gateway_name {
+	case "paypal":
+		baseUrl, err := this.di.Config.String("application.siteUrl")
+
+		if err != nil {
+			panic("Could not get siteUrl from config.")
+		}
+
+		url := baseUrl + "/compra-en-legion/" + product.Slug + "/unirme"
+
+		meta["paypal"] = map[string]interface{}{
+			"return_url": url,
+			"cancel_url": url,
+		}
+	}
 
 	t := time.Now()
 
@@ -247,13 +265,13 @@ func (this *Customer) MassdropTransaction(product *Product, q int, gateway_name 
 	err := order.Save()
 
 	if err != nil {
-		return nil, nil, err
+		return res, nil, nil, err
 	}
 
-	err = order.Checkout()
+	res, err = order.Checkout()
 
 	if err != nil {
-		return nil, nil, err
+		return res, nil, nil, err
 	}
 
 	var transactionType string = "reservation"
@@ -279,5 +297,5 @@ func (this *Customer) MassdropTransaction(product *Product, q int, gateway_name 
 	transaction.SetDI(this.di)
 	transaction.Save()
 
-	return order, transaction, nil
+	return res, order, transaction, nil
 }

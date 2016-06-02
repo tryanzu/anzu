@@ -5,21 +5,16 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/components"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/mail"
+	"github.com/fernandez14/spartangeek-blacker/modules/payments"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/olebedev/config"
 	"github.com/xuyu/goredis"
 	"gopkg.in/mgo.v2/bson"
 
+	"math"
 	"time"
 )
-
-func Boot(key string) *Module {
-
-	module := &Module{StripeKey: key}
-
-	return module
-}
 
 func ValidStatus(name string) bool {
 
@@ -37,6 +32,17 @@ func ValidStatus(name string) bool {
 	return false
 }
 
+type comissionFn func(float64) float64
+
+var comissions = map[string]comissionFn{
+	"stripe": func(n float64) float64 {
+		return math.Ceil(n*0.042 + 4.0)
+	},
+	"paypal": func(n float64) float64 {
+		return math.Ceil(n*0.046 + 5.0)
+	},
+}
+
 type Module struct {
 	Mongo      *mongo.Service               `inject:""`
 	Errors     *exceptions.ExceptionsModule `inject:""`
@@ -45,8 +51,8 @@ type Module struct {
 	Mail       *mail.Module                 `inject:""`
 	User       *user.Module                 `inject:""`
 	Components *components.Module           `inject:""`
+	Payments   *payments.Module             `inject:""`
 	Acl        *acl.Module                  `inject:""`
-	StripeKey  string
 }
 
 func (module *Module) GetCustomerFromUser(user_id bson.ObjectId) Customer {

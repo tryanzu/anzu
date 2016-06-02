@@ -222,7 +222,7 @@ func (this API) Place(c *gin.Context) {
 			return
 		}
 
-		err = order.Checkout()
+		res, err := order.Checkout()
 
 		if err != nil {
 			c.JSON(400, gin.H{"message": err.Error(), "key": err.Error(), "status": "error"})
@@ -301,7 +301,7 @@ func (this API) Place(c *gin.Context) {
 			customer.CleanCart()
 		}
 
-		c.JSON(200, gin.H{"status": "okay"})
+		c.JSON(200, gin.H{"status": "okay", "response": res})
 		return
 	}
 

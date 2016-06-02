@@ -54,7 +54,7 @@ func (this API) Massdrop(c *gin.Context) {
 		meta := form.Meta
 		meta["session_id"] = session_id
 
-		order, transaction, err := customer.MassdropTransaction(product, form.Quantity, form.Gateway, meta)
+		res, order, transaction, err := customer.MassdropTransaction(product, form.Quantity, form.Gateway, meta)
 
 		if err != nil {
 			c.JSON(400, gin.H{"message": err.Error(), "error": err.Error(), "status": "error", "order_id": order.Id, "transaction_id": transaction.Id})
@@ -114,7 +114,7 @@ func (this API) Massdrop(c *gin.Context) {
 			}(order.Id)*/
 		}
 
-		c.JSON(200, gin.H{"status": "okay"})
+		c.JSON(200, gin.H{"status": "okay", "response": res})
 		return
 	}
 

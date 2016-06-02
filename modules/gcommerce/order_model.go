@@ -1,6 +1,7 @@
 package gcommerce
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/modules/payments"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"gopkg.in/mgo.v2/bson"
 	"time"
@@ -43,7 +44,7 @@ type Order struct {
 	CustomerAdress *CustomerAddress `bson:"-" json:"-"`
 
 	di      *Module
-	gateway Gateway
+	gateway payments.Gateway
 }
 
 type Item struct {

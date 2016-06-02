@@ -64,6 +64,7 @@ func main() {
 	var notificationsModule notifications.NotificationsModule
 	var feedModule feed.FeedModule
 	var exceptions exceptions.ExceptionsModule
+	var gcommerceModule gcommerce.Module
 
 	storeService := store.Boot()
 
@@ -86,7 +87,6 @@ func main() {
 	}
 
 	gosift.ApiKey = string_value(configService.String("ecommerce.siftscience.api_key"))
-	gcommerceService := gcommerce.Boot(string_value(configService.String("ecommerce.stripe.secret")))
 	searchConfig, err := configService.Get("algolia")
 
 	if err != nil {
@@ -192,7 +192,6 @@ func main() {
 		&inject.Object{Value: transmitService, Complete: true},
 		&inject.Object{Value: aclService, Complete: false},
 		&inject.Object{Value: storeService, Complete: false},
-		&inject.Object{Value: gcommerceService, Complete: false},
 		&inject.Object{Value: assetsService, Complete: false},
 		&inject.Object{Value: userService, Complete: false},
 		&inject.Object{Value: componentsService, Complete: false},
@@ -206,6 +205,7 @@ func main() {
 		&inject.Object{Value: &notificationsModule},
 		&inject.Object{Value: &feedModule},
 		&inject.Object{Value: &transmitModule},
+		&inject.Object{Value: &gcommerceModule},
 		&inject.Object{Value: &exceptions},
 	)
 
