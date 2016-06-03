@@ -306,16 +306,16 @@ func (self *Post) LoadVotes(user_id bson.ObjectId) {
 	// Only when there's loaded comments on the post
 	if len(self.Comments.Set) > 0 {
 
-		var ls []bson.ObjectId
+		//var ls []bson.ObjectId
 		var comments []Vote
 
-		for _, c := range self.Comments.Set {
+		/*for _, c := range self.Comments.Set {
 
 			ls = append(ls, c.Id)
-		}
+		}*/
 
 		// Get votes given to post's comments
-		err := database.C("votes").Find(bson.M{"type": "comment", "related_id": bson.M{"$in": ls}, "user_id": user_id}).All(&comments)
+		err := database.C("votes").Find(bson.M{"type": "comment", "related_id": self.Id, "user_id": user_id}).All(&comments)
 
 		if err != nil {
 			panic(err)
@@ -325,10 +325,12 @@ func (self *Post) LoadVotes(user_id bson.ObjectId) {
 
 			for index, c := range self.Comments.Set {
 
+				p := strconv.Itoa(c.Position)
+
 				// Iterate over comment's votes to determine status
 				for _, v := range comments {
 
-					if v.RelatedId == c.Id {
+					if v.NestedType == p {
 						self.Comments.Set[index].Liked = v.Value
 					}
 				}
