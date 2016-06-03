@@ -63,12 +63,11 @@ func (this API) Update(c *gin.Context) {
 		user := this.Acl.User(user_bson_id)
 
 		if user.CanUpdatePost(post) == false {
-
 			c.JSON(400, gin.H{"message": "Can't update post. Insufficient permissions", "status": "error"})
 			return
 		}
 
-		if user.CanWrite(category) == false {
+		if post.Category != category.Id && user.CanWrite(category) == false {
 			c.JSON(400, gin.H{"status": "error", "message": "Not enough permissions to write this category."})
 			return
 		}
