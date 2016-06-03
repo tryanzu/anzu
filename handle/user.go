@@ -503,35 +503,33 @@ func (di *UserAPI) UserUpdateProfile(c *gin.Context) {
 
 	if err == nil {
 
-		var form model.UserProfileForm
+		var form map[string]string
 
 		if c.BindWith(&form, binding.JSON) == nil {
 
 			set := bson.M{}
 
-			if form.UserName != "" && user.NameChanges < 1 {
+			if username, exists := form["username"]; exists && user.NameChanges < 1 {
 
 				valid_username, _ := regexp.Compile(`^[0-9a-zA-Z\-]{0,32}$`)
 
-				if valid_username.MatchString(form.UserName) {
+				if valid_username.MatchString(username) {
 
 					// Generate a slug for the username
-					username_slug := sanitize.Path(sanitize.Accents(form.UserName))
+					username_slug := sanitize.Path(sanitize.Accents(username))
 
 					// Check whether user exists
 					count, _ := database.C("users").Find(bson.M{"username_slug": username_slug}).Count()
 
 					if count == 0 {
-						set["username"] = form.UserName
+						set["username"] = username
 						set["username_slug"] = username_slug
 						set["name_changes"] = user.NameChanges + 1
 					}
 				}
 			}
 
-			if form.Description != "" {
-
-				description := form.Description
+			if description, exists := form["description"]; exists {
 
 				if len([]rune(description)) > 60 {
 					description = helpers.Truncate(description, 57) + "..."
@@ -540,16 +538,16 @@ func (di *UserAPI) UserUpdateProfile(c *gin.Context) {
 				set["description"] = description
 			}
 
-			if form.Email != "" && user.Email != form.Email {
+			if email, exists := form["email"]; exists && user.Email != email {
 
-				if !helpers.IsEmail(form.Email) {
+				if !helpers.IsEmail(email) {
 					c.JSON(400, gin.H{"status": "error", "message": "Invalid email address.", "details": "invalid-email", "fields": []string{"email"}})
 					return
 				}
 
 				_, err := di.User.Get(bson.M{"$or": []bson.M{
-					{"email": form.Email},
-					{"facebook.email": form.Email},
+					{"email": email},
+					{"facebook.email": email},
 				}})
 
 				if err == nil {
@@ -557,27 +555,39 @@ func (di *UserAPI) UserUpdateProfile(c *gin.Context) {
 					return
 				}
 
-				set["email"] = form.Email
+				set["email"] = email
 				set["ver_code"] = helpers.StrRandom(12)
 				set["validated"] = false
 			}
 
-			set["phone"] = form.Phone
-			set["battlenet_id"] = form.BattlenetId
-			set["steam_id"] = form.SteamId
-			set["origin_id"] = form.OriginId
-			set["country"] = form.Country
+			if phone, exists := form["phone"]; exists {
+				set["phone"] = phone
+			}
 
-			if form.Password != "" {
+			if bt, exists := form["battlenet_id"]; exists {
+				set["battlenet_id"] = bt
+			}
 
-				if len([]rune(form.Password)) < 4 {
+			if steam, exists := form["steam_id"]; exists {
+				set["steam_id"] = steam
+			}
+
+			if origin, exists := form["origin_id"]; exists {
+				set["origin_id"] = origin
+			}
+
+			if country, exists := form["country"]; exists {
+				set["country"] = country
+			}
+
+			if password, exists := form["password"]; exists {
+
+				if len([]rune(password)) < 4 {
 					c.JSON(400, gin.H{"status": "error", "message": "Can't allow password update, too short."})
 					return
 				}
 
-				password := helpers.Sha256(form.Password)
-
-				set["password"] = password
+				set["password"] = helpers.Sha256(password)
 			}
 
 			set["updated_at"] = time.Now()
