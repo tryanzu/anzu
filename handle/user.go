@@ -260,7 +260,7 @@ func (di UserAPI) UserGetJwtToken(c *gin.Context) {
 
 	// Get the email or the username or the id and its password
 	email, password := qs.Get("email"), qs.Get("password")
-	usr, err := di.User.Get(bson.M{"email": email})
+	usr, err := di.User.Get(bson.M{"email": email, "deleted_at": bson.M{"$exists": false}})
 
 	if err != nil {
 		c.JSON(400, gin.H{"status": "error", "message": "Couldnt get user."})
