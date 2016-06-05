@@ -124,7 +124,8 @@ type MassdropAggregation struct {
 		Type       string        `bson:"type" json:"type"`
 	} `bson:"_id" json:"_id"`
 
-	Count int `bson:"count" json:"count"`
+	Count  int `bson:"count" json:"count"`
+	QCount int `bson:"qcount" json:"qcount"`
 }
 
 type ProductAggregation struct {

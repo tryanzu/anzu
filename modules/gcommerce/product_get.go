@@ -127,7 +127,7 @@ func (this Products) GetMassdrops(limit, offset int) []MassdropFoundation {
 
 	err = database.C("gcommerce_massdrop_transactions").Pipe([]bson.M{
 		{"$match": bson.M{"massdrop_id": bson.M{"$in": ids}, "status": "completed"}},
-		{"$group": bson.M{"_id": bson.M{"massdrop_id": "$massdrop_id", "type": "$type"}, "count": bson.M{"$sum": 1}}},
+		{"$group": bson.M{"_id": bson.M{"massdrop_id": "$massdrop_id", "type": "$type"}, "count": bson.M{"$sum": 1}, "qcount": bson.M{"$sum": "$attributes.quantity"}}},
 	}).All(&aggregation)
 
 	if err != nil {
@@ -140,7 +140,7 @@ func (this Products) GetMassdrops(limit, offset int) []MassdropFoundation {
 		if a.Id.Type == "interested" {
 			insterested_map[id] = a.Count
 		} else if a.Id.Type == "reservation" {
-			reservation_map[id] = a.Count
+			reservation_map[id] = a.QCount
 		}
 	}
 
