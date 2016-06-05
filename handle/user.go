@@ -402,7 +402,7 @@ func (this UserAPI) UserLogout(c *gin.Context) {
 		return
 	}
 
-	c.JSON(400, gin.H{"status": "error", "message": "Bad request, no user id."})
+	c.JSON(200, gin.H{"status": "okay"})
 }
 
 func (di *UserAPI) UserUpdateProfileAvatar(c *gin.Context) {
