@@ -110,7 +110,7 @@ func (this Products) GetMassdrops(limit, offset int) []MassdropFoundation {
 	var prods []bson.ObjectId
 
 	database := this.di.Mongo.Database
-	err := database.C("gcommerce_massdrop").Find(nil).Limit(limit).Skip(offset).All(&list)
+	err := database.C("gcommerce_massdrop").Find(bson.M{"deleted_at": bson.M{"$exists": false}}).Limit(limit).Skip(offset).All(&list)
 
 	if err != nil {
 		panic(err)
