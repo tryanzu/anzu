@@ -1,5 +1,5 @@
-hash: a3426f76e41f2e75a01e498a5f12dce1a066a107f898e12aca4dbf2c579f808d
-updated: 2016-05-18T20:35:26.181968857-05:00
+hash: a998f5ce00a1d0afa94f50596884f369ed4b59c195f642e313539a27633a2380
+updated: 2016-06-20T12:54:06.280287152-05:00
 imports:
 - name: collectd.org
   version: 9fc824c70f713ea0f058a07b49a4c563ef2a3b98
@@ -131,6 +131,11 @@ imports:
   version: ce80572eb55aa0ac839330041ca9db1afa5f1f6c
 - name: github.com/jmcvetta/napping
   version: 32c9eedd6eb69d9a7ce0eb999deb620e0aafb5b4
+- name: github.com/jmcvetta/neoism
+  version: 66fd640d319cdca6bfa9da2c55b449b70cca224c
+  repo: https://github.com/jmcvetta/neoism
+- name: github.com/jmcvetta/randutil
+  version: 2bb1b664bcff821e02b2a0644cd29c7e824d54f8
 - name: github.com/julienschmidt/httprouter
   version: 77366a47451a56bb3ba682481eed85b64fea14e8
 - name: github.com/justinas/alice
@@ -280,6 +285,8 @@ imports:
   version: eb9d6938e19c840497c2c6a02076552a7d96166f
 - name: gopkg.in/jmcvetta/napping.v3
   version: 5be8267a453ffa5b80c4af7fa4cfc1d04d3cfd5c
+- name: gopkg.in/jmcvetta/neoism.v1
+  version: c37ec30845b63d9f168f55e837c787e08a15e9a6
 - name: gopkg.in/mgo.v2
   version: d90005c5262a3463800497ea5a89aed5fe22c886
   subpackages:

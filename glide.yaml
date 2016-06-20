@@ -60,3 +60,4 @@ import:
 - package: github.com/fernandez14/go-enlacefiscal
 - package: github.com/fernandez14/go-siftscience
 - package: github.com/leebenson/paypal
+- package: gopkg.in/jmcvetta/neoism.v1
