@@ -36,6 +36,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stripe/stripe-go/client"
 	"github.com/xuyu/goredis"
+	"gopkg.in/jmcvetta/neoism.v1"
 	"os"
 	"runtime"
 )
@@ -180,6 +181,18 @@ func main() {
 
 	p := payments.GetModule(paymentGateways)
 
+	neo4jUri, err := configService.String("database.neo4j")
+
+	if err != nil {
+		panic("Could not get config data to initialize neo4j connection.")
+	}
+
+	neo4j, err := neoism.Connect(neo4jUri)
+
+	if err != nil {
+		panic(err)
+	}
+
 	// Provide graph with service instances
 	err = g.Provide(
 		&inject.Object{Value: configService, Complete: true},
@@ -189,6 +202,7 @@ func main() {
 		&inject.Object{Value: s3Service, Complete: true},
 		&inject.Object{Value: s3BucketService, Complete: true},
 		&inject.Object{Value: firebaseService, Complete: true},
+		&inject.Object{Value: neo4j, Complete: true},
 		&inject.Object{Value: statsService, Complete: true},
 		&inject.Object{Value: searchService, Complete: true},
 		&inject.Object{Value: transmitService, Complete: true},

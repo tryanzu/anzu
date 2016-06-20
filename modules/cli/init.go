@@ -15,6 +15,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/olebedev/config"
+	"gopkg.in/jmcvetta/neoism.v1"
 	"gopkg.in/mgo.v2/bson"
 	"log"
 	"reflect"
@@ -34,6 +35,7 @@ type Module struct {
 	Mail      *mail.Module                 `inject:""`
 	GCommerce *gcommerce.Module            `inject:""`
 	Config    *config.Config               `inject:""`
+	Neoism    *neoism.Database             `inject:""`
 }
 
 type fn func()
@@ -54,6 +56,7 @@ func (module Module) Run(name string) {
 		"custom-invoices":    module.GenerateCustomInvoices,
 		"migrate-comments":   module.MigrateDeletedComment,
 		"migrate-ccomments":  module.MigrateChosenComment,
+		"export-components":  module.ExportComponents,
 	}
 
 	if handler, exists := commands[name]; exists {
