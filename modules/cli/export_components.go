@@ -27,13 +27,27 @@ func (module Module) ExportComponents() {
 	database := module.Mongo.Database
 	neo := module.Neoism
 	list := database.C("components").Find(nil).Iter()
+	n := 1
+
+	var transaction *neoism.Tx
+	var err error
 
 	for list.Next(&c) {
+
+		if n%50 == 1 {
+			transaction, err = neo.Begin(nil)
+
+			if err != nil {
+				panic(err)
+			}
+		}
+
 		if name, exists := c["name"]; exists {
 
 			props := neoism.Props{}
 			sells := false
 			cType := "unknown"
+			images := []string{}
 
 			for i, value := range c {
 				if i == "_id" {
@@ -52,6 +66,12 @@ func (module Module) ExportComponents() {
 					props["price"] = price
 					props["stock"] = stock
 
+					continue
+				}
+
+				if i == "images" {
+					images = value.([]string)
+					props["images"] = images
 					continue
 				}
 
@@ -76,6 +96,26 @@ func (module Module) ExportComponents() {
 			}
 
 			fmt.Println("Processed " + name.(string))
+		}
+
+		if n%50 == 0 && transaction != nil {
+			err = transaction.Commit()
+
+			if err != nil {
+				panic(err)
+			}
+
+			transaction = nil
+		}
+
+		n++
+	}
+
+	if transaction != nil {
+		err = transaction.Commit()
+
+		if err != nil {
+			panic(err)
 		}
 	}
 }
