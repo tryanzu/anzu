@@ -201,6 +201,7 @@ func (module *Module) Run() {
 		v1.GET("/search/posts", module.PostsFactory.Search)
 		v1.GET("/search/products", module.Products.Search)
 		v1.GET("/search/components", module.ComponentsFactory.Search)
+		v1.GET("/search/components-v2", module.ComponentsFactory.Lookup)
 
 		// Massdrop routes
 		v1.GET("/massdrop", module.Massdrop.Get)
