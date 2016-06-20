@@ -27,20 +27,8 @@ func (module Module) ExportComponents() {
 	database := module.Mongo.Database
 	neo := module.Neoism
 	list := database.C("components").Find(nil).Iter()
-	n := 1
-
-	var transaction *neoism.Tx
-	var err error
 
 	for list.Next(&c) {
-
-		if n%50 == 1 {
-			transaction, err = neo.Begin(nil)
-
-			if err != nil {
-				panic(err)
-			}
-		}
 
 		if name, exists := c["name"]; exists {
 
@@ -96,26 +84,6 @@ func (module Module) ExportComponents() {
 			}
 
 			fmt.Println("Processed " + name.(string))
-		}
-
-		if n%50 == 0 && transaction != nil {
-			err = transaction.Commit()
-
-			if err != nil {
-				panic(err)
-			}
-
-			transaction = nil
-		}
-
-		n++
-	}
-
-	if transaction != nil {
-		err = transaction.Commit()
-
-		if err != nil {
-			panic(err)
 		}
 	}
 }
