@@ -35,7 +35,6 @@ func (module Module) ExportComponents() {
 			props := neoism.Props{}
 			sells := false
 			cType := "unknown"
-			images := []string{}
 
 			for i, value := range c {
 				if i == "_id" {
@@ -58,7 +57,14 @@ func (module Module) ExportComponents() {
 				}
 
 				if i == "images" {
-					images = value.([]string)
+
+					images := []string{}
+					imageList := value.([]interface{})
+
+					for _, v := range imageList {
+						images = append(images, v.(string))
+					}
+
 					props["images"] = images
 					continue
 				}
