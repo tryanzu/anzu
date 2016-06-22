@@ -35,6 +35,7 @@ func (b *Build) SetDI(m *Module) {
 func (b *Build) UpdateByMap(m map[string]interface{}) error {
 
 	set := bson.M{}
+	unset := bson.M{}
 	db := b.di.Mongo.Database
 
 	if name, exists := m["name"].(string); exists {
@@ -51,18 +52,49 @@ func (b *Build) UpdateByMap(m map[string]interface{}) error {
 				set[component] = bson.ObjectIdHex(c)
 			}
 		}
+		if c, exists := m[component].(bool); exists {
+			if c == false {
+				unset[component] = ""
+			}
+		}
 	}
 
 	var multipleIdAttrs = []string{"gpu", "memory", "storage"}
 
 	for _, component := range multipleIdAttrs {
-		if c, exists := m[component].([]bson.ObjectId); exists {
-			set[component] = c
+		if c, exists := m[component].([]string); exists {
+
+			ls := []bson.ObjectId{}
+
+			for _, id := range c {
+				if bson.IsObjectIdHex(id) {
+					ls = append(ls, bson.ObjectIdHex(id))
+				}
+			}
+
+			set[component] = ls
+		}
+
+		if c, exists := m[component].(bool); exists {
+			if c == false {
+				unset[component] = ""
+			}
 		}
 	}
 
-	if len(set) > 0 {
-		err := db.C("builds").Update(bson.M{"_id": b.Id}, bson.M{"$set": set})
+	if len(set) > 0 || len(unset) > 0 {
+
+		params := bson.M{}
+
+		if len(set) > 0 {
+			params["$set"] = set
+		}
+
+		if len(unset) > 0 {
+			params["$unset"] = unset
+		}
+
+		err := db.C("builds").Update(bson.M{"_id": b.Id}, params)
 
 		if err != nil {
 			return err
