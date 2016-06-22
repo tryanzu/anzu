@@ -6,6 +6,7 @@ import (
 	"github.com/facebookgo/inject"
 	"github.com/fernandez14/spartangeek-blacker/handle"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller"
+	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/builds"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/cart"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/checkout"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/comments"
@@ -49,6 +50,7 @@ type Module struct {
 	Products          products.API
 	Massdrop          massdrop.API
 	Deals             deals.API
+	Builds            builds.API
 	Customer          controller.CustomerAPI
 	Orders            controller.OrdersAPI
 	Owners            controller.OwnersAPI
@@ -87,6 +89,7 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.Sitemap},
 		&inject.Object{Value: &module.Gaming},
 		&inject.Object{Value: &module.Store},
+		&inject.Object{Value: &module.Builds},
 		&inject.Object{Value: &module.BuildNotes},
 		&inject.Object{Value: &module.Mail},
 		&inject.Object{Value: &module.Components},
@@ -173,7 +176,6 @@ func (module *Module) Run() {
 		})
 
 		v1.GET("/whoami", func(c *gin.Context) {
-
 			c.String(200, c.ClientIP())
 		})
 
@@ -201,7 +203,7 @@ func (module *Module) Run() {
 		v1.GET("/search/posts", module.PostsFactory.Search)
 		v1.GET("/search/products", module.Products.Search)
 		v1.GET("/search/components", module.ComponentsFactory.Search)
-		v1.GET("/search/components-v2", module.ComponentsFactory.Lookup)
+		v1.GET("/search/parts", module.ComponentsFactory.Lookup)
 
 		// Massdrop routes
 		v1.GET("/massdrop", module.Massdrop.Get)
@@ -234,6 +236,9 @@ func (module *Module) Run() {
 
 		// Stats routes
 		v1.GET("/stats/board", module.Stats.BoardGet)
+
+		// Build routes
+		v1.GET("/build", module.Builds.GetAction)
 
 		// Store routes
 		store := v1.Group("/store")
@@ -271,6 +276,8 @@ func (module *Module) Run() {
 
 		authorized.Use(module.Middlewares.NeedAuthorization())
 		{
+			authorized.POST("/build", module.PostsFactory.Create)
+
 			// Auth routes
 			v1.GET("/auth/logout", module.Users.UserLogout)
 
@@ -313,6 +320,7 @@ func (module *Module) Run() {
 
 			backoffice.Use(module.Middlewares.NeedAclAuthorization())
 			{
+
 				store := backoffice.Group("/store")
 				{
 					store.GET("/order", module.Orders.Get)
