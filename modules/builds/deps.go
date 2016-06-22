@@ -62,7 +62,7 @@ func (m *Module) FindOrCreate(sessionId string, userId *bson.ObjectId) *Build {
 
 func (m *Module) FindByRef(ref string) (*Build, error) {
 
-	var build Build
+	var build *Build
 
 	err := m.Mongo.Database.C("builds").Find(bson.M{"ref": ref}).One(&build)
 
@@ -70,5 +70,7 @@ func (m *Module) FindByRef(ref string) (*Build, error) {
 		return nil, err
 	}
 
-	return &build, nil
+	build.SetDI(m)
+
+	return build, nil
 }

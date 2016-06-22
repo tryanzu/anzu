@@ -36,6 +36,7 @@ func (a API) GetAction(c *gin.Context) {
 
 		if err != nil {
 			c.JSON(404, gin.H{"status": "error", "message": "Could not get build by ref."})
+			return
 		}
 	} else {
 		session := sessions.Default(c)

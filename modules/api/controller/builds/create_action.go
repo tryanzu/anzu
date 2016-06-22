@@ -52,9 +52,9 @@ type PartMapPayload struct {
 	Options []PartPayload `json:"options" binding:"required"`
 }
 
-type BuildPayload struct {
+/*type BuildPayload struct {
 	Id    int              `json:"id"`
 	Name  string           `json:"name" binding:"required"`
 	Price int              `json:"price" binding:"required"`
 	Parts []PartMapPayload `json:"parts" binding:"required"`
-}
+}*/

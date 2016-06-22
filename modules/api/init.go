@@ -239,6 +239,8 @@ func (module *Module) Run() {
 
 		// Build routes
 		v1.GET("/build", module.Builds.GetAction)
+		v1.GET("/build/:id", module.Builds.GetAction)
+		v1.PUT("/build/:id", module.Builds.UpdateAction)
 
 		// Store routes
 		store := v1.Group("/store")
