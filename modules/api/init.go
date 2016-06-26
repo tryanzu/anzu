@@ -358,6 +358,7 @@ func (module *Module) Run() {
 		{
 			mail.HEAD("/inbound/:address", func(c *gin.Context) { c.String(200, ":)") })
 			mail.POST("/inbound/:address", module.Mail.Inbound)
+			mail.POST("/postmark-bounced", module.Mail.BounceWebhook)
 		}
 	}
 

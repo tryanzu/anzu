@@ -153,6 +153,50 @@ func (self MailAPI) MandrillFallback(c *gin.Context) {
 	c.JSON(200, gin.H{"status": "okay"})
 }
 
+func (m MailAPI) BounceWebhook(c *gin.Context) {
+
+	var payload PostmarkBouncedPayload
+
+	if c.Bind(&payload) == nil {
+
+		db := m.Mongo.Database
+		err := db.C("mail_bounces").Insert(payload)
+
+		if err != nil {
+			panic(err)
+		}
+
+		order, err := m.Store.OrderFinder(payload.Email)
+
+		if err == nil {
+
+			// Keep the track of what disabled the order
+			order.PushTag("disabled:" + payload.Type)
+
+			// Ignore the order
+			order.Ignore()
+		}
+
+		c.JSON(200, gin.H{"status": "okay"})
+	}
+
+	c.JSON(400, gin.H{"message": "The request did not match the needed payload. Aborting..."})
+}
+
+type PostmarkBouncedPayload struct {
+	ID          int
+	Type        string
+	TypeCode    int
+	MessageID   string
+	Description string
+	Details     string
+	Inactive    bool
+	CanActivate bool
+	Email       string
+	Subject     string
+	BouncedAt   time.Time
+}
+
 type MailInbound struct {
 	Id                bson.ObjectId     `bson:"_id,omitempty" json:"id"`
 	MessageID         string            `json:"MessageID"`
