@@ -183,6 +183,28 @@ func (m MailAPI) BounceWebhook(c *gin.Context) {
 	c.JSON(400, gin.H{"message": "The request did not match the needed payload. Aborting..."})
 }
 
+func (m MailAPI) OpenWebhook(c *gin.Context) {
+
+	var payload PostmarkOpenPayload
+
+	if c.Bind(&payload) == nil {
+
+		payload.Id = bson.NewObjectId()
+		db := m.Mongo.Database
+		err := db.C("mail_opens").Insert(payload)
+
+		if err != nil {
+			panic(err)
+		}
+
+		m.Store.TrackEmailOpened(payload.MessageID, payload.Id, payload.ReadSeconds)
+
+		c.JSON(200, gin.H{"status": "okay"})
+	}
+
+	c.JSON(400, gin.H{"message": "The request did not match the needed payload. Aborting..."})
+}
+
 type PostmarkBouncedPayload struct {
 	ID          int       `bson:"_id" json:"ID"`
 	Type        string    `bson:"type" json:"Type"`
@@ -195,6 +217,16 @@ type PostmarkBouncedPayload struct {
 	Email       string    `bson:"email" json:"Email"`
 	Subject     string    `bson:"subject" json:"Subject"`
 	BouncedAt   time.Time `bson:"bounced_at" json:"BouncedAt"`
+}
+
+type PostmarkOpenPayload struct {
+	Id          bson.ObjectId          `bson:"_id,omitempty" json:"id"`
+	MessageID   string                 `bson:"message_id" json:"MessageID"`
+	Recipient   string                 `bson:"recipient" json:"Recipient"`
+	ReadSeconds int                    `bson:"read_seconds" json:"ReadSeconds"`
+	FirstOpen   bool                   `bson:"first_open" json:"FirstOpen"`
+	Geo         map[string]interface{} `bson:"geo" json:"Geo"`
+	ReceivedAt  time.Time              `bson:"description" json:"ReceivedAt"`
 }
 
 type MailInbound struct {

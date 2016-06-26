@@ -1,5 +1,11 @@
 package mail
 
+import (
+	"gopkg.in/mgo.v2/bson"
+
+	"time"
+)
+
 type Mail struct {
 	Subject   string
 	Template  int
@@ -18,4 +24,10 @@ type ModuleConfig struct {
 	From       string
 	FromName   string
 	Recipients []string
+}
+
+type InboundMail struct {
+	Id        bson.ObjectId `bson:"_id,omitempty" json:"id"`
+	MessageId string        `bson:"messageid" json:"message_id"`
+	Created   time.Time     `bson:"created_at" json:"created_at"`
 }

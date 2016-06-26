@@ -6,6 +6,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/olebedev/config"
 	"github.com/xuyu/goredis"
+	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 
 	"strconv"
@@ -48,24 +49,51 @@ func (module *Module) Order(id bson.ObjectId) (*One, error) {
 	return one, nil
 }
 
-// Find an order by the provided email
-func (module *Module) OrderFinder(mail string) (*One, error) {
+// Find an order by the provided order type
+func (module *Module) OrderFinder(order interface{}) (*One, error) {
 
-	var model *OrderModel
+	var m *OrderModel
+	var query *mgo.Query
+	db := module.Mongo.Database
+	orders := db.C("orders")
 
-	database := module.Mongo.Database
-
-	// Get the order using it's email
-	err := database.C("orders").Find(bson.M{"user.email": mail}).Sort("-updated_at").One(&model)
-
-	if err != nil {
-
-		return nil, exceptions.NotFound{"Invalid order follower. Not found."}
+	switch order.(type) {
+	case bson.ObjectId:
+		query = orders.Find(bson.M{"_id": order.(bson.ObjectId)})
+	case bson.M:
+		query = orders.Find(order.(bson.M))
+	case string:
+		query = orders.Find(bson.M{"user.email": order.(string)})
+	default:
+		panic("Unkown argument type")
 	}
 
-	one := &One{data: model, di: module}
+	err := query.Sort("-updated_at").One(&m)
+
+	if err != nil {
+		return nil, exceptions.NotFound{"Could not found order using criteria."}
+	}
+
+	one := &One{data: m, di: module}
 
 	return one, nil
+}
+
+func (m *Module) TrackEmailOpened(messageId string, trackId bson.ObjectId, seconds int) {
+
+	var r mail.InboundMail
+
+	db := m.Mongo.Database
+	err := db.C("inbound_mails").Find(bson.M{"messageid": messageId}).One(&r)
+
+	if err == nil {
+
+		err := db.C("orders").Update(bson.M{"messages.related_id": r.Id}, bson.M{"$set": bson.M{"messages.$.opened_at": time.Now(), "messages.$.otrack_id": trackId, "messages.$.read_seconds": seconds}})
+
+		if err != nil {
+			panic(err)
+		}
+	}
 }
 
 func (module *Module) CreateOrder(order OrderModel) {
