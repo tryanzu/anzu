@@ -15,9 +15,7 @@ import (
 )
 
 func Boot() *Module {
-
 	module := &Module{}
-
 	return module
 }
 
