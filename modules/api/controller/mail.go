@@ -184,17 +184,17 @@ func (m MailAPI) BounceWebhook(c *gin.Context) {
 }
 
 type PostmarkBouncedPayload struct {
-	ID          int
-	Type        string
-	TypeCode    int
-	MessageID   string
-	Description string
-	Details     string
-	Inactive    bool
-	CanActivate bool
-	Email       string
-	Subject     string
-	BouncedAt   time.Time
+	ID          int       `bson:"_id" json:"ID"`
+	Type        string    `bson:"type" json:"Type"`
+	TypeCode    int       `bson:"type_code" json:"TypeCode"`
+	MessageID   string    `bson:"message_id" json:"MessageID"`
+	Description string    `bson:"description" json:"Description"`
+	Details     string    `bson:"details" json:"Details"`
+	Inactive    bool      `bson:"inactive" json:"Inactive"`
+	CanActivate bool      `bson:"can_activate" json:"CanActivate"`
+	Email       string    `bson:"email" json:"Email"`
+	Subject     string    `bson:"subject" json:"Subject"`
+	BouncedAt   time.Time `bson:"bounced_at" json:"BouncedAt"`
 }
 
 type MailInbound struct {
