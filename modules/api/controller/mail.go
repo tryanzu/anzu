@@ -178,6 +178,7 @@ func (m MailAPI) BounceWebhook(c *gin.Context) {
 		}
 
 		c.JSON(200, gin.H{"status": "okay"})
+		return
 	}
 
 	c.JSON(400, gin.H{"message": "The request did not match the needed payload. Aborting..."})
@@ -187,7 +188,9 @@ func (m MailAPI) OpenWebhook(c *gin.Context) {
 
 	var payload PostmarkOpenPayload
 
-	if c.Bind(&payload) == nil {
+	err := c.BindJSON(&payload)
+
+	if err == nil {
 
 		payload.Id = bson.NewObjectId()
 		db := m.Mongo.Database
@@ -200,9 +203,10 @@ func (m MailAPI) OpenWebhook(c *gin.Context) {
 		m.Store.TrackEmailOpened(payload.MessageID, payload.Id, payload.ReadSeconds)
 
 		c.JSON(200, gin.H{"status": "okay"})
+		return
 	}
 
-	c.JSON(400, gin.H{"message": "The request did not match the needed payload. Aborting..."})
+	c.JSON(400, gin.H{"message": "The request did not match the needed payload. Aborting...", "details": err})
 }
 
 type PostmarkBouncedPayload struct {
@@ -221,12 +225,12 @@ type PostmarkBouncedPayload struct {
 
 type PostmarkOpenPayload struct {
 	Id          bson.ObjectId          `bson:"_id,omitempty" json:"-"`
-	MessageID   string                 `bson:"message_id" json:"MessageID"`
-	Recipient   string                 `bson:"recipient" json:"Recipient"`
-	ReadSeconds int                    `bson:"read_seconds" json:"ReadSeconds"`
-	FirstOpen   bool                   `bson:"first_open" json:"FirstOpen"`
-	Geo         map[string]interface{} `bson:"geo" json:"Geo"`
-	ReceivedAt  time.Time              `bson:"received_at" json:"ReceivedAt"`
+	MessageID   string                 `bson:"message_id" json:"MessageID,omitempty"`
+	Recipient   string                 `bson:"recipient" json:"Recipient,omitempty"`
+	ReadSeconds int                    `bson:"read_seconds" json:"ReadSeconds,omitempty"`
+	FirstOpen   bool                   `bson:"first_open" json:"FirstOpen,omitempty"`
+	Geo         map[string]interface{} `bson:"geo" json:"Geo,omitempty"`
+	ReceivedAt  string                 `bson:"received_at" json:"ReceivedAt,omitempty"`
 }
 
 type MailInbound struct {
