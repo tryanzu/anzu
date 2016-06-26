@@ -60,12 +60,15 @@ type OrderUserModel struct {
 }
 
 type MessageModel struct {
-	Type      string                 `bson:"type" json:"type"`
-	Content   string                 `bson:"content" json:"content"`
-	RelatedId bson.ObjectId          `bson:"related_id,omitempty" json:"related_id,omitempty"`
-	Meta      map[string]interface{} `bson:"-" json:"meta,omitempty"`
-	Created   time.Time              `bson:"created_at" json:"created_at"`
-	Updated   time.Time              `bson:"updated_at" json:"updated_at"`
+	Type        string                 `bson:"type" json:"type"`
+	Content     string                 `bson:"content" json:"content"`
+	RelatedId   bson.ObjectId          `bson:"related_id,omitempty" json:"related_id,omitempty"`
+	TrackId     bson.ObjectId          `bson:"otrack_id,omitempty" json:"otrack_id,omitempty"`
+	Opened      time.Time              `bson:"opened_at,omitempty" json:"opened_at,omitempty"`
+	ReadSeconds int                    `bson:"read_seconds,omitempty" json:"read_seconds,omitempty"`
+	Meta        map[string]interface{} `bson:"-" json:"meta,omitempty"`
+	Created     time.Time              `bson:"created_at" json:"created_at"`
+	Updated     time.Time              `bson:"updated_at" json:"updated_at"`
 }
 
 type ActivityModel struct {

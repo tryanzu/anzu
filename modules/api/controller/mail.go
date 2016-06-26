@@ -220,13 +220,13 @@ type PostmarkBouncedPayload struct {
 }
 
 type PostmarkOpenPayload struct {
-	Id          bson.ObjectId          `bson:"_id,omitempty" json:"id"`
+	Id          bson.ObjectId          `bson:"_id,omitempty" json:"-"`
 	MessageID   string                 `bson:"message_id" json:"MessageID"`
 	Recipient   string                 `bson:"recipient" json:"Recipient"`
 	ReadSeconds int                    `bson:"read_seconds" json:"ReadSeconds"`
 	FirstOpen   bool                   `bson:"first_open" json:"FirstOpen"`
 	Geo         map[string]interface{} `bson:"geo" json:"Geo"`
-	ReceivedAt  time.Time              `bson:"description" json:"ReceivedAt"`
+	ReceivedAt  time.Time              `bson:"received_at" json:"ReceivedAt"`
 }
 
 type MailInbound struct {
