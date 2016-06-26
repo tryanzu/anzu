@@ -62,6 +62,7 @@ type OrderUserModel struct {
 type MessageModel struct {
 	Type        string                 `bson:"type" json:"type"`
 	Content     string                 `bson:"content" json:"content"`
+	MessageID   string                 `bson:"postmark_id,omitempty" json:"postmark_id,omitempty"`
 	RelatedId   bson.ObjectId          `bson:"related_id,omitempty" json:"related_id,omitempty"`
 	TrackId     bson.ObjectId          `bson:"otrack_id,omitempty" json:"otrack_id,omitempty"`
 	Opened      time.Time              `bson:"opened_at,omitempty" json:"opened_at,omitempty"`

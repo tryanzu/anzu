@@ -1,10 +1,10 @@
 package mail
 
 import (
-	"github.com/olebedev/config"
 	"github.com/hjr265/postmark.go/postmark"
+	"github.com/olebedev/config"
+
 	"net/mail"
-	"log"
 )
 
 type Module struct {
@@ -13,23 +13,23 @@ type Module struct {
 	debug  bool
 }
 
-func (module Module) Send(m Mail) {
+func (module Module) Send(m Mail) string {
 
 	message := &postmark.Message{}
 
 	if m.FromName == "" && m.FromEmail == "" {
 
 		message.From = &mail.Address{
-	        Name:    module.config.FromName,
-	        Address: module.config.From,
-	    }
-		
+			Name:    module.config.FromName,
+			Address: module.config.From,
+		}
+
 	} else {
 
 		message.From = &mail.Address{
-	        Name:    m.FromName,
-	        Address: m.FromEmail,
-	    }
+			Name:    m.FromName,
+			Address: m.FromEmail,
+		}
 	}
 
 	var recipients []*mail.Address
@@ -66,15 +66,15 @@ func (module Module) Send(m Mail) {
 		panic(err)
 	}
 
-	log.Println(res)
+	return res.MessageID
 }
 
 func Boot(key string, config *config.Config, debug bool) *Module {
 
 	// Initialize mandrill client
 	client := &postmark.Client{
-	    ApiKey: key,
-	    Secure: true,
+		ApiKey: key,
+		Secure: true,
 	}
 
 	name, err := config.String("from.name")

@@ -79,14 +79,12 @@ func (module *Module) OrderFinder(order interface{}) (*One, error) {
 
 func (m *Module) TrackEmailOpened(messageId string, trackId bson.ObjectId, seconds int) {
 
-	var r mail.InboundMail
-
 	db := m.Mongo.Database
-	err := db.C("inbound_mails").Find(bson.M{"messageid": messageId}).One(&r)
+	c, err := db.C("orders").Find(bson.M{"messages.postmark_id": messageId}).Count()
 
-	if err == nil {
+	if err == nil && c > 0 {
 
-		err := db.C("orders").Update(bson.M{"messages.related_id": r.Id}, bson.M{"$set": bson.M{"messages.$.opened_at": time.Now(), "messages.$.otrack_id": trackId, "messages.$.read_seconds": seconds}})
+		err := db.C("orders").Update(bson.M{"messages.postmark_id": messageId}, bson.M{"$set": bson.M{"messages.$.opened_at": time.Now(), "messages.$.otrack_id": trackId, "messages.$.read_seconds": seconds}})
 
 		if err != nil {
 			panic(err)
