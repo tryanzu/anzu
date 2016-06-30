@@ -59,7 +59,7 @@ func (module Module) TrustUserIP(address string, usr *user.One) bool {
 	} else if ip.Banned == true && usr.Data().Banned == false {
 
 		// In case the ip is banned but the user is not then update it
-		err := database.C("users").Update(bson.M{"_id": usr.Data().Id}, bson.M{"$set": bson.M{"$set": bson.M{"banned": true, "banned_at": time.Now()}, "$push": bson.M{"banned_reason": usr.Data().UserName + " has accessed from a flagged IP. " + ip.Address}}})
+		err := database.C("users").Update(bson.M{"_id": usr.Data().Id}, bson.M{"$set": bson.M{"banned": true, "banned_at": time.Now()}, "$push": bson.M{"banned_reason": usr.Data().UserName + " has accessed from a flagged IP. " + ip.Address}})
 
 		if err != nil {
 			panic(err)
