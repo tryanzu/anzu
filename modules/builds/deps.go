@@ -4,12 +4,14 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"gopkg.in/mgo.v2/bson"
+	"gopkg.in/op/go-logging.v1"
 
 	"time"
 )
 
 type Module struct {
-	Mongo *mongo.Service `inject:""`
+	Mongo  *mongo.Service  `inject:""`
+	Logger *logging.Logger `inject:""`
 }
 
 func (m *Module) FindOrCreate(sessionId string, userId *bson.ObjectId) *Build {

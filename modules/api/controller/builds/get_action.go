@@ -66,5 +66,7 @@ func (a API) GetAction(c *gin.Context) {
 		return
 	}
 
+	build.LoadComponents()
+
 	c.JSON(200, build)
 }

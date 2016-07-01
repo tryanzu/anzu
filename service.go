@@ -36,6 +36,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stripe/stripe-go/client"
 	"github.com/xuyu/goredis"
+	"gopkg.in/op/go-logging.v1"
 	"os"
 	"runtime"
 )
@@ -65,6 +66,15 @@ func main() {
 	var feedModule feed.FeedModule
 	var exceptions exceptions.ExceptionsModule
 	var gcommerceModule gcommerce.Module
+
+	var log *logging.Logger = logging.MustGetLogger("blacker")
+	var format logging.Formatter = logging.MustStringFormatter(
+		`%{color}%{time:15:04:05.000} %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}`,
+	)
+
+	backend := logging.NewLogBackend(os.Stderr, "", 0)
+	backendFormatter := logging.NewBackendFormatter(backend, format)
+	logging.SetBackend(backendFormatter)
 
 	storeService := store.Boot()
 
@@ -182,6 +192,7 @@ func main() {
 
 	// Provide graph with service instances
 	err = g.Provide(
+		&inject.Object{Value: log, Complete: true},
 		&inject.Object{Value: configService, Complete: true},
 		&inject.Object{Value: mongoService, Complete: true},
 		&inject.Object{Value: errorService, Complete: true},
