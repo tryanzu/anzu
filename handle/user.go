@@ -377,20 +377,18 @@ func (this UserAPI) UserLogout(c *gin.Context) {
 
 	if signed_in {
 
-		user_id := id.(string)
-
-		go func() {
+		go func(id string) {
 
 			defer this.Errors.Recover()
 
 			err := gosift.Track("$logout", map[string]interface{}{
-				"$user_id": user_id,
+				"$user_id": id,
 			})
 
 			if err != nil {
 				panic(err)
 			}
-		}()
+		}(id.(string))
 
 		bucket := sessions.Default(c)
 
