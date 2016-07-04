@@ -53,8 +53,10 @@ func (this API) Add(c *gin.Context) {
 
 			go func(post *feed.Post, comment *feed.Comment, user_id bson.ObjectId) {
 
-				// Tell the new comment for gamification
-				this.Gaming.Get(user_id).Did("comment")
+				if post.Category.Hex() != "55dc16593f6ba1005d000007" {
+					// Tell the new comment for gamification
+					this.Gaming.Get(user_id).Did("comment")
+				}
 
 				// Notify the author about this comment
 				this.Notifications.Comment(post.Slug, post.Title, comment.Position, post.Id, post.UserId, user_id)
