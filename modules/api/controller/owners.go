@@ -25,7 +25,6 @@ func (self OwnersAPI) Post(c *gin.Context) {
 	usrId := bson.ObjectIdHex(usrParam.(string))
 
 	if bson.IsObjectIdHex(idParam) && c.Bind(&form) == nil {
-
 		if IsOwnStatusValid(kindParam, form.Status) {
 
 			usr, err := self.User.Get(usrId)
@@ -94,7 +93,11 @@ func IsOwnStatusValid(name string, status *string) bool {
 		return false
 	}
 
-	if name == "component" && *status != "want-it" && *status != "have-it" && *status != "had-it" && status != nil {
+	if name == "component" && status == nil {
+		return true
+	}
+
+	if name == "component" && *status != "want-it" && *status != "have-it" && *status != "had-it" {
 		return false
 	}
 
@@ -106,5 +109,5 @@ func IsOwnStatusValid(name string, status *string) bool {
 }
 
 type OwnersPostForm struct {
-	Status *string `json:"status" binding:"required"`
+	Status *string `json:"status"`
 }
