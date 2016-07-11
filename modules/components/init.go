@@ -112,7 +112,7 @@ func (module *Module) List(limit, offset int, search, kind string, activated boo
 		}
 	} else {
 
-		err := database.C("components").Find(query).Select(fields).Limit(limit).Sort("-activated").Skip(offset).All(&components)
+		err := database.C("components").Find(query).Select(fields).Limit(limit).Sort("-views", "-activated").Skip(offset).All(&components)
 
 		if err != nil {
 			panic(err)

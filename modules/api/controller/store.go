@@ -62,7 +62,21 @@ func (self StoreAPI) Orders(c *gin.Context) {
 	}
 
 	search := c.Query("search")
+	version := c.Query("version")
 	orders := self.Store.GetSortedOrders(limit, offset, search)
+
+	if version == "v2" {
+		list := make([]string, len(orders))
+		entities := make(map[string]interface{}, len(orders))
+
+		for index, order := range orders {
+			list[index] = order.Id.Hex()
+			entities[order.Id.Hex()] = order
+		}
+
+		c.JSON(200, gin.H{"entities": entities, "results": list})
+		return
+	}
 
 	c.JSON(200, orders)
 }

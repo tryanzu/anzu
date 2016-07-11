@@ -17,6 +17,7 @@ import (
 	"github.com/olebedev/config"
 	"gopkg.in/jmcvetta/neoism.v1"
 	"gopkg.in/mgo.v2/bson"
+	"gopkg.in/op/go-logging.v1"
 	"log"
 	"reflect"
 	"regexp"
@@ -36,6 +37,7 @@ type Module struct {
 	GCommerce *gcommerce.Module            `inject:""`
 	Config    *config.Config               `inject:""`
 	Neoism    *neoism.Database             `inject:""`
+	Logger    *logging.Logger              `inject:""`
 }
 
 type fn func()
@@ -57,6 +59,7 @@ func (module Module) Run(name string) {
 		"migrate-comments":   module.MigrateDeletedComment,
 		"migrate-ccomments":  module.MigrateChosenComment,
 		"export-components":  module.ExportComponents,
+		"count-components":   module.GenerateComponentViews,
 	}
 
 	if handler, exists := commands[name]; exists {

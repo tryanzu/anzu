@@ -1,13 +1,13 @@
 package user
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/modules/mail"
-	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/fernandez14/go-siftscience"
+	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
+	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"gopkg.in/mgo.v2/bson"
 
-	"time"
 	"errors"
+	"time"
 )
 
 type One struct {
@@ -121,7 +121,7 @@ func (self *One) loadOwnedComponents() {
 			if component.Id == owning.RelatedId {
 
 				components[index].Relationship = OwnRelationship{
-					Type: owning.Type,
+					Type:    owning.Type,
 					Created: owning.Created,
 				}
 
@@ -129,7 +129,6 @@ func (self *One) loadOwnedComponents() {
 			}
 		}
 	}
-
 
 	self.data.Components = components
 }
@@ -160,11 +159,11 @@ func (self *One) Owns(status, entity string, id bson.ObjectId) {
 	database := di.Mongo.Database
 
 	record := &OwnModel{
-		UserId:  self.data.Id,
-		Related: entity,
+		UserId:    self.data.Id,
+		Related:   entity,
 		RelatedId: id,
-		Type: status,
-		Created: time.Now(),
+		Type:      status,
+		Created:   time.Now(),
 	}
 
 	self.ROwns(entity, id)
@@ -208,16 +207,25 @@ func (self *One) TrackView(entity string, entity_id bson.ObjectId) {
 
 	database := self.di.Mongo.Database
 	record := &ViewModel{
-		UserId: self.data.Id,
-		Related: entity,
+		UserId:    self.data.Id,
+		Related:   entity,
 		RelatedId: entity_id,
-		Created: time.Now(),
+		Created:   time.Now(),
 	}
 
 	err := database.C("user_views").Insert(record)
 
 	if err != nil {
 		panic(err)
+	}
+
+	if entity == "component" {
+
+		err := database.C("components").Update(bson.M{"_id": entity_id}, bson.M{"$inc": bson.M{"views": 1}})
+
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 
@@ -247,10 +255,10 @@ func (self *One) SiftScienceBackfill() {
 
 	ms := self.data.Created.Unix() * 1000
 	data := map[string]interface{}{
-		"$time": ms,
-		"$user_id": self.data.Id.Hex(),
+		"$time":       ms,
+		"$user_id":    self.data.Id.Hex(),
 		"$user_email": self.Email(),
-		"$name": self.data.UserName,
+		"$name":       self.data.UserName,
 	}
 
 	if self.data.Facebook != nil {
@@ -282,9 +290,9 @@ func (self *One) SendRecoveryEmail() {
 	database := self.di.Mongo.Database
 
 	record := &UserRecoveryToken{
-		UserId: self.data.Id,
-		Token: helpers.StrRandom(12),
-		Used: false,
+		UserId:  self.data.Id,
+		Token:   helpers.StrRandom(12),
+		Used:    false,
 		Created: time.Now(),
 		Updated: time.Now(),
 	}
