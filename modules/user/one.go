@@ -97,8 +97,7 @@ func (self *One) loadOwnedComponents() {
 
 	di := self.di
 	database := di.Mongo.Database
-
-	err := database.C("user_owns").Find(bson.M{"user_id": self.data.Id, "related": "component", "removed": {"$exists": false}}).Sort("created_at").All(&ownings)
+	err := database.C("user_owns").Find(bson.M{"user_id": self.data.Id, "related": "component", "removed": bson.M{"$exists": false}}).Sort("created_at").All(&ownings)
 
 	if err != nil {
 		panic(err)
