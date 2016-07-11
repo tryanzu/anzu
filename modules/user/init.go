@@ -8,6 +8,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+	"gopkg.in/op/go-logging.v1"
 
 	"regexp"
 	"strings"
@@ -25,6 +26,7 @@ type Module struct {
 	Mongo  *mongo.Service               `inject:""`
 	Mail   *mail.Module                 `inject:""`
 	Errors *exceptions.ExceptionsModule `inject:""`
+	Logger *logging.Logger              `inject:""`
 }
 
 // Gets an instance of a user
