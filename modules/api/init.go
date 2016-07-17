@@ -238,6 +238,7 @@ func (module *Module) Run() {
 		v1.GET("/stats/board", module.Stats.BoardGet)
 
 		// Build routes
+		v1.GET("/builds", module.Builds.ListAction)
 		v1.GET("/build", module.Builds.GetAction)
 		v1.GET("/build/:id", module.Builds.GetAction)
 		v1.PUT("/build/:id", module.Builds.UpdateAction)
@@ -339,6 +340,7 @@ func (module *Module) Run() {
 				backoffice.POST("/order/:id", module.Store.Answer)
 				backoffice.POST("/order/:id/tag", module.Store.Tag)
 				backoffice.POST("/order/:id/activity", module.Store.Activity)
+				backoffice.POST("/order/:id/trust", module.Store.Trust)
 				backoffice.POST("/order/:id/stage", module.Store.Stage)
 
 				// Build notes routes

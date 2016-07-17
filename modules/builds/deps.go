@@ -62,6 +62,23 @@ func (m *Module) FindOrCreate(sessionId string, userId *bson.ObjectId) *Build {
 	return &build
 }
 
+func (m *Module) FindAll() []*Build {
+
+	var builds []*Build
+
+	err := m.Mongo.Database.C("builds").Find(nil).Limit(100).All(&builds)
+
+	if err != nil {
+		panic(err)
+	}
+
+	for _, b := range builds {
+		b.SetDI(m)
+	}
+
+	return builds
+}
+
 func (m *Module) FindByRef(ref string) (*Build, error) {
 
 	var build *Build

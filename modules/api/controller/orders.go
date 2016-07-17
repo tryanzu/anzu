@@ -1,4 +1,4 @@
-package controller 
+package controller
 
 import (
 	"github.com/fernandez14/spartangeek-blacker/modules/gcommerce"
@@ -12,15 +12,15 @@ import (
 )
 
 type OrdersAPI struct {
-	GCommerce  *gcommerce.Module  `inject:""`
-	Mail  *mail.Module   `inject:""`
-	User  *user.Module   `inject:""`
+	GCommerce *gcommerce.Module `inject:""`
+	Mail      *mail.Module      `inject:""`
+	User      *user.Module      `inject:""`
 }
 
 func (this OrdersAPI) Get(c *gin.Context) {
 
 	var offset int = 0
-	var limit  int = 20
+	var limit int = 20
 
 	l := c.Query("limit")
 	o := c.Query("offset")
@@ -31,7 +31,7 @@ func (this OrdersAPI) Get(c *gin.Context) {
 		cl, err := strconv.Atoi(l)
 
 		if err == nil && cl > 0 {
-			limit = cl 
+			limit = cl
 		}
 	}
 
@@ -39,7 +39,7 @@ func (this OrdersAPI) Get(c *gin.Context) {
 		co, err := strconv.Atoi(o)
 
 		if err == nil && co > 0 {
-			offset = co 
+			offset = co
 		}
 	}
 
@@ -74,7 +74,7 @@ func (this OrdersAPI) Get(c *gin.Context) {
 					"$in": tag_list,
 				},
 			}
-			
+
 		} else {
 
 			meta = bson.M{
@@ -192,7 +192,7 @@ func (this OrdersAPI) SendOrderConfirmation(c *gin.Context) {
 		}
 
 		mailing := this.Mail
-		{	
+		{
 			var paymentType string
 			var template int
 
@@ -213,18 +213,18 @@ func (this OrdersAPI) SendOrderConfirmation(c *gin.Context) {
 					},
 				},
 				Variables: map[string]interface{}{
-					"name": usr.Name(),
-					"payment": paymentType,
-					"line1": address.Line1(),
-					"line2": address.Line2(),
-					"line3": address.Extra(),
+					"name":           usr.Name(),
+					"payment":        paymentType,
+					"line1":          address.Line1(),
+					"line2":          address.Line2(),
+					"line3":          address.Extra(),
 					"total_products": order.GetOriginalTotal() - order.Shipping.OPrice,
 					"total_shipping": order.Shipping.OPrice,
-					"subtotal": order.GetOriginalTotal(),
-					"commision": order.GetGatewayCommision(),
-					"total": order.Total,
-					"items": order.Items,
-					"reference": order.Reference,
+					"subtotal":       order.GetOriginalTotal(),
+					"commision":      order.GetGatewayCommision(),
+					"total":          order.Total,
+					"items":          order.Items,
+					"reference":      order.Reference,
 				},
 			}
 
@@ -236,9 +236,9 @@ func (this OrdersAPI) SendOrderConfirmation(c *gin.Context) {
 func (this OrdersAPI) ChangeStatus(c *gin.Context) {
 
 	var form ComponentStatusForm
-	
+
 	order_id := c.Param("id")
-	
+
 	if bson.IsObjectIdHex(order_id) == false {
 		c.JSON(400, gin.H{"message": "Invalid request, id not valid.", "status": "error"})
 		return
@@ -253,16 +253,16 @@ func (this OrdersAPI) ChangeStatus(c *gin.Context) {
 	}
 
 	if c.Bind(&form) == nil {
-		
-	 	if gcommerce.ValidStatus(form.Name) {
-	 		
-	 		order.ChangeStatus(form.Name)
-	 		
-	 		c.JSON(200, gin.H{"status": "okay"})
-	 		return
-	 	}
+
+		if gcommerce.ValidStatus(form.Name) {
+
+			order.ChangeStatus(form.Name)
+
+			c.JSON(200, gin.H{"status": "okay"})
+			return
+		}
 	}
-	
+
 	c.JSON(400, gin.H{"message": "Invalid request, status not valid.", "status": "error"})
 	return
 }

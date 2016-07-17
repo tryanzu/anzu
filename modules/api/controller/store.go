@@ -202,6 +202,31 @@ func (self *StoreAPI) Tag(c *gin.Context) {
 	}
 }
 
+func (self *StoreAPI) Trust(c *gin.Context) {
+
+	var form TrustForm
+
+	order_id := c.Param("id")
+
+	if bson.IsObjectIdHex(order_id) == false {
+		c.JSON(400, gin.H{"message": "Invalid request, id not valid.", "status": "error"})
+		return
+	}
+
+	id := bson.ObjectIdHex(order_id)
+
+	if c.BindJSON(&form) == nil {
+		order, err := self.Store.Order(id)
+
+		if err == nil {
+			order.SetTrusted(form.Trusted)
+			c.JSON(200, gin.H{"status": "okay"})
+		} else {
+			c.JSON(400, gin.H{"status": "error", "message": err.Error()})
+		}
+	}
+}
+
 // Update order stage
 func (self *StoreAPI) Stage(c *gin.Context) {
 
@@ -291,6 +316,10 @@ type OrderUserForm struct {
 
 type OrderTagForm struct {
 	Name string `json:"name" binding:"required"`
+}
+
+type TrustForm struct {
+	Trusted bool `json:"trusted" binding:"required"`
 }
 
 type OrderStageForm struct {
