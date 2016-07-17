@@ -227,6 +227,31 @@ func (self *StoreAPI) Trust(c *gin.Context) {
 	}
 }
 
+func (self *StoreAPI) Favorite(c *gin.Context) {
+
+	var form FavoriteForm
+
+	order_id := c.Param("id")
+
+	if bson.IsObjectIdHex(order_id) == false {
+		c.JSON(400, gin.H{"message": "Invalid request, id not valid.", "status": "error"})
+		return
+	}
+
+	id := bson.ObjectIdHex(order_id)
+
+	if c.BindJSON(&form) == nil {
+		order, err := self.Store.Order(id)
+
+		if err == nil {
+			order.SetFlag("favorite", form.Favorite)
+			c.JSON(200, gin.H{"status": "okay"})
+		} else {
+			c.JSON(400, gin.H{"status": "error", "message": err.Error()})
+		}
+	}
+}
+
 // Update order stage
 func (self *StoreAPI) Stage(c *gin.Context) {
 
@@ -320,6 +345,10 @@ type OrderTagForm struct {
 
 type TrustForm struct {
 	Trusted bool `json:"trusted" binding:"required"`
+}
+
+type FavoriteForm struct {
+	Favorite bool `json:"favorite" binding:"required"`
 }
 
 type OrderStageForm struct {

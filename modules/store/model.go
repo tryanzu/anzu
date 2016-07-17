@@ -43,6 +43,7 @@ type OrderModel struct {
 	Activities []ActivityModel `bson:"activities,omitempty" json:"activities"`
 	Pipeline   PipelineModel   `bson:"pipeline,omitempty" json:"pipeline"`
 	Trusted    bool            `bson:"trusted_flag" json:"trusted_flag"`
+	Favorite   bool            `bson:"favorite_flag" json:"favorite_flag"`
 	Lead       bool            `bson:"-" json:"lead"`
 	Created    time.Time       `bson:"created_at" json:"created_at"`
 	Updated    time.Time       `bson:"updated_at" json:"updated_at"`

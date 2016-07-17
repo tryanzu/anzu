@@ -337,6 +337,17 @@ func (o *One) SetTrusted(isTrusted bool) {
 	}
 }
 
+func (o *One) SetFlag(flag string, status bool) {
+
+	flag = flag + "_flag"
+	database := o.di.Mongo.Database
+	err := database.C("orders").Update(bson.M{"_id": o.data.Id}, bson.M{"$set": bson.M{flag: status}})
+
+	if err != nil {
+		panic(err)
+	}
+}
+
 func (self *One) EmitInvoice(name, rfc, email string, total float64) (*Invoice, error) {
 
 	config, err := self.di.Config.Get("invoicing")

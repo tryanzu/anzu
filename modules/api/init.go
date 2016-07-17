@@ -341,6 +341,7 @@ func (module *Module) Run() {
 				backoffice.POST("/order/:id/tag", module.Store.Tag)
 				backoffice.POST("/order/:id/activity", module.Store.Activity)
 				backoffice.POST("/order/:id/trust", module.Store.Trust)
+				backoffice.POST("/order/:id/favorite", module.Store.Favorite)
 				backoffice.POST("/order/:id/stage", module.Store.Stage)
 
 				// Build notes routes
