@@ -344,11 +344,11 @@ type OrderTagForm struct {
 }
 
 type TrustForm struct {
-	Trusted bool `json:"trusted" binding:"required"`
+	Trusted bool `json:"trusted"`
 }
 
 type FavoriteForm struct {
-	Favorite bool `json:"favorite" binding:"required"`
+	Favorite bool `json:"favorite"`
 }
 
 type OrderStageForm struct {
