@@ -197,13 +197,95 @@ func (module *Module) GetOrdersAggregation() map[string]interface{} {
 	return aggregation
 }
 
-func (module *Module) GetSortedOrders(limit, skip int, search string) []OrderModel {
+func (module *Module) GetSortedOrders(limit, skip int, search, group string) []OrderModel {
 
 	var list []OrderModel
 
 	database := module.Mongo.Database
-
 	clause := bson.M{"deleted_at": bson.M{"$exists": false}}
+
+	if group != "" && (group == "brandNew" || group == "nextUp" || group == "onHold") {
+
+		switch group {
+		case "brandNew":
+			clause["messages"] = bson.M{"$exists": false}
+		case "nextUp":
+			var boundaries []struct {
+				Id bson.ObjectId `bson:"_id"`
+			}
+
+			err := database.C("orders").Pipe([]bson.M{
+				{
+					"$match": bson.M{"deleted_at": bson.M{"$exists": false}, "messages": bson.M{"$exists": true}},
+				},
+				{
+					"$sort": bson.M{"updated_at": -1},
+				},
+				{
+					"$project": bson.M{"lastMessage": bson.M{"$arrayElemAt": []interface{}{"$messages", -1}}},
+				},
+				{
+					"$match": bson.M{"lastMessage.type": "inbound"},
+				},
+				{
+					"$skip": skip,
+				},
+				{
+					"$limit": limit,
+				},
+			}).All(&boundaries)
+
+			if err != nil {
+				panic(err)
+			}
+
+			var list []bson.ObjectId
+
+			for _, item := range boundaries {
+				list = append(list, item.Id)
+			}
+
+			clause["_id"] = bson.M{"$in": list}
+
+		case "onHold":
+			var boundaries []struct {
+				Id bson.ObjectId `bson:"_id"`
+			}
+
+			err := database.C("orders").Pipe([]bson.M{
+				{
+					"$match": bson.M{"deleted_at": bson.M{"$exists": false}, "messages": bson.M{"$exists": true}},
+				},
+				{
+					"$sort": bson.M{"updated_at": -1},
+				},
+				{
+					"$project": bson.M{"lastMessage": bson.M{"$arrayElemAt": []interface{}{"$messages", -1}}},
+				},
+				{
+					"$match": bson.M{"lastMessage.type": "text"},
+				},
+				{
+					"$skip": skip,
+				},
+				{
+					"$limit": limit,
+				},
+			}).All(&boundaries)
+
+			if err != nil {
+				panic(err)
+			}
+
+			var list []bson.ObjectId
+
+			for _, item := range boundaries {
+				list = append(list, item.Id)
+			}
+
+			clause["_id"] = bson.M{"$in": list}
+		}
+	}
 
 	if search != "" {
 

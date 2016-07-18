@@ -62,8 +62,9 @@ func (self StoreAPI) Orders(c *gin.Context) {
 	}
 
 	search := c.Query("search")
+	group := c.Query("group")
 	version := c.Query("version")
-	orders := self.Store.GetSortedOrders(limit, offset, search)
+	orders := self.Store.GetSortedOrders(limit, offset, search, group)
 
 	if version == "v2" {
 		list := make([]string, len(orders))
