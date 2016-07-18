@@ -81,6 +81,13 @@ func (self StoreAPI) Orders(c *gin.Context) {
 	c.JSON(200, orders)
 }
 
+func (s StoreAPI) OrdersAggregate(c *gin.Context) {
+
+	tags := s.Store.GetOrdersAggregation()
+
+	c.JSON(200, tags)
+}
+
 // REST handler for getting one order
 func (self StoreAPI) One(c *gin.Context) {
 

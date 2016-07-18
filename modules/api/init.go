@@ -334,6 +334,7 @@ func (module *Module) Run() {
 
 				backoffice.POST("/deals/invoice", module.Deals.GenerateInvoice)
 
+				backoffice.GET("/order-report", module.Store.OrdersAggregate)
 				backoffice.GET("/order", module.Store.Orders)
 				backoffice.GET("/order/:id", module.Store.One)
 				backoffice.DELETE("/order/:id", module.Store.Ignore)

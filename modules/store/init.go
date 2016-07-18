@@ -107,6 +107,96 @@ func (module *Module) CreateOrder(order OrderModel) {
 	}
 }
 
+func (m *Module) getNextUpCount() int {
+
+	database := m.Mongo.Database
+	now := time.Now()
+	then := now.Add(-24 * 30 * time.Hour)
+
+	var awaitingCount struct {
+		Count int `bson:"count"`
+	}
+
+	// Count deals that need our "response"
+	err := database.C("orders").Pipe([]bson.M{
+		{
+			"$match": bson.M{"deleted_at": bson.M{"$exists": false}, "messages": bson.M{"$exists": true}, "created_at": bson.M{"$gte": then}},
+		},
+		{
+			"$project": bson.M{"lastMessage": bson.M{"$arrayElemAt": []interface{}{"$messages", -1}}},
+		},
+		{
+			"$match": bson.M{"lastMessage.type": "inbound"},
+		},
+		{
+			"$group": bson.M{"_id": nil, "count": bson.M{"$sum": 1}},
+		},
+	}).One(&awaitingCount)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return awaitingCount.Count
+}
+
+func (m *Module) getOnHoldCount() int {
+
+	database := m.Mongo.Database
+
+	var onholdCount struct {
+		Count int `bson:"count"`
+	}
+
+	// Count deals that need our "response"
+	err := database.C("orders").Pipe([]bson.M{
+		{
+			"$match": bson.M{"deleted_at": bson.M{"$exists": false}, "messages": bson.M{"$exists": true}},
+		},
+		{
+			"$project": bson.M{"lastMessage": bson.M{"$arrayElemAt": []interface{}{"$messages", -1}}},
+		},
+		{
+			"$match": bson.M{"lastMessage.type": "text"},
+		},
+		{
+			"$group": bson.M{"_id": nil, "count": bson.M{"$sum": 1}},
+		},
+	}).One(&onholdCount)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return onholdCount.Count
+}
+
+func (m *Module) getNewCount() int {
+
+	database := m.Mongo.Database
+	now := time.Now()
+	then := now.Add(-24 * 30 * time.Hour)
+
+	count, err := database.C("orders").Find(bson.M{"messages": bson.M{"$exists": false}, "created_at": bson.M{"$gte": then}}).Count()
+
+	if err != nil {
+		panic(err)
+	}
+
+	return count
+}
+
+func (module *Module) GetOrdersAggregation() map[string]interface{} {
+
+	aggregation := map[string]interface{}{
+		"onHold":   module.getOnHoldCount(),
+		"nextUp":   module.getNextUpCount(),
+		"brandNew": module.getNewCount(),
+	}
+
+	return aggregation
+}
+
 func (module *Module) GetSortedOrders(limit, skip int, search string) []OrderModel {
 
 	var list []OrderModel
