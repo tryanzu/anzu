@@ -217,7 +217,7 @@ func (module *Module) GetSortedOrders(limit, skip int, search, group string) []O
 	database := module.Mongo.Database
 	clause := bson.M{"deleted_at": bson.M{"$exists": false}}
 
-	if group != "" && (group == "brandNew" || group == "nextUp" || group == "onHold") {
+	if group != "" && (group == "brandNew" || group == "nextUp" || group == "onHold" || group == "closed") {
 
 		switch group {
 		case "brandNew":
