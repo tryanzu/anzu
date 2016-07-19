@@ -186,12 +186,25 @@ func (m *Module) getNewCount() int {
 	return count
 }
 
+func (m *Module) getClosedCount() int {
+
+	database := m.Mongo.Database
+	count, err := database.C("orders").Find(bson.M{"messages": bson.M{"$exists": false}, "pipeline.step": 5}).Count()
+
+	if err != nil {
+		panic(err)
+	}
+
+	return count
+}
+
 func (module *Module) GetOrdersAggregation() map[string]interface{} {
 
 	aggregation := map[string]interface{}{
 		"onHold":   module.getOnHoldCount(),
 		"nextUp":   module.getNextUpCount(),
 		"brandNew": module.getNewCount(),
+		"closed":   module.getClosedCount(),
 	}
 
 	return aggregation
@@ -209,6 +222,8 @@ func (module *Module) GetSortedOrders(limit, skip int, search, group string) []O
 		switch group {
 		case "brandNew":
 			clause["messages"] = bson.M{"$exists": false}
+		case "closed":
+			clause["pipeline.step"] = 5
 		case "nextUp":
 			var boundaries []struct {
 				Id bson.ObjectId `bson:"_id"`
@@ -309,8 +324,13 @@ func (module *Module) GetSortedOrders(limit, skip int, search, group string) []O
 		}
 	}
 
-	err := database.C("orders").Find(clause).Select(bson.M{"score": bson.M{"$meta": "textScore"}}).Sort("$textScore:score", "-updated_at").Limit(limit).Skip(skip).All(&list)
+	query := database.C("orders").Find(clause).Select(bson.M{"score": bson.M{"$meta": "textScore"}}).Sort("$textScore:score", "-updated_at")
 
+	if _, aggregated := clause["_id"]; !aggregated {
+		query = query.Limit(limit).Skip(skip)
+	}
+
+	err := query.All(&list)
 	if err != nil {
 		panic(err)
 	}
