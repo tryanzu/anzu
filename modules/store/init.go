@@ -189,7 +189,7 @@ func (m *Module) getNewCount() int {
 func (m *Module) getClosedCount() int {
 
 	database := m.Mongo.Database
-	count, err := database.C("orders").Find(bson.M{"messages": bson.M{"$exists": false}, "pipeline.step": 5}).Count()
+	count, err := database.C("orders").Find(bson.M{"messages": bson.M{"$exists": true}, "pipeline.step": 5}).Count()
 
 	if err != nil {
 		panic(err)
