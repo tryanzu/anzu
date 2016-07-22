@@ -177,7 +177,7 @@ func (m *Module) getNewCount() int {
 	now := time.Now()
 	then := now.Add(-24 * 30 * time.Hour)
 
-	count, err := database.C("orders").Find(bson.M{"messages": bson.M{"$exists": false}, "created_at": bson.M{"$gte": then}}).Count()
+	count, err := database.C("orders").Find(bson.M{"messages": bson.M{"$exists": false}, "created_at": bson.M{"$gte": then}, "deleted_at": bson.M{"$exists": false}}).Count()
 
 	if err != nil {
 		panic(err)
