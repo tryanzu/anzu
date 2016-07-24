@@ -282,7 +282,6 @@ func (di UserAPI) UserGetJwtToken(c *gin.Context) {
 	trusted_user := di.Security.TrustUserIP(c.ClientIP(), usr)
 
 	if !trusted_user {
-
 		c.JSON(403, gin.H{"status": "error", "message": "Not trusted."})
 		return
 	}
@@ -291,8 +290,19 @@ func (di UserAPI) UserGetJwtToken(c *gin.Context) {
 
 	go di.trackSiftScienceLogin(usr.Data().Id.Hex(), session_id, true)
 
+	var remember int = 72
+	rememberParam := qs.Get("remember")
+
+	if rememberParam != "" {
+		rememberTime, rememberErr := strconv.Atoi(rememberParam)
+
+		if rememberErr == nil {
+			remember = rememberTime
+		}
+	}
+
 	// Generate JWT with the information about the user
-	token, firebase := di.generateUserToken(usr.Data().Id)
+	token, firebase := di.generateUserToken(usr.Data().Id, remember)
 
 	// Save the activity
 	user_id, signed_in := c.Get("user_id")
@@ -366,7 +376,7 @@ func (di UserAPI) UserGetTokenFacebook(c *gin.Context) {
 	}
 
 	// Generate JWT with the information about the user
-	token, firebase := di.generateUserToken(id)
+	token, firebase := di.generateUserToken(id, 72)
 
 	c.JSON(200, gin.H{"status": "okay", "token": token, "firebase": firebase, "session_id": session_id})
 }
@@ -644,7 +654,7 @@ func (di *UserAPI) UserRegisterAction(c *gin.Context) {
 		}
 
 		// Generate token if auth is going to perform
-		token, firebase := di.generateUserToken(usr.Data().Id)
+		token, firebase := di.generateUserToken(usr.Data().Id, 72)
 
 		// Finished creating the post
 		c.JSON(200, gin.H{"status": "okay", "code": 200, "token": token, "firebase": firebase})
@@ -805,12 +815,12 @@ func (di *UserAPI) UserAutocompleteGet(c *gin.Context) {
 	}
 }
 
-func (di *UserAPI) generateUserToken(id bson.ObjectId) (string, string) {
+func (di *UserAPI) generateUserToken(id bson.ObjectId, expiration int) (string, string) {
 
 	// Generate JWT with the information about the user
 	token := jwt.New(jwt.SigningMethodHS256)
 	token.Claims["user_id"] = id.Hex()
-	token.Claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
+	token.Claims["exp"] = time.Now().Add(time.Hour * time.Duration(expiration)).Unix()
 
 	// Use the secret inside the configuration to encrypt it
 	secret, err := di.ConfigService.String("application.secret")
