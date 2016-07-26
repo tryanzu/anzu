@@ -363,10 +363,9 @@ func (di UserAPI) UserGetTokenFacebook(c *gin.Context) {
 			return
 		}
 
-		_, err := di.User.SignUpFacebook(facebook)
+		usr, err = di.User.SignUpFacebook(facebook)
 
 		if err != nil {
-
 			c.JSON(400, gin.H{"status": "error", "message": err.Error()})
 			return
 		}
