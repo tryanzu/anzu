@@ -7,6 +7,7 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/fernandez14/go-siftscience"
 	"github.com/fernandez14/spartangeek-blacker/model"
+	"github.com/fernandez14/spartangeek-blacker/modules/acl"
 	"github.com/fernandez14/spartangeek-blacker/modules/content"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
@@ -42,6 +43,7 @@ type UserAPI struct {
 	User          *user.Module                 `inject:""`
 	Content       *content.Module              `inject:""`
 	Gaming        *gaming.Module               `inject:""`
+	Acl           *acl.Module                  `inject:""`
 	Security      *security.Module             `inject:""`
 	Collector     CollectorAPI                 `inject:"inline"`
 }
@@ -302,10 +304,22 @@ func (di UserAPI) UserGetJwtToken(c *gin.Context) {
 	}
 
 	// Generate JWT with the information about the user
-	token, firebase := di.generateUserToken(usr.Data().Id, remember)
+	token, firebase := di.generateUserToken(usr.Data().Id, usr.Data().Roles, remember)
 
 	// Save the activity
 	user_id, signed_in := c.Get("user_id")
+
+	permission := c.Query("permission")
+
+	if permission != "" {
+
+		perms := di.Acl.User(usr.Data().Id)
+
+		if perms.Can(permission) == false {
+			c.AbortWithStatus(401)
+			return
+		}
+	}
 
 	if signed_in {
 
@@ -313,7 +327,7 @@ func (di UserAPI) UserGetJwtToken(c *gin.Context) {
 		go di.Collector.Activity(model.Activity{UserId: bson.ObjectIdHex(user_id.(string)), Event: "user-view", RelatedId: usr.Data().Id})
 	}
 
-	c.JSON(200, gin.H{"status": "okay", "token": token, "session_id": session_id, "firebase": firebase})
+	c.JSON(200, gin.H{"status": "okay", "token": token, "session_id": session_id, "firebase": firebase, "expires": remember})
 }
 
 func (di UserAPI) UserGetTokenFacebook(c *gin.Context) {
@@ -376,7 +390,7 @@ func (di UserAPI) UserGetTokenFacebook(c *gin.Context) {
 	}
 
 	// Generate JWT with the information about the user
-	token, firebase := di.generateUserToken(id, 72)
+	token, firebase := di.generateUserToken(id, usr.Data().Roles, 72)
 
 	c.JSON(200, gin.H{"status": "okay", "token": token, "firebase": firebase, "session_id": session_id})
 }
@@ -654,7 +668,7 @@ func (di *UserAPI) UserRegisterAction(c *gin.Context) {
 		}
 
 		// Generate token if auth is going to perform
-		token, firebase := di.generateUserToken(usr.Data().Id, 72)
+		token, firebase := di.generateUserToken(usr.Data().Id, usr.Data().Roles, 72)
 
 		// Finished creating the post
 		c.JSON(200, gin.H{"status": "okay", "code": 200, "token": token, "firebase": firebase})
@@ -815,12 +829,20 @@ func (di *UserAPI) UserAutocompleteGet(c *gin.Context) {
 	}
 }
 
-func (di *UserAPI) generateUserToken(id bson.ObjectId, expiration int) (string, string) {
+func (di *UserAPI) generateUserToken(id bson.ObjectId, roles []user.UserRole, expiration int) (string, string) {
 
 	// Generate JWT with the information about the user
 	token := jwt.New(jwt.SigningMethodHS256)
 	token.Claims["user_id"] = id.Hex()
 	token.Claims["exp"] = time.Now().Add(time.Hour * time.Duration(expiration)).Unix()
+
+	scope := []string{}
+
+	for _, role := range roles {
+		scope = append(scope, role.Name)
+	}
+
+	token.Claims["scope"] = scope
 
 	// Use the secret inside the configuration to encrypt it
 	secret, err := di.ConfigService.String("application.secret")

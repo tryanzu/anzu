@@ -321,7 +321,7 @@ func (module *Module) Run() {
 			// Backoffice routes
 			backoffice := authorized.Group("backoffice")
 
-			backoffice.Use(module.Middlewares.NeedAclAuthorization())
+			backoffice.Use(module.Middlewares.NeedAclAuthorization("sensitive-data"))
 			{
 
 				store := backoffice.Group("/store")

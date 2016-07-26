@@ -33,6 +33,23 @@ func (module *Module) User(id bson.ObjectId) *User {
 	return user
 }
 
+func (refs *Module) CheckPermissions(roles []string, permission string) bool {
+
+	for _, role := range roles {
+
+		p, exists := refs.Permissions[permission]
+
+		if exists {
+			if refs.Map.IsGranted(role, p, nil) {
+				// User's role is granted to do "permission"
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
 func Boot(file string) *Module {
 
 	module := &Module{}

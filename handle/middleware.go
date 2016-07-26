@@ -3,12 +3,14 @@ package handle
 import (
 	"github.com/cactus/go-statsd-client/statsd"
 	"github.com/dgrijalva/jwt-go"
-	"github.com/satori/go.uuid"
+	"github.com/fernandez14/spartangeek-blacker/modules/acl"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/getsentry/raven-go"
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/olebedev/config"
+	"github.com/satori/go.uuid"
+	"gopkg.in/op/go-logging.v1"
 
 	"errors"
 	"fmt"
@@ -19,10 +21,12 @@ import (
 )
 
 type MiddlewareAPI struct {
-	ErrorService  *raven.Client  `inject:""`
-	ConfigService *config.Config `inject:""`
-	DataService   *mongo.Service `inject:""`
-	StatsService  *statsd.Client `inject:""`
+	ErrorService  *raven.Client   `inject:""`
+	ConfigService *config.Config  `inject:""`
+	DataService   *mongo.Service  `inject:""`
+	StatsService  *statsd.Client  `inject:""`
+	Acl           *acl.Module     `inject:""`
+	Logger        *logging.Logger `inject:""`
 }
 
 func (di *MiddlewareAPI) CORS() gin.HandlerFunc {
@@ -156,9 +160,18 @@ func (di *MiddlewareAPI) Authorization() gin.HandlerFunc {
 					return
 				}
 
+				scope := []string{}
+
+				if scopes, exists := signed.Claims["scope"]; exists {
+					for _, role := range scopes.([]interface{}) {
+						scope = append(scope, role.(string))
+					}
+				}
+
 				// Set the token for further usage
 				c.Set("token", jtw_token)
 				c.Set("user_id", signed.Claims["user_id"].(string))
+				c.Set("scope", scope)
 			}
 		}
 
@@ -186,11 +199,23 @@ func (di *MiddlewareAPI) NeedAuthorization() gin.HandlerFunc {
 	}
 }
 
-func (di *MiddlewareAPI) NeedAclAuthorization() gin.HandlerFunc {
-
+func (di *MiddlewareAPI) NeedAclAuthorization(permission string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		c.Next()
+		di.Logger.Debug("Need ACL Auth for " + permission)
+
+		if scope, exists := c.Get("scope"); exists {
+			roles := scope.([]string)
+
+			di.Logger.Debugf("%v", roles)
+
+			if di.Acl.CheckPermissions(roles, permission) {
+				c.Next()
+				return
+			}
+		}
+
+		c.AbortWithStatus(401)
 	}
 }
 
