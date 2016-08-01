@@ -6,6 +6,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/olebedev/config"
 	"github.com/xuyu/goredis"
+	"gopkg.in/jmcvetta/napping.v3"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 
@@ -99,8 +100,42 @@ func (module *Module) CreateOrder(order OrderModel) {
 	// Set the dates
 	order.Created = time.Now()
 	order.Updated = time.Now()
+	order.Id = bson.NewObjectId()
 
 	err := database.C("orders").Insert(order)
+
+	go func() {
+		var body struct {
+			DidYouMean string  `json:"did_you_mean"`
+			Score      float64 `json:"score"`
+			MxFound    bool    `json:"mx_found"`
+			SmtpCheck  bool    `json:"smtp_check"`
+		}
+
+		// Check email integrity in bg
+		email := order.User.Email
+		p := napping.Params{
+			"access_key": "01b35d3ee296e9783d73c321b3548fca",
+			"email":      email,
+			"smtp":       "1",
+		}.AsUrlValues()
+
+		response, err := napping.Get("https://apilayer.net/api/check", &p, &body, nil)
+
+		if err != nil {
+			panic(err)
+		}
+
+		if response.Status() == 200 {
+			if body.MxFound == false && body.SmtpCheck == false {
+				err := database.C("orders").Update(bson.M{"_id": order.Id}, bson.M{"$set": bson.M{"deleted_at": time.Now()}, "$push": bson.M{"tags": "disabled:InvalidMail"}})
+
+				if err != nil {
+					panic(err)
+				}
+			}
+		}
+	}()
 
 	if err != nil {
 		panic(err)
