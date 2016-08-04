@@ -30,7 +30,7 @@ func (broadcaster FirebaseBroadcaster) Send(message model.UserFirebaseNotificati
 	}
 
 	// Increase the notifications count
-	root.Set("count", count+1, nil)
+	firebase.Set(target_path+"/count", count+1, nil)
 
 	// Send the notification to firebase straight forward
 	root.Child("list", nil, nil).Push(message, nil)
