@@ -15,7 +15,6 @@ func (broadcaster FirebaseBroadcaster) Send(message model.UserFirebaseNotificati
 	firebase := broadcaster.Firebase
 	target_path := "users/" + message.UserId.Hex() + "/notifications"
 
-	root := firebase.Child(target_path, nil, nil)
 	count := 0
 
 	if fcount := firebase.Child(target_path+"/count", nil, nil).Value(); fcount != nil {
@@ -33,7 +32,7 @@ func (broadcaster FirebaseBroadcaster) Send(message model.UserFirebaseNotificati
 	firebase.Set(target_path+"/count", count+1, nil)
 
 	// Send the notification to firebase straight forward
-	root.Child("list", nil, nil).Push(message, nil)
+	firebase.Child(target_path+"/list", nil, nil).Push(message, nil)
 
 	return
 }
