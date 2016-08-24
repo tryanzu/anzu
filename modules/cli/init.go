@@ -60,6 +60,11 @@ func (module Module) Run(name string) {
 		"migrate-ccomments":  module.MigrateChosenComment,
 		"export-components":  module.ExportComponents,
 		"count-components":   module.GenerateComponentViews,
+
+		"spree-products":            module.SpreeProducts,
+		"spree-products-images":     module.SpreeProductsImages,
+		"spree-products-flush":      module.SpreeProductsFlush,
+		"spree-products-properties": module.SpreeProductsProperties,
 	}
 
 	if handler, exists := commands[name]; exists {
