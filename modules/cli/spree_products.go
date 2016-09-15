@@ -338,7 +338,7 @@ func (module Module) SpreeProductsFlush() {
 		}
 
 		if resp.StatusCode != 204 {
-			fmt.Printf("Could not flush product (%v): %v\n\nAborting....\n", resp.StatusCode, string(body))
+			fmt.Printf("Could not flush product (%v, %v, %v): %v\n\nAborting....\n", resp.StatusCode, c.SpreeId, c.SpartanId.Hex(), string(body))
 			break
 		}
 

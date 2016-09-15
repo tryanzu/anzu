@@ -135,7 +135,7 @@ func (component *ComponentModel) DeletePrice() {
 	component.Activated = false
 	component.Store.Vendors = make(map[string]ComponentStoreItemModel)
 
-	err := database.C("components").Update(bson.M{"_id": component.Id}, bson.M{"$unset": bson.M{"store": 1}, "$set": bson.M{"activated": false}})	
+	err := database.C("components").Update(bson.M{"_id": component.Id}, bson.M{"$unset": bson.M{"store": 1}, "$set": bson.M{"activated": false}})
 
 	if err != nil {
 		panic(err)

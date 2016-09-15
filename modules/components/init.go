@@ -5,6 +5,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/search"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"gopkg.in/mgo.v2/bson"
+	"gopkg.in/op/go-logging.v1"
 )
 
 func Boot() *Module {
@@ -15,8 +16,10 @@ func Boot() *Module {
 }
 
 type Module struct {
-	Mongo  *mongo.Service `inject:""`
-	Search *search.Module `inject:""`
+	Mongo  *mongo.Service               `inject:""`
+	Search *search.Module               `inject:""`
+	Errors *exceptions.ExceptionsModule `inject:""`
+	Logger *logging.Logger              `inject:""`
 }
 
 func (module *Module) Get(find interface{}) (*ComponentModel, error) {

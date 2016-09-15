@@ -203,7 +203,6 @@ func (module *Module) Run() {
 		v1.GET("/search/posts", module.PostsFactory.Search)
 		v1.GET("/search/products", module.Products.Search)
 		v1.GET("/search/components", module.ComponentsFactory.Search)
-		v1.GET("/search/parts", module.ComponentsFactory.Lookup)
 
 		// Massdrop routes
 		v1.GET("/massdrop", module.Massdrop.Get)
@@ -353,6 +352,7 @@ func (module *Module) Run() {
 				backoffice.DELETE("/notes/:id", module.BuildNotes.Delete)
 
 				// Components routes
+				backoffice.PUT("/spree/:part", module.ComponentsFactory.SpreeExport)
 				backoffice.PUT("/component/:slug/price", module.Components.UpdatePrice)
 				backoffice.DELETE("/component/:slug/price", module.Components.DeletePrice)
 			}
