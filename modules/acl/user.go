@@ -12,6 +12,10 @@ type User struct {
 	acl  *Module
 }
 
+func (user *User) HasValidated() bool {
+	return user.data.Validated
+}
+
 func (user *User) CanWrite(category model.Category) bool {
 
 	if allowed, _ := helpers.InArray("*", category.Permissions.Write); allowed {

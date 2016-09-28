@@ -100,7 +100,6 @@ func (self *NotificationsModule) Mention(parseableMeta map[string]interface{}, u
 
 	broadcaster := self.Broadcaster
 	broadcaster.Send(notification)
-
 }
 
 func (di *NotificationsModule) ParseContentMentions(obj MentionParseObject) {

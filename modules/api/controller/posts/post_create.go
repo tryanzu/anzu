@@ -45,8 +45,8 @@ func (this API) Create(c *gin.Context) {
 
 		user := this.Acl.User(bson_id)
 
-		if user.CanWrite(category) == false {
-			c.JSON(400, gin.H{"status": "error", "message": "Not enough permissions."})
+		if user.CanWrite(category) == false || user.HasValidated() == false {
+			c.JSON(403, gin.H{"status": "error", "message": "Not enough permissions."})
 			return
 		}
 
