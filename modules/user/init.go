@@ -140,7 +140,6 @@ func (module *Module) SignUp(email, username, password, referral string) (*One, 
 	}
 
 	if helpers.IsEmail(email) == false {
-
 		return nil, exceptions.OutOfBounds{"Invalid email. Provide a real one."}
 	}
 
