@@ -49,6 +49,21 @@ type Track struct {
 	Updated    time.Time     `bson:"updated_at"`
 }
 
+func (m Module) SpreeTaxons() {
+
+	var c *components.SpreeRecord
+
+	database := m.Mongo.Database
+	list := database.C("spree_rels").Find(nil).Iter()
+
+	for list.Next(&c) {
+		// Set DI pointer once
+		c.SetDI(m.Components)
+		fmt.Println("Updating taxon for " + strconv.Itoa(c.SpreeId))
+		c.UpdateTaxons()
+	}
+}
+
 func (module Module) SpreeProducts() {
 
 	var c *components.ComponentModel

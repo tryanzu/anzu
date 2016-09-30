@@ -32,6 +32,16 @@ type SpreeStocks struct {
 	Items []map[string]interface{} `json:"stock_items"`
 }
 
+var taxons map[string]string = map[string]string{
+	"video-card": "2",
+	"cpu":        "3",
+	"storage":    "4",
+	"monitor":    "6",
+	"case":       "9",
+	"keyboard":   "5",
+	"mouse":      "5",
+}
+
 func (spree *SpreeRecord) SetDI(di *Module) {
 	spree.di = di
 }
@@ -69,6 +79,37 @@ func (spree *SpreeRecord) UpdateStock(status bool) {
 		spree.ensureStockItems()
 	} else {
 		spree.ensureNoStock()
+	}
+}
+
+func (spree *SpreeRecord) UpdateTaxons() {
+
+	if taxon, exists := taxons[spree.Type]; exists {
+
+		form := url.Values{}
+		form.Add("product[taxon_ids][]", taxon)
+
+		req, _ := http.NewRequest("PUT", SPREE_API_URL+"products/"+strconv.Itoa(spree.SpreeId), strings.NewReader(form.Encode()))
+		client := http.Client{}
+
+		req.Header.Add("X-Spree-Token", SPREE_TOKEN)
+		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+		resp, err := client.Do(req)
+
+		if err != nil {
+			panic(err)
+		}
+
+		body, err := ioutil.ReadAll(resp.Body)
+
+		if err != nil {
+			panic(err)
+		}
+
+		if resp.StatusCode != 200 {
+			panic(fmt.Sprintf("Could not post product (%v): %v\n\nAborting....\n", resp.StatusCode, string(body)))
+		}
 	}
 }
 

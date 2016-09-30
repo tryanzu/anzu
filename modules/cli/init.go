@@ -27,17 +27,18 @@ import (
 )
 
 type Module struct {
-	Mongo     *mongo.Service               `inject:""`
-	Search    *search.Module               `inject:""`
-	Errors    *exceptions.ExceptionsModule `inject:""`
-	User      *user.Module                 `inject:""`
-	Feed      *feed.FeedModule             `inject:""`
-	Transmit  *transmit.Sender             `inject:""`
-	Mail      *mail.Module                 `inject:""`
-	GCommerce *gcommerce.Module            `inject:""`
-	Config    *config.Config               `inject:""`
-	Neoism    *neoism.Database             `inject:""`
-	Logger    *logging.Logger              `inject:""`
+	Mongo      *mongo.Service               `inject:""`
+	Search     *search.Module               `inject:""`
+	Errors     *exceptions.ExceptionsModule `inject:""`
+	User       *user.Module                 `inject:""`
+	Feed       *feed.FeedModule             `inject:""`
+	Transmit   *transmit.Sender             `inject:""`
+	Mail       *mail.Module                 `inject:""`
+	GCommerce  *gcommerce.Module            `inject:""`
+	Components *components.Module           `inject:""`
+	Config     *config.Config               `inject:""`
+	Neoism     *neoism.Database             `inject:""`
+	Logger     *logging.Logger              `inject:""`
 }
 
 type fn func()
@@ -61,6 +62,7 @@ func (module Module) Run(name string) {
 		"export-components":  module.ExportComponents,
 		"count-components":   module.GenerateComponentViews,
 
+		"spree-taxons":              module.SpreeTaxons,
 		"spree-products":            module.SpreeProducts,
 		"spree-products-images":     module.SpreeProductsImages,
 		"spree-products-flush":      module.SpreeProductsFlush,
