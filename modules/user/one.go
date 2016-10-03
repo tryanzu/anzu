@@ -233,7 +233,6 @@ func (self *One) TrackView(entity string, entity_id bson.ObjectId) {
 func (self *One) SendConfirmationEmail() {
 
 	mailing := self.di.Mail
-
 	compose := mail.Mail{
 		Template: 250222,
 		Recipient: []mail.MailRecipient{

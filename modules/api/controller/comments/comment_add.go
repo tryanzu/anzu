@@ -35,6 +35,13 @@ func (this API) Add(c *gin.Context) {
 			return
 		}
 
+		user := this.Acl.User(user_id)
+
+		if user.HasValidated() == false {
+			c.JSON(403, gin.H{"status": "error", "message": "Not enough permissions."})
+			return
+		}
+
 		comment := post.PushComment(form.Content, user_id)
 
 		go func(carrier *transmit.Sender, id bson.ObjectId, usrId bson.ObjectId) {

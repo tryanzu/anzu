@@ -21,9 +21,10 @@ type MailRecipient struct {
 }
 
 type ModuleConfig struct {
-	From       string
-	FromName   string
-	Recipients []string
+	From           string
+	FromName       string
+	Recipients     []string
+	IgnoredDomains []string
 }
 
 type InboundMail struct {

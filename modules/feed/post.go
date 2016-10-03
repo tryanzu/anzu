@@ -263,7 +263,6 @@ func (self *Post) LoadUsers() {
 
 		// Best answer author
 		if self.Comments.Answer != nil {
-
 			if exists, _ := helpers.InArray(self.Comments.Answer.UserId, list); !exists {
 				list = append(list, self.Comments.Answer.UserId)
 			}
