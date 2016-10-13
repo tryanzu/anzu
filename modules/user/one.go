@@ -230,25 +230,6 @@ func (self *One) TrackView(entity string, entity_id bson.ObjectId) {
 	}
 }
 
-func (self *One) SendConfirmationEmail() {
-
-	mailing := self.di.Mail
-	compose := mail.Mail{
-		Template: 250222,
-		Recipient: []mail.MailRecipient{
-			{
-				Name:  self.data.UserName,
-				Email: self.data.Email,
-			},
-		},
-		Variables: map[string]interface{}{
-			"confirm_url": "https://spartangeek.com/signup/confirm/" + self.data.VerificationCode,
-		},
-	}
-
-	mailing.Send(compose)
-}
-
 func (self *One) SiftScienceBackfill() {
 
 	defer self.di.Errors.Recover()
@@ -319,6 +300,33 @@ func (self *One) SendRecoveryEmail() {
 	mailing.Send(compose)
 }
 
+func (self *One) SendConfirmationEmail() error {
+
+	if self.Data().ConfirmationSent != nil {
+		deadline := self.Data().ConfirmationSent.Add(time.Duration(time.Minute * 5))
+		if deadline.After(time.Now()) {
+			return errors.New("Rate exceeded temporarily")
+		}
+	}
+
+	compose := mail.Mail{
+		Template: 250222,
+		Recipient: []mail.MailRecipient{
+			{
+				Name:  self.data.UserName,
+				Email: self.data.Email,
+			},
+		},
+		Variables: map[string]interface{}{
+			"confirm_url": "https://spartangeek.com/signup/confirm/" + self.data.VerificationCode,
+		},
+	}
+
+	self.di.Mongo.Database.C("users").Update(bson.M{"_id": self.data.Id}, bson.M{"$set": bson.M{"confirm_sent_at": time.Now()}})
+	self.di.Mail.Send(compose)
+	return nil
+}
+
 func (self *One) MarkAsValidated() {
 
 	di := self.di
@@ -334,6 +342,10 @@ func (self *One) MarkAsValidated() {
 
 	// Confirm the referral in case it exists
 	self.followReferral()
+}
+
+func (o *One) IsValidated() bool {
+	return o.data.Validated
 }
 
 func (self *One) Update(data map[string]interface{}) error {

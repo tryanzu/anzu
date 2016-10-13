@@ -66,11 +66,6 @@ func (module *Module) Get(usr interface{}) (*One, error) {
 	}
 
 	user := &One{data: model, di: context}
-
-	if model.SiftAccount != true {
-		go user.SiftScienceBackfill()
-	}
-
 	return user, nil
 }
 
@@ -135,7 +130,6 @@ func (module *Module) SignUp(email, username, password, referral string) (*One, 
 	id := bson.NewObjectId()
 
 	if valid_name.MatchString(username) == false || strings.Count(username, "") < 3 || strings.Count(username, "") > 21 {
-
 		return nil, exceptions.OutOfBounds{"Invalid username. Must have only alphanumeric characters."}
 	}
 
@@ -147,20 +141,16 @@ func (module *Module) SignUp(email, username, password, referral string) (*One, 
 	unique, _ := database.C("users").Find(bson.M{"$or": []bson.M{{"email": email}, {"username_slug": slug}}}).Count()
 
 	if unique > 0 {
-
 		return nil, exceptions.OutOfBounds{"User already exists."}
 	}
 
 	// Track the referral if we have to
 	if referral != "" {
-
 		var reference User
-
 		err := database.C("users").Find(bson.M{"ref_code": referral}).One(&reference)
 
 		// Track the referral link
 		if err == nil {
-
 			track := &ReferralModel{
 				OwnerId:   reference.Id,
 				UserId:    id,
@@ -173,7 +163,6 @@ func (module *Module) SignUp(email, username, password, referral string) (*One, 
 			err := database.C("referrals").Insert(track)
 
 			if err != nil {
-
 				panic(err)
 			}
 		}
@@ -223,7 +212,6 @@ func (module *Module) SignUp(email, username, password, referral string) (*One, 
 }
 
 func (module *Module) SignUpFacebook(facebook map[string]interface{}) (*One, error) {
-
 	context := module
 	database := module.Mongo.Database
 	id := bson.NewObjectId()
@@ -251,7 +239,6 @@ func (module *Module) SignUpFacebook(facebook map[string]interface{}) (*One, err
 			err := database.C("referrals").Insert(track)
 
 			if err != nil {
-
 				panic(err)
 			}
 		}

@@ -170,11 +170,6 @@ func (module *Module) Run() {
 
 	v1.Use(module.Middlewares.Authorization())
 	{
-		v1.GET("/panic-now", func(c *gin.Context) {
-
-			panic("panic is just an illusion")
-		})
-
 		v1.GET("/whoami", func(c *gin.Context) {
 			c.String(200, c.ClientIP())
 		})
@@ -282,6 +277,7 @@ func (module *Module) Run() {
 
 			// Auth routes
 			v1.GET("/auth/logout", module.Users.UserLogout)
+			v1.GET("/auth/resend-confirmation", module.UsersFactory.ResendConfirmation)
 
 			// Payments routes
 			authorized.POST("/payments", module.Payments.Place)
@@ -322,7 +318,6 @@ func (module *Module) Run() {
 
 			backoffice.Use(module.Middlewares.NeedAclAuthorization("sensitive-data"))
 			{
-
 				store := backoffice.Group("/store")
 				{
 					store.GET("/order", module.Orders.Get)
@@ -332,7 +327,6 @@ func (module *Module) Run() {
 				}
 
 				backoffice.POST("/deals/invoice", module.Deals.GenerateInvoice)
-
 				backoffice.GET("/order-report", module.Store.OrdersAggregate)
 				backoffice.GET("/order", module.Store.Orders)
 				backoffice.GET("/order/:id", module.Store.One)

@@ -51,6 +51,7 @@ type UserPrivate struct {
 	ReferralCode     string          `bson:"ref_code,omitempty" json:"ref_code"`
 	VerificationCode string          `bson:"ver_code,omitempty" json:"ver_code"`
 	SessionId        string          `bson:"-" json:"session_id"`
+	ConfirmationSent *time.Time      `bson:"confirm_sent_at" json:"-"`
 	Updated          time.Time       `bson:"updated_at" json:"updated_at"`
 	Gamificated      time.Time       `bson:"gamificated_at" json:"gamificated_at"`
 }
