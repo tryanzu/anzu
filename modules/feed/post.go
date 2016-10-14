@@ -123,6 +123,8 @@ func (self *Post) LoadComments(take, skip int) {
 				} else if err != nil {
 					panic(err)
 				}
+
+				return
 			}
 
 			content.ParseTags(ca)
