@@ -90,7 +90,6 @@ func (self *Post) LoadComments(take, skip int) {
 
 	// Load the best answer if needed
 	if self.Solved == true && self.Comments.Answer == nil {
-
 		loaded := false
 
 		// We may have the chosen answer within the loaded comments set
@@ -102,24 +101,20 @@ func (self *Post) LoadComments(take, skip int) {
 		}
 
 		if !loaded {
-
 			var ca *Comment
 
 			// Load the chosen answer from Database
 			err := database.C("comments").Find(bson.M{"post_id": self.Id, "deleted_at": bson.M{"$exists": false}, "chosen": true}).One(&ca)
 
 			if err != nil {
-
 				count, err := database.C("posts").Find(bson.M{"post_id": self.Id, "deleted_at": bson.M{"$exists": true}, "chosen": true}).Count()
 
 				if count > 0 && err == nil {
-
 					err := database.C("posts").Update(bson.M{"_id": self.Id}, bson.M{"$set": bson.M{"solved": false}})
 
 					if err != nil {
 						panic(err)
 					}
-
 				} else if err != nil {
 					panic(err)
 				}

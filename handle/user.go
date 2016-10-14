@@ -334,31 +334,32 @@ func (di UserAPI) UserGetTokenFacebook(c *gin.Context) {
 
 	var facebook map[string]interface{}
 	var id bson.ObjectId
+	var constraints []bson.M
 
 	// Bind to strings map
 	c.BindWith(&facebook, binding.JSON)
 
-	var facebook_id interface{}
+	if fbId, exists := facebook["id"].(string); exists && len(fbId) > 0 {
+		constraints = append(constraints, bson.M{"facebook.id": fbId, "deleted_at": bson.M{"$exists": false}})
+	}
 
-	if _, okay := facebook["id"]; okay == false {
+	if fbEmail, exists := facebook["email"].(string); exists && len(fbEmail) > 0 {
+		constraints = append(constraints, bson.M{"email": fbEmail, "deleted_at": bson.M{"$exists": false}})
+	}
 
-		c.JSON(401, gin.H{"error": "Invalid oAuth facebook token...", "status": 105})
+	if len(constraints) == 0 {
+		c.JSON(401, gin.H{"status": "error", "message": "Invalid oAuth facebook token..."})
 		return
-	} else {
-
-		facebook_id = facebook["id"]
 	}
 
 	session_id := c.MustGet("session_id").(string)
-	usr, err := di.User.Get(bson.M{"facebook.id": facebook_id})
+	usr, err := di.User.Get(bson.M{"$or": constraints})
 
 	// Create a new user
 	if err != nil {
-
 		trusted := di.Security.TrustIP(c.ClientIP())
 
 		if !trusted {
-
 			c.JSON(403, gin.H{"status": "error", "message": "Not trusted."})
 			return
 		}
@@ -369,9 +370,7 @@ func (di UserAPI) UserGetTokenFacebook(c *gin.Context) {
 			c.JSON(400, gin.H{"status": "error", "message": err.Error()})
 			return
 		}
-
 	} else {
-
 		// The id for the token would be the same as the facebook user
 		id = usr.Data().Id
 		trusted_user := di.Security.TrustUserIP(c.ClientIP(), usr)
@@ -385,7 +384,7 @@ func (di UserAPI) UserGetTokenFacebook(c *gin.Context) {
 			_ = usr.Update(map[string]interface{}{"facebook": facebook, "email": email.(string)})
 		}
 
-		go di.trackSiftScienceLogin(id.Hex(), session_id, true)
+		//go di.trackSiftScienceLogin(id.Hex(), session_id, true)
 	}
 
 	// Generate JWT with the information about the user
