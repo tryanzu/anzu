@@ -177,6 +177,10 @@ func (module *Module) Run() {
 			c.String(200, c.ClientIP())
 		})
 
+		// Authentication routes
+		v1.GET("/oauth/:provider", module.Oauth.GetAuthRedirect)
+		v1.GET("/oauth/:provider/callback", module.Oauth.CompleteAuth)
+
 		v1.GET("/payments/donators", module.Payments.GetTopDonators)
 		v1.POST("/subscribe", module.Users.UserSubscribe)
 		v1.POST("/leads", module.Lead.Post)
@@ -220,10 +224,6 @@ func (module *Module) Run() {
 		v1.GET("/auth/recovery-token/:token", module.UsersFactory.ValidatePasswordRecovery)
 		v1.PUT("/auth/recovery-token/:token", module.UsersFactory.UpdatePasswordFromToken)
 		v1.GET("/user/confirm/:code", module.Users.UserValidateEmail)
-
-		// Authentication routes
-		v1.GET("/oauth/:provider", module.Oauth.GetAuthRedirect)
-		v1.GET("/oauth/:provider/callback", module.Oauth.CompleteAuth)
 
 		// Categories routes
 		v1.GET("/category", module.Categories.CategoriesGet)

@@ -1,6 +1,9 @@
-hash: 7c110057b15eeb6a9f19ffce6f67f35bc5601ea8986b26918a0fc364e7e24650
-updated: 2016-06-30T17:55:25.570900674-05:00
+hash: c6b40f09f43dad3283844c48d7cebd7a368b73054d51bcd6a1b2b76188543e97
+updated: 2016-10-27T11:41:46.996392094-05:00
 imports:
+- name: cloud.google.com/go
+  version: 40fedcdb51cfb298ab6a204da4c54a03d6d40a3e
+  repo: https://cloud.google.com/go
 - name: collectd.org
   version: 9fc824c70f713ea0f058a07b49a4c563ef2a3b98
 - name: github.com/algolia/algoliasearch-client-go
@@ -87,16 +90,29 @@ imports:
   version: e2c4d06662b4a79fa3db3a83f65d6e252620c55e
 - name: github.com/goji/param
   version: da86c81e3e3c23b1948bc7a003d381250a032aa7
+- name: github.com/golang/geo
+  version: 6ff6a0122efb1f33de63b7ff533320c805aee520
+  repo: https://github.com/golang/geo
+- name: github.com/golang/glog
+  version: 23def4e6c14b4da8ac2ed8007337bc5eb5007998
 - name: github.com/golang/protobuf
   version: 2402d76f3d41f928c7902a765dfc872356dd3aad
 - name: github.com/golang/snappy
   version: 5979233c5d6225d4a8e438cdd0b411888449ddab
+- name: github.com/googleapis/gax-go
+  version: 4f7da601ca02aa546c5ef911a0b6595fdadf4e18
+  repo: https://github.com/googleapis/gax-go
 - name: github.com/googollee/go-engine.io
   version: a66cf68b24e56df0cacdc6041b93742f983a296a
 - name: github.com/googollee/go-socket.io
   version: 7000a8a5cd56ab1c3ead7cf33de3e9b2b1906af4
 - name: github.com/gorilla/context
   version: 1c83b3eabd45b6d76072b66b746c20815fb2872d
+- name: github.com/gorilla/mux
+  version: 757bef944d0f21880861c2dd9c871ca543023cba
+- name: github.com/gorilla/pat
+  version: cf955c3d1f2c27ee96f93e9738085c762ff5f49d
+  repo: https://github.com/gorilla/pat
 - name: github.com/gorilla/securecookie
   version: e95799a481bbcc3d01c2ad5178524cb8bec9f370
 - name: github.com/gorilla/sessions
@@ -132,7 +148,7 @@ imports:
 - name: github.com/jmcvetta/napping
   version: 32c9eedd6eb69d9a7ce0eb999deb620e0aafb5b4
 - name: github.com/jmcvetta/neoism
-  version: 66fd640d319cdca6bfa9da2c55b449b70cca224c
+  version: 9d29cb10be18b1256c9290b9fc9b64c34278b8b7
 - name: github.com/jmcvetta/randutil
   version: 2bb1b664bcff821e02b2a0644cd29c7e824d54f8
 - name: github.com/julienschmidt/httprouter
@@ -157,6 +173,8 @@ imports:
   version: c265cfa48dda6474e208715ca93e987829f572f8
 - name: github.com/manucorporat/sse
   version: ee05b128a739a0fb76c7ebd3ae4810c1de808d6d
+- name: github.com/markbates/goth
+  version: 75b41c4517c2bbca43e4518b2cd504f637ab8718
 - name: github.com/martini-contrib/render
   version: ec18f8345a1181146728238980606fb1d6f40e8c
 - name: github.com/matttproud/golang_protobuf_extensions
@@ -172,11 +190,13 @@ imports:
   version: d2dd0262208475919e1a362f675cfc0e7c10e905
 - name: github.com/motain/gocheck
   version: 9beb271d26e640863a5bf4a3c5ea40ccdd466b84
+- name: github.com/mrjones/oauth
+  version: 88427e754deb856c87036b0f91c069bc4f6a1411
+  repo: https://github.com/mrjones/oauth
 - name: github.com/olebedev/config
   version: e3edea7d68b76222b5118cc2e1cf3825e30abb80
 - name: github.com/op/go-logging
   version: 970db520ece77730c7e4724c61121037378659d9
-  repo: https://github.com/op/go-logging
 - name: github.com/oxtoacart/bpool
   version: 4e1c5567d7c2dd59fa4c7c83d34c2f3528b025d6
 - name: github.com/paulbellamy/ratecounter
@@ -265,16 +285,36 @@ imports:
   version: 1f22c0103821b9390939b6776727195525381532
   subpackages:
   - ssh
+- name: golang.org/x/debug
+  version: fb508927b491eca48a708e9d000fdb7afa53c32b
+  repo: https://golang.org/x/debug
 - name: golang.org/x/net
   version: f315505cf3349909cdf013ea56690da34e96a451
+- name: golang.org/x/oauth2
+  version: 25b4fb1468cb89700c7c060cb99f30581a61f5e3
 - name: golang.org/x/sys
   version: 33267e036fd93fcd26ea95b7bdaf2d8306cb743c
 - name: golang.org/x/text
   version: a71fd10341b064c10f4a81ceac72bcf70f26ea34
   subpackages:
   - unicode/norm
+- name: golang.org/x/time
+  version: 711ca1cb87636abec28122ef3bc6a77269d433f3
+  repo: https://golang.org/x/time
 - name: golang.org/x/tools
   version: 8b178a93c1f5b5c8f4e36cd6bd64e0d5bf0ee180
+- name: google.golang.org/api
+  version: 3ef9447cad8d725923ca024dab57786299cf745a
+  repo: https://google.golang.org/api
+- name: google.golang.org/appengine
+  version: 46239ca616842c00f41b8cbc6bbf2bd6ffbfcdad
+  repo: https://google.golang.org/appengine
+- name: google.golang.org/genproto
+  version: 9359a8d303c45e3212571b77610f1cefb0c6f3eb
+  repo: https://google.golang.org/genproto
+- name: google.golang.org/grpc
+  version: 396f8ba2a6b9039070f4ff97561f5e408828fccd
+  repo: https://google.golang.org/grpc
 - name: gopkg.in/airbrake/gobrake.v2
   version: 31c8ff1fb8b79a6947e6565e9a6df535f98a6b94
 - name: gopkg.in/fatih/pool.v2
