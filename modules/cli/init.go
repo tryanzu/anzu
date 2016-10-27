@@ -62,6 +62,7 @@ func (module Module) Run(name string) {
 		"export-components":  module.ExportComponents,
 		"count-components":   module.GenerateComponentViews,
 		"clean-duplicates":   module.CleanupDuplicates,
+		"clean-references":   module.CleanupReferences,
 
 		"spree-taxons":              module.SpreeTaxons,
 		"spree-products":            module.SpreeProducts,

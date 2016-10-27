@@ -13,6 +13,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/components"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/deals"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/massdrop"
+	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/oauth"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/payments"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/posts"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/products"
@@ -29,6 +30,7 @@ type Module struct {
 	Posts             handle.PostAPI
 	Votes             handle.VoteAPI
 	VotesFactory      votes.API
+	Oauth             oauth.API
 	Users             handle.UserAPI
 	Categories        handle.CategoryAPI
 	Elections         handle.ElectionAPI
@@ -90,6 +92,7 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.Gaming},
 		&inject.Object{Value: &module.Store},
 		&inject.Object{Value: &module.Builds},
+		&inject.Object{Value: &module.Oauth},
 		&inject.Object{Value: &module.BuildNotes},
 		&inject.Object{Value: &module.Mail},
 		&inject.Object{Value: &module.Components},
@@ -217,6 +220,10 @@ func (module *Module) Run() {
 		v1.GET("/auth/recovery-token/:token", module.UsersFactory.ValidatePasswordRecovery)
 		v1.PUT("/auth/recovery-token/:token", module.UsersFactory.UpdatePasswordFromToken)
 		v1.GET("/user/confirm/:code", module.Users.UserValidateEmail)
+
+		// Authentication routes
+		v1.GET("/oauth/:provider", module.Oauth.GetAuthRedirect)
+		v1.GET("/oauth/:provider/callback", module.Oauth.CompleteAuth)
 
 		// Categories routes
 		v1.GET("/category", module.Categories.CategoriesGet)

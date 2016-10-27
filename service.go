@@ -29,6 +29,9 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/getsentry/raven-go"
 	"github.com/leebenson/paypal"
+	"github.com/markbates/goth"
+	"github.com/markbates/goth/providers/facebook"
+	"github.com/markbates/goth/providers/steam"
 	"github.com/mitchellh/goamz/aws"
 	"github.com/mitchellh/goamz/s3"
 	"github.com/olebedev/config"
@@ -107,6 +110,12 @@ func main() {
 	assetsService := assets.Boot()
 	transmitService := transmit.Boot(string_value(configService.String("zmq.push")))
 	mailService := mail.Boot(string_value(configService.String("mail.api_key")), mailConfig, false)
+
+	// Authentication services
+	goth.UseProviders(
+		facebook.New(string_value(configService.String("auth.facebook.key")), string_value(configService.String("auth.facebook.secret")), string_value(configService.String("auth.facebook.callback")), "email"),
+		steam.New(string_value(configService.String("auth.steam.key")), string_value(configService.String("auth.steam.callback"))),
+	)
 
 	// Amazon services for the DI
 	amazonAuth, err := aws.GetAuth(string_value(configService.String("amazon.access_key")), string_value(configService.String("amazon.secret")))
