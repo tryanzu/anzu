@@ -1,7 +1,7 @@
 ### SpartanGeek / Blacker
 
 #### How to start blacker with pm2
-```pm2 start /home/spartan-user/src/github.com/fernandez14/spartangeek-blacker/blacker --interpreter none --name="blacker-transmit" -f -x -- transmit```
+```ENV_FILE=/home/spartan/blacker/current/env.json pm2 start /home/spartan/blacker/current/blacker --interpreter none --name="blacker-api" -f -x -- api```
 
 
 ### Wercker CI

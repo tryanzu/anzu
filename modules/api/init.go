@@ -218,7 +218,7 @@ func (module *Module) Run() {
 		v1.GET("/users/:id", module.Users.UserGetOne)
 		v1.GET("/users/:id/:kind", module.Users.UserGetActivity)
 		v1.GET("/user/search", module.Users.UserAutocompleteGet)
-		v1.POST("/user/get-token/facebook", module.Users.UserGetTokenFacebook)
+		//v1.POST("/user/get-token/facebook", module.Users.UserGetTokenFacebook) DEPRECATED
 		v1.GET("/auth/get-token", module.Users.UserGetJwtToken)
 		v1.GET("/auth/lost-password", module.UsersFactory.RequestPasswordRecovery)
 		v1.GET("/auth/recovery-token/:token", module.UsersFactory.ValidatePasswordRecovery)

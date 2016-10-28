@@ -84,8 +84,8 @@ func (a API) CompleteAuth(c *gin.Context) {
 	var constraints []bson.M
 	var id bson.ObjectId
 
-	field := usr.Provider + ".id"
 	if len(usr.UserID) > 0 {
+		field := usr.Provider + ".id"
 		constraints = append(constraints, bson.M{field: usr.UserID, "deleted_at": bson.M{"$exists": false}})
 	}
 
@@ -102,7 +102,7 @@ func (a API) CompleteAuth(c *gin.Context) {
 			return
 		}
 
-		u, err = a.Users.SignUpFacebook(usr.RawData)
+		u, err = a.Users.OauthSignup(usr.Provider, usr)
 
 		if err != nil {
 			c.JSON(400, gin.H{"status": "error", "message": err.Error()})

@@ -42,9 +42,9 @@ type User struct {
 
 type UserPrivate struct {
 	User             `bson:",inline"`
-	Password         string          `bson:"password" json:"-"`
+	Password         string          `bson:"password,omitempty" json:"-"`
 	Step             int             `bson:"step,omitempty" json:"step"`
-	Email            string          `bson:"email" json:"email,omitempty"`
+	Email            string          `bson:"email,omitempty" json:"email,omitempty"`
 	Categories       []bson.ObjectId `bson:"categories,omitempty" json:"categories,omitempty"`
 	Facebook         interface{}     `bson:"facebook,omitempty" json:"facebook,omitempty"`
 	Stats            UserStats       `bson:"stats,omitempty" json:"stats,omitempty"`

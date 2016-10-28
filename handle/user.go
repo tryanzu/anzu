@@ -330,69 +330,6 @@ func (di UserAPI) UserGetJwtToken(c *gin.Context) {
 	c.JSON(200, gin.H{"status": "okay", "token": token, "session_id": session_id, "firebase": firebase, "expires": remember})
 }
 
-func (di UserAPI) UserGetTokenFacebook(c *gin.Context) {
-
-	var facebook map[string]interface{}
-	var id bson.ObjectId
-	var constraints []bson.M
-
-	// Bind to strings map
-	c.BindWith(&facebook, binding.JSON)
-
-	if fbId, exists := facebook["id"].(string); exists && len(fbId) > 0 {
-		constraints = append(constraints, bson.M{"facebook.id": fbId, "deleted_at": bson.M{"$exists": false}})
-	}
-
-	if fbEmail, exists := facebook["email"].(string); exists && len(fbEmail) > 0 {
-		constraints = append(constraints, bson.M{"email": fbEmail, "deleted_at": bson.M{"$exists": false}})
-	}
-
-	if len(constraints) == 0 {
-		c.JSON(401, gin.H{"status": "error", "message": "Invalid oAuth facebook token..."})
-		return
-	}
-
-	session_id := c.MustGet("session_id").(string)
-	usr, err := di.User.Get(bson.M{"$or": constraints})
-
-	// Create a new user
-	if err != nil {
-		trusted := di.Security.TrustIP(c.ClientIP())
-
-		if !trusted {
-			c.JSON(403, gin.H{"status": "error", "message": "Not trusted."})
-			return
-		}
-
-		usr, err = di.User.SignUpFacebook(facebook)
-
-		if err != nil {
-			c.JSON(400, gin.H{"status": "error", "message": err.Error()})
-			return
-		}
-	} else {
-		// The id for the token would be the same as the facebook user
-		id = usr.Data().Id
-		trusted_user := di.Security.TrustUserIP(c.ClientIP(), usr)
-
-		if !trusted_user {
-			c.JSON(403, gin.H{"status": "error", "message": "Not trusted."})
-			return
-		}
-
-		if email, exists := facebook["email"]; exists {
-			_ = usr.Update(map[string]interface{}{"facebook": facebook, "email": email.(string)})
-		}
-
-		//go di.trackSiftScienceLogin(id.Hex(), session_id, true)
-	}
-
-	// Generate JWT with the information about the user
-	token, firebase := di.generateUserToken(id, usr.Data().Roles, 72)
-
-	c.JSON(200, gin.H{"status": "okay", "token": token, "firebase": firebase, "session_id": session_id})
-}
-
 func (this UserAPI) UserLogout(c *gin.Context) {
 
 	id, signed_in := c.Get("user_id")

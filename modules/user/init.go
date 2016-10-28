@@ -6,10 +6,12 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/fernandez14/spartangeek-blacker/modules/payments"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
+	"github.com/markbates/goth"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"gopkg.in/op/go-logging.v1"
 
+	"errors"
 	"regexp"
 	"strings"
 	"time"
@@ -211,58 +213,46 @@ func (module *Module) SignUp(email, username, password, referral string) (*One, 
 	return user, nil
 }
 
-func (module *Module) SignUpFacebook(facebook map[string]interface{}) (*One, error) {
-	context := module
-	database := module.Mongo.Database
-	id := bson.NewObjectId()
+func (m *Module) computeNickname(nicknames ...string) (string, error) {
+	var nickname string
+	for _, name := range nicknames {
+		if len(nickname) > 0 {
+			break
+		}
 
-	// Track the referral if we have to
-	if _, has_referral := facebook["ref"]; has_referral {
-
-		var reference User
-
-		referral := facebook["ref"].(string)
-		err := database.C("users").Find(bson.M{"ref_code": referral}).One(&reference)
-
-		// Track the referral link
-		if err == nil {
-
-			track := &ReferralModel{
-				OwnerId:   reference.Id,
-				UserId:    id,
-				Code:      referral,
-				Confirmed: true,
-				Created:   time.Now(),
-				Updated:   time.Now(),
-			}
-
-			err := database.C("referrals").Insert(track)
-
-			if err != nil {
-				panic(err)
-			}
+		if len(strings.TrimSpace(name)) > 0 {
+			nickname = strings.TrimSpace(name)
 		}
 	}
 
-	email := ""
-
-	if _, ok := facebook["email"]; ok {
-		email = facebook["email"].(string)
+	nickname = helpers.StrSlug(nickname)
+	if len(nickname) == 0 {
+		return "", errors.New("Could not compute nickname from empty strings")
 	}
+
+	return nickname, nil
+}
+
+// Sign up user from oauth provider
+func (module *Module) OauthSignup(provider string, user goth.User) (*One, error) {
+	db := module.Mongo.Database
+	id := bson.NewObjectId()
 
 	profile := map[string]interface{}{
 		"country": "México",
 		"bio":     "Just another spartan geek",
 	}
 
-	username := facebook["first_name"].(string) + " " + facebook["last_name"].(string)
-	username = helpers.StrSlug(username)
+	nickname, err := module.computeNickname(user.NickName, user.Name, "User"+helpers.StrRandom(8))
+	if err != nil {
+		return nil, err
+	}
 
 	usr := &UserPrivate{
 		User: User{
 			Id:           id,
-			UserName:     username,
-			UserNameSlug: username,
+			UserName:     nickname,
+			UserNameSlug: nickname,
 			Description:  "",
 			Profile:      profile,
 			Created:      time.Now(),
@@ -276,22 +266,25 @@ func (module *Module) SignUpFacebook(facebook map[string]interface{}) (*One, err
 			Validated: true,
 		},
 		Password:         "",
-		Email:            email,
+		Email:            user.Email,
 		ReferralCode:     helpers.StrRandom(6),
 		VerificationCode: helpers.StrRandom(12),
 		Updated:          time.Now(),
-		Facebook:         facebook,
 	}
 
-	err := database.C("users").Insert(usr)
-
+	err = db.C("users").Insert(usr)
 	if err != nil {
 		panic(err)
 	}
 
-	user := &One{data: usr, di: context}
+	err = db.C("users").Update(bson.M{"_id": id}, bson.M{"$set": bson.M{provider: user.RawData}})
+	if err != nil {
+		panic(err)
+	}
 
-	return user, nil
+	_user := &One{data: usr, di: module}
+
+	return _user, nil
 }
 
 func (module *Module) IsValidRecoveryToken(token string) (bool, error) {
