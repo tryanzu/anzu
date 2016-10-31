@@ -140,9 +140,9 @@ func (module *Module) SignUp(email, username, password, referral string) (*One, 
 	}
 
 	// Check if user already exists using that email
-	unique, _ := database.C("users").Find(bson.M{"$or": []bson.M{{"email": email}, {"username_slug": slug}}}).Count()
+	unique, err := database.C("users").Find(bson.M{"$or": []bson.M{{"email": email}, {"username_slug": slug}}}).Count()
 
-	if unique > 0 {
+	if unique > 0 || err != nil {
 		return nil, exceptions.OutOfBounds{"User already exists."}
 	}
 
