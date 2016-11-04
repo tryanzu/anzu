@@ -85,7 +85,7 @@ func (self Module) RegisterOwnAsset(remoteUrl string, o Parseable) *Asset {
 
 			fmt.Println(msg)
 
-			err := database.C("remote_assets").Update(bson.M{"_id": asset.Id}, bson.M{"$set": bson.M{"status": "remote", "hosted": "", "hash": ""}})
+			err := database.C("remote_assets").Update(bson.M{"_id": asset.Id}, bson.M{"$set": bson.M{"status": "remote", "hosted": "", "hash": "", "message": msg.Error()}})
 
 			if err != nil {
 				panic(err)
