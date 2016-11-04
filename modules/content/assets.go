@@ -175,6 +175,8 @@ func (self Module) RegisterOwnAsset(remoteUrl string, o Parseable) *Asset {
 					panic(err)
 				}
 			}
+
+			return
 		}
 
 		fail(errors.New("Could not download from remote and self hold"))
