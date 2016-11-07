@@ -15,8 +15,10 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -223,11 +225,8 @@ func (di *MiddlewareAPI) ErrorTracking(debug bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		if debug == false {
-
 			envfile := os.Getenv("ENV_FILE")
-
 			if envfile == "" {
-
 				envfile = "./env.json"
 			}
 
@@ -236,18 +235,24 @@ func (di *MiddlewareAPI) ErrorTracking(debug bool) gin.HandlerFunc {
 			}
 
 			defer func() {
-
 				var packet *raven.Packet
 
 				switch rval := recover().(type) {
 				case nil:
 					return
+				case *net.OpError:
+					if rval.Err == syscall.EPIPE {
+						return
+					}
+					packet = raven.NewPacket(rval.Error(), raven.NewException(rval, raven.NewStacktrace(2, 3, nil)))
+
+					// Show the error
+					log.Printf("[error][net.OpError] %v\n", rval)
 				case error:
 					packet = raven.NewPacket(rval.Error(), raven.NewException(rval, raven.NewStacktrace(2, 3, nil)))
 
 					// Show the error
 					log.Printf("[error] %v\n", rval)
-
 				default:
 					rvalStr := fmt.Sprint(rval)
 					packet = raven.NewPacket(rvalStr, raven.NewException(errors.New(rvalStr), raven.NewStacktrace(2, 3, nil)))
