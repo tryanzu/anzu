@@ -19,7 +19,7 @@ commands:
         run: source /etc/profile && cd $BUILD_PATH && glide install && go build -o blacker
     release-build: 
         desc: Create new relase using latest build
-        run: cd $REL_PATH/releases && mkdir $SUP_TIME && cd ./$SUP_TIME && cp $BUILD_PATH/blacker ./blacker && rmdir $REL_PATH/current; ln -s $REL_PATH/releases/$SUP_TIME $REL_PATH/current
+        run: cd $REL_PATH/releases && mkdir $SUP_TIME && cd ./$SUP_TIME && cp $BUILD_PATH/blacker ./blacker && rm $REL_PATH/current; ln -s $REL_PATH/releases/$SUP_TIME $REL_PATH/current
     restart:
         desc: Restart all pm2 processes
         run: pm2 restart all
