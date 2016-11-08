@@ -18,6 +18,7 @@ import (
 	"net"
 	"os"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -240,7 +241,7 @@ func (di *MiddlewareAPI) ErrorTracking(debug bool) gin.HandlerFunc {
 				case nil:
 					return
 				case *net.OpError:
-					if rval.Temporary() {
+					if rval.Temporary() || rval.Err == syscall.EPIPE {
 						return
 					}
 
