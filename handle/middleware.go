@@ -18,7 +18,6 @@ import (
 	"net"
 	"os"
 	"strings"
-	"syscall"
 	"time"
 )
 
@@ -241,9 +240,10 @@ func (di *MiddlewareAPI) ErrorTracking(debug bool) gin.HandlerFunc {
 				case nil:
 					return
 				case *net.OpError:
-					if rval.Err == syscall.EPIPE {
+					if rval.Temporary() {
 						return
 					}
+
 					packet = raven.NewPacket(rval.Error(), raven.NewException(rval, raven.NewStacktrace(2, 3, nil)))
 
 					// Show the error
