@@ -57,7 +57,7 @@ func (a API) CompleteAuth(c *gin.Context) {
 	bucket := sessions.Default(c)
 	oauth := bucket.Get("oauth")
 	if oauth == nil {
-		c.JSON(500, gin.H{"status": "error", "message": err.Error()})
+		c.JSON(500, gin.H{"status": "error", "message": "Could not get oauth session ref"})
 		return
 	}
 	bucket.Delete("oauth")
