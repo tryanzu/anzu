@@ -20,6 +20,9 @@ commands:
     release-build: 
         desc: Create new relase using latest build
         run: cd $REL_PATH/releases && mkdir $SUP_TIME && cd ./$SUP_TIME && cp $BUILD_PATH/blacker ./blacker && rm $REL_PATH/current; ln -s $REL_PATH/releases/$SUP_TIME $REL_PATH/current
+    cleanup-releases:
+        desc: Cleanup old releases
+        run: ls -1d $REL_PATH/releases/* | \sort -rg | \tail -n +4 | \xargs /bin/rm -rf
     restart:
         desc: Restart all pm2 processes
         run: pm2 restart all
@@ -49,5 +52,6 @@ targets:
         - build
         - release-build
         - restart
+        - cleanup-releases
         - notify-sentry
         - notify-slack
