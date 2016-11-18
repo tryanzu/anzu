@@ -53,6 +53,7 @@ type UserPrivate struct {
 	SessionId        string          `bson:"-" json:"session_id"`
 	Duplicates       []bson.ObjectId `bson:"duplicates" json:"-"`
 	ConfirmationSent *time.Time      `bson:"confirm_sent_at" json:"-"`
+	OnesignalID      string          `bson:"onesignal_id" json:"onesignal_id"`
 	Updated          time.Time       `bson:"updated_at" json:"updated_at"`
 	Gamificated      time.Time       `bson:"gamificated_at" json:"gamificated_at"`
 }
