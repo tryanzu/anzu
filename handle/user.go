@@ -398,7 +398,6 @@ func (di *UserAPI) UserUpdateProfileAvatar(c *gin.Context) {
 		name = bson.NewObjectId().Hex()
 
 		if extension == "" {
-
 			extension = ".jpg"
 		}
 
@@ -420,7 +419,8 @@ func (di *UserAPI) UserUpdateProfileAvatar(c *gin.Context) {
 		thumbnail, err := bimg.NewImage(data).Process(options)
 
 		if err != nil {
-			panic(err)
+			c.JSON(400, gin.H{"status": "error", "message": "Unsupported image type..."})
+			return
 		}
 
 		path = "users/" + name + "-120x120" + extension
