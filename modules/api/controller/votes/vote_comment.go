@@ -79,7 +79,8 @@ func (this API) Comment(c *gin.Context) {
 			err = database.C("votes").RemoveId(alreadyVoted.Id)
 
 			if err != nil {
-				panic(err)
+				c.JSON(409, gin.H{"message": "Could not found vote reference.", "status": "error"})
+				return
 			}
 
 			// Return the gamification points
