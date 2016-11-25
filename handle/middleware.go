@@ -240,7 +240,7 @@ func (di *MiddlewareAPI) ErrorTracking(debug bool) gin.HandlerFunc {
 				case nil:
 					return
 				case *net.OpError:
-					if rval.Temporary() || rval.Err == syscall.EPIPE {
+					if rval.Temporary() || rval.Err == syscall.EPIPE || strings.Contains(rval.Error(), "write: broken pipe") {
 						return
 					}
 
