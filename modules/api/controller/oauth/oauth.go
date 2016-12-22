@@ -42,7 +42,7 @@ func (a API) GetAuthRedirect(c *gin.Context) {
 
 	bucket := sessions.Default(c)
 	bucket.Set("oauth", sess.Marshal())
-	bucket.Set("redir", c.Param("redir"))
+	bucket.Set("redir", c.Query("redir"))
 	bucket.Save()
 
 	c.Redirect(303, url)
