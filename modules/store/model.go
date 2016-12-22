@@ -26,6 +26,12 @@ type InvoiceAssets struct {
 	PDF string `bson:"pdf" json:"pdf"`
 }
 
+type Messages []MessageModel
+
+func (a Messages) Len() int           { return len(a) }
+func (a Messages) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a Messages) Less(i, j int) bool { return !a[i].Created.Before(a[j].Created) }
+
 type OrderModel struct {
 	Id         bson.ObjectId   `bson:"_id,omitempty" json:"id,omitempty"`
 	User       OrderUserModel  `bson:"user" json:"user"`
@@ -38,7 +44,7 @@ type OrderModel struct {
 	Extra      []string        `bson:"extras" json:"extra"`
 	BuyDelay   int             `bson:"buydelay" json:"buydelay"`
 	Unreaded   bool            `bson:"unreaded" json:"unreaded"`
-	Messages   []MessageModel  `bson:"messages,omitempty" json:"messages"`
+	Messages   Messages        `bson:"messages,omitempty" json:"messages"`
 	Tags       []TagModel      `bson:"tags,omitempty" json:"tags"`
 	Activities []ActivityModel `bson:"activities,omitempty" json:"activities"`
 	Pipeline   PipelineModel   `bson:"pipeline,omitempty" json:"pipeline"`

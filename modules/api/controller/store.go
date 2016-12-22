@@ -4,6 +4,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/store"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
+	"sort"
 	"strconv"
 	"time"
 )
@@ -117,6 +118,7 @@ func (self StoreAPI) One(c *gin.Context) {
 
 	data := order.Data()
 	data.RelatedUsers = order.MatchUsers()
+	sort.Sort(data.Messages)
 
 	c.JSON(200, data)
 }

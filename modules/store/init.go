@@ -9,6 +9,7 @@ import (
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -381,11 +382,10 @@ func (module *Module) GetSortedOrders(limit, skip int, search, group string) []O
 	if err == nil {
 
 		for index, order := range list {
+			sort.Sort(list[index].Messages)
 
 			for _, lead := range leads {
-
 				if strings.ToLower(lead.Email) == strings.ToLower(order.User.Email) {
-
 					list[index].Lead = true
 				}
 			}
