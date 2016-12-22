@@ -42,6 +42,7 @@ func (a API) GetAuthRedirect(c *gin.Context) {
 
 	bucket := sessions.Default(c)
 	bucket.Set("oauth", sess.Marshal())
+	bucket.Set("redir", c.Param("redir"))
 	bucket.Save()
 
 	c.Redirect(303, url)
@@ -60,7 +61,9 @@ func (a API) CompleteAuth(c *gin.Context) {
 		c.JSON(500, gin.H{"status": "error", "message": "Could not get oauth session ref"})
 		return
 	}
+	redir := bucket.Get("redir")
 	bucket.Delete("oauth")
+	bucket.Delete("redir")
 	bucket.Save()
 
 	sess, err := provider.UnmarshalSession(oauth.(string))
@@ -122,14 +125,18 @@ func (a API) CompleteAuth(c *gin.Context) {
 		_ = u.Update(map[string]interface{}{usr.Provider: usr.RawData, "email": usr.Email})
 	}
 
-	siteUrl, err := a.Config.String("application.siteUrl")
-	if err != nil {
-		panic(err)
+	forward := redir.(string)
+
+	if len(forward) < 6 {
+		forward, err = a.Config.String("application.siteUrl")
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	// Generate JWT with the information about the user
 	token, firebase := a.generateUserToken(id, u.Data().Roles, 72)
-	url := fmt.Sprintf("%s/?token=%s&fbToken=%s", siteUrl, token, firebase)
+	url := fmt.Sprintf("%s/?token=%s&fbToken=%s", forward, token, firebase)
 
 	c.Redirect(303, url)
 }
