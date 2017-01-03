@@ -178,6 +178,10 @@ func (self *One) PushTag(tag string) {
 	}
 }
 
+func (o *One) DeleteTag(name string) error {
+	return o.di.Mongo.Database.C("orders").Update(bson.M{"_id": o.data.Id}, bson.M{"$pull": bson.M{"tags": bson.M{"name": name}}})
+}
+
 func (self *One) PushActivity(name, description string, due_at time.Time) {
 
 	database := self.di.Mongo.Database

@@ -183,7 +183,6 @@ func (self *StoreAPI) Answer(c *gin.Context) {
 
 // Push tag to an order
 func (self *StoreAPI) Tag(c *gin.Context) {
-
 	var form OrderTagForm
 
 	order_id := c.Param("id")
@@ -209,6 +208,27 @@ func (self *StoreAPI) Tag(c *gin.Context) {
 
 			c.JSON(400, gin.H{"status": "error", "message": err.Error()})
 		}
+	}
+}
+
+func (self *StoreAPI) DeleteTag(c *gin.Context) {
+	var f OrderTagForm
+
+	oid := c.Param("id")
+	if !bson.IsObjectIdHex(oid) {
+		c.JSON(400, gin.H{"message": "Invalid request, id not valid.", "status": "error"})
+		return
+	}
+
+	id := bson.ObjectIdHex(oid)
+	if c.BindJSON(&f) == nil {
+		order, err := self.Store.Order(id)
+		if err != nil {
+			c.JSON(400, gin.H{"status": "error", "message": err.Error()})
+		}
+
+		_ = order.DeleteTag(f.Name)
+		c.JSON(200, gin.H{"status": "okay"})
 	}
 }
 

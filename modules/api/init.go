@@ -174,7 +174,9 @@ func (module *Module) Run() {
 	v1.Use(module.Middlewares.Authorization())
 	{
 		v1.GET("/whoami", func(c *gin.Context) {
-			c.String(200, c.ClientIP())
+			result := gin.H{"address": c.ClientIP()}
+
+			c.JSON(200, result)
 		})
 
 		// Authentication routes
@@ -341,6 +343,7 @@ func (module *Module) Run() {
 				backoffice.DELETE("/order/:id", module.Store.Ignore)
 				backoffice.POST("/order/:id", module.Store.Answer)
 				backoffice.POST("/order/:id/tag", module.Store.Tag)
+				backoffice.DELETE("/order/:id/tag", module.Store.DeleteTag)
 				backoffice.POST("/order/:id/activity", module.Store.Activity)
 				backoffice.POST("/order/:id/trust", module.Store.Trust)
 				backoffice.POST("/order/:id/favorite", module.Store.Favorite)
