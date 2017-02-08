@@ -63,3 +63,4 @@ import:
 - package: gopkg.in/jmcvetta/neoism.v1
 - package: gopkg.in/op/go-logging.v1
 - package: github.com/markbates/goth
+- package: github.com/messagebird/go-rest-api

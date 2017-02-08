@@ -15,13 +15,12 @@ type StoreAPI struct {
 
 // Place an order (public endpoint)
 func (self StoreAPI) PlaceOrder(c *gin.Context) {
-
-	var form OrderForm
-
-	var ip string = c.ClientIP()
+	var (
+		form OrderForm
+		ip   string = c.ClientIP()
+	)
 
 	if c.BindJSON(&form) == nil {
-
 		order := store.OrderModel{
 			User: store.OrderUserModel{
 				Name:  form.User.Name,

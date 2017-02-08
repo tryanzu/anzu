@@ -8,8 +8,8 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
-	"unicode"
 	"time"
+	"unicode"
 )
 
 var lat = []*unicode.RangeTable{unicode.Letter, unicode.Number}
@@ -39,10 +39,10 @@ func InArray(val interface{}, array interface{}) (exists bool, index int) {
 func Truncate(s string, length int) string {
 	var numRunes = 0
 	for index, _ := range s {
-	 numRunes++
-	 if numRunes > length {
-	      return s[:index]
-	 }
+		numRunes++
+		if numRunes > length {
+			return s[:index]
+		}
 	}
 	return s
 }
@@ -113,7 +113,7 @@ func StrCapRandom(length int) string {
 
 	now := time.Now()
 	rand.Seed(now.UnixNano())
-	
+
 	b := make([]rune, length)
 	for i := range b {
 		b[i] = letters[rand.Intn(len(letters))]
@@ -124,6 +124,22 @@ func StrCapRandom(length int) string {
 	return generated
 }
 
+func StrNumRandom(length int) string {
+
+	var letters = []rune("0123456789")
+
+	now := time.Now()
+	rand.Seed(now.UnixNano())
+
+	b := make([]rune, length)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+
+	generated := string(b)
+
+	return generated
+}
 
 func Sha256(s string) string {
 

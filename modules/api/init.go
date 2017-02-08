@@ -279,14 +279,14 @@ func (module *Module) Run() {
 		}
 
 		authorized := v1.Group("")
-
 		authorized.Use(module.Middlewares.NeedAuthorization())
 		{
+			authorized.PUT("/contest-lead", module.Lead.UpdateContestLead)
 			authorized.POST("/build", module.PostsFactory.Create)
 
 			// Auth routes
-			v1.GET("/auth/logout", module.Users.UserLogout)
-			v1.GET("/auth/resend-confirmation", module.UsersFactory.ResendConfirmation)
+			authorized.GET("/auth/logout", module.Users.UserLogout)
+			authorized.GET("/auth/resend-confirmation", module.UsersFactory.ResendConfirmation)
 
 			// Payments routes
 			authorized.POST("/payments", module.Payments.Place)
