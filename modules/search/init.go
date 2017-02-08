@@ -1,16 +1,16 @@
 package search
 
 import (
-	"github.com/olebedev/config"
 	"github.com/algolia/algoliasearch-client-go/algoliasearch"
+	"github.com/olebedev/config"
 )
 
 type Module struct {
-	client  *algoliasearch.Client
-	indices map[string]*algoliasearch.Index
+	client  algoliasearch.Client
+	indices map[string]algoliasearch.Index
 }
 
-func (module Module) Get(name string) *algoliasearch.Index {
+func (module Module) Get(name string) algoliasearch.Index {
 
 	if index, exists := module.indices[name]; exists {
 
@@ -21,7 +21,7 @@ func (module Module) Get(name string) *algoliasearch.Index {
 }
 
 func Boot(module_config *config.Config) *Module {
-	
+
 	config_application, err := module_config.String("application")
 
 	if err != nil {
@@ -38,7 +38,7 @@ func Boot(module_config *config.Config) *Module {
 	client := algoliasearch.NewClient(config_application, config_api)
 
 	// Prepare available indices
-	indices := make(map[string]*algoliasearch.Index)
+	indices := make(map[string]algoliasearch.Index)
 	config_indices, err := module_config.List("indexes")
 
 	if err != nil {

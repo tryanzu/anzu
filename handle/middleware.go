@@ -53,9 +53,7 @@ func (di *MiddlewareAPI) CORS() gin.HandlerFunc {
 func (di *MiddlewareAPI) StatsdTiming() gin.HandlerFunc {
 
 	return func(c *gin.Context) {
-
 		t := time.Now()
-
 		c.Next()
 
 		latency := time.Since(t)
@@ -162,8 +160,9 @@ func (di *MiddlewareAPI) Authorization() gin.HandlerFunc {
 				}
 
 				scope := []string{}
+				claims := signed.Claims.(jwt.MapClaims)
 
-				if scopes, exists := signed.Claims["scope"]; exists {
+				if scopes, exists := claims["scope"]; exists {
 					for _, role := range scopes.([]interface{}) {
 						scope = append(scope, role.(string))
 					}
@@ -171,7 +170,7 @@ func (di *MiddlewareAPI) Authorization() gin.HandlerFunc {
 
 				// Set the token for further usage
 				c.Set("token", jtw_token)
-				c.Set("user_id", signed.Claims["user_id"].(string))
+				c.Set("user_id", claims["user_id"].(string))
 				c.Set("scope", scope)
 			}
 		}

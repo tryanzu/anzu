@@ -766,20 +766,29 @@ func (di *UserAPI) UserAutocompleteGet(c *gin.Context) {
 	}
 }
 
+type UserToken struct {
+	UserID string   `json:"user"`
+	Scopes []string `json:"scope"`
+	jwt.StandardClaims
+}
+
 func (di *UserAPI) generateUserToken(id bson.ObjectId, roles []user.UserRole, expiration int) (string, string) {
 
-	// Generate JWT with the information about the user
-	token := jwt.New(jwt.SigningMethodHS256)
-	token.Claims["user_id"] = id.Hex()
-	token.Claims["exp"] = time.Now().Add(time.Hour * time.Duration(expiration)).Unix()
-
 	scope := []string{}
-
 	for _, role := range roles {
 		scope = append(scope, role.Name)
 	}
 
-	token.Claims["scope"] = scope
+	claims := UserToken{
+		id.Hex(),
+		scope,
+		jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(time.Hour * time.Duration(expiration)).Unix(),
+			Issuer:    "spartangeek",
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	// Use the secret inside the configuration to encrypt it
 	secret, err := di.ConfigService.String("application.secret")
