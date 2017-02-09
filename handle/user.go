@@ -767,7 +767,7 @@ func (di *UserAPI) UserAutocompleteGet(c *gin.Context) {
 }
 
 type UserToken struct {
-	UserID string   `json:"user"`
+	UserID string   `json:"user_id"`
 	Scopes []string `json:"scope"`
 	jwt.StandardClaims
 }

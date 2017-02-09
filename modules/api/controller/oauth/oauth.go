@@ -142,7 +142,7 @@ func (a API) CompleteAuth(c *gin.Context) {
 }
 
 type UserToken struct {
-	UserID string   `json:"user"`
+	UserID string   `json:"user_id"`
 	Scopes []string `json:"scope"`
 	jwt.StandardClaims
 }
