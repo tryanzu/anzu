@@ -281,6 +281,7 @@ func (module *Module) Run() {
 		authorized := v1.Group("")
 		authorized.Use(module.Middlewares.NeedAuthorization())
 		{
+			authorized.GET("/contest-lead", module.Lead.GetContestLead)
 			authorized.PUT("/contest-lead", module.Lead.UpdateContestLead)
 			authorized.POST("/build", module.PostsFactory.Create)
 

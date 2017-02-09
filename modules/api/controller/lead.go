@@ -75,6 +75,21 @@ func (this LeadAPI) Post(c *gin.Context) {
 	c.JSON(400, gin.H{"status": "error", "message": "Invalid parameters."})
 }
 
+func (container LeadAPI) GetContestLead(c *gin.Context) {
+	var original ContestLead
+
+	db := container.Mongo.Database
+	user_str := c.MustGet("user_id")
+	user_id := bson.ObjectIdHex(user_str.(string))
+
+	// Find record if any for further diffs
+	db.C("contest_leads").Find(bson.M{"user_id": user_id}).One(&original)
+
+	original.Code = "secret"
+
+	c.JSON(200, original)
+}
+
 func (container LeadAPI) UpdateContestLead(c *gin.Context) {
 	var form, original ContestLead
 
@@ -102,6 +117,7 @@ func (container LeadAPI) UpdateContestLead(c *gin.Context) {
 		isNew := !original.Id.Valid()
 		_, err = container.Mongo.Database.C("contest_leads").Upsert(bson.M{"user_id": user_id}, bson.M{
 			"$set": bson.M{
+				"step":       form.Step,
 				"email":      form.Email,
 				"name":       form.Name,
 				"phone":      form.Phone,
@@ -119,14 +135,17 @@ func (container LeadAPI) UpdateContestLead(c *gin.Context) {
 			panic(err)
 		}
 
-		if original.Phone != form.Phone && len(form.Phone) == 10 {
+		sent := false
+		_, resend := c.GetQuery("resend")
+
+		if original.SentTimes < 3 && (original.Phone != form.Phone || resend) && len(form.Phone) == 10 {
 			confirm := fmt.Sprintf("Hola %s! Tu codigo de confirmación es %s", usr.Name(), code)
 
 			client := messagebird.New("OVa8Syl3B47DfdRgiahMvd6KV")
 			message, err := client.NewMessage("spartangeek", []string{"+521" + form.Phone}, confirm, nil)
 
 			if err != nil {
-				c.JSON(422, gin.H{"status": "error", "message": err})
+				c.JSON(422, gin.H{"status": "error", "message": "No pudimos enviarte un código de confirmación a ese número.", "details": err})
 				return
 			}
 
@@ -134,6 +153,8 @@ func (container LeadAPI) UpdateContestLead(c *gin.Context) {
 			if err != nil {
 				panic(err)
 			}
+
+			sent = true
 		}
 
 		if !isNew && code == form.Code && original.Validated == false {
@@ -143,7 +164,7 @@ func (container LeadAPI) UpdateContestLead(c *gin.Context) {
 			}
 		}
 
-		c.JSON(200, gin.H{"status": "okay"})
+		c.JSON(200, gin.H{"status": "okay", "sms_sent": sent})
 	}
 }
 
