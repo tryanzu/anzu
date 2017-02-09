@@ -1,8 +1,8 @@
-hash: b1c6a51213a19f50fc591f2395d8f2284c4a0ba2bf35f56e61f705f7c5abda4a
-updated: 2017-02-08T16:35:30.361163237-06:00
+hash: f149187b79f914c28838d60ce93cfd3df846560b05b50fa608552eecc9a33efc
+updated: 2017-02-09T13:30:54.978664883-06:00
 imports:
 - name: github.com/algolia/algoliasearch-client-go
-  version: bfe41a0098abf64a2529e95a2f10b4e6cc32ac1f
+  version: 597a1919857ba29aafa399ae3e74feec2827a5d5
   subpackages:
   - algoliasearch
 - name: github.com/blevesearch/bleve
@@ -40,12 +40,15 @@ imports:
   - search/searcher
 - name: github.com/blevesearch/go-porterstemmer
   version: 23a2c8e5cf1f380f27722c6d2ae8896431dc7d0e
+  repo: https://github.com/blevesearch/go-porterstemmer
 - name: github.com/blevesearch/segment
-  version: 762005e7a34fd909a84586299f1dd457371d36ee
+  version: db70c57796cc8c310613541dfade3dce627d09c7
+  repo: https://github.com/blevesearch/segment
 - name: github.com/boj/redistore
   version: fc113767cd6b051980f260d6dbe84b2740c46ab0
 - name: github.com/boltdb/bolt
-  version: e9cf4fae01b5a8ff89d0ec6b32f0d9c9f79aefdd
+  version: 144418e1475d8bf7abbdc48583500f1a20c62ea7
+  repo: https://github.com/boltdb/bolt
 - name: github.com/brandfolder/gin-gorelic
   version: b3200fd6d4c7c434fd4d4d7ecb39a3c43aa8253c
 - name: github.com/cactus/go-statsd-client
@@ -95,7 +98,8 @@ imports:
 - name: github.com/goinggo/work
   version: e2c4d06662b4a79fa3db3a83f65d6e252620c55e
 - name: github.com/golang/protobuf
-  version: 2402d76f3d41f928c7902a765dfc872356dd3aad
+  version: 655cdfa588ea190e901bc5590e65d5621688847c
+  repo: https://github.com/golang/protobuf
   subpackages:
   - proto
 - name: github.com/googollee/go-engine.io
@@ -172,9 +176,8 @@ imports:
   version: 450379d2950a65070b23cc93c53436553add4484
   subpackages:
   - providers/facebook
-  - providers/steam
 - name: github.com/mattn/go-isatty
-  version: 30a891c33c7cde7b02a981314b4228ec99380cca
+  version: 281032e84ae07510239465db46bf442aa44b953a
 - name: github.com/messagebird/go-rest-api
   version: c8643b4c74a7b7b89565aa6fbfa77ec555a2c830
 - name: github.com/micro/go-micro
@@ -219,11 +222,12 @@ imports:
 - name: github.com/satori/go.uuid
   version: b061729afc07e77a8aa4fad0a2fd840958f1942a
 - name: github.com/spf13/cobra
-  version: 99600f6874c95daab762dc2373dc3ee1f6a48575
+  version: b5d8e8f46a2f829f755b6e33b454e25c61c935e1
 - name: github.com/spf13/pflag
   version: 9ff6c6923cfffbcd502984b8e0c80539a94968b7
 - name: github.com/steveyen/gtreap
   version: 0abe01ef9be25c4aedc174758ec2d917314d6d70
+  repo: https://github.com/steveyen/gtreap
 - name: github.com/stretchr/testify
   version: f390dcf405f7b83c997eac1b06768bb9f44dec18
   subpackages:
@@ -277,20 +281,20 @@ imports:
 - name: github.com/yvasiyarov/newrelic_platform_go
   version: 9c099fbc30e90de5bb5c5f94aa5fd08f2daeaacd
 - name: golang.org/x/crypto
-  version: 537c9dfe43c8ca78e68e340fc140bca4d8bfaaa0
+  version: dd96d35c1b251a7ef77f057fc5c4f92ea2b285b4
   subpackages:
   - curve25519
   - ed25519
   - ed25519/internal/edwards25519
   - ssh
 - name: golang.org/x/net
-  version: f315505cf3349909cdf013ea56690da34e96a451
+  version: e45385e9b226f570b1f086bf287b25d3d4117776
   subpackages:
   - context
   - html
   - html/atom
 - name: golang.org/x/oauth2
-  version: 4464e7848382e6f39db55097f70e1460bdf944b3
+  version: de0725b330ab43c1a3d6c84d961cf01183783f1e
   subpackages:
   - internal
 - name: golang.org/x/sys
@@ -298,7 +302,7 @@ imports:
   subpackages:
   - unix
 - name: golang.org/x/text
-  version: dafb3384ad25363d928a9e97ce4ad3a2f0667e34
+  version: 5ee49cfe751141f8017047bab800d1f528ee3be1
   subpackages:
   - transform
   - unicode/norm
