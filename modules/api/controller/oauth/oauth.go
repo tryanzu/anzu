@@ -2,6 +2,7 @@ package oauth
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/CloudCom/fireauth"
@@ -22,6 +23,11 @@ type API struct {
 }
 
 func (a API) GetAuthRedirect(c *gin.Context) {
+	siteUrl, err := a.Config.String("application.siteUrl")
+	if err != nil {
+		panic(err)
+	}
+
 	provider, err := goth.GetProvider(c.Param("provider"))
 	if err != nil {
 		c.JSON(500, gin.H{"status": "error", "message": err.Error()})
@@ -40,6 +46,11 @@ func (a API) GetAuthRedirect(c *gin.Context) {
 		return
 	}
 
+	if !strings.HasPrefix(c.Query("redir"), siteUrl) {
+		c.JSON(401, gin.H{"status": "unauthorized."})
+		return
+	}
+
 	bucket := sessions.Default(c)
 	bucket.Set("oauth", sess.Marshal())
 	bucket.Set("redir", c.Query("redir"))
@@ -49,9 +60,9 @@ func (a API) GetAuthRedirect(c *gin.Context) {
 }
 
 func (a API) CompleteAuth(c *gin.Context) {
-	provider, err := goth.GetProvider(c.Param("provider"))
+	provider, err := goth.GetProvider("facebook")
 	if err != nil {
-		c.JSON(500, gin.H{"status": "error", "message": err.Error()})
+		c.JSON(500, gin.H{"status": "provider-error", "message": err.Error()})
 		return
 	}
 
@@ -68,13 +79,13 @@ func (a API) CompleteAuth(c *gin.Context) {
 
 	sess, err := provider.UnmarshalSession(oauth.(string))
 	if err != nil {
-		c.JSON(500, gin.H{"status": "error", "message": err.Error()})
+		c.JSON(500, gin.H{"status": "session-error", "oauth": oauth, "message": err.Error()})
 		return
 	}
 
 	_, err = sess.Authorize(provider, c.Request.URL.Query())
 	if err != nil {
-		c.JSON(500, gin.H{"status": "error", "message": err.Error()})
+		c.JSON(500, gin.H{"status": "authorize-error", "message": err.Error()})
 		return
 	}
 
