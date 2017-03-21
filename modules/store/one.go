@@ -43,7 +43,7 @@ func (self *One) PushAnswer(text, kind string) {
 		}
 
 		compose := mail.Mail{
-			Subject:  "",
+			Subject:  subject,
 			Template: 250241,
 			Recipient: []mail.MailRecipient{
 				{
@@ -55,6 +55,7 @@ func (self *One) PushAnswer(text, kind string) {
 			FromName:  "Drak Spartan",
 			Variables: map[string]interface{}{
 				"content": text,
+				"subject": subject,
 			},
 		}
 
