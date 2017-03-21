@@ -34,11 +34,16 @@ func (self *One) PushAnswer(text, kind string) {
 	database := self.di.Mongo.Database
 
 	if kind == "text" {
-
 		mailing := self.di.Mail
 		text = strings.Replace(text, "\n", "<br>", -1)
 
+		subject := "PC Spartana"
+		if len(self.data.Messages) > 0 {
+			subject = "Re: " + subject
+		}
+
 		compose := mail.Mail{
+			Subject:  "",
 			Template: 250241,
 			Recipient: []mail.MailRecipient{
 				{
