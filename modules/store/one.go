@@ -39,7 +39,7 @@ func (self *One) PushAnswer(text, kind string) {
 
 		subject := "PC Spartana"
 		if len(self.data.Messages) > 0 {
-			subject = "Re: " + subject
+			subject = "RE: " + subject
 		}
 
 		compose := mail.Mail{
