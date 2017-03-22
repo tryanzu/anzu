@@ -6,6 +6,7 @@ import (
 	"github.com/cosn/firebase"
 	"github.com/facebookgo/inject"
 	"github.com/fernandez14/go-siftscience"
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/interfaces"
 	"github.com/fernandez14/spartangeek-blacker/modules/acl"
 	"github.com/fernandez14/spartangeek-blacker/modules/api"
@@ -31,7 +32,7 @@ import (
 	"github.com/leebenson/paypal"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/providers/facebook"
-	"github.com/markbates/goth/providers/steam"
+	"github.com/micro/go-micro/broker"
 	"github.com/mitchellh/goamz/aws"
 	"github.com/mitchellh/goamz/s3"
 	"github.com/olebedev/config"
@@ -41,16 +42,15 @@ import (
 	"github.com/xuyu/goredis"
 	"gopkg.in/op/go-logging.v1"
 	"os"
-	"runtime"
 )
 
 func main() {
 
+	// Run dependencies bootstraping sequences.
+	deps.Bootstrap()
+
 	// Graph main object (used to inject dependencies)
 	var g inject.Graph
-
-	// Start by using the power of the machine cores
-	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	// Run with the specified env file
 	envfile := os.Getenv("ENV_FILE")
@@ -112,10 +112,10 @@ func main() {
 	mailService := mail.Boot(string_value(configService.String("mail.api_key")), mailConfig, false)
 
 	// Authentication services
-	goth.UseProviders(
-		facebook.New(string_value(configService.String("auth.facebook.key")), string_value(configService.String("auth.facebook.secret")), string_value(configService.String("auth.facebook.callback")), "email"),
-		steam.New(string_value(configService.String("auth.steam.key")), string_value(configService.String("auth.steam.callback"))),
-	)
+	facebookProvider := facebook.New(string_value(configService.String("auth.facebook.key")), string_value(configService.String("auth.facebook.secret")), string_value(configService.String("auth.facebook.callback")), "email")
+	fmt.Printf("facebook provider client %s secret %s", facebookProvider.ClientKey, facebookProvider.Secret)
+	facebookProvider.Debug(true)
+	goth.UseProviders(facebookProvider)
 
 	// Amazon services for the DI
 	amazonAuth, err := aws.GetAuth(string_value(configService.String("amazon.access_key")), string_value(configService.String("amazon.secret")))
@@ -196,6 +196,14 @@ func main() {
 	}
 
 	paymentGateways["offline"] = &payments.Offline{}
+
+	if err := broker.Init(); err != nil {
+		log.Fatalf("Broker Init error: %v", err)
+	}
+
+	if err := broker.Connect(); err != nil {
+		log.Fatalf("Broker Connect error: %v", err)
+	}
 
 	p := payments.GetModule(paymentGateways)
 

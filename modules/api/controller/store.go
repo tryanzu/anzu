@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/modules/store"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
@@ -151,32 +152,24 @@ func (self StoreAPI) FastAnswer(c *gin.Context) {
 
 // Answer with text to an order
 func (self *StoreAPI) Answer(c *gin.Context) {
-
 	var form OrderAnswerForm
-
 	order_id := c.Param("id")
 
 	if bson.IsObjectIdHex(order_id) == false {
-
 		c.JSON(400, gin.H{"message": "Invalid request, id not valid.", "status": "error"})
 		return
 	}
 
 	id := bson.ObjectIdHex(order_id)
-
 	if c.BindJSON(&form) == nil {
-
-		order, err := self.Store.Order(id)
-
-		if err == nil {
-
-			order.PushAnswer(form.Content, form.Type)
-
-			c.JSON(200, gin.H{"status": "okay"})
-		} else {
-
+		lead, err := store.FLead(deps.Container, id)
+		if err != nil {
 			c.JSON(400, gin.H{"status": "error", "message": err.Error()})
+			return
 		}
+		lead.Reply(deps.Container, form.Content, form.Type)
+
+		c.JSON(200, gin.H{"status": "okay"})
 	}
 }
 

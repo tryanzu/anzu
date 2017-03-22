@@ -22,17 +22,6 @@ type MailAPI struct {
 
 // Get an inbound mail from mandrill
 func (self MailAPI) Inbound(c *gin.Context) {
-
-	address := c.Param("address")
-
-	if address == "pc" {
-
-		// Fallback to mandrill handler
-		self.MandrillFallback(c)
-
-		return
-	}
-
 	request := c.Request
 	content, err := ioutil.ReadAll(request.Body)
 
@@ -53,17 +42,13 @@ func (self MailAPI) Inbound(c *gin.Context) {
 	form.Id = bson.NewObjectId()
 
 	go func(m MailInbound, self MailAPI) {
-
-		// Recover from any panic even inside this goroutine
 		defer self.Errors.Recover()
 
 		assets := self.Assets
 		database := self.Mongo.Database
 
 		if len(m.Attachments) > 0 {
-
 			for _, attachment := range m.Attachments {
-
 				err := assets.UploadBase64(attachment.Content, attachment.Name, "mail", m.Id, attachment)
 
 				if err != nil {
@@ -84,16 +69,10 @@ func (self MailAPI) Inbound(c *gin.Context) {
 		order, err := self.Store.OrderFinder(m.FromFull.Email)
 
 		if err == nil {
-
-			var text string
+			text := m.TextBody
 
 			if len(m.StrippedTextReply) > 0 {
-
 				text = m.StrippedTextReply
-
-			} else {
-
-				text = m.TextBody
 			}
 
 			// Push inbound answer
@@ -104,51 +83,6 @@ func (self MailAPI) Inbound(c *gin.Context) {
 		}
 
 	}(form, self)
-
-	c.JSON(200, gin.H{"status": "okay"})
-}
-
-func (self MailAPI) MandrillFallback(c *gin.Context) {
-
-	var events []MailMandrillInbound
-
-	mandrill_request := c.PostForm("mandrill_events")
-
-	err := json.Unmarshal([]byte(mandrill_request), &events)
-
-	if err != nil {
-
-		c.JSON(400, gin.H{"status": "Could not process the request the way we expected."})
-		return
-	}
-
-	// Due that we don't know how mandrill does stuff internally we'll respond back as fast as we can
-	go func(list []MailMandrillInbound, self MailAPI) {
-
-		database := self.Mongo.Database
-
-		for _, mail := range list {
-
-			// Assign an id to each mail so we can go further and relate them
-			id := bson.NewObjectId()
-			mail.Id = id
-
-			// Persist each inbound email
-			err := database.C("mails").Insert(mail)
-
-			if err != nil {
-				continue
-			}
-
-			order, err := self.Store.OrderFinder(mail.Message.FromEmail)
-
-			if err == nil {
-
-				order.PushInboundAnswer(mail.Message.Text, id)
-			}
-		}
-
-	}(events, self)
 
 	c.JSON(200, gin.H{"status": "okay"})
 }
