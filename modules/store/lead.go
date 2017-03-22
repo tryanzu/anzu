@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -37,17 +38,15 @@ type Lead struct {
 	RelatedUsers interface{}  `bson:"-" json:"related_users,omitempty"`
 	Duplicates   []OrderModel `bson:"-" json:"duplicates,omitempty"`
 	Invoice      *Invoice     `bson:"-" json:"invoice,omitempty"`
-
-	deps Deps
 }
 
 // Reply logic over a lead.
-func (lead *Lead) Reply(answer, kind string) error {
-	db := lead.deps.Mgo()
-	mailer := lead.deps.Mailer()
+func (lead *Lead) Reply(answer, kind string) (string, error) {
+	db := deps.Container.Mgo()
+	mailer := deps.Container.Mailer()
 
 	if kind != "text" && kind != "note" {
-		return InvalidLeadAnswer
+		return "", InvalidLeadAnswer
 	}
 
 	var id, subject string
@@ -95,8 +94,8 @@ func (lead *Lead) Reply(answer, kind string) error {
 		})
 
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	return id, nil
 }

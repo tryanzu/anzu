@@ -17,7 +17,6 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
 	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
 	"github.com/fernandez14/spartangeek-blacker/modules/gcommerce"
-	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/fernandez14/spartangeek-blacker/modules/notifications"
 	"github.com/fernandez14/spartangeek-blacker/modules/payments"
 	"github.com/fernandez14/spartangeek-blacker/modules/preprocessor"
@@ -91,12 +90,6 @@ func main() {
 	firebaseService := new(firebase.Client)
 	firebaseService.Init(string_value(configService.String("firebase.url")), string_value(configService.String("firebase.secret")), nil)
 
-	mailConfig, err := configService.Get("mail")
-
-	if err != nil {
-		panic(err)
-	}
-
 	gosift.ApiKey = string_value(configService.String("ecommerce.siftscience.api_key"))
 	searchConfig, err := configService.Get("algolia")
 
@@ -107,7 +100,6 @@ func main() {
 	searchService := search.Boot(searchConfig)
 	assetsService := assets.Boot()
 	transmitService := transmit.Boot(string_value(configService.String("zmq.push")))
-	mailService := mail.Boot(string_value(configService.String("mail.api_key")), mailConfig, false)
 
 	// Authentication services
 	facebookProvider := facebook.New(string_value(configService.String("auth.facebook.key")), string_value(configService.String("auth.facebook.secret")), string_value(configService.String("auth.facebook.callback")), "email")
@@ -224,7 +216,6 @@ func main() {
 		&inject.Object{Value: userService, Complete: false},
 		&inject.Object{Value: componentsService, Complete: false},
 		&inject.Object{Value: gamingService, Complete: false},
-		&inject.Object{Value: mailService, Complete: false},
 		&inject.Object{Value: p, Complete: false},
 		&inject.Object{Value: broadcaster, Complete: true, Name: "Notifications"},
 		&inject.Object{Value: &cliModule},

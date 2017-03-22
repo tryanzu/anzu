@@ -145,11 +145,6 @@ func (self StoreAPI) Ignore(c *gin.Context) {
 	c.JSON(200, gin.H{"status": "okay"})
 }
 
-// Use one of the predefined answers to answer an order
-func (self StoreAPI) FastAnswer(c *gin.Context) {
-
-}
-
 // Answer with text to an order
 func (self *StoreAPI) Answer(c *gin.Context) {
 	var form OrderAnswerForm
@@ -162,14 +157,20 @@ func (self *StoreAPI) Answer(c *gin.Context) {
 
 	id := bson.ObjectIdHex(order_id)
 	if c.BindJSON(&form) == nil {
+
 		lead, err := store.FindLead(deps.Container, id)
 		if err != nil {
 			c.JSON(400, gin.H{"status": "error", "message": err.Error()})
 			return
 		}
-		lead.Reply(form.Content, form.Type)
 
-		c.JSON(200, gin.H{"status": "okay"})
+		id, err := lead.Reply(form.Content, form.Type)
+		if err != nil {
+			c.JSON(400, gin.H{"status": "error", "message": err.Error()})
+			return
+		}
+
+		c.JSON(200, gin.H{"status": "okay", "id": id})
 	}
 }
 

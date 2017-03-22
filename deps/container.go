@@ -35,7 +35,7 @@ func Bootstrap() {
 	fields := reflect.Indirect(v)
 
 	for i := 0; i < v.NumField(); i++ {
-		slog.Printf("Bootstraped %s at %p",
+		slog.Printf("Bootstraped %s at %v",
 			fields.Type().Field(i).Name,
 			v.Field(i).Interface(),
 		)

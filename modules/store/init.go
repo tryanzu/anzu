@@ -26,7 +26,7 @@ type Module struct {
 }
 
 func FindLead(deps Deps, id bson.ObjectId) (*Lead, error) {
-	data := &Lead{deps: deps}
+	data := &Lead{}
 	err := deps.Mgo().C("orders").FindId(id).One(&data)
 	if err != nil {
 		return nil, err

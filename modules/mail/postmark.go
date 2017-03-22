@@ -3,7 +3,7 @@ package mail
 import (
 	"github.com/hjr265/postmark.go/postmark"
 	"github.com/olebedev/config"
-	"gopkg.in/op/go-logging.v1"
+	"github.com/op/go-logging"
 
 	"bufio"
 	"net/mail"
@@ -12,7 +12,7 @@ import (
 )
 
 type PostmarkMailer struct {
-	Logger *logging.Logger `inject:""`
+	Logger *logging.Logger
 	Client *postmark.Client
 	config ModuleConfig
 	debug  bool
@@ -88,11 +88,16 @@ func (m PostmarkMailer) IsSafe(email string) bool {
 	return true
 }
 
-func Boot(key string, config *config.Config, debug bool) PostmarkMailer {
+func Postmark(config *config.Config, logger *logging.Logger) (PostmarkMailer, error) {
+
+	apiKey, err := config.String("api_key")
+	if err != nil {
+		return PostmarkMailer{}, err
+	}
 
 	// Initialize mandrill client
 	client := &postmark.Client{
-		ApiKey: key,
+		ApiKey: apiKey,
 		Secure: true,
 	}
 
@@ -149,7 +154,7 @@ func Boot(key string, config *config.Config, debug bool) PostmarkMailer {
 		IgnoredDomains: ignoredList,
 	}
 
-	module := PostmarkMailer{debug: debug, config: module_config, Client: client}
+	module := PostmarkMailer{config: module_config, Client: client, Logger: logger}
 
-	return module
+	return module, nil
 }
