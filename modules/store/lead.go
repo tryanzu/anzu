@@ -80,7 +80,33 @@ func (lead *Lead) Reply(answer, kind string) (string, error) {
 		}
 
 		buf := new(bytes.Buffer)
-		t := template.Must(template.New("lead-reply.tmpl").Funcs(funcs).ParseFiles("templates/lead-reply.tmpl"))
+		t := template.New("lead-reply").Funcs(funcs)
+		t, _ = t.Parse(`hello {{.UserName}}!
+            {{ .Reply | trust | nl2br }}
+			<br><br><br><br>
+			<div class="gmail_quote">
+			{{with .Lead -}}
+				{{ range .Messages -}}
+					{{ if eq .Type "inbound" -}} 
+						El {{ .Created.Format "02/01/2006, 03:04:05 PM" }}, {{ $.Lead.User.Name }} &lt;{{ $.Lead.User.Email }}&gt; escribió:<br><br>
+						<blockquote class="gmail_quote" style="margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex">
+							<div>
+							{{ .Content | trust | nl2br }}<br><br>
+					{{ else }}
+						El {{ .Created.Format "02/01/2006, 03:04:05 PM" }}, Drak Spartan &lt;pedidos@spartangeek.com&gt; escribió:<br><br>
+						<blockquote class="gmail_quote" style="margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex">
+							<div>
+							{{ .Content | trust | nl2br }}<br><br>
+					{{- end }}
+				{{- end }}
+
+				{{ range .Messages -}}
+						</div>
+					</blockquote>
+				{{- end }}
+			{{- end }}
+			</div>
+        `)
 		err := t.Execute(buf, data)
 		if err != nil {
 			panic(err)

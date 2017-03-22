@@ -1,5 +1,5 @@
-hash: f149187b79f914c28838d60ce93cfd3df846560b05b50fa608552eecc9a33efc
-updated: 2017-02-09T13:30:54.978664883-06:00
+hash: 8084451d9532d72ba7bbe7dfff3d0cac1f4d4ee1168b16946ea7c0fe5a33e104
+updated: 2017-03-22T16:50:59.7148954-06:00
 imports:
 - name: github.com/algolia/algoliasearch-client-go
   version: 597a1919857ba29aafa399ae3e74feec2827a5d5
@@ -153,8 +153,6 @@ imports:
 - name: github.com/iron-io/iron_go3
   version: b50ecf8ff90187fc5fabccd9d028dd461adce4ee
   subpackages:
-  - api
-  - config
   - mq
 - name: github.com/jinzhu/now
   version: 95f61531f9021a162633b50777cc1263d3064641
@@ -205,6 +203,8 @@ imports:
   version: ab25296c0f51f1022f01cd99dfb45f1775de8799
 - name: github.com/olebedev/config
   version: afea898d27c7d17376ecc60c7c2e73c76b40060e
+- name: github.com/op/go-logging
+  version: 970db520ece77730c7e4724c61121037378659d9
 - name: github.com/pborman/uuid
   version: 1b00554d822231195d1babd97ff4a781231955c9
 - name: github.com/pebbe/zmq4
@@ -283,9 +283,6 @@ imports:
 - name: golang.org/x/crypto
   version: dd96d35c1b251a7ef77f057fc5c4f92ea2b285b4
   subpackages:
-  - curve25519
-  - ed25519
-  - ed25519/internal/edwards25519
   - ssh
 - name: golang.org/x/net
   version: e45385e9b226f570b1f086bf287b25d3d4117776
