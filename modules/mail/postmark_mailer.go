@@ -6,10 +6,13 @@ import (
 	"github.com/op/go-logging"
 
 	"bufio"
+	"errors"
 	"net/mail"
 	"os"
 	"strings"
 )
+
+var ErrInvalidRecipients = errors.New("Invalid recipients.")
 
 type PostmarkMailer struct {
 	Logger *logging.Logger
@@ -19,52 +22,31 @@ type PostmarkMailer struct {
 }
 
 func (module PostmarkMailer) Send(m Mail) string {
-
-	message := &postmark.Message{}
-
-	if m.FromName == "" && m.FromEmail == "" {
-		message.From = &mail.Address{
-			Name:    module.config.FromName,
-			Address: module.config.From,
-		}
-
-	} else {
-		message.From = &mail.Address{
-			Name:    m.FromName,
-			Address: m.FromEmail,
-		}
+	message, err := module.prepareMessage(m)
+	if err != nil {
+		panic(err)
 	}
 
-	var recipients []*mail.Address
-
-	if module.debug {
-
-		for _, recipient := range module.config.Recipients {
-			recipients = append(recipients, &mail.Address{
-				Name:    recipient,
-				Address: recipient,
-			})
-		}
-
-	} else {
-
-		for _, recipient := range m.Recipient {
-			if module.IsSafe(recipient.Email) {
-				recipients = append(recipients, &mail.Address{
-					Name:    recipient.Name,
-					Address: recipient.Email,
-				})
-			}
-		}
-	}
-
-	if len(recipients) == 0 {
-		return "no-recipients"
-	}
-
-	message.To = recipients
 	message.TemplateModel = m.Variables
 	message.TemplateId = m.Template
+
+	// Send the email using mandrill's API abstraction
+	res, err := module.Client.Send(message)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return res.MessageID
+}
+
+func (module PostmarkMailer) SendRaw(raw Raw) string {
+	message, err := module.prepareMessage(raw)
+	if err != nil {
+		panic(err)
+	}
+
+	message.HtmlBody = raw.Content
 
 	// Send the email using mandrill's API abstraction
 	res, err := module.Client.Send(message)
@@ -84,8 +66,53 @@ func (m PostmarkMailer) IsSafe(email string) bool {
 		}
 	}
 
-	m.Logger.Infof("%s seems like a safe email.", email)
+	m.Logger.Debugf("%s seems like a safe email.", email)
 	return true
+}
+
+func (module PostmarkMailer) prepareRecipients(m Mailable) []*mail.Address {
+	if module.debug {
+		var recipients []*mail.Address
+		for _, recipient := range module.config.Recipients {
+			recipients = append(recipients, &mail.Address{
+				Name:    recipient,
+				Address: recipient,
+			})
+		}
+
+		return recipients
+	}
+
+	to := m.To()
+
+	// Filter without allocating.
+	recipients := to[:0]
+	for _, res := range to {
+		if module.IsSafe(res.Address) {
+			recipients = append(recipients, res)
+		}
+	}
+
+	return recipients
+}
+
+func (module PostmarkMailer) prepareMessage(m Mailable) (*postmark.Message, error) {
+	message := &postmark.Message{}
+	message.From = m.From()
+	if message.From.Address == "" && message.From.Address == "" {
+		message.From = &mail.Address{
+			Name:    module.config.FromName,
+			Address: module.config.From,
+		}
+	}
+
+	recipients := module.prepareRecipients(m)
+	if len(recipients) == 0 {
+		return nil, ErrInvalidRecipients
+	}
+
+	message.To = recipients
+	return message, nil
 }
 
 func Postmark(config *config.Config, logger *logging.Logger) (PostmarkMailer, error) {

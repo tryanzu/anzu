@@ -1,7 +1,9 @@
 package store
 
 import (
+	"bytes"
 	"errors"
+	"html/template"
 	"strings"
 	"time"
 
@@ -38,6 +40,9 @@ type Lead struct {
 	RelatedUsers interface{}  `bson:"-" json:"related_users,omitempty"`
 	Duplicates   []OrderModel `bson:"-" json:"duplicates,omitempty"`
 	Invoice      *Invoice     `bson:"-" json:"invoice,omitempty"`
+
+	readed    bool
+	readIndex int64
 }
 
 // Reply logic over a lead.
@@ -51,31 +56,56 @@ func (lead *Lead) Reply(answer, kind string) (string, error) {
 
 	var id, subject string
 	if kind == "text" {
-		answer = strings.Replace(answer, "\n", "<br>", -1)
 		subject = "PC Spartana"
 
 		if len(lead.Messages) > 0 {
 			subject = "RE: " + subject
 		}
 
-		compose := mail.Mail{
-			Subject:  subject,
-			Template: 250241,
-			Recipient: []mail.MailRecipient{
-				{
-					Name:  lead.User.Name,
-					Email: lead.User.Email,
-				},
+		data := struct {
+			Reply string
+			Lead  *Lead
+		}{
+			answer,
+			lead,
+		}
+
+		funcs := template.FuncMap{
+			"trust": func(html string) template.HTML {
+				return template.HTML(html)
 			},
-			FromEmail: "pc@spartangeek.com",
-			FromName:  "Drak Spartan",
-			Variables: map[string]interface{}{
-				"content": answer,
-				"subject": subject,
+			"nl2br": func(html template.HTML) template.HTML {
+				return template.HTML(strings.Replace(string(html), "\n", "<br>", -1))
 			},
 		}
 
-		id = mailer.Send(compose)
+		buf := new(bytes.Buffer)
+		t := template.Must(template.New("lead-reply.tmpl").Funcs(funcs).ParseFiles("templates/lead-reply.tmpl"))
+		err := t.Execute(buf, data)
+		if err != nil {
+			panic(err)
+		}
+
+		compose := mail.Raw{
+			mail.MailBase{
+				Subject: subject,
+				Recipient: []mail.MailRecipient{
+					{
+						Name:  lead.User.Name,
+						Email: lead.User.Email,
+					},
+				},
+				FromEmail: "pc@spartangeek.com",
+				FromName:  "Drak Spartan",
+				Variables: map[string]interface{}{
+					"content": answer,
+					"subject": subject,
+				},
+			},
+			buf,
+		}
+
+		id = mailer.SendRaw(compose)
 	}
 
 	message := MessageModel{
@@ -96,6 +126,8 @@ func (lead *Lead) Reply(answer, kind string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	lead.Messages = append(lead.Messages, message)
 
 	return id, nil
 }

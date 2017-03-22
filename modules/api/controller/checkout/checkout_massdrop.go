@@ -80,28 +80,30 @@ func (this API) Massdrop(c *gin.Context) {
 				}
 
 				compose := mail.Mail{
-					Template:  template,
-					FromName:  "Spartan Geek",
-					FromEmail: "pedidos@spartangeek.com",
-					Recipient: []mail.MailRecipient{
-						{
-							Name:  usr.Name(),
-							Email: usr.Email(),
+					mail.MailBase{
+						FromName:  "Spartan Geek",
+						FromEmail: "pedidos@spartangeek.com",
+						Recipient: []mail.MailRecipient{
+							{
+								Name:  usr.Name(),
+								Email: usr.Email(),
+							},
+							{
+								Name:  "Equipo Spartan Geek",
+								Email: "pedidos@spartangeek.com",
+							},
 						},
-						{
-							Name:  "Equipo Spartan Geek",
-							Email: "pedidos@spartangeek.com",
+						Variables: map[string]interface{}{
+							"name":      usr.Name(),
+							"reference": order.Reference,
+							"price":     product.Massdrop.Reserve,
+							"slug":      product.Slug,
+							"pname":     product.Name,
+							"quantity":  form.Quantity,
+							"total":     humanize.FormatFloat("#,###.##", product.Massdrop.Reserve*float64(form.Quantity)),
 						},
 					},
-					Variables: map[string]interface{}{
-						"name":      usr.Name(),
-						"reference": order.Reference,
-						"price":     product.Massdrop.Reserve,
-						"slug":      product.Slug,
-						"pname":     product.Name,
-						"quantity":  form.Quantity,
-						"total":     humanize.FormatFloat("#,###.##", product.Massdrop.Reserve*float64(form.Quantity)),
-					},
+					template,
 				}
 
 				go mailing.Send(compose)

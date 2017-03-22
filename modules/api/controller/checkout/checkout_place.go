@@ -268,20 +268,22 @@ func (this API) Place(c *gin.Context) {
 			}
 
 			compose := mail.Mail{
-				Template:  template,
-				FromName:  "Spartan Geek",
-				FromEmail: "pedidos@spartangeek.com",
-				Recipient: []mail.MailRecipient{
-					{
-						Name:  usr.Name(),
-						Email: usr.Email(),
+				mail.MailBase{
+					FromName:  "Spartan Geek",
+					FromEmail: "pedidos@spartangeek.com",
+					Recipient: []mail.MailRecipient{
+						{
+							Name:  usr.Name(),
+							Email: usr.Email(),
+						},
+						{
+							Name:  "Equipo Spartan Geek",
+							Email: "pedidos@spartangeek.com",
+						},
 					},
-					{
-						Name:  "Equipo Spartan Geek",
-						Email: "pedidos@spartangeek.com",
-					},
+					Variables: vars,
 				},
-				Variables: vars,
+				template,
 			}
 
 			go mailing.Send(compose)
