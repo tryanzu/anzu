@@ -81,7 +81,7 @@ func (lead *Lead) Reply(answer, kind string) (string, error) {
 
 		buf := new(bytes.Buffer)
 		t := template.New("lead-reply").Funcs(funcs)
-		t, _ = t.Parse(`hello {{.UserName}}!
+		t, _ = t.Parse(`
             {{ .Reply | trust | nl2br }}
 			<br><br><br><br>
 			<div class="gmail_quote">
