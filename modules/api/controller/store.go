@@ -162,12 +162,12 @@ func (self *StoreAPI) Answer(c *gin.Context) {
 
 	id := bson.ObjectIdHex(order_id)
 	if c.BindJSON(&form) == nil {
-		lead, err := store.FLead(deps.Container, id)
+		lead, err := store.FindLead(deps.Container, id)
 		if err != nil {
 			c.JSON(400, gin.H{"status": "error", "message": err.Error()})
 			return
 		}
-		lead.Reply(deps.Container, form.Content, form.Type)
+		lead.Reply(form.Content, form.Type)
 
 		c.JSON(200, gin.H{"status": "okay"})
 	}

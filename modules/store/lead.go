@@ -37,12 +37,14 @@ type Lead struct {
 	RelatedUsers interface{}  `bson:"-" json:"related_users,omitempty"`
 	Duplicates   []OrderModel `bson:"-" json:"duplicates,omitempty"`
 	Invoice      *Invoice     `bson:"-" json:"invoice,omitempty"`
+
+	deps Deps
 }
 
 // Reply logic over a lead.
-func (lead *Lead) Reply(deps Deps, answer, kind string) error {
-	db := deps.Mgo()
-	mailer := deps.Mailer()
+func (lead *Lead) Reply(answer, kind string) error {
+	db := lead.deps.Mgo()
+	mailer := lead.deps.Mailer()
 
 	if kind != "text" && kind != "note" {
 		return InvalidLeadAnswer

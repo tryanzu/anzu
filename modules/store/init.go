@@ -27,9 +27,8 @@ type Module struct {
 	Config *config.Config               `inject:""`
 }
 
-func FLead(deps Deps, id bson.ObjectId) (*Lead, error) {
-	var data *Lead
-
+func FindLead(deps Deps, id bson.ObjectId) (*Lead, error) {
+	data := &Lead{deps: deps}
 	err := deps.Mgo().C("orders").FindId(id).One(&data)
 	if err != nil {
 		return nil, err
