@@ -2,7 +2,6 @@ package store
 
 import (
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
-	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/olebedev/config"
 	"github.com/xuyu/goredis"
@@ -11,7 +10,6 @@ import (
 
 	"sort"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -24,8 +22,17 @@ type Module struct {
 	Mongo  *mongo.Service               `inject:""`
 	Errors *exceptions.ExceptionsModule `inject:""`
 	Redis  *goredis.Redis               `inject:""`
-	Mail   *mail.Module                 `inject:""`
 	Config *config.Config               `inject:""`
+}
+
+func FindLead(deps Deps, id bson.ObjectId) (*Lead, error) {
+	data := &Lead{}
+	err := deps.Mgo().C("orders").FindId(id).One(&data)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
 }
 
 func (module *Module) Order(id bson.ObjectId) (*One, error) {
@@ -370,26 +377,8 @@ func (module *Module) GetSortedOrders(limit, skip int, search, group string) []O
 		panic(err)
 	}
 
-	var mails []string
-	var leads []Lead
-
-	for _, order := range list {
-		mails = append(mails, order.User.Email)
-	}
-
-	err = database.C("leads").Find(bson.M{"email": bson.M{"$in": mails}}).All(&leads)
-
-	if err == nil {
-
-		for index, order := range list {
-			sort.Sort(list[index].Messages)
-
-			for _, lead := range leads {
-				if strings.ToLower(lead.Email) == strings.ToLower(order.User.Email) {
-					list[index].Lead = true
-				}
-			}
-		}
+	for index, _ := range list {
+		sort.Sort(list[index].Messages)
 	}
 
 	return list

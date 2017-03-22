@@ -3,7 +3,6 @@ package user
 import (
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
-	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/fernandez14/spartangeek-blacker/modules/payments"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/markbates/goth"
@@ -26,7 +25,6 @@ func Boot() *Module {
 
 type Module struct {
 	Mongo  *mongo.Service               `inject:""`
-	Mail   *mail.Module                 `inject:""`
 	Errors *exceptions.ExceptionsModule `inject:""`
 	Logger *logging.Logger              `inject:""`
 }

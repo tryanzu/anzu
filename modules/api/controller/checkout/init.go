@@ -4,7 +4,6 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/cart"
 	"github.com/fernandez14/spartangeek-blacker/modules/components"
 	"github.com/fernandez14/spartangeek-blacker/modules/gcommerce"
-	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/fernandez14/spartangeek-blacker/modules/store"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/gin-gonic/contrib/sessions"
@@ -22,7 +21,6 @@ type API struct {
 	Store      *store.Module      `inject:""`
 	Components *components.Module `inject:""`
 	GCommerce  *gcommerce.Module  `inject:""`
-	Mail       *mail.Module       `inject:""`
 	User       *user.Module       `inject:""`
 }
 

@@ -2,6 +2,7 @@ package user
 
 import (
 	"github.com/fernandez14/go-siftscience"
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"gopkg.in/mgo.v2/bson"
@@ -267,7 +268,7 @@ func (self *One) SiftScienceBackfill() {
 
 func (self *One) SendRecoveryEmail() {
 
-	mailing := self.di.Mail
+	mailer := deps.Container.Mailer()
 	database := self.di.Mongo.Database
 
 	record := &UserRecoveryToken{
@@ -285,19 +286,21 @@ func (self *One) SendRecoveryEmail() {
 	}
 
 	compose := mail.Mail{
-		Template: 461461,
-		Recipient: []mail.MailRecipient{
-			{
-				Name:  self.data.UserName,
-				Email: self.data.Email,
+		mail.MailBase{
+			Recipient: []mail.MailRecipient{
+				{
+					Name:  self.data.UserName,
+					Email: self.data.Email,
+				},
+			},
+			Variables: map[string]interface{}{
+				"recover_url": "https://spartangeek.com/user/lost_password/" + record.Token,
 			},
 		},
-		Variables: map[string]interface{}{
-			"recover_url": "https://spartangeek.com/user/lost_password/" + record.Token,
-		},
+		461461,
 	}
 
-	mailing.Send(compose)
+	mailer.Send(compose)
 }
 
 func (self *One) SendConfirmationEmail() error {
@@ -310,20 +313,22 @@ func (self *One) SendConfirmationEmail() error {
 	}
 
 	compose := mail.Mail{
-		Template: 250222,
-		Recipient: []mail.MailRecipient{
-			{
-				Name:  self.data.UserName,
-				Email: self.data.Email,
+		mail.MailBase{
+			Recipient: []mail.MailRecipient{
+				{
+					Name:  self.data.UserName,
+					Email: self.data.Email,
+				},
+			},
+			Variables: map[string]interface{}{
+				"confirm_url": "https://spartangeek.com/signup/confirm/" + self.data.VerificationCode,
 			},
 		},
-		Variables: map[string]interface{}{
-			"confirm_url": "https://spartangeek.com/signup/confirm/" + self.data.VerificationCode,
-		},
+		250222,
 	}
 
 	self.di.Mongo.Database.C("users").Update(bson.M{"_id": self.data.Id}, bson.M{"$set": bson.M{"confirm_sent_at": time.Now()}})
-	self.di.Mail.Send(compose)
+	deps.Container.Mailer().Send(compose)
 	return nil
 }
 

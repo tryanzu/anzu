@@ -8,7 +8,6 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
 	"github.com/fernandez14/spartangeek-blacker/modules/gcommerce"
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
-	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/fernandez14/spartangeek-blacker/modules/search"
 	"github.com/fernandez14/spartangeek-blacker/modules/transmit"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
@@ -31,7 +30,6 @@ type Module struct {
 	User       *user.Module                 `inject:""`
 	Feed       *feed.FeedModule             `inject:""`
 	Transmit   *transmit.Sender             `inject:""`
-	Mail       *mail.Module                 `inject:""`
 	GCommerce  *gcommerce.Module            `inject:""`
 	Components *components.Module           `inject:""`
 	Config     *config.Config               `inject:""`

@@ -1,10 +1,10 @@
 package checkout
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/modules/cart"
 	"github.com/fernandez14/spartangeek-blacker/modules/gcommerce"
 	"github.com/fernandez14/spartangeek-blacker/modules/mail"
-	"github.com/fernandez14/spartangeek-blacker/modules/queue"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -230,7 +230,7 @@ func (this API) Place(c *gin.Context) {
 		}
 
 		// After checkout procedures
-		mailing := this.Mail
+		mailing := deps.Container.Mailer()
 		{
 			usr, err := this.User.Get(user_id)
 
@@ -268,33 +268,25 @@ func (this API) Place(c *gin.Context) {
 			}
 
 			compose := mail.Mail{
-				Template:  template,
-				FromName:  "Spartan Geek",
-				FromEmail: "pedidos@spartangeek.com",
-				Recipient: []mail.MailRecipient{
-					{
-						Name:  usr.Name(),
-						Email: usr.Email(),
+				mail.MailBase{
+					FromName:  "Spartan Geek",
+					FromEmail: "pedidos@spartangeek.com",
+					Recipient: []mail.MailRecipient{
+						{
+							Name:  usr.Name(),
+							Email: usr.Email(),
+						},
+						{
+							Name:  "Equipo Spartan Geek",
+							Email: "pedidos@spartangeek.com",
+						},
 					},
-					{
-						Name:  "Equipo Spartan Geek",
-						Email: "pedidos@spartangeek.com",
-					},
+					Variables: vars,
 				},
-				Variables: vars,
+				template,
 			}
 
 			go mailing.Send(compose)
-
-			go func(id bson.ObjectId) {
-
-				err := queue.PushWDelay("gcommerce", "payment-reminder", map[string]interface{}{"id": id.Hex()}, 3600*24*2)
-
-				if err != nil {
-					panic(err)
-				}
-
-			}(order.Id)
 
 			// Clean up cart items
 			cartContainer.Save(make([]cart.CartItem, 0))

@@ -4,13 +4,11 @@ import (
 	"github.com/fernandez14/go-enlacefiscal"
 	"github.com/fernandez14/spartangeek-blacker/modules/assets"
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
-	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"gopkg.in/mgo.v2/bson"
 
 	"io/ioutil"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -22,59 +20,6 @@ type One struct {
 func (self *One) Data() *OrderModel {
 
 	return self.data
-}
-
-func (self *One) PushAnswer(text, kind string) {
-
-	if kind != "text" && kind != "note" {
-		return
-	}
-
-	messageID := ""
-	database := self.di.Mongo.Database
-
-	if kind == "text" {
-		mailing := self.di.Mail
-		text = strings.Replace(text, "\n", "<br>", -1)
-
-		subject := "PC Spartana"
-		if len(self.data.Messages) > 0 {
-			subject = "RE: " + subject
-		}
-
-		compose := mail.Mail{
-			Subject:  subject,
-			Template: 250241,
-			Recipient: []mail.MailRecipient{
-				{
-					Name:  self.data.User.Name,
-					Email: self.data.User.Email,
-				},
-			},
-			FromEmail: "pc@spartangeek.com",
-			FromName:  "Drak Spartan",
-			Variables: map[string]interface{}{
-				"content": text,
-				"subject": subject,
-			},
-		}
-
-		messageID = mailing.Send(compose)
-	}
-
-	message := MessageModel{
-		Content:   text,
-		Type:      kind,
-		MessageID: messageID,
-		Created:   time.Now(),
-		Updated:   time.Now(),
-	}
-
-	err := database.C("orders").Update(bson.M{"_id": self.data.Id}, bson.M{"$push": bson.M{"messages": message}, "$set": bson.M{"updated_at": time.Now()}})
-
-	if err != nil {
-		panic(err)
-	}
 }
 
 func (self *One) LoadDuplicates() {

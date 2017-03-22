@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/modules/gcommerce"
 	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
@@ -13,7 +14,6 @@ import (
 
 type OrdersAPI struct {
 	GCommerce *gcommerce.Module `inject:""`
-	Mail      *mail.Module      `inject:""`
 	User      *user.Module      `inject:""`
 }
 
@@ -191,7 +191,7 @@ func (this OrdersAPI) SendOrderConfirmation(c *gin.Context) {
 			return
 		}
 
-		mailing := this.Mail
+		mailing := deps.Container.Mailer()
 		{
 			var paymentType string
 			var template int
@@ -205,27 +205,29 @@ func (this OrdersAPI) SendOrderConfirmation(c *gin.Context) {
 			}
 
 			compose := mail.Mail{
-				Template: template,
-				Recipient: []mail.MailRecipient{
-					{
-						Name:  usr.Name(),
-						Email: usr.Email(),
+				mail.MailBase{
+					Recipient: []mail.MailRecipient{
+						{
+							Name:  usr.Name(),
+							Email: usr.Email(),
+						},
+					},
+					Variables: map[string]interface{}{
+						"name":           usr.Name(),
+						"payment":        paymentType,
+						"line1":          address.Line1(),
+						"line2":          address.Line2(),
+						"line3":          address.Extra(),
+						"total_products": order.GetOriginalTotal() - order.Shipping.OPrice,
+						"total_shipping": order.Shipping.OPrice,
+						"subtotal":       order.GetOriginalTotal(),
+						"commision":      order.GetGatewayCommision(),
+						"total":          order.Total,
+						"items":          order.Items,
+						"reference":      order.Reference,
 					},
 				},
-				Variables: map[string]interface{}{
-					"name":           usr.Name(),
-					"payment":        paymentType,
-					"line1":          address.Line1(),
-					"line2":          address.Line2(),
-					"line3":          address.Extra(),
-					"total_products": order.GetOriginalTotal() - order.Shipping.OPrice,
-					"total_shipping": order.Shipping.OPrice,
-					"subtotal":       order.GetOriginalTotal(),
-					"commision":      order.GetGatewayCommision(),
-					"total":          order.Total,
-					"items":          order.Items,
-					"reference":      order.Reference,
-				},
+				template,
 			}
 
 			go mailing.Send(compose)

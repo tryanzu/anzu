@@ -3,6 +3,7 @@ package gcommerce
 import (
 	//"github.com/fernandez14/go-siftscience"
 	"github.com/dustin/go-humanize"
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/fernandez14/spartangeek-blacker/modules/payments"
 	"gopkg.in/mgo.v2/bson"
@@ -109,7 +110,7 @@ func (this *Order) SendMassdropConfirmation(productId bson.ObjectId, q int) {
 		return
 	}
 
-	mailing := this.di.Mail
+	mailing := deps.Container.Mailer()
 	{
 		customer := this.GetCustomer()
 		usr, err := this.di.User.Get(customer.UserId)
@@ -121,28 +122,30 @@ func (this *Order) SendMassdropConfirmation(productId bson.ObjectId, q int) {
 		var template int = 549841
 
 		compose := mail.Mail{
-			Template:  template,
-			FromName:  "Spartan Geek",
-			FromEmail: "pedidos@spartangeek.com",
-			Recipient: []mail.MailRecipient{
-				{
-					Name:  usr.Name(),
-					Email: usr.Email(),
+			mail.MailBase{
+				FromName:  "Spartan Geek",
+				FromEmail: "pedidos@spartangeek.com",
+				Recipient: []mail.MailRecipient{
+					{
+						Name:  usr.Name(),
+						Email: usr.Email(),
+					},
+					{
+						Name:  "Equipo Spartan Geek",
+						Email: "pedidos@spartangeek.com",
+					},
 				},
-				{
-					Name:  "Equipo Spartan Geek",
-					Email: "pedidos@spartangeek.com",
+				Variables: map[string]interface{}{
+					"name":      usr.Name(),
+					"reference": this.Reference,
+					"price":     product.Massdrop.Reserve,
+					"slug":      product.Slug,
+					"pname":     product.Name,
+					"quantity":  q,
+					"total":     humanize.FormatFloat("#,###.##", product.Massdrop.Reserve*float64(q)),
 				},
 			},
-			Variables: map[string]interface{}{
-				"name":      usr.Name(),
-				"reference": this.Reference,
-				"price":     product.Massdrop.Reserve,
-				"slug":      product.Slug,
-				"pname":     product.Name,
-				"quantity":  q,
-				"total":     humanize.FormatFloat("#,###.##", product.Massdrop.Reserve*float64(q)),
-			},
+			template,
 		}
 
 		go mailing.Send(compose)
