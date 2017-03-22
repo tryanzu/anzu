@@ -5,13 +5,6 @@ import (
 	"time"
 )
 
-type Lead struct {
-	Id      bson.ObjectId `bson:"_id,omitempty" json:"id"`
-	Email   string        `bson:"email" json:"email"`
-	Name    string        `bson:"name" json:"name"`
-	Created time.Time     `bson:"created_at" json:"created_at"`
-}
-
 type Invoice struct {
 	Id      bson.ObjectId          `bson:"_id,omitempty" json:"id"`
 	DealId  bson.ObjectId          `bson:"deal_id,omitempty" json:"deal_id,omitempty"`
