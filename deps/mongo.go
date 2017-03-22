@@ -5,12 +5,12 @@ import (
 )
 
 func IgniteMongoDB(container Deps) (Deps, error) {
-	uri, err := container.Config.String("database.uri")
+	uri, err := container.Config().String("database.uri")
 	if err != nil {
 		return container, err
 	}
 
-	dbName, err := container.Config.String("database.name")
+	dbName, err := container.Config().String("database.name")
 	if err != nil {
 		return container, err
 	}
@@ -25,8 +25,8 @@ func IgniteMongoDB(container Deps) (Deps, error) {
 	// See https://godoc.org/gopkg.in/mgo.v2#Session.SetMode
 	session.SetMode(mgo.Monotonic, true)
 
-	container.Session = session
-	container.Database = database
+	container.DatabaseSessionProvider = session
+	container.DatabaseProvider = database
 
 	return container, nil
 }

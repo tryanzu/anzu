@@ -22,7 +22,7 @@ func IgniteConfig(container Deps) (Deps, error) {
 		return container, err
 	}
 
-	container.Config = conf
-	container.Logger.Debugf("Configuration ignited using %s", envfile)
+	container.ConfigProvider = conf
+	container.Log().Debugf("Configuration ignited using %s", envfile)
 	return container, nil
 }

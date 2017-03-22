@@ -20,6 +20,6 @@ func IgniteLogger(container Deps) (Deps, error) {
 	formatter := logging.NewBackendFormatter(backend, format)
 
 	logging.SetBackend(formatter)
-	container.Logger = log
+	container.LoggerProvider = log
 	return container, nil
 }
