@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"html/template"
+	"sort"
 	"strings"
 	"time"
 
@@ -62,6 +63,7 @@ func (lead *Lead) Reply(answer, kind string) (string, error) {
 			subject = "RE: " + subject
 		}
 
+		sort.Sort(lead.Messages)
 		data := struct {
 			Reply string
 			Lead  *Lead

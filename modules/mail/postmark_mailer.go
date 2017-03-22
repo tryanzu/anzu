@@ -112,6 +112,7 @@ func (module PostmarkMailer) prepareMessage(m Mailable) (*postmark.Message, erro
 	}
 
 	message.To = recipients
+	message.Subject = m.SubjectText()
 	return message, nil
 }
 
