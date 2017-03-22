@@ -12,7 +12,7 @@ type Deps struct {
 	DatabaseSessionProvider *mgo.Session
 	DatabaseProvider        *mgo.Database
 	LoggerProvider          *logging.Logger
-	MailerProvider          *mail.Module
+	MailerProvider          mail.Mailer
 }
 
 func (d Deps) Config() *config.Config {
@@ -27,6 +27,6 @@ func (d Deps) Mgo() *mgo.Database {
 	return d.DatabaseProvider
 }
 
-func (d Deps) Mailer() *mail.Module {
+func (d Deps) Mailer() mail.Mailer {
 	return d.MailerProvider
 }

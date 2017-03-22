@@ -2,7 +2,6 @@ package store
 
 import (
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
-	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/olebedev/config"
 	"github.com/xuyu/goredis"
@@ -23,7 +22,6 @@ type Module struct {
 	Mongo  *mongo.Service               `inject:""`
 	Errors *exceptions.ExceptionsModule `inject:""`
 	Redis  *goredis.Redis               `inject:""`
-	Mail   *mail.Module                 `inject:""`
 	Config *config.Config               `inject:""`
 }
 

@@ -11,14 +11,14 @@ import (
 	"strings"
 )
 
-type Module struct {
+type PostmarkMailer struct {
 	Logger *logging.Logger `inject:""`
 	Client *postmark.Client
 	config ModuleConfig
 	debug  bool
 }
 
-func (module Module) Send(m Mail) string {
+func (module PostmarkMailer) Send(m Mail) string {
 
 	message := &postmark.Message{}
 
@@ -76,7 +76,7 @@ func (module Module) Send(m Mail) string {
 	return res.MessageID
 }
 
-func (m Module) IsSafe(email string) bool {
+func (m PostmarkMailer) IsSafe(email string) bool {
 	for _, domain := range m.config.IgnoredDomains {
 		if strings.HasSuffix(email, domain) {
 			m.Logger.Warningf("%s has been declared as unsafe.", email)
@@ -88,7 +88,7 @@ func (m Module) IsSafe(email string) bool {
 	return true
 }
 
-func Boot(key string, config *config.Config, debug bool) *Module {
+func Boot(key string, config *config.Config, debug bool) PostmarkMailer {
 
 	// Initialize mandrill client
 	client := &postmark.Client{
@@ -149,7 +149,7 @@ func Boot(key string, config *config.Config, debug bool) *Module {
 		IgnoredDomains: ignoredList,
 	}
 
-	module := &Module{debug: debug, config: module_config, Client: client}
+	module := PostmarkMailer{debug: debug, config: module_config, Client: client}
 
 	return module
 }

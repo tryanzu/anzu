@@ -4,7 +4,6 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/acl"
 	"github.com/fernandez14/spartangeek-blacker/modules/components"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
-	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/fernandez14/spartangeek-blacker/modules/payments"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
@@ -48,7 +47,6 @@ type Module struct {
 	Errors     *exceptions.ExceptionsModule `inject:""`
 	Redis      *goredis.Redis               `inject:""`
 	Config     *config.Config               `inject:""`
-	Mail       *mail.Module                 `inject:""`
 	User       *user.Module                 `inject:""`
 	Components *components.Module           `inject:""`
 	Payments   *payments.Module             `inject:""`

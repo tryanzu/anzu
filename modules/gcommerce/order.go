@@ -3,6 +3,7 @@ package gcommerce
 import (
 	//"github.com/fernandez14/go-siftscience"
 	"github.com/dustin/go-humanize"
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/fernandez14/spartangeek-blacker/modules/payments"
 	"gopkg.in/mgo.v2/bson"
@@ -109,7 +110,7 @@ func (this *Order) SendMassdropConfirmation(productId bson.ObjectId, q int) {
 		return
 	}
 
-	mailing := this.di.Mail
+	mailing := deps.Container.Mailer()
 	{
 		customer := this.GetCustomer()
 		usr, err := this.di.User.Get(customer.UserId)

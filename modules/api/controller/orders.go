@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/modules/gcommerce"
 	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
@@ -13,7 +14,6 @@ import (
 
 type OrdersAPI struct {
 	GCommerce *gcommerce.Module `inject:""`
-	Mail      *mail.Module      `inject:""`
 	User      *user.Module      `inject:""`
 }
 
@@ -191,7 +191,7 @@ func (this OrdersAPI) SendOrderConfirmation(c *gin.Context) {
 			return
 		}
 
-		mailing := this.Mail
+		mailing := deps.Container.Mailer()
 		{
 			var paymentType string
 			var template int

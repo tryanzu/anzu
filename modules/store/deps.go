@@ -7,5 +7,5 @@ import (
 
 type Deps interface {
 	Mgo() *mgo.Database
-	Mailer() *mail.Module
+	Mailer() mail.Mailer
 }

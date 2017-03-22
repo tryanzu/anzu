@@ -2,6 +2,7 @@ package checkout
 
 import (
 	"github.com/dustin/go-humanize"
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
@@ -64,7 +65,7 @@ func (this API) Massdrop(c *gin.Context) {
 		if form.Gateway != "paypal" {
 
 			// After checkout procedures
-			mailing := this.Mail
+			mailing := deps.Container.Mailer()
 			{
 				usr, err := this.User.Get(user_id)
 
@@ -104,16 +105,6 @@ func (this API) Massdrop(c *gin.Context) {
 				}
 
 				go mailing.Send(compose)
-
-				/*go func(id bson.ObjectId) {
-
-					err := queue.PushWDelay("gcommerce", "payment-reminder", map[string]interface{}{"id": id.Hex()}, 3600*24*2)
-
-					if err != nil {
-						panic(err)
-					}
-
-				}(order.Id)*/
 			}
 		}
 
