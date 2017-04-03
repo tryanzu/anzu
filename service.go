@@ -39,10 +39,15 @@ import (
 	"github.com/stripe/stripe-go/client"
 	"github.com/xuyu/goredis"
 	"gopkg.in/op/go-logging.v1"
+
 	"os"
+	"runtime"
 )
 
 func main() {
+
+	// Start by using the power of the machine cores
+	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	// Run dependencies bootstraping sequences.
 	deps.Bootstrap()
