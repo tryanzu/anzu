@@ -19,6 +19,7 @@ func Bootstrap() {
 		IgniteLogger,
 		IgniteConfig,
 		IgniteMongoDB,
+		IgniteCache,
 		IgniteMailer,
 	}
 
