@@ -343,17 +343,17 @@ func (module *Module) Run() {
 				backoffice.GET("/order", module.Store.Orders)
 				backoffice.GET("/activities", module.Store.Activities)
 
-				backoffice.Use(module.Middlewares.ValidateBsonID("id"))
+				order := backoffice.Group("/order").Use(module.Middlewares.ValidateBsonID("id"))
 				{
-					backoffice.GET("/order/:id", module.Store.One)
-					backoffice.DELETE("/order/:id", module.Store.Ignore)
-					backoffice.POST("/order/:id", module.Store.Answer)
-					backoffice.POST("/order/:id/tag", module.Store.Tag)
-					backoffice.DELETE("/order/:id/tag", module.Store.DeleteTag)
-					backoffice.POST("/order/:id/activity", module.Store.Activity)
-					backoffice.POST("/order/:id/trust", module.Store.Trust)
-					backoffice.POST("/order/:id/favorite", module.Store.Favorite)
-					backoffice.POST("/order/:id/stage", module.Store.Stage)
+					order.GET("/:id", module.Store.One)
+					order.DELETE("/:id", module.Store.Ignore)
+					order.POST("/:id", module.Store.Answer)
+					order.POST("/:id/tag", module.Store.Tag)
+					order.DELETE("/:id/tag", module.Store.DeleteTag)
+					order.POST("/:id/activity", module.Store.Activity)
+					order.POST("/:id/trust", module.Store.Trust)
+					order.POST("/:id/favorite", module.Store.Favorite)
+					order.POST("/:id/stage", module.Store.Stage)
 				}
 
 				// Build notes routes
