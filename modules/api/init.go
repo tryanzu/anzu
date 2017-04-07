@@ -340,10 +340,10 @@ func (module *Module) Run() {
 
 				backoffice.POST("/deals/invoice", module.Deals.GenerateInvoice)
 				backoffice.GET("/order-report", module.Store.OrdersAggregate)
-				backoffice.GET("/order", module.Store.Orders)
 				backoffice.GET("/activities", module.Store.Activities)
 
-				order := backoffice.Group("/order").Use(module.Middlewares.ValidateBsonID("id"))
+				order := backoffice.Group("/order")
+				order.Use(module.Middlewares.ValidateBsonID("id"))
 				{
 					order.GET("/:id", module.Store.One)
 					order.DELETE("/:id", module.Store.Ignore)
@@ -355,6 +355,8 @@ func (module *Module) Run() {
 					order.POST("/:id/favorite", module.Store.Favorite)
 					order.POST("/:id/stage", module.Store.Stage)
 				}
+
+				backoffice.GET("/order", module.Store.Orders)
 
 				// Build notes routes
 				backoffice.GET("/notes", module.BuildNotes.All)
