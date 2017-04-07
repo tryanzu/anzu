@@ -120,7 +120,6 @@ func (module *Module) Populate(g inject.Graph) {
 func (module *Module) Run() {
 
 	var debug bool = true
-
 	environment, err := module.Dependencies.Config.String("environment")
 
 	if err != nil {
@@ -130,6 +129,7 @@ func (module *Module) Run() {
 	// If development turn debug on
 	if environment != "development" {
 		debug = false
+		gin.SetMode(gin.ReleaseMode)
 	}
 
 	// Session storage
@@ -164,6 +164,7 @@ func (module *Module) Run() {
 	router.Use(module.Middlewares.CORS())
 	router.Use(module.Middlewares.MongoRefresher())
 	router.Use(module.Middlewares.StatsdTiming())
+	router.Use(module.Middlewares.TrustIP())
 
 	// Sitemap generator
 	router.GET("/sitemap.xml", module.Sitemap.GetSitemap)
@@ -216,11 +217,9 @@ func (module *Module) Run() {
 
 		// User routes
 		v1.POST("/user", module.Users.UserRegisterAction)
-		//v1.GET("/user/my/notifications", users.UserNotificationsGet)
 		v1.GET("/users/:id", module.Users.UserGetOne)
 		v1.GET("/users/:id/:kind", module.Users.UserGetActivity)
 		v1.GET("/user/search", module.Users.UserAutocompleteGet)
-		//v1.POST("/user/get-token/facebook", module.Users.UserGetTokenFacebook) DEPRECATED
 		v1.POST("/auth/get-token", module.Users.UserGetJwtToken)
 		v1.GET("/auth/lost-password", module.UsersFactory.RequestPasswordRecovery)
 		v1.GET("/auth/recovery-token/:token", module.UsersFactory.ValidatePasswordRecovery)

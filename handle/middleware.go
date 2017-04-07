@@ -4,6 +4,7 @@ import (
 	"github.com/cactus/go-statsd-client/statsd"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/fernandez14/spartangeek-blacker/modules/acl"
+	"github.com/fernandez14/spartangeek-blacker/modules/security"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/getsentry/raven-go"
 	"github.com/gin-gonic/contrib/sessions"
@@ -24,12 +25,13 @@ import (
 )
 
 type MiddlewareAPI struct {
-	ErrorService  *raven.Client   `inject:""`
-	ConfigService *config.Config  `inject:""`
-	DataService   *mongo.Service  `inject:""`
-	StatsService  *statsd.Client  `inject:""`
-	Acl           *acl.Module     `inject:""`
-	Logger        *logging.Logger `inject:""`
+	ErrorService  *raven.Client    `inject:""`
+	ConfigService *config.Config   `inject:""`
+	DataService   *mongo.Service   `inject:""`
+	StatsService  *statsd.Client   `inject:""`
+	Acl           *acl.Module      `inject:""`
+	Logger        *logging.Logger  `inject:""`
+	Security      *security.Module `inject:""`
 }
 
 func (di *MiddlewareAPI) CORS() gin.HandlerFunc {
@@ -51,6 +53,18 @@ func (di *MiddlewareAPI) CORS() gin.HandlerFunc {
 	}
 }
 
+// Allow to block all requests from insecure IP addresses.
+func (di *MiddlewareAPI) TrustIP() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		trusted := di.Security.TrustIP(c.ClientIP())
+
+		if !trusted {
+			c.AbortWithStatus(403)
+			return
+		}
+		c.Next()
+	}
+}
 func (di *MiddlewareAPI) ValidateBsonID(name string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param(name)

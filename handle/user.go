@@ -249,11 +249,9 @@ func (di *UserAPI) UserGetByToken(c *gin.Context) {
 }
 
 func (di UserAPI) UserGetJwtToken(c *gin.Context) {
-
 	trusted := di.Security.TrustIP(c.ClientIP())
 
 	if !trusted {
-
 		c.JSON(403, gin.H{"status": "error", "message": "Not trusted."})
 		return
 	}
