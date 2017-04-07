@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/olebedev/config"
 	"github.com/satori/go.uuid"
+	"gopkg.in/mgo.v2/bson"
 	"gopkg.in/op/go-logging.v1"
 
 	"errors"
@@ -50,8 +51,18 @@ func (di *MiddlewareAPI) CORS() gin.HandlerFunc {
 	}
 }
 
-func (di *MiddlewareAPI) StatsdTiming() gin.HandlerFunc {
+func (di *MiddlewareAPI) ValidateBsonID(name string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		id := c.Param(name)
+		if bson.IsObjectIdHex(id) == false {
+			c.JSON(400, gin.H{"message": "Invalid request, present ID is not valid.", "status": "error"})
+			return
+		}
+		c.Next()
+	}
+}
 
+func (di *MiddlewareAPI) StatsdTiming() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		t := time.Now()
 		c.Next()

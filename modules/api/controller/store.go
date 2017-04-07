@@ -5,6 +5,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/store"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
+
 	"sort"
 	"strconv"
 	"time"
@@ -48,18 +49,13 @@ func (self StoreAPI) PlaceOrder(c *gin.Context) {
 
 // Get all orders sorted by convenience
 func (self StoreAPI) Orders(c *gin.Context) {
+	var limit, offset int = 10, 0
 
-	// Get parameters and convert them to needed types
-	limit, err := strconv.Atoi(c.DefaultQuery("limit", "10"))
-
-	if err != nil {
-		limit = 10
+	if n, err := strconv.Atoi(c.DefaultQuery("offset", "0")); err != nil {
+		offset = n
 	}
-
-	offset, err := strconv.Atoi(c.DefaultQuery("offset", "0"))
-
-	if err != nil {
-		offset = 0
+	if n, err := strconv.Atoi(c.DefaultQuery("limit", "10")); err != nil {
+		limit = n
 	}
 
 	search := c.Query("search")
@@ -306,43 +302,60 @@ func (self *StoreAPI) Stage(c *gin.Context) {
 	}
 }
 
-// Push activity for the order
+// Assign a new activity related to a lead.
 func (self *StoreAPI) Activity(c *gin.Context) {
-
-	var form OrderActivityForm
-
-	order_id := c.Param("id")
-
-	if bson.IsObjectIdHex(order_id) == false {
-
-		c.JSON(400, gin.H{"message": "Invalid request, id not valid.", "status": "error"})
+	var form store.Activity
+	err := c.BindJSON(&form)
+	if err != nil {
+		c.JSON(400, gin.H{"status": "error", "message": err.Error()})
 		return
 	}
 
-	id := bson.ObjectIdHex(order_id)
+	id := bson.ObjectIdHex(c.Param("id"))
+	lead, err := store.FindLead(deps.Container, id)
+	if err != nil {
+		c.JSON(400, gin.H{"status": "error", "message": err.Error()})
+		return
+	}
 
-	if c.BindJSON(&form) == nil {
+	activity, err := store.AssignActivity(deps.Container, *lead, form)
+	if err != nil {
+		c.JSON(400, gin.H{"status": "error", "message": err.Error()})
+		return
+	}
 
-		due_at, err := time.Parse("2006-01-02 15:04", form.Due)
+	c.JSON(200, gin.H{"status": "okay", "activity": activity})
+}
 
-		if err != nil {
+func (self *StoreAPI) Activities(c *gin.Context) {
+	var limit, offset int = 10, 0
+	var typeId string = c.DefaultQuery("type_id", "")
+	var dates []time.Time
 
-			c.JSON(400, gin.H{"status": "error", "message": err.Error()})
-		} else {
+	if n, err := strconv.Atoi(c.DefaultQuery("offset", "0")); err != nil {
+		offset = n
+	}
 
-			order, err := self.Store.Order(id)
+	if n, err := strconv.Atoi(c.DefaultQuery("limit", "10")); err != nil {
+		limit = n
+	}
 
-			if err == nil {
-
-				order.PushActivity(form.Name, form.Description, due_at)
-
-				c.JSON(200, gin.H{"status": "okay"})
-			} else {
-
-				c.JSON(400, gin.H{"status": "error", "message": err.Error()})
+	if r, active := c.GetQueryArray("dates"); active {
+		for _, date := range r {
+			datetime, err := time.Parse(time.RFC3339, date)
+			if err != nil {
+				dates = append(dates, datetime)
 			}
 		}
 	}
+
+	leads, err := store.FindActivities(deps.Container, typeId, dates, offset, limit)
+	if err != nil {
+		c.JSON(400, gin.H{"status": "error", "message": err.Error()})
+		return
+	}
+
+	c.JSON(200, leads)
 }
 
 type OrderForm struct {

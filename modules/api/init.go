@@ -326,29 +326,36 @@ func (module *Module) Run() {
 
 			// Backoffice routes
 			backoffice := authorized.Group("backoffice")
-
 			backoffice.Use(module.Middlewares.NeedAclAuthorization("sensitive-data"))
 			{
 				store := backoffice.Group("/store")
 				{
 					store.GET("/order", module.Orders.Get)
-					store.GET("/order/:id", module.Orders.GetOne)
-					store.POST("/order/:id/send-confirmation", module.Orders.SendOrderConfirmation)
-					store.PUT("/order/:id/status", module.Orders.ChangeStatus)
+					store.Use(module.Middlewares.ValidateBsonID("id"))
+					{
+						store.GET("/order/:id", module.Orders.GetOne)
+						store.POST("/order/:id/send-confirmation", module.Orders.SendOrderConfirmation)
+						store.PUT("/order/:id/status", module.Orders.ChangeStatus)
+					}
 				}
 
 				backoffice.POST("/deals/invoice", module.Deals.GenerateInvoice)
 				backoffice.GET("/order-report", module.Store.OrdersAggregate)
 				backoffice.GET("/order", module.Store.Orders)
-				backoffice.GET("/order/:id", module.Store.One)
-				backoffice.DELETE("/order/:id", module.Store.Ignore)
-				backoffice.POST("/order/:id", module.Store.Answer)
-				backoffice.POST("/order/:id/tag", module.Store.Tag)
-				backoffice.DELETE("/order/:id/tag", module.Store.DeleteTag)
-				backoffice.POST("/order/:id/activity", module.Store.Activity)
-				backoffice.POST("/order/:id/trust", module.Store.Trust)
-				backoffice.POST("/order/:id/favorite", module.Store.Favorite)
-				backoffice.POST("/order/:id/stage", module.Store.Stage)
+				backoffice.GET("/activities", module.Store.Activities)
+
+				backoffice.Use(module.Middlewares.ValidateBsonID("id"))
+				{
+					backoffice.GET("/order/:id", module.Store.One)
+					backoffice.DELETE("/order/:id", module.Store.Ignore)
+					backoffice.POST("/order/:id", module.Store.Answer)
+					backoffice.POST("/order/:id/tag", module.Store.Tag)
+					backoffice.DELETE("/order/:id/tag", module.Store.DeleteTag)
+					backoffice.POST("/order/:id/activity", module.Store.Activity)
+					backoffice.POST("/order/:id/trust", module.Store.Trust)
+					backoffice.POST("/order/:id/favorite", module.Store.Favorite)
+					backoffice.POST("/order/:id/stage", module.Store.Stage)
+				}
 
 				// Build notes routes
 				backoffice.GET("/notes", module.BuildNotes.All)
