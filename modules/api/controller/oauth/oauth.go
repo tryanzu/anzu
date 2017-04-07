@@ -109,13 +109,6 @@ func (a API) CompleteAuth(c *gin.Context) {
 
 	u, err := a.Users.Get(bson.M{"$or": constraints})
 	if err != nil {
-		trusted := a.Security.TrustIP(c.ClientIP())
-
-		if !trusted {
-			c.JSON(403, gin.H{"status": "error", "message": "Not trusted."})
-			return
-		}
-
 		u, err = a.Users.OauthSignup(usr.Provider, usr)
 
 		if err != nil {
