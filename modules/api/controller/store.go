@@ -51,10 +51,10 @@ func (self StoreAPI) PlaceOrder(c *gin.Context) {
 func (self StoreAPI) Orders(c *gin.Context) {
 	var limit, offset int = 10, 0
 
-	if n, err := strconv.Atoi(c.DefaultQuery("offset", "0")); err != nil {
+	if n, err := strconv.Atoi(c.DefaultQuery("offset", "0")); err == nil {
 		offset = n
 	}
-	if n, err := strconv.Atoi(c.DefaultQuery("limit", "10")); err != nil {
+	if n, err := strconv.Atoi(c.DefaultQuery("limit", "10")); err == nil {
 		limit = n
 	}
 
@@ -332,11 +332,11 @@ func (self *StoreAPI) Activities(c *gin.Context) {
 	var typeId string = c.DefaultQuery("type_id", "")
 	var dates []time.Time
 
-	if n, err := strconv.Atoi(c.DefaultQuery("offset", "0")); err != nil {
+	if n, err := strconv.Atoi(c.DefaultQuery("offset", "0")); err == nil {
 		offset = n
 	}
 
-	if n, err := strconv.Atoi(c.DefaultQuery("limit", "10")); err != nil {
+	if n, err := strconv.Atoi(c.DefaultQuery("limit", "10")); err == nil {
 		limit = n
 	}
 
