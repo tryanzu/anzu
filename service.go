@@ -104,7 +104,6 @@ func main() {
 
 	searchService := search.Boot(searchConfig)
 	assetsService := assets.Boot()
-	transmitService := transmit.ZMQ{string_value(configService.String("zmq.push")), log}
 
 	// Authentication services
 	facebookProvider := facebook.New(string_value(configService.String("auth.facebook.key")), string_value(configService.String("auth.facebook.secret")), string_value(configService.String("auth.facebook.callback")), "email")
@@ -214,7 +213,6 @@ func main() {
 		&inject.Object{Value: firebaseService, Complete: true},
 		&inject.Object{Value: statsService, Complete: true},
 		&inject.Object{Value: searchService, Complete: true},
-		&inject.Object{Value: transmitService, Complete: true},
 		&inject.Object{Value: aclService, Complete: false},
 		&inject.Object{Value: storeService, Complete: false},
 		&inject.Object{Value: assetsService, Complete: false},
@@ -227,7 +225,6 @@ func main() {
 		&inject.Object{Value: &securityModule},
 		&inject.Object{Value: &notificationsModule},
 		&inject.Object{Value: &feedModule},
-		&inject.Object{Value: &transmitModule},
 		&inject.Object{Value: &gcommerceModule},
 		&inject.Object{Value: &exceptions},
 	)

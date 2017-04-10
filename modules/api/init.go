@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"github.com/brandfolder/gin-gorelic"
 	"github.com/facebookgo/inject"
+	"github.com/fernandez14/spartangeek-blacker/core/http"
 	"github.com/fernandez14/spartangeek-blacker/handle"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/builds"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/cart"
+	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/chat"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/checkout"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/comments"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/components"
@@ -280,6 +282,8 @@ func (module *Module) Run() {
 		authorized := v1.Group("")
 		authorized.Use(module.Middlewares.NeedAuthorization())
 		{
+			authorized.Use(http.UserMiddleware()).POST("/chat/messages", chat.SendMessage)
+
 			authorized.GET("/contest-lead", module.Lead.GetContestLead)
 			authorized.PUT("/contest-lead", module.Lead.UpdateContestLead)
 			authorized.POST("/build", module.PostsFactory.Create)
