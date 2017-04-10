@@ -343,7 +343,7 @@ func (self *StoreAPI) Activities(c *gin.Context) {
 	if r, active := c.GetQueryArray("dates"); active {
 		for _, date := range r {
 			datetime, err := time.Parse(time.RFC3339, date)
-			if err != nil {
+			if err == nil {
 				dates = append(dates, datetime)
 			}
 		}

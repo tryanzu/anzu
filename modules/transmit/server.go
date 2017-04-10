@@ -73,6 +73,7 @@ func RunServer(socketPort, pullPort string) {
 			so.Join("feed")
 			so.Join("post")
 			so.Join("general")
+			so.Join("chat")
 			so.Join("user")
 
 			so.On("disconnection", func() {
