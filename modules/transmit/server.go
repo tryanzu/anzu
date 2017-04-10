@@ -2,7 +2,6 @@ package transmit
 
 import (
 	"github.com/googollee/go-socket.io"
-	"github.com/olebedev/config"
 	zmq "github.com/pebbe/zmq4"
 	"github.com/rs/cors"
 
@@ -12,23 +11,7 @@ import (
 	"sync"
 )
 
-type Module struct {
-	Config *config.Config `inject:""`
-}
-
-func (module *Module) Run() {
-
-	socketPort, err := module.Config.String("ports.socket")
-
-	if err != nil {
-		log.Fatal("Socket port not found in config.")
-	}
-
-	pullPort, err := module.Config.String("zmq.pull")
-
-	if err != nil {
-		log.Fatal("ZMQ pull port not found in config.")
-	}
+func RunServer(socketPort, pullPort string) {
 
 	var wg sync.WaitGroup
 	wg.Add(2)

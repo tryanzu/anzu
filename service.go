@@ -63,7 +63,6 @@ func main() {
 
 	// Resources for the API
 	var api api.Module
-	var transmitModule transmit.Module
 	var preprocessor preprocessor.Module
 	var cliModule cli.Module
 	var securityModule security.Module
@@ -354,14 +353,18 @@ func main() {
 		includes a socket-io instance and a zeromq pull server
         `,
 		Run: func(cmd *cobra.Command, args []string) {
-
-			// Populate the DI with the instances
-			if err := g.Populate(); err != nil {
-				fmt.Fprintln(os.Stderr, err)
-				os.Exit(1)
+			socketPort, err := configService.String("ports.socket")
+			if err != nil {
+				log.Fatal("Socket port not found in config.")
 			}
 
-			transmitModule.Run()
+			pullPort, err := configService.String("zmq.pull")
+
+			if err != nil {
+				log.Fatal("ZMQ pull port not found in config.")
+			}
+
+			transmit.RunServer(socketPort, pullPort)
 		},
 	}
 
