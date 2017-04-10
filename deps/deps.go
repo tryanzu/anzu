@@ -2,6 +2,7 @@ package deps
 
 import (
 	"github.com/fernandez14/spartangeek-blacker/modules/mail"
+	"github.com/fernandez14/spartangeek-blacker/modules/transmit"
 	"github.com/olebedev/config"
 	"github.com/op/go-logging"
 	"github.com/xuyu/goredis"
@@ -14,6 +15,7 @@ type Deps struct {
 	DatabaseProvider        *mgo.Database
 	LoggerProvider          *logging.Logger
 	MailerProvider          mail.Mailer
+	TransmitProvider        transmit.Sender
 	CacheProvider           *goredis.Redis
 }
 
@@ -35,4 +37,8 @@ func (d Deps) Mailer() mail.Mailer {
 
 func (d Deps) Cache() *goredis.Redis {
 	return d.CacheProvider
+}
+
+func (d Deps) Transmit() transmit.Sender {
+	return d.TransmitProvider
 }

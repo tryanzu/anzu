@@ -10,9 +10,9 @@ import (
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/olebedev/config"
+	"github.com/op/go-logging"
 	"github.com/satori/go.uuid"
 	"gopkg.in/mgo.v2/bson"
-	"gopkg.in/op/go-logging.v1"
 
 	"errors"
 	"fmt"

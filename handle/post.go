@@ -5,12 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cosn/firebase"
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/modules/acl"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
 	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
-	"github.com/fernandez14/spartangeek-blacker/modules/transmit"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/gin-gonic/gin"
 	"github.com/mitchellh/goamz/s3"
@@ -40,7 +40,6 @@ type PostAPI struct {
 	Firebase      *firebase.Client             `inject:""`
 	Gaming        *gaming.Module               `inject:""`
 	ConfigService *config.Config               `inject:""`
-	Transmit      *transmit.Sender             `inject:""`
 	Acl           *acl.Module                  `inject:""`
 }
 
@@ -787,28 +786,18 @@ func (di PostAPI) PostDelete(c *gin.Context) {
 		panic(err)
 	}
 
-	go func(carrier *transmit.Sender, id bson.ObjectId) {
-
-		carrierParams := map[string]interface{}{
-			"fire": "delete-post",
-			"id":   id.Hex(),
-		}
-
-		carrier.Emit("feed", "action", carrierParams)
-
-	}(di.Transmit, post.Id)
+	go deps.Container.Transmit().Emit("feed", "action", map[string]interface{}{
+		"fire": "delete-post",
+		"id":   post.Id.Hex(),
+	})
 
 	c.JSON(200, gin.H{"status": "okay"})
 }
 
 func (di PostAPI) syncUsersFeed(post *model.Post) {
-
-	carrier := di.Transmit
-
-	// Recover from any panic even inside this goroutine
 	defer di.Errors.Recover()
 
-	carrierParams := map[string]interface{}{
+	params := map[string]interface{}{
 		"fire":     "new-post",
 		"category": post.Category.Hex(),
 		"user_id":  post.UserId.Hex(),
@@ -816,7 +805,7 @@ func (di PostAPI) syncUsersFeed(post *model.Post) {
 		"slug":     post.Slug,
 	}
 
-	carrier.Emit("feed", "action", carrierParams)
+	deps.Container.Transmit().Emit("feed", "action", params)
 }
 
 func (di PostAPI) downloadAssetFromUrl(from string, post_id bson.ObjectId) error {

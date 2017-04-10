@@ -1,7 +1,7 @@
 package posts
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/modules/transmit"
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
 
@@ -57,16 +57,16 @@ func (this API) MarkCommentAsAnswer(c *gin.Context) {
 
 	comment.MarkAsAnswer()
 
-	go func(carrier *transmit.Sender, id bson.ObjectId) {
+	go func(id bson.ObjectId) {
 
 		carrierParams := map[string]interface{}{
 			"fire": "best-answer",
 			"id":   id.Hex(),
 		}
 
-		carrier.Emit("feed", "action", carrierParams)
+		deps.Container.Transmit().Emit("feed", "action", carrierParams)
 
-	}(this.Transmit, post.Data().Id)
+	}(post.Data().Id)
 
 	c.JSON(200, gin.H{"status": "okay"})
 }

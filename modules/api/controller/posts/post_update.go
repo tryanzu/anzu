@@ -1,9 +1,9 @@
 package posts
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
-	"github.com/fernandez14/spartangeek-blacker/modules/transmit"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"gopkg.in/mgo.v2/bson"
@@ -46,13 +46,11 @@ func (this API) Update(c *gin.Context) {
 		post_category := postForm.Category
 
 		if bson.IsObjectIdHex(post_category) == false {
-
 			c.JSON(400, gin.H{"status": "error", "message": "Invalid category id"})
 			return
 		}
 
 		var category model.Category
-
 		err = database.C("categories").Find(bson.M{"parent": bson.M{"$exists": true}, "_id": bson.ObjectIdHex(post_category)}).One(&category)
 
 		if err != nil {
@@ -61,7 +59,6 @@ func (this API) Update(c *gin.Context) {
 		}
 
 		user := this.Acl.User(user_bson_id)
-
 		if user.CanUpdatePost(post) == false {
 			c.JSON(400, gin.H{"message": "Can't update post. Insufficient permissions", "status": "error"})
 			return
@@ -85,7 +82,6 @@ func (this API) Update(c *gin.Context) {
 		slug := post.Slug
 
 		if postForm.Name != post.Title {
-
 			slug := helpers.StrSlug(postForm.Name)
 			slug_exists, _ := database.C("posts").Find(bson.M{"slug": slug}).Count()
 
@@ -93,18 +89,17 @@ func (this API) Update(c *gin.Context) {
 				slug = helpers.StrSlugRandom(postForm.Name)
 			}
 
-			go func(carrier *transmit.Sender, id bson.ObjectId) {
-
-				carrierParams := map[string]interface{}{
+			go func(id bson.ObjectId) {
+				params := map[string]interface{}{
 					"fire":  "changed-title",
 					"id":    id.Hex(),
 					"title": postForm.Name,
 					"slug":  slug,
 				}
 
-				carrier.Emit("feed", "action", carrierParams)
+				deps.Container.Transmit().Emit("feed", "action", params)
 
-			}(this.Transmit, post.Id)
+			}(post.Id)
 		}
 
 		content := html.EscapeString(postForm.Content)
@@ -124,16 +119,15 @@ func (this API) Update(c *gin.Context) {
 			update_directive["$set"] = set_directive
 
 			if post.Pinned == false {
-				go func(carrier *transmit.Sender, id bson.ObjectId) {
-
-					carrierParams := map[string]interface{}{
+				go func(id bson.ObjectId) {
+					params := map[string]interface{}{
 						"fire": "pinned",
 						"id":   id.Hex(),
 					}
 
-					carrier.Emit("feed", "action", carrierParams)
+					deps.Container.Transmit().Emit("feed", "action", params)
 
-				}(this.Transmit, post.Id)
+				}(post.Id)
 			}
 
 		} else {
@@ -141,35 +135,26 @@ func (this API) Update(c *gin.Context) {
 			unset["pinned"] = ""
 
 			if post.Pinned == true {
-				go func(carrier *transmit.Sender, id bson.ObjectId) {
-
-					carrierParams := map[string]interface{}{
+				go func(id bson.ObjectId) {
+					params := map[string]interface{}{
 						"fire": "unpinned",
 						"id":   id.Hex(),
 					}
 
-					carrier.Emit("feed", "action", carrierParams)
-
-				}(this.Transmit, post.Id)
+					deps.Container.Transmit().Emit("feed", "action", params)
+				}(post.Id)
 			}
 		}
 
 		if postForm.Lock == true {
-
 			set_directive := update_directive["$set"].(bson.M)
 			set_directive["lock"] = postForm.Lock
 			update_directive["$set"] = set_directive
 
 			if post.Lock == false {
-				go func(carrier *transmit.Sender, id bson.ObjectId) {
-
-					carrierParams := map[string]interface{}{
-						"fire": "locked",
-					}
-
-					carrier.Emit("post", id.Hex(), carrierParams)
-
-				}(this.Transmit, post.Id)
+				go deps.Container.Transmit().Emit("post", post.Id.Hex(), map[string]interface{}{
+					"fire": "locked",
+				})
 			}
 
 		} else {
@@ -177,15 +162,9 @@ func (this API) Update(c *gin.Context) {
 			unset["lock"] = ""
 
 			if post.Lock == true {
-				go func(carrier *transmit.Sender, id bson.ObjectId) {
-
-					carrierParams := map[string]interface{}{
-						"fire": "unlocked",
-					}
-
-					carrier.Emit("post", id.Hex(), carrierParams)
-
-				}(this.Transmit, post.Id)
+				go deps.Container.Transmit().Emit("post", post.Id.Hex(), map[string]interface{}{
+					"fire": "unlocked",
+				})
 			}
 		}
 
@@ -213,15 +192,9 @@ func (this API) Update(c *gin.Context) {
 			go this.savePostImages(asset, post.Id)
 		}
 
-		go func(carrier *transmit.Sender, id bson.ObjectId) {
-
-			carrierParams := map[string]interface{}{
-				"fire": "updated",
-			}
-
-			carrier.Emit("post", id.Hex(), carrierParams)
-
-		}(this.Transmit, post.Id)
+		go deps.Container.Transmit().Emit("post", post.Id.Hex(), map[string]interface{}{
+			"fire": "updated",
+		})
 
 		c.JSON(200, gin.H{"status": "okay", "id": post.Id.Hex(), "slug": post.Slug})
 		return

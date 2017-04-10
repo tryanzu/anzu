@@ -1,7 +1,7 @@
 package comments
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/modules/transmit"
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -35,23 +35,23 @@ func (this API) Delete(c *gin.Context) {
 
 	comment.Delete()
 
-	go func(carrier *transmit.Sender, post_id bson.ObjectId, comment_id bson.ObjectId) {
+	go func(post_id bson.ObjectId, comment_id bson.ObjectId) {
 
 		carrierParams := map[string]interface{}{
 			"fire": "delete-comment",
 			"id":   post_id.Hex(),
 		}
 
-		carrier.Emit("feed", "action", carrierParams)
+		deps.Container.Transmit().Emit("feed", "action", carrierParams)
 
 		carrierParams = map[string]interface{}{
 			"fire": "delete-comment",
 			"id":   comment_id.Hex(),
 		}
 
-		carrier.Emit("post", post_id.Hex(), carrierParams)
+		deps.Container.Transmit().Emit("post", post_id.Hex(), carrierParams)
 
-	}(this.Transmit, post.Id, comment.Id)
+	}(post.Id, comment.Id)
 
 	c.JSON(200, gin.H{"status": "okay"})
 	return

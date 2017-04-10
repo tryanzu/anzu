@@ -3,8 +3,8 @@ package builds
 import (
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
+	"github.com/op/go-logging"
 	"gopkg.in/mgo.v2/bson"
-	"gopkg.in/op/go-logging.v1"
 
 	"time"
 )

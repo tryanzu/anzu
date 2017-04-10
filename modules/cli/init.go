@@ -9,13 +9,12 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/gcommerce"
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/fernandez14/spartangeek-blacker/modules/search"
-	"github.com/fernandez14/spartangeek-blacker/modules/transmit"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/olebedev/config"
+	"github.com/op/go-logging"
 	"gopkg.in/jmcvetta/neoism.v1"
 	"gopkg.in/mgo.v2/bson"
-	"gopkg.in/op/go-logging.v1"
 	"log"
 	"regexp"
 	"strconv"
@@ -29,7 +28,6 @@ type Module struct {
 	Errors     *exceptions.ExceptionsModule `inject:""`
 	User       *user.Module                 `inject:""`
 	Feed       *feed.FeedModule             `inject:""`
-	Transmit   *transmit.Sender             `inject:""`
 	GCommerce  *gcommerce.Module            `inject:""`
 	Components *components.Module           `inject:""`
 	Config     *config.Config               `inject:""`
@@ -46,7 +44,6 @@ func (module Module) Run(name string) {
 		"codes-fix":          module.Codes,
 		"send-confirmations": module.ConfirmationEmails,
 		"replace-url":        module.ReplaceURL,
-		"test-transmit":      module.TestSocket,
 		"first-newsletter":   module.FirstNewsletter,
 		"massdrop-invoicing": module.GenerateMassdropInvoices,
 		"custom-invoicing":   module.GenerateCustomInvoice,
@@ -106,20 +103,6 @@ func (module Module) FirstNewsletter() {
 	}
 
 	fmt.Println("Finished")
-}
-
-func (module Module) TestSocket() {
-
-	carrier := module.Transmit
-
-	carrierParams := map[string]interface{}{
-		"fire":     "new-post",
-		"category": "549da59c6461740097000000",
-	}
-
-	carrier.Emit("feed", "action", carrierParams)
-
-	fmt.Println("feed action emmited")
 }
 
 func (module Module) ReplaceURL() {

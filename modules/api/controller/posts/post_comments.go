@@ -8,7 +8,6 @@ import (
 )
 
 func (this API) GetPostComments(c *gin.Context) {
-
 	post_id := c.Param("id")
 	offsetQuery := c.Query("offset")
 	limitQuery := c.Query("limit")

@@ -11,9 +11,13 @@ type Activity struct {
 	LeadId      bson.ObjectId `bson:"lead_id" json:"lead_id"`
 	TypeId      string        `bson:"type_id" json:"type_id" binding:"required"`
 	TypeName    string        `bson:"type_name" json:"type_name" binding:"required"`
+	AssignedTo  string        `bson:"assigned_to" json:"assigned_to"`
+	AssignedId  string        `bson:"assigned_id" json:"assigned_id"`
+	Notes       string        `bson:"notes" json:"notes"`
 	Description string        `bson:"description" json:"description" binding:"required"`
 	Date        time.Time     `bson:"date" json:"date" binding:"required"`
 	Duration    int           `bson:"duration" json:"duration"`
+	Completed   bool          `bson:"completed" json:"completed"`
 	Created     time.Time     `bson:"created_at" json:"created_at"`
 	Updated     time.Time     `bson:"updated_at" json:"updated_at"`
 }

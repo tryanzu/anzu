@@ -1,9 +1,9 @@
 package votes
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
-	"github.com/fernandez14/spartangeek-blacker/modules/transmit"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
@@ -13,7 +13,6 @@ import (
 )
 
 func (this API) Comment(c *gin.Context) {
-
 	database := this.Mongo.Database
 	id := c.Params.ByName("id")
 
@@ -85,7 +84,6 @@ func (this API) Comment(c *gin.Context) {
 
 			// Return the gamification points
 			if alreadyVoted.Value == 1 {
-
 				go func(usr *user.One, comment_owner bson.ObjectId) {
 
 					this.Gaming.Get(usr).Tribute(1)
@@ -99,17 +97,11 @@ func (this API) Comment(c *gin.Context) {
 
 				}(usr, comment.UserId)
 
-				go func(carrier *transmit.Sender, id, cid bson.ObjectId, pos int) {
-
-					carrierParams := map[string]interface{}{
-						"fire":  "comment-upvote-remove",
-						"id":    cid.Hex(),
-						"index": pos,
-					}
-
-					carrier.Emit("post", id.Hex(), carrierParams)
-
-				}(this.Transmit, post.Id, comment.Id, comment.Position)
+				go deps.Container.Transmit().Emit("post", post.Id.Hex(), map[string]interface{}{
+					"fire":  "comment-upvote-remove",
+					"id":    comment.Id.Hex(),
+					"index": comment.Position,
+				})
 
 			} else if alreadyVoted.Value == -1 {
 
@@ -126,17 +118,11 @@ func (this API) Comment(c *gin.Context) {
 
 				}(usr, comment.UserId)
 
-				go func(carrier *transmit.Sender, id, cid bson.ObjectId, pos int) {
-
-					carrierParams := map[string]interface{}{
-						"fire":  "comment-downvote-remove",
-						"id":    cid.Hex(),
-						"index": pos,
-					}
-
-					carrier.Emit("post", id.Hex(), carrierParams)
-
-				}(this.Transmit, post.Id, comment.Id, comment.Position)
+				go deps.Container.Transmit().Emit("post", post.Id.Hex(), map[string]interface{}{
+					"fire":  "comment-downvote-remove",
+					"id":    comment.Id.Hex(),
+					"index": comment.Position,
+				})
 			}
 
 			c.JSON(200, gin.H{"status": "okay"})
@@ -155,35 +141,21 @@ func (this API) Comment(c *gin.Context) {
 			voteValue = 1
 			mutator = "votes.up"
 
-			go func(carrier *transmit.Sender, id, cid bson.ObjectId, pos int) {
-
-				carrierParams := map[string]interface{}{
-					"fire":  "comment-upvote",
-					"id":    cid.Hex(),
-					"index": pos,
-				}
-
-				carrier.Emit("post", id.Hex(), carrierParams)
-
-			}(this.Transmit, post.Id, comment.Id, comment.Position)
+			go deps.Container.Transmit().Emit("post", post.Id.Hex(), map[string]interface{}{
+				"fire":  "comment-upvote",
+				"id":    comment.Id.Hex(),
+				"index": comment.Position,
+			})
 		}
 
 		if vote.Direction == "down" {
-
 			voteValue = -1
 			mutator = "votes.down"
-
-			go func(carrier *transmit.Sender, id, cid bson.ObjectId, pos int) {
-
-				carrierParams := map[string]interface{}{
-					"fire":  "comment-downvote",
-					"id":    cid.Hex(),
-					"index": pos,
-				}
-
-				carrier.Emit("post", id.Hex(), carrierParams)
-
-			}(this.Transmit, post.Id, comment.Id, comment.Position)
+			go deps.Container.Transmit().Emit("post", post.Id.Hex(), map[string]interface{}{
+				"fire":  "comment-downvote",
+				"id":    comment.Id.Hex(),
+				"index": comment.Position,
+			})
 		}
 
 		err = database.C("comments").Update(bson.M{"_id": comment.Id}, bson.M{"$inc": bson.M{mutator: 1}})

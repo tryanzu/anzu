@@ -1,7 +1,7 @@
 package comments
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/modules/transmit"
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -39,7 +39,7 @@ func (this API) Update(c *gin.Context) {
 
 		comment.Update(form.Content)
 
-		go func(carrier *transmit.Sender, id bson.ObjectId, position int, comment_id bson.ObjectId) {
+		go func(id bson.ObjectId, position int, comment_id bson.ObjectId) {
 
 			carrierParams := map[string]interface{}{
 				"fire":  "comment-updated",
@@ -47,9 +47,9 @@ func (this API) Update(c *gin.Context) {
 				"id":    comment_id,
 			}
 
-			carrier.Emit("post", id.Hex(), carrierParams)
+			deps.Container.Transmit().Emit("post", id.Hex(), carrierParams)
 
-		}(this.Transmit, post.Id, comment.Position, comment.Id)
+		}(post.Id, comment.Position, comment.Id)
 
 		c.JSON(200, gin.H{"status": "okay", "message": comment.Content})
 		return

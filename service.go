@@ -34,11 +34,11 @@ import (
 	"github.com/mitchellh/goamz/aws"
 	"github.com/mitchellh/goamz/s3"
 	"github.com/olebedev/config"
+	"github.com/op/go-logging"
 	"github.com/robfig/cron"
 	"github.com/spf13/cobra"
 	"github.com/stripe/stripe-go/client"
 	"github.com/xuyu/goredis"
-	"gopkg.in/op/go-logging.v1"
 
 	"os"
 	"runtime"
@@ -104,7 +104,7 @@ func main() {
 
 	searchService := search.Boot(searchConfig)
 	assetsService := assets.Boot()
-	transmitService := transmit.Boot(string_value(configService.String("zmq.push")))
+	transmitService := transmit.ZMQ{string_value(configService.String("zmq.push")), log}
 
 	// Authentication services
 	facebookProvider := facebook.New(string_value(configService.String("auth.facebook.key")), string_value(configService.String("auth.facebook.secret")), string_value(configService.String("auth.facebook.callback")), "email")

@@ -2,10 +2,10 @@ package handle
 
 import (
 	"bytes"
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
-	"github.com/fernandez14/spartangeek-blacker/modules/transmit"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -18,7 +18,6 @@ type VoteAPI struct {
 	Data   *mongo.Service `inject:""`
 	Gaming *gaming.Module `inject:""`
 	User   *user.Module   `inject:""`
-	Transmit *transmit.Sender `inject:""`
 }
 
 func (di VoteAPI) VoteComponent(c *gin.Context) {
@@ -313,16 +312,10 @@ func (di VoteAPI) VoteComment(c *gin.Context) {
 
 					}(usr, comment_)
 
-					go func(carrier *transmit.Sender, id bson.ObjectId) {
-
-						carrierParams := map[string]interface{}{
-							"fire": "comment-upvote-remove",
-							"index": comment_index,
-						} 
-
-						carrier.Emit("post", id.Hex(), carrierParams)
-
-					}(di.Transmit, post.Id)
+					go deps.Container.Transmit().Emit("post", post.Id.Hex(), map[string]interface{}{
+						"fire":  "comment-upvote-remove",
+						"index": comment_index,
+					})
 
 				} else if already_voted.Value == -1 {
 
@@ -339,16 +332,10 @@ func (di VoteAPI) VoteComment(c *gin.Context) {
 
 					}(usr, comment_)
 
-					go func(carrier *transmit.Sender, id bson.ObjectId) {
-
-						carrierParams := map[string]interface{}{
-							"fire": "comment-downvote-remove",
-							"index": comment_index,
-						} 
-
-						carrier.Emit("post", id.Hex(), carrierParams)
-
-					}(di.Transmit, post.Id)
+					go deps.Container.Transmit().Emit("post", post.Id.Hex(), map[string]interface{}{
+						"fire":  "comment-downvote-remove",
+						"index": comment_index,
+					})
 				}
 
 				c.JSON(200, gin.H{"status": "okay"})
@@ -357,7 +344,6 @@ func (di VoteAPI) VoteComment(c *gin.Context) {
 
 			// Check if has enough tribute or shit to give
 			if (vote.Direction == "up" && user_model.Gaming.Tribute < 1) || (vote.Direction == "down" && user_model.Gaming.Shit < 1) {
-
 				c.JSON(400, gin.H{"message": "Dont have enough gaming points to do this.", "status": "error"})
 				return
 			}
@@ -371,33 +357,20 @@ func (di VoteAPI) VoteComment(c *gin.Context) {
 				vote_value = 1
 				add.WriteString(".votes.up")
 
-				go func(carrier *transmit.Sender, id bson.ObjectId) {
-
-					carrierParams := map[string]interface{}{
-						"fire": "comment-upvote",
-						"index": comment_index,
-					} 
-
-					carrier.Emit("post", id.Hex(), carrierParams)
-
-				}(di.Transmit, post.Id)
+				go deps.Container.Transmit().Emit("post", post.Id.Hex(), map[string]interface{}{
+					"fire":  "comment-upvote",
+					"index": comment_index,
+				})
 			}
 
 			if vote.Direction == "down" {
-
 				vote_value = -1
 				add.WriteString(".votes.down")
 
-				go func(carrier *transmit.Sender, id bson.ObjectId) {
-
-					carrierParams := map[string]interface{}{
-						"fire": "comment-downvote",
-						"index": comment_index,
-					} 
-
-					carrier.Emit("post", id.Hex(), carrierParams)
-
-				}(di.Transmit, post.Id)
+				go deps.Container.Transmit().Emit("post", post.Id.Hex(), map[string]interface{}{
+					"fire":  "comment-downvote",
+					"index": comment_index,
+				})
 			}
 
 			inc := add.String()
@@ -497,10 +470,7 @@ func (di VoteAPI) VotePost(c *gin.Context) {
 	id := c.Params.ByName("id")
 
 	if bson.IsObjectIdHex(id) == false {
-
-		// Invalid request
 		c.JSON(400, gin.H{"error": "Invalid request...", "status": 601})
-
 		return
 	}
 
@@ -526,9 +496,7 @@ func (di VoteAPI) VotePost(c *gin.Context) {
 
 		// Get the author of the vote
 		usr, err := di.User.Get(user_bson_id)
-
 		if err != nil {
-
 			c.JSON(400, gin.H{"status": "error", "message": err.Error()})
 			return
 		}
@@ -598,15 +566,9 @@ func (di VoteAPI) VotePost(c *gin.Context) {
 
 				}(usr, post)
 
-				go func(carrier *transmit.Sender, id bson.ObjectId) {
-
-					carrierParams := map[string]interface{}{
-						"fire": "upvote-remove",
-					} 
-
-					carrier.Emit("post", id.Hex(), carrierParams)
-
-				}(di.Transmit, post.Id)
+				go deps.Container.Transmit().Emit("post", post.Id.Hex(), map[string]interface{}{
+					"fire": "upvote-remove",
+				})
 
 			} else if already_voted.Value == -1 {
 
@@ -623,15 +585,9 @@ func (di VoteAPI) VotePost(c *gin.Context) {
 
 				}(usr, post)
 
-				go func(carrier *transmit.Sender, id bson.ObjectId) {
-
-					carrierParams := map[string]interface{}{
-						"fire": "downvote-remove",
-					} 
-
-					carrier.Emit("post", id.Hex(), carrierParams)
-
-				}(di.Transmit, post.Id)
+				go deps.Container.Transmit().Emit("post", post.Id.Hex(), map[string]interface{}{
+					"fire": "downvote-remove",
+				})
 			}
 
 			c.JSON(200, gin.H{"status": "okay"})
@@ -650,35 +606,21 @@ func (di VoteAPI) VotePost(c *gin.Context) {
 		add.WriteString("votes.")
 
 		if vote.Direction == "up" {
-
 			vote_value = 1
 			add.WriteString("up")
 
-			go func(carrier *transmit.Sender, id bson.ObjectId) {
-
-				carrierParams := map[string]interface{}{
-					"fire": "upvote",
-				} 
-
-				carrier.Emit("post", id.Hex(), carrierParams)
-
-			}(di.Transmit, post.Id)
+			go deps.Container.Transmit().Emit("post", post.Id.Hex(), map[string]interface{}{
+				"fire": "upvote",
+			})
 		}
 
 		if vote.Direction == "down" {
-
 			vote_value = -1
 			add.WriteString("down")
 
-			go func(carrier *transmit.Sender, id bson.ObjectId) {
-
-				carrierParams := map[string]interface{}{
-					"fire": "downvote",
-				} 
-
-				carrier.Emit("post", id.Hex(), carrierParams)
-
-			}(di.Transmit, post.Id)
+			go deps.Container.Transmit().Emit("post", post.Id.Hex(), map[string]interface{}{
+				"fire": "downvote",
+			})
 		}
 
 		inc := add.String()

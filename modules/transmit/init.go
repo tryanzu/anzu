@@ -1,15 +1,15 @@
 package transmit
 
 import (
-	"github.com/olebedev/config"
 	"github.com/googollee/go-socket.io"
-    "github.com/rs/cors"
+	"github.com/olebedev/config"
 	zmq "github.com/pebbe/zmq4"
+	"github.com/rs/cors"
 
-    "log"
-    "net/http"
-    "encoding/json"
-    "sync"
+	"encoding/json"
+	"log"
+	"net/http"
+	"sync"
 )
 
 type Module struct {
@@ -30,102 +30,95 @@ func (module *Module) Run() {
 		log.Fatal("ZMQ pull port not found in config.")
 	}
 
-    var wg sync.WaitGroup
-    wg.Add(2)
+	var wg sync.WaitGroup
+	wg.Add(2)
 
-    messages := make(chan Message)
+	messages := make(chan Message)
 
-    go func() {
+	go func() {
 
-        defer wg.Done()
+		defer wg.Done()
 
-        //  Socket to receive messages on
-        receiver, err := zmq.NewSocket(zmq.PULL)
+		//  Socket to receive messages on
+		receiver, err := zmq.NewSocket(zmq.PULL)
 
-        if err != nil {
-            panic(err)
-        }
+		if err != nil {
+			panic(err)
+		}
 
-        err = receiver.Bind("tcp://*:" + pullPort)
+		err = receiver.Bind("tcp://*:" + pullPort)
 
-        if err != nil {
-            panic(err)
-        }
+		if err != nil {
+			panic(err)
+		}
 
-        log.Println("Started zmq pull server at tcp://*:" + pullPort)
+		log.Println("Started zmq pull server at tcp://*:" + pullPort)
 
-        for {
+		for {
 
-            var message Message 
-            
-            msg, _ := receiver.Recv(0)
+			var message Message
 
-            if err := json.Unmarshal([]byte(msg), &message); err != nil {
-                continue
-            }
+			msg, _ := receiver.Recv(0)
 
-            messages <- message
+			if err := json.Unmarshal([]byte(msg), &message); err != nil {
+				continue
+			}
 
-            log.Println("Broadcasted message to " + message.Room)
-        }
+			messages <- message
 
-        log.Println("Closed receiver")
-        receiver.Close()
-    }()
+			log.Println("Broadcasted message to " + message.Room)
+		}
 
-    go func() {
+		log.Println("Closed receiver")
+		receiver.Close()
+	}()
 
-        defer wg.Done()
+	go func() {
 
-        server, err := socketio.NewServer(nil)
-    
-        if err != nil {
-            log.Fatal(err)
-        }
-        
-        server.On("connection", func(so socketio.Socket) {
+		defer wg.Done()
 
-            log.Println("Connection handled.")
+		server, err := socketio.NewServer(nil)
 
-            so.Join("feed")
-            so.Join("post")
-            so.Join("general")
-            so.Join("user")
-            
-            so.On("disconnection", func() {
-                log.Println("Diconnection handled.")
-            })
-        })
+		if err != nil {
+			log.Fatal(err)
+		}
 
-        server.On("error", func(so socketio.Socket, err error) {
-            log.Println("error:", err)
-        })
+		server.On("connection", func(so socketio.Socket) {
 
-        go func() {
-            for {
-                msg := <-messages
-                log.Printf("%v\n", msg)
+			log.Println("Connection handled.")
 
-                server.BroadcastTo(msg.Room, msg.Event, msg.Message)
-            }
-        }()
+			so.Join("feed")
+			so.Join("post")
+			so.Join("general")
+			so.Join("user")
 
-        log.Println("Started sockets server at localhost:" + socketPort + "...")
+			so.On("disconnection", func() {
+				log.Println("Diconnection handled.")
+			})
+		})
 
-        mux := http.NewServeMux()
-        mux.Handle("/socket.io/", server)
-        handler := cors.Default().Handler(mux)
+		server.On("error", func(so socketio.Socket, err error) {
+			log.Println("error:", err)
+		})
 
-        log.Fatal(http.ListenAndServe(":" + socketPort, handler))
-    }()
-	   
-    log.Println("Waiting To Finish")
-    wg.Wait()
-}
+		go func() {
+			for {
+				msg := <-messages
+				log.Printf("%v\n", msg)
 
-func Boot(pushAddress string) *Sender {
+				server.BroadcastTo(msg.Room, msg.Event, msg.Message)
+			}
+		}()
 
-	spot := &Sender{pushAddress}
-	
-	return spot
+		log.Println("Started sockets server at localhost:" + socketPort + "...")
+
+		mux := http.NewServeMux()
+		mux.Handle("/socket.io/", server)
+		handler := cors.Default().Handler(mux)
+
+		log.Fatal(http.ListenAndServe(":"+socketPort, handler))
+	}()
+
+	log.Println("Waiting To Finish")
+	wg.Wait()
 }

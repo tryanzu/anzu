@@ -1,14 +1,13 @@
 package comments
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
-	"github.com/fernandez14/spartangeek-blacker/modules/transmit"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
 )
 
 func (this API) Add(c *gin.Context) {
-
 	var form CommentForm
 
 	id := c.Params.ByName("id")
@@ -44,7 +43,7 @@ func (this API) Add(c *gin.Context) {
 
 		comment := post.PushComment(form.Content, user_id)
 
-		go func(carrier *transmit.Sender, id bson.ObjectId, usrId bson.ObjectId) {
+		go func(id bson.ObjectId, usrId bson.ObjectId) {
 
 			carrierParams := map[string]interface{}{
 				"fire":    "new-comment",
@@ -52,9 +51,9 @@ func (this API) Add(c *gin.Context) {
 				"user_id": usrId.Hex(),
 			}
 
-			carrier.Emit("feed", "action", carrierParams)
+			deps.Container.Transmit().Emit("feed", "action", carrierParams)
 
-		}(this.Transmit, post.Id, user_id)
+		}(post.Id, user_id)
 
 		if post.UserId != user_id {
 

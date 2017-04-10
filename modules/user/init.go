@@ -6,9 +6,9 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/payments"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/markbates/goth"
+	"github.com/op/go-logging"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	"gopkg.in/op/go-logging.v1"
 
 	"errors"
 	"regexp"

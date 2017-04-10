@@ -1,6 +1,7 @@
 package posts
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/gin-gonic/gin"
@@ -14,10 +15,7 @@ import (
 )
 
 func (this API) Create(c *gin.Context) {
-
 	var form model.PostForm
-
-	// Get the database interface from the DI
 	database := this.Mongo.Database
 
 	// Check for user token
@@ -152,7 +150,6 @@ func (this API) Create(c *gin.Context) {
 				}
 
 				for component, value := range components {
-
 					component_elements := value.(map[string]interface{})
 					bindable := reflect.ValueOf(&publish_components).Elem()
 
@@ -202,9 +199,7 @@ func (this API) Create(c *gin.Context) {
 
 					// Catch errors on runtime
 					defer this.Errors.Recover()
-
-					carrier := this.Transmit
-					carrierParams := map[string]interface{}{
+					params := map[string]interface{}{
 						"fire":     "new-post",
 						"category": publish.Category.Hex(),
 						"user_id":  publish.UserId.Hex(),
@@ -212,7 +207,7 @@ func (this API) Create(c *gin.Context) {
 						"slug":     publish.Slug,
 					}
 
-					carrier.Emit("feed", "action", carrierParams)
+					deps.Container.Transmit().Emit("feed", "action", params)
 
 					if publish.Category.Hex() != "55dc16593f6ba1005d000007" {
 						usr := this.Gaming.Get(bson_id)
@@ -271,12 +266,9 @@ func (this API) Create(c *gin.Context) {
 			}
 
 			go func() {
-
-				// Catch errors on runtime
 				defer this.Errors.Recover()
 
-				carrier := this.Transmit
-				carrierParams := map[string]interface{}{
+				params := map[string]interface{}{
 					"fire":     "new-post",
 					"category": publish.Category.Hex(),
 					"user_id":  publish.UserId.Hex(),
@@ -284,7 +276,7 @@ func (this API) Create(c *gin.Context) {
 					"slug":     publish.Slug,
 				}
 
-				carrier.Emit("feed", "action", carrierParams)
+				deps.Container.Transmit().Emit("feed", "action", params)
 
 				if publish.Category.Hex() != "55dc16593f6ba1005d000007" {
 					usr := this.Gaming.Get(bson_id)
