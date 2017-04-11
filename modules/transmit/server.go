@@ -47,7 +47,7 @@ func RunServer(socketPort, pullPort string, redis *goredis.Redis) {
 			// Once message is unmarshaled send it back to processing channel
 			messages <- message
 			if message.Room == "chat" {
-				if _, err := redis.LPush("chat", msg); err != nil {
+				if _, err := redis.LPush(message.RoomID(), msg); err != nil {
 					log.Println("error:", err)
 				}
 			}
@@ -68,9 +68,7 @@ func RunServer(socketPort, pullPort string, redis *goredis.Redis) {
 		}
 
 		server.On("connection", func(so socketio.Socket) {
-
 			log.Println("Connection handled.")
-
 			so.Join("feed")
 			so.Join("post")
 			so.Join("general")
@@ -81,8 +79,9 @@ func RunServer(socketPort, pullPort string, redis *goredis.Redis) {
 				log.Println("Diconnection handled.")
 			})
 
-			so.On("chat update-me", func() {
-				last, err := redis.LRange("chat", 0, 9)
+			so.On("chat update-me", func(channel string) {
+				redis.LTrim("chat:"+channel, 0, 9)
+				last, err := redis.LRange("chat:"+channel, 0, 9)
 				if err == nil {
 					for i := len(last) - 1; i >= 0; i-- {
 						var m Message
@@ -90,7 +89,7 @@ func RunServer(socketPort, pullPort string, redis *goredis.Redis) {
 							continue
 						}
 
-						so.Emit("chat dia-de-hueva", m.Message)
+						so.Emit("chat "+channel, m.Message)
 					}
 				}
 			})
