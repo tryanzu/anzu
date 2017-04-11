@@ -4,6 +4,7 @@ import (
 	"github.com/googollee/go-socket.io"
 	zmq "github.com/pebbe/zmq4"
 	"github.com/rs/cors"
+	"github.com/xuyu/goredis"
 
 	"encoding/json"
 	"log"
@@ -11,26 +12,22 @@ import (
 	"sync"
 )
 
-func RunServer(socketPort, pullPort string) {
-
+func RunServer(socketPort, pullPort string, redis *goredis.Redis) {
 	var wg sync.WaitGroup
 	wg.Add(2)
 
-	messages := make(chan Message)
+	messages := make(chan Message, 100)
 
 	go func() {
-
 		defer wg.Done()
 
 		//  Socket to receive messages on
 		receiver, err := zmq.NewSocket(zmq.PULL)
-
 		if err != nil {
 			panic(err)
 		}
 
 		err = receiver.Bind("tcp://*:" + pullPort)
-
 		if err != nil {
 			panic(err)
 		}
@@ -38,16 +35,22 @@ func RunServer(socketPort, pullPort string) {
 		log.Println("Started zmq pull server at tcp://*:" + pullPort)
 
 		for {
-
 			var message Message
 
+			// Block until new message is received.
 			msg, _ := receiver.Recv(0)
 
 			if err := json.Unmarshal([]byte(msg), &message); err != nil {
 				continue
 			}
 
+			// Once message is unmarshaled send it back to processing channel
 			messages <- message
+			if message.Room == "chat" {
+				if _, err := redis.LPush("chat", msg); err != nil {
+					log.Println("error:", err)
+				}
+			}
 
 			log.Println("Broadcasted message to " + message.Room)
 		}
@@ -57,11 +60,9 @@ func RunServer(socketPort, pullPort string) {
 	}()
 
 	go func() {
-
 		defer wg.Done()
 
 		server, err := socketio.NewServer(nil)
-
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -78,6 +79,20 @@ func RunServer(socketPort, pullPort string) {
 
 			so.On("disconnection", func() {
 				log.Println("Diconnection handled.")
+			})
+
+			so.On("chat update-me", func() {
+				last, err := redis.LRange("chat", 0, 9)
+				if err == nil {
+					for i := len(last) - 1; i >= 0; i-- {
+						var m Message
+						if err := json.Unmarshal([]byte(last[i]), &m); err != nil {
+							continue
+						}
+
+						so.Emit("chat dia-de-hueva", m.Message)
+					}
+				}
 			})
 		})
 

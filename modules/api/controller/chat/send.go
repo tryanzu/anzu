@@ -4,6 +4,8 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/core/user"
 	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/gin-gonic/gin"
+
+	"time"
 )
 
 func SendMessage(c *gin.Context) {
@@ -16,10 +18,11 @@ func SendMessage(c *gin.Context) {
 		user := c.MustGet("user").(user.User)
 
 		deps.Container.Transmit().Emit("chat", body.Channel, map[string]interface{}{
-			"content":  body.Content,
-			"user_id":  user.Id,
-			"username": user.UserName,
-			"avatar":   user.Image,
+			"content":   body.Content,
+			"user_id":   user.Id,
+			"username":  user.UserName,
+			"avatar":    user.Image,
+			"timestamp": time.Now().Unix(),
 		})
 
 		c.AbortWithStatus(200)
