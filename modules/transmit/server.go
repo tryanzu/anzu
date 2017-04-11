@@ -112,7 +112,9 @@ func RunServer(socketPort, pullPort string, redis *goredis.Redis) {
 
 		mux := http.NewServeMux()
 		mux.Handle("/socket.io/", server)
-		handler := cors.Default().Handler(mux)
+		handler := cors.New(cors.Options{
+			AllowCredentials: true,
+		}).Handler(mux)
 
 		log.Fatal(http.ListenAndServe(":"+socketPort, handler))
 	}()
