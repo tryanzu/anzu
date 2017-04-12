@@ -2,6 +2,7 @@ package deps
 
 import (
 	"github.com/fernandez14/spartangeek-blacker/modules/transmit"
+	zmq "github.com/pebbe/zmq4"
 )
 
 // Bootstraps transmit driver.
@@ -15,7 +16,20 @@ func IgniteTransmit(container Deps) (Deps, error) {
 			return container, err
 		}
 
-		container.TransmitProvider = transmit.ZMQ{address, container.Log()}
+		//  Socket to send messages on
+		sender, err := zmq.NewSocket(zmq.PUSH)
+		if err != nil {
+			return container, err
+		}
+
+		err = sender.Connect("tcp://" + address)
+		if err != nil {
+			return container, err
+		}
+
+		sender.Send("0", 0)
+
+		container.TransmitProvider = transmit.ZMQ{sender, container.Log()}
 	case "test":
 		container.TransmitProvider = transmit.Test{container.Log()}
 	}

@@ -9,26 +9,11 @@ import (
 )
 
 type ZMQ struct {
-	Address string
-	Logger  *logging.Logger
+	Socket *zmq.Socket
+	Logger *logging.Logger
 }
 
 func (pool ZMQ) Emit(channel, event string, params map[string]interface{}) {
-
-	//  Socket to send messages on
-	sender, err := zmq.NewSocket(zmq.PUSH)
-	defer sender.Close()
-
-	if err != nil {
-		panic(err)
-	}
-
-	err = sender.Connect("tcp://" + pool.Address)
-	if err != nil {
-		panic(err)
-	}
-
-	sender.Send("0", 0)
 
 	room := channel
 	roomEvent := room + " " + event
@@ -43,7 +28,7 @@ func (pool ZMQ) Emit(channel, event string, params map[string]interface{}) {
 		panic(err)
 	}
 
-	_, err = sender.Send(string(msg), 0)
+	_, err = pool.Socket.Send(string(msg), 0)
 
 	if err != nil {
 		panic(err)
