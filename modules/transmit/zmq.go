@@ -5,7 +5,6 @@ import (
 	zmq "github.com/pebbe/zmq4"
 
 	"encoding/json"
-	"time"
 )
 
 type ZMQ struct {
@@ -28,12 +27,8 @@ func (pool ZMQ) Emit(channel, event string, params map[string]interface{}) {
 		panic(err)
 	}
 
-	_, err = pool.Socket.Send(string(msg), 0)
-
+	_, err = pool.Socket.SendMessageDontwait(string(msg), 0)
 	if err != nil {
 		panic(err)
 	}
-
-	// Give 0mq time to deliver
-	time.Sleep(time.Second)
 }
