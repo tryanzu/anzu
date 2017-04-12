@@ -46,11 +46,15 @@ func RunServer(socketPort, pullPort string, redis *goredis.Redis) {
 
 			// Once message is unmarshaled send it back to processing channel
 			messages <- message
-			if message.Room == "chat" {
-				if _, err := redis.LPush(message.RoomID(), msg); err != nil {
-					log.Println("error:", err)
+
+			// Async message saving.
+			go func() {
+				if message.Room == "chat" {
+					if _, err := redis.LPush(message.RoomID(), msg); err != nil {
+						log.Println("error:", err)
+					}
 				}
-			}
+			}()
 
 			log.Println("Broadcasted message to " + message.Room)
 		}
@@ -104,7 +108,7 @@ func RunServer(socketPort, pullPort string, redis *goredis.Redis) {
 				msg := <-messages
 				log.Printf("%v\n", msg)
 
-				server.BroadcastTo(msg.Room, msg.Event, msg.Message)
+				go server.BroadcastTo(msg.Room, msg.Event, msg.Message)
 			}
 		}()
 
