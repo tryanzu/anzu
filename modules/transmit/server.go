@@ -4,7 +4,6 @@ import (
 	"github.com/googollee/go-socket.io"
 	zmq "github.com/pebbe/zmq4"
 	"github.com/rs/cors"
-	"github.com/xuyu/goredis"
 
 	"encoding/json"
 	"log"
@@ -12,10 +11,11 @@ import (
 	"sync"
 )
 
-func RunServer(socketPort, pullPort string, redis *goredis.Redis) {
+func RunServer(deps Deps, socketPort, pullPort string) {
 	var wg sync.WaitGroup
 	wg.Add(2)
 
+	redis := deps.Cache()
 	messages := make(chan Message, 100)
 
 	go func() {
@@ -71,34 +71,7 @@ func RunServer(socketPort, pullPort string, redis *goredis.Redis) {
 			log.Fatal(err)
 		}
 
-		server.On("connection", func(so socketio.Socket) {
-			log.Println("Connection handled.")
-			so.Join("feed")
-			so.Join("post")
-			so.Join("general")
-			so.Join("chat")
-			so.Join("user")
-
-			so.On("disconnection", func() {
-				log.Println("Diconnection handled.")
-			})
-
-			so.On("chat update-me", func(channel string) {
-				redis.LTrim("chat:"+channel, 0, 9)
-				last, err := redis.LRange("chat:"+channel, 0, 9)
-				if err == nil {
-					for i := len(last) - 1; i >= 0; i-- {
-						var m Message
-						if err := json.Unmarshal([]byte(last[i]), &m); err != nil {
-							continue
-						}
-
-						so.Emit("chat "+channel, m.Message)
-					}
-				}
-			})
-		})
-
+		server.On("connection", handleConnection(deps))
 		server.On("error", func(so socketio.Socket, err error) {
 			log.Println("error:", err)
 		})

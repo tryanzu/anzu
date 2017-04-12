@@ -364,7 +364,7 @@ func main() {
 				log.Fatal("ZMQ pull port not found in config.")
 			}
 
-			transmit.RunServer(socketPort, pullPort, cacheService)
+			transmit.RunServer(deps.Container, socketPort, pullPort)
 		},
 	}
 
