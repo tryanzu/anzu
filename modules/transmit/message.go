@@ -1,6 +1,7 @@
 package transmit
 
 import (
+	"encoding/json"
 	"strings"
 )
 
@@ -12,4 +13,13 @@ type Message struct {
 
 func (m Message) RoomID() string {
 	return strings.Replace(m.Event, " ", ":", -1)
+}
+
+func (m Message) Encode() string {
+	bytes, err := json.Marshal(m)
+	if err != nil {
+		panic(err)
+	}
+
+	return string(bytes)
 }

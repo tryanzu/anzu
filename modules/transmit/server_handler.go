@@ -78,6 +78,17 @@ func handleConnection(deps Deps) func(so socketio.Socket) {
 						so.Emit("chat "+channel, chat)
 						so.BroadcastTo("chat", "chat "+channel, chat)
 
+						// Async message saving.
+						msg := Message{
+							Room:    "chat",
+							Event:   "chat " + channel,
+							Message: chat,
+						}
+
+						if _, err := redis.LPush(msg.RoomID(), msg.Encode()); err != nil {
+							log.Error("error:", err)
+						}
+
 						log.Debugf("Handling message %s to %s", message, channel)
 					})
 				}
@@ -97,8 +108,8 @@ func handleConnection(deps Deps) func(so socketio.Socket) {
 		})
 
 		so.On("chat update-me", func(channel string) {
-			redis.LTrim("chat:"+channel, 0, 9)
-			last, err := redis.LRange("chat:"+channel, 0, 9)
+			redis.LTrim("chat:"+channel, 0, 30)
+			last, err := redis.LRange("chat:"+channel, 0, 30)
 			if err == nil {
 				for i := len(last) - 1; i >= 0; i-- {
 					var m Message
