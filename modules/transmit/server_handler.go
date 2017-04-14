@@ -7,6 +7,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 
 	"encoding/json"
+	"strings"
 	"time"
 )
 
@@ -40,6 +41,16 @@ func handleConnection(deps Deps) func(so socketio.Socket) {
 					log.Debugf("Handled user %s connection.", usr.UserName)
 
 					so.On("chat send", func(channel, message string) {
+						message = strings.TrimSpace(message)
+
+						if len(channel) < 1 || len(message) < 1 {
+							return
+						}
+
+						if len(message) >= 200 {
+							message = message[:200] + "..."
+						}
+
 						n, err := redis.Incr("chat:rates:m:" + usr.Id.Hex())
 						if err != nil {
 							log.Errorf("Error on rate limitter: %v", err)
