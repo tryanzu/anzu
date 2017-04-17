@@ -5,6 +5,7 @@ import (
 
 	"html"
 	"time"
+	"unicode/utf8"
 )
 
 type Comment struct {
@@ -120,8 +121,12 @@ func (self *Comment) Delete() {
 }
 
 func (self *Comment) Update(c string) {
-
-	if len(c) > 0 {
+	length := utf8.RuneCountInString(c)
+	if length > 0 {
+		if length > 3000 {
+			chars := []rune(c)
+			c = string(chars[:3000])
+		}
 
 		self.Content = html.EscapeString(c)
 

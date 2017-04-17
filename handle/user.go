@@ -515,7 +515,7 @@ func (di *UserAPI) UserUpdateProfile(c *gin.Context) {
 			set["origin_id"] = origin
 		}
 
-		if country, exists := form["country"]; exists {
+		if country, exists := form["country"]; exists && len([]rune(country)) <= 3 {
 			set["country"] = country
 		}
 

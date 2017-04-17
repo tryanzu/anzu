@@ -156,6 +156,10 @@ func (self *Post) LoadCommentById(id bson.ObjectId) error {
 func (self *Post) PushComment(c string, user_id bson.ObjectId) *Comment {
 
 	c = html.EscapeString(c)
+	if len(c) > 3000 {
+		c = c[:3000] + "..."
+	}
+
 	pos := self.GetCommentCount()
 
 	comment := &Comment{
