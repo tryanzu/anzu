@@ -608,7 +608,6 @@ func (di *UserAPI) UserGetActivity(c *gin.Context) {
 	limit := 10
 
 	if bson.IsObjectIdHex(user_id) == false {
-
 		c.JSON(400, gin.H{"status": "error", "message": "Invalid user id."})
 		return
 	}
@@ -704,9 +703,8 @@ func (di *UserAPI) UserGetActivity(c *gin.Context) {
 					Created:   c.Created,
 					Directive: "commented",
 					Author: map[string]string{
-						"id":    usr.Data().Id.Hex(),
-						"name":  usr.Data().UserName,
-						"email": usr.Data().Email,
+						"id":   usr.Data().Id.Hex(),
+						"name": usr.Data().UserName,
 					},
 				})
 			}
