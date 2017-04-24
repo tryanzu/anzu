@@ -23,6 +23,7 @@ type Activity struct {
 }
 
 func AssignActivity(deps Deps, lead Lead, activity Activity) (Activity, error) {
+	activity.Id = bson.NewObjectId()
 	activity.LeadId = lead.Id
 	activity.Created = time.Now()
 	activity.Updated = time.Now()
