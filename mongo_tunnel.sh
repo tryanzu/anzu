@@ -1,0 +1,1 @@
+ssh -fN -l spartan -i ~/.ssh/id_rsa -L 9999:localhost:27217 m2.spartangeek.com

@@ -7,7 +7,7 @@ import (
 )
 
 type Activity struct {
-	Id          bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
+	Id          bson.ObjectId `bson:"_id,omitempty" json:"-"`
 	LeadId      bson.ObjectId `bson:"lead_id" json:"lead_id"`
 	TypeId      string        `bson:"type_id" json:"type_id" binding:"required"`
 	TypeName    string        `bson:"type_name" json:"type_name" binding:"required"`

@@ -10,6 +10,7 @@ import (
 
 	"encoding/json"
 	"io/ioutil"
+	"strings"
 	"time"
 )
 
@@ -70,9 +71,15 @@ func (self MailAPI) Inbound(c *gin.Context) {
 
 		if err == nil {
 			text := m.TextBody
+			sep := "Escribe tu respuesta ARRIBA DE ESTA LINEA al responder"
 
 			if len(m.StrippedTextReply) > 0 {
 				text = m.StrippedTextReply
+			}
+
+			if strings.Contains(text, sep) {
+				parts := strings.Split(text, sep)
+				text = parts[0]
 			}
 
 			// Push inbound answer

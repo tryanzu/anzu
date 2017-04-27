@@ -84,6 +84,7 @@ func (lead *Lead) Reply(answer, kind string) (string, error) {
 		buf := new(bytes.Buffer)
 		t := template.New("lead-reply").Funcs(funcs)
 		t, _ = t.Parse(`
+			<div style="color: #AAAAAA;padding:5px 0;border-bottom: 1px solid #EEEEEE;margin-bottom: 10px">Escribe tu respuesta ARRIBA DE ESTA LINEA al responder</div>
             {{ .Reply | trust | nl2br }}
 			<br><br><br><br>
 			<div class="gmail_quote">
