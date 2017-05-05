@@ -16,7 +16,7 @@ func UserMiddleware() gin.HandlerFunc {
 		// Attempt to retrieve user data otherwise abort request.
 		usr, err := user.FindId(deps.Container, oid)
 		if err != nil {
-			c.AbortWithError(412, err)
+			c.AbortWithError(500, err)
 			return
 		}
 
