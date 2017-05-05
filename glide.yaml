@@ -66,3 +66,5 @@ import:
 - package: github.com/messagebird/go-rest-api
 - package: github.com/certifi/gocertifi
 - package: github.com/op/go-logging
+- package: github.com/newrelic/go-agent
+  version: ^1.9.0

@@ -1,5 +1,5 @@
-hash: 8084451d9532d72ba7bbe7dfff3d0cac1f4d4ee1168b16946ea7c0fe5a33e104
-updated: 2017-03-22T16:50:59.7148954-06:00
+hash: 3945a66ec4a6c7405a36fd5b7dc550abdffe2ba64c4eef480779f7c00a13e7a8
+updated: 2017-05-05T13:03:30.16182292-05:00
 imports:
 - name: github.com/algolia/algoliasearch-client-go
   version: 597a1919857ba29aafa399ae3e74feec2827a5d5
@@ -98,8 +98,7 @@ imports:
 - name: github.com/goinggo/work
   version: e2c4d06662b4a79fa3db3a83f65d6e252620c55e
 - name: github.com/golang/protobuf
-  version: 655cdfa588ea190e901bc5590e65d5621688847c
-  repo: https://github.com/golang/protobuf
+  version: 2402d76f3d41f928c7902a765dfc872356dd3aad
   subpackages:
   - proto
 - name: github.com/googollee/go-engine.io
@@ -201,6 +200,15 @@ imports:
   - s3
 - name: github.com/mitchellh/hashstructure
   version: ab25296c0f51f1022f01cd99dfb45f1775de8799
+- name: github.com/newrelic/go-agent
+  version: 29ec3cd1bb2f21d21d36da37dae52695cb2c3a17
+  subpackages:
+  - _integrations/nrgin/v1
+  - internal
+  - internal/jsonx
+  - internal/logger
+  - internal/sysinfo
+  - internal/utilization
 - name: github.com/olebedev/config
   version: afea898d27c7d17376ecc60c7c2e73c76b40060e
 - name: github.com/op/go-logging
@@ -274,18 +282,12 @@ imports:
   version: a98ad7ee00ec53921f08832bc06ecf7fd600e6a1
 - name: github.com/xuyu/goredis
   version: 89fbe9474b3758ff3adf0b7b29c95aeed115fb7b
-- name: github.com/yvasiyarov/go-metrics
-  version: c25f46c4b94079672242ec48a545e7ca9ebe3aec
-- name: github.com/yvasiyarov/gorelic
-  version: ae09aa139a2b7f638e2412baceaceebd41eff115
-- name: github.com/yvasiyarov/newrelic_platform_go
-  version: 9c099fbc30e90de5bb5c5f94aa5fd08f2daeaacd
 - name: golang.org/x/crypto
   version: dd96d35c1b251a7ef77f057fc5c4f92ea2b285b4
   subpackages:
   - ssh
 - name: golang.org/x/net
-  version: e45385e9b226f570b1f086bf287b25d3d4117776
+  version: f315505cf3349909cdf013ea56690da34e96a451
   subpackages:
   - context
   - html

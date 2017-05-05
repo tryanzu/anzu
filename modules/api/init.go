@@ -1,8 +1,6 @@
 package api
 
 import (
-	"fmt"
-	"github.com/brandfolder/gin-gorelic"
 	"github.com/facebookgo/inject"
 	"github.com/fernandez14/spartangeek-blacker/core/http"
 	"github.com/fernandez14/spartangeek-blacker/handle"
@@ -23,7 +21,11 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/votes"
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"github.com/newrelic/go-agent"
+	"github.com/newrelic/go-agent/_integrations/nrgin/v1"
 	"github.com/olebedev/config"
+
+	"fmt"
 	"os"
 )
 
@@ -123,7 +125,6 @@ func (module *Module) Run() {
 
 	var debug bool = true
 	environment, err := module.Dependencies.Config.String("environment")
-
 	if err != nil {
 		panic(err)
 	}
@@ -136,19 +137,23 @@ func (module *Module) Run() {
 
 	// Session storage
 	secret, err := module.Dependencies.Config.String("application.secret")
-
 	if err != nil {
 		panic(err)
 	}
 
 	redis_server, err := module.Dependencies.Config.String("cache.redis")
-
 	if err != nil {
 		panic(err)
 	}
 
 	store, err := sessions.NewRedisStore(10, "tcp", redis_server, "", []byte(secret))
+	if err != nil {
+		panic(err)
+	}
 
+	config := newrelic.NewConfig("Blacker", "45fd4c0a34ce36ba2b0209d5a332bc5d13e22eb1")
+	config.Enabled = !debug
+	app, err := newrelic.NewApplication(config)
 	if err != nil {
 		panic(err)
 	}
@@ -156,12 +161,9 @@ func (module *Module) Run() {
 	// Start gin classic middlewares
 	router := gin.Default()
 
-	// Start gorelic
-	gorelic.InitNewrelicAgent("3e8e387fb7b29dedb924db3ba88e2790599bd0fb", "Blacker", false)
-
 	// Middlewares setup
+	router.Use(nrgin.Middleware(app))
 	router.Use(sessions.Sessions("session", store))
-	router.Use(gorelic.Handler)
 	router.Use(module.Middlewares.ErrorTracking(debug))
 	router.Use(module.Middlewares.CORS())
 	router.Use(module.Middlewares.MongoRefresher())
