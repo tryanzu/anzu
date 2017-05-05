@@ -329,7 +329,6 @@ func (self *StoreAPI) Activity(c *gin.Context) {
 
 func (self *StoreAPI) Activities(c *gin.Context) {
 	var limit, offset int = 10, 0
-	var typeId string = c.DefaultQuery("type_id", "")
 	var dates []time.Time
 
 	if n, err := strconv.Atoi(c.DefaultQuery("offset", "0")); err == nil {
@@ -349,7 +348,7 @@ func (self *StoreAPI) Activities(c *gin.Context) {
 		}
 	}
 
-	leads, err := store.FindActivities(deps.Container, typeId, dates, offset, limit)
+	leads, err := store.FindActivities(deps.Container, dates, offset, limit)
 	if err != nil {
 		c.JSON(400, gin.H{"status": "error", "message": err.Error()})
 		return
