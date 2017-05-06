@@ -273,6 +273,23 @@ func (self *One) Touch(userId bson.ObjectId) {
 	if err != nil {
 		panic(err)
 	}
+
+	self.data.Readed = append(self.data.Readed, userId)
+	self.data.UserReaded = true
+}
+
+func (self *One) Unread(userId bson.ObjectId) {
+	db := self.di.Mongo.Database
+	err := db.C("orders").Update(
+		bson.M{"_id": self.data.Id},
+		bson.M{"$pull": bson.M{"readed": userId}},
+	)
+
+	if err != nil {
+		panic(err)
+	}
+
+	self.data.UserReaded = false
 }
 
 func (self *One) Ignore() {

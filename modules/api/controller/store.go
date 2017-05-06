@@ -58,10 +58,12 @@ func (self StoreAPI) Orders(c *gin.Context) {
 		limit = n
 	}
 
+	user := c.MustGet("user").(user.User)
 	search := c.Query("search")
 	group := c.Query("group")
 	version := c.Query("version")
 	orders := self.Store.GetSortedOrders(limit, offset, search, group)
+	orders = store.HaveRead(orders, user.Id)
 
 	if version == "v2" {
 		list := make([]string, len(orders))
@@ -105,7 +107,7 @@ func (self StoreAPI) One(c *gin.Context) {
 	order.LoadAssets()
 	order.LoadDuplicates()
 
-	data := order.Data()
+	data := store.HasBeenRead(*order.Data(), user.Id)
 	data.RelatedUsers = order.MatchUsers()
 	sort.Sort(data.Messages)
 
@@ -237,6 +239,22 @@ func (self *StoreAPI) Trust(c *gin.Context) {
 			c.JSON(400, gin.H{"status": "error", "message": err.Error()})
 		}
 	}
+}
+
+func (api *StoreAPI) Unread(c *gin.Context) {
+	id := bson.ObjectIdHex(c.Param("id"))
+	user := c.MustGet("user").(user.User)
+
+	// Fetch order using provided ID
+	order, err := api.Store.Order(id)
+	if err != nil {
+		c.JSON(404, gin.H{"status": "error", "message": "Order not found."})
+		return
+	}
+
+	order.Unread(user.Id)
+
+	c.JSON(200, gin.H{"status": "okay"})
 }
 
 func (self *StoreAPI) Favorite(c *gin.Context) {

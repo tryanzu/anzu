@@ -220,7 +220,6 @@ func (module *Module) GetOrdersAggregation() map[string]interface{} {
 }
 
 func (module *Module) GetSortedOrders(limit, skip int, search, group string) []OrderModel {
-
 	var list []OrderModel
 
 	database := module.Mongo.Database
@@ -312,13 +311,10 @@ func (module *Module) GetSortedOrders(limit, skip int, search, group string) []O
 	}
 
 	if search != "" {
-
 		n, err := strconv.Atoi(search)
-
 		if err != nil {
 			n = -1
 		}
-
 		clause = bson.M{
 			"$or": []bson.M{
 				{
@@ -349,4 +345,24 @@ func (module *Module) GetSortedOrders(limit, skip int, search, group string) []O
 	}
 
 	return list
+}
+
+// Compute collection Readed property.
+func HaveRead(collection []OrderModel, userId bson.ObjectId) []OrderModel {
+	for index, order := range collection {
+		collection[index] = HasBeenRead(order, userId)
+	}
+
+	return collection
+}
+
+func HasBeenRead(order OrderModel, userId bson.ObjectId) OrderModel {
+	for _, r := range order.Readed {
+		if r == userId {
+			order.UserReaded = true
+			break
+		}
+	}
+
+	return order
 }
