@@ -284,7 +284,10 @@ func (module *Module) Run() {
 		authorized := v1.Group("")
 		authorized.Use(module.Middlewares.NeedAuthorization())
 		{
-			authorized.Use(http.UserMiddleware()).POST("/chat/messages", chat.SendMessage)
+			withUser := authorized.Group("").Use(http.UserMiddleware())
+			{
+				withUser.POST("/chat/messages", chat.SendMessage)
+			}
 
 			authorized.GET("/contest-lead", module.Lead.GetContestLead)
 			authorized.PUT("/contest-lead", module.Lead.UpdateContestLead)
