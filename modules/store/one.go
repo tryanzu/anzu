@@ -153,9 +153,7 @@ func (self *One) PushActivity(name, description string, due_at time.Time) {
 }
 
 func (self *One) PushInboundAnswer(text string, mail bson.ObjectId) {
-
-	database := self.di.Mongo.Database
-
+	db := self.di.Mongo.Database
 	message := MessageModel{
 		Content:   text,
 		Type:      "inbound",
@@ -164,7 +162,10 @@ func (self *One) PushInboundAnswer(text string, mail bson.ObjectId) {
 		Updated:   time.Now(),
 	}
 
-	err := database.C("orders").Update(bson.M{"_id": self.data.Id}, bson.M{"$push": bson.M{"messages": message}, "$set": bson.M{"unreaded": true, "updated_at": time.Now()}})
+	err := db.C("orders").Update(
+		bson.M{"_id": self.data.Id},
+		bson.M{"$push": bson.M{"messages": message}, "$set": bson.M{"readed": []bson.ObjectId{}, "updated_at": time.Now()}},
+	)
 
 	if err != nil {
 		panic(err)
@@ -266,7 +267,7 @@ func (self *One) Touch(userId bson.ObjectId) {
 	db := self.di.Mongo.Database
 	err := db.C("orders").Update(
 		bson.M{"_id": self.data.Id},
-		bson.M{"$push": bson.M{"readed": userId}},
+		bson.M{"$addToSet": bson.M{"readed": userId}},
 	)
 
 	if err != nil {

@@ -72,7 +72,6 @@ func (this API) Get(c *gin.Context) {
 	}
 
 	data := post.Data()
-
 	true_count := this.Feed.TrueCommentCount(data.Id)
 	data.Comments.Total = true_count
 

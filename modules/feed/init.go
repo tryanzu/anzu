@@ -259,7 +259,6 @@ func (module *FeedModule) FulfillBestAnswer(list []LightPostModel) []LightPostMo
 }
 
 func (module *FeedModule) TrueCommentCount(id bson.ObjectId) int {
-
 	var count int
 
 	database := module.Mongo.Database
