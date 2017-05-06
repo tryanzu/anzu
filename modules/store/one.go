@@ -261,11 +261,13 @@ func (self *One) MatchUsers() []user.UserBasic {
 	return users
 }
 
-func (self *One) Touch() {
-
-	database := self.di.Mongo.Database
-
-	err := database.C("orders").Update(bson.M{"_id": self.data.Id}, bson.M{"$set": bson.M{"unreaded": false}})
+// Mark deal as readed for userId
+func (self *One) Touch(userId bson.ObjectId) {
+	db := self.di.Mongo.Database
+	err := db.C("orders").Update(
+		bson.M{"_id": self.data.Id},
+		bson.M{"$push": bson.M{"readed": userId}},
+	)
 
 	if err != nil {
 		panic(err)

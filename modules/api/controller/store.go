@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/core/user"
 	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/modules/store"
 	"github.com/gin-gonic/gin"
@@ -37,7 +38,6 @@ func (self StoreAPI) PlaceOrder(c *gin.Context) {
 			Games:    form.Games,
 			Extra:    form.Extra,
 			Usage:    form.Usage,
-			Unreaded: true,
 			BuyDelay: form.BuyDelay,
 		}
 
@@ -88,25 +88,18 @@ func (s StoreAPI) OrdersAggregate(c *gin.Context) {
 
 // REST handler for getting one order
 func (self StoreAPI) One(c *gin.Context) {
+	user := c.MustGet("user").(user.User)
+	id := bson.ObjectIdHex(c.Param("id"))
 
-	id := c.Param("id")
-
-	if bson.IsObjectIdHex(id) == false {
-
-		c.JSON(400, gin.H{"status": "error", "message": "Can't perform action. Invalid id."})
-		return
-	}
-
-	order, err := self.Store.Order(bson.ObjectIdHex(id))
-
+	// Fetch order using provided ID
+	order, err := self.Store.Order(id)
 	if err != nil {
-
 		c.JSON(404, gin.H{"status": "error", "message": "Order not found."})
 		return
 	}
 
 	// Mark as readed
-	order.Touch()
+	order.Touch(user.Id)
 
 	// Load assets
 	order.LoadAssets()

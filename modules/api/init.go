@@ -354,6 +354,7 @@ func (module *Module) Run() {
 
 				order := backoffice.Group("/order")
 				order.Use(module.Middlewares.ValidateBsonID("id"))
+				order.Use(http.UserMiddleware())
 				{
 					order.GET("/:id", module.Store.One)
 					order.DELETE("/:id", module.Store.Ignore)

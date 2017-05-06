@@ -7,10 +7,11 @@ import (
 )
 
 func (this API) Get(c *gin.Context) {
-
-	var kind string
-	var post *feed.Post
-	var err error
+	var (
+		kind string
+		post *feed.Post
+		err  error
+	)
 
 	id := c.Params.ByName("id")
 

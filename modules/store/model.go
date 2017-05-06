@@ -36,7 +36,7 @@ type OrderModel struct {
 	Games      []string        `bson:"games" json:"games"`
 	Extra      []string        `bson:"extras" json:"extra"`
 	BuyDelay   int             `bson:"buydelay" json:"buydelay"`
-	Unreaded   bool            `bson:"unreaded" json:"unreaded"`
+	Readed     []bson.ObjectId `bson:"readed" json:"readed"`
 	Messages   Messages        `bson:"messages,omitempty" json:"messages"`
 	Tags       []TagModel      `bson:"tags,omitempty" json:"tags"`
 	Activities []ActivityModel `bson:"activities,omitempty" json:"activities"`

@@ -102,30 +102,20 @@ func (this OrdersAPI) Get(c *gin.Context) {
 
 func (this OrdersAPI) GetOne(c *gin.Context) {
 
-	id_param := c.Param("id")
-
-	if bson.IsObjectIdHex(id_param) == false {
-		c.JSON(400, gin.H{"message": "Invalid request, id not valid.", "status": "error"})
-		return
-	}
-
-	id := bson.ObjectIdHex(id_param)
+	id := bson.ObjectIdHex(c.Param("id"))
 	order, err := this.GCommerce.One(bson.M{"_id": id})
-
 	if err != nil {
 		c.JSON(404, gin.H{"message": "Invalid request, order not found.", "status": "error"})
 		return
 	}
 
 	customer, err := this.GCommerce.GetCustomer(order.UserId)
-
 	if err != nil {
 		c.JSON(404, gin.H{"message": "Invalid request, order customer not found.", "status": "error"})
 		return
 	}
 
 	usr, err := this.User.Get(customer.UserId)
-
 	if err != nil {
 		c.JSON(404, gin.H{"message": "Invalid request, order user not found.", "status": "error"})
 		return
