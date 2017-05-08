@@ -359,13 +359,15 @@ func (self *StoreAPI) Activities(c *gin.Context) {
 		}
 	}
 
-	leads, err := store.FindActivities(deps.Container, dates, offset, limit)
+	activities, err := store.FindActivities(deps.Container, dates, offset, limit)
 	if err != nil {
 		c.JSON(400, gin.H{"status": "error", "message": err.Error()})
 		return
 	}
 
-	c.JSON(200, leads)
+	leads, err := store.FetchLeads(deps.Container, activities.QueryLeads())
+
+	c.JSON(200, gin.H{"leads": leads.ToMap(), "activities": activities.ToMap()})
 }
 
 type OrderForm struct {

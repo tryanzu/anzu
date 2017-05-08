@@ -1,6 +1,7 @@
 package store
 
 import (
+	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 
 	"time"
@@ -14,6 +15,28 @@ type Activity struct {
 	Completed bool          `bson:"completed" json:"completed"`
 	Created   time.Time     `bson:"created_at" json:"created_at"`
 	Updated   time.Time     `bson:"updated_at" json:"updated_at"`
+}
+
+type Activities []Activity
+
+func (list Activities) ToMap() map[string]Activity {
+	m := map[string]Activity{}
+	for _, item := range list {
+		m[item.Id.Hex()] = item
+	}
+
+	return m
+}
+
+func (list Activities) QueryLeads() Query {
+	id := make([]bson.ObjectId, len(list))
+	for i, activity := range list {
+		id[i] = activity.LeadId
+	}
+
+	return func(col *mgo.Collection) *mgo.Query {
+		return col.Find(bson.M{"_id": bson.M{"$in": id}})
+	}
 }
 
 func AssignActivity(deps Deps, lead Lead, activity Activity) (Activity, error) {
@@ -30,8 +53,8 @@ func AssignActivity(deps Deps, lead Lead, activity Activity) (Activity, error) {
 	return activity, nil
 }
 
-func FindActivities(deps Deps, betweenDates []time.Time, offset, limit int) ([]Activity, error) {
-	var activities []Activity
+func FindActivities(deps Deps, betweenDates []time.Time, offset, limit int) (Activities, error) {
+	var list Activities
 	params := bson.M{}
 	if len(betweenDates) == 2 {
 		params["date"] = bson.M{
@@ -40,10 +63,10 @@ func FindActivities(deps Deps, betweenDates []time.Time, offset, limit int) ([]A
 		}
 	}
 
-	err := deps.Mgo().C("activities").Find(params).Limit(limit).Skip(offset).All(&activities)
+	err := deps.Mgo().C("activities").Find(params).Limit(limit).Skip(offset).All(&list)
 	if err != nil {
-		return activities, err
+		return list, err
 	}
 
-	return activities, nil
+	return list, nil
 }

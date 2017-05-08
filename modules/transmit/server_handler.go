@@ -51,15 +51,17 @@ func handleConnection(deps Deps) func(so socketio.Socket) {
 							message = message[:200] + "..."
 						}
 
+						one := map[string]interface{}{
+							"content":   message,
+							"user_id":   usr.Id,
+							"username":  usr.UserName,
+							"avatar":    usr.Image,
+							"timestamp": time.Now().Unix(),
+						}
+
 						chat := map[string]interface{}{
 							"list": []map[string]interface{}{
-								{
-									"content":   message,
-									"user_id":   usr.Id,
-									"username":  usr.UserName,
-									"avatar":    usr.Image,
-									"timestamp": time.Now().Unix(),
-								},
+								one,
 							},
 						}
 
@@ -98,7 +100,7 @@ func handleConnection(deps Deps) func(so socketio.Socket) {
 						msg := Message{
 							Room:    "chat",
 							Event:   "chat " + channel,
-							Message: chat,
+							Message: one,
 						}
 
 						if _, err := redis.LPush(msg.RoomID(), msg.Encode()); err != nil {

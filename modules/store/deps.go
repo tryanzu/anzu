@@ -9,3 +9,5 @@ type Deps interface {
 	Mgo() *mgo.Database
 	Mailer() mail.Mailer
 }
+
+type Query func(col *mgo.Collection) *mgo.Query

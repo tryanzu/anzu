@@ -25,16 +25,6 @@ type Module struct {
 	Config *config.Config               `inject:""`
 }
 
-func FindLead(deps Deps, id bson.ObjectId) (*Lead, error) {
-	data := &Lead{}
-	err := deps.Mgo().C("orders").FindId(id).One(&data)
-	if err != nil {
-		return nil, err
-	}
-
-	return data, nil
-}
-
 func (module *Module) Order(id bson.ObjectId) (*One, error) {
 
 	var model *OrderModel
@@ -356,6 +346,7 @@ func HaveRead(collection []OrderModel, userId bson.ObjectId) []OrderModel {
 	return collection
 }
 
+// Compute order Readed property.
 func HasBeenRead(order OrderModel, userId bson.ObjectId) OrderModel {
 	for _, r := range order.Readed {
 		if r == userId {

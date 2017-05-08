@@ -26,7 +26,8 @@ type Lead struct {
 	Games      []string        `bson:"games" json:"games"`
 	Extra      []string        `bson:"extras" json:"extra"`
 	BuyDelay   int             `bson:"buydelay" json:"buydelay"`
-	Unreaded   bool            `bson:"unreaded" json:"unreaded"`
+	Readed     []bson.ObjectId `bson:"readed" json:"-"`
+	UserReaded bool            `bson:"-" json:"readed"`
 	Messages   Messages        `bson:"messages,omitempty" json:"messages"`
 	Tags       []TagModel      `bson:"tags,omitempty" json:"tags"`
 	Activities []ActivityModel `bson:"activities,omitempty" json:"activities"`
@@ -44,6 +45,17 @@ type Lead struct {
 
 	readed    bool
 	readIndex int64
+}
+
+type Leads []Lead
+
+func (list Leads) ToMap() map[string]Lead {
+	m := map[string]Lead{}
+	for _, item := range list {
+		m[item.Id.Hex()] = item
+	}
+
+	return m
 }
 
 // Reply logic over a lead.
@@ -159,4 +171,30 @@ func (lead *Lead) Reply(answer, kind string) (string, error) {
 	lead.Messages = append(lead.Messages, message)
 
 	return id, nil
+}
+
+// Find lead by ID
+func FindLead(deps Deps, id bson.ObjectId) (*Lead, error) {
+	data := &Lead{}
+	err := deps.Mgo().C("orders").FindId(id).One(&data)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
+}
+
+// Fetch multiple leads by conditions
+func FetchLeads(deps Deps, query Query) (Leads, error) {
+	var list Leads
+	err := query(deps.Mgo().C("orders")).All(&list)
+	if err != nil {
+		return Leads{}, err
+	}
+
+	for index, _ := range list {
+		sort.Sort(list[index].Messages)
+	}
+
+	return list, nil
 }
