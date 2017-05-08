@@ -51,6 +51,20 @@ func handleConnection(deps Deps) func(so socketio.Socket) {
 							message = message[:200] + "..."
 						}
 
+						chat := map[string]interface{}{
+							"list": []map[string]interface{}{
+								{
+									"content":   message,
+									"user_id":   usr.Id,
+									"username":  usr.UserName,
+									"avatar":    usr.Image,
+									"timestamp": time.Now().Unix(),
+								},
+							},
+						}
+
+						so.Emit("chat "+channel, chat)
+
 						n, err := redis.Incr("chat:rates:m:" + usr.Id.Hex())
 						if err != nil {
 							log.Errorf("Error on rate limitter: %v", err)
@@ -71,23 +85,14 @@ func handleConnection(deps Deps) func(so socketio.Socket) {
 							return
 						}
 
+						so.BroadcastTo("chat", "chat "+channel, chat)
+
 						_, err = redis.Incr("chat:rates:s:" + usr.Id.Hex())
 						if err != nil {
 							log.Error(err)
 						}
 
 						redis.Expire("chat:rates:s:"+usr.Id.Hex(), 1)
-
-						chat := map[string]interface{}{
-							"content":   message,
-							"user_id":   usr.Id,
-							"username":  usr.UserName,
-							"avatar":    usr.Image,
-							"timestamp": time.Now().Unix(),
-						}
-
-						so.Emit("chat "+channel, chat)
-						so.BroadcastTo("chat", "chat "+channel, chat)
 
 						// Async message saving.
 						msg := Message{
@@ -122,14 +127,20 @@ func handleConnection(deps Deps) func(so socketio.Socket) {
 			redis.LTrim("chat:"+channel, 0, 30)
 			last, err := redis.LRange("chat:"+channel, 0, 30)
 			if err == nil {
+				// Allocate space for messages list.
+				messages := Messages{
+					List: []map[string]interface{}{},
+				}
+
 				for i := len(last) - 1; i >= 0; i-- {
 					var m Message
 					if err := json.Unmarshal([]byte(last[i]), &m); err != nil {
 						continue
 					}
-
-					so.Emit("chat "+channel, m.Message)
+					messages.List = append(messages.List, m.Message)
 				}
+
+				so.Emit("chat "+channel, messages)
 			}
 		})
 	}

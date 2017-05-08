@@ -11,6 +11,10 @@ type Message struct {
 	Message map[string]interface{} `json:"message"`
 }
 
+type Messages struct {
+	List []map[string]interface{} `json:"list"`
+}
+
 func (m Message) RoomID() string {
 	return strings.Replace(m.Event, " ", ":", -1)
 }
