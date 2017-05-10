@@ -8,7 +8,7 @@ import (
 )
 
 type Activity struct {
-	Id        bson.ObjectId `bson:"_id,omitempty" json:"-"`
+	Id        bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
 	LeadId    bson.ObjectId `bson:"lead_id" json:"lead_id"`
 	Content   string        `bson:"content" json:"content" binding:"required"`
 	Date      time.Time     `bson:"date" json:"date" binding:"required"`
@@ -40,12 +40,15 @@ func (list Activities) QueryLeads() Query {
 }
 
 func AssignActivity(deps Deps, lead Lead, activity Activity) (Activity, error) {
-	activity.Id = bson.NewObjectId()
+	if activity.Id.Valid() == false {
+		activity.Id = bson.NewObjectId()
+	}
+
 	activity.LeadId = lead.Id
 	activity.Created = time.Now()
 	activity.Updated = time.Now()
 
-	err := deps.Mgo().C("activities").Insert(activity)
+	_, err := deps.Mgo().C("activities").UpsertId(activity.Id, activity)
 	if err != nil {
 		return activity, err
 	}
