@@ -58,7 +58,7 @@ func AssignActivity(deps Deps, lead Lead, activity Activity) (Activity, error) {
 
 func FindActivities(deps Deps, betweenDates []time.Time, offset, limit int) (Activities, error) {
 	var list Activities
-	params := bson.M{}
+	params := bson.M{"completed": false}
 	if len(betweenDates) == 2 {
 		params["date"] = bson.M{
 			"$gte": betweenDates[0],
