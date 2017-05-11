@@ -41,10 +41,10 @@ func UpsertMacro(deps Deps, m Macro) (macro Macro, err error) {
 	if m.Id.Valid() == false {
 		m.Id = bson.NewObjectId()
 		m.Created = time.Now()
-		m.Updated = time.Now()
 	}
 
-	_, err = deps.Mgo().C(MACRO_COL).UpsertId(macro.Id, m)
+	m.Updated = time.Now()
+	_, err = deps.Mgo().C(MACRO_COL).UpsertId(m.Id, m)
 	macro = m
 	return
 }
