@@ -1,114 +1,50 @@
 package controller
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/core/common"
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/modules/store"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
 )
 
-type BuildNotesAPI struct {
-	Store *store.Module `inject:""`
-}
-
-func (self BuildNotesAPI) All(c *gin.Context) {
-
-	notes := self.Store.GetNotes()
-
-	c.JSON(200, notes)
-}
-
-// REST handler for getting one build note
-func (self BuildNotesAPI) One(c *gin.Context) {
-
-	id := c.Param("id")
-
-	if bson.IsObjectIdHex(id) == false {
-
-		c.JSON(400, gin.H{"status": "error", "message": "Can't perform action. Invalid id."})
-		return
-	}
-
-	note, err := self.Store.GetNote(bson.ObjectIdHex(id))
-
+// Return all saved macros.
+func AllMacros(c *gin.Context) {
+	list, err := store.FindMacros(deps.Container, bson.M{})
 	if err != nil {
-
-		c.JSON(404, gin.H{"status": "error", "message": "Build note not found."})
+		c.AbortWithError(500, err)
 		return
 	}
 
-	c.JSON(200, note)
+	c.JSON(200, list)
 }
 
-// REST handler for creating build notes
-func (self BuildNotesAPI) Create(c *gin.Context) {
+// Insert or update macro.
+func UpsertMacro(c *gin.Context) {
+	var payload store.Macro
 
-	var form BuildResponseForm
-
-	if c.BindJSON(&form) == nil {
-
-		id, err := self.Store.CreateNote(form.Title, form.Content, form.Price)
-
-		if err != nil {
-
-			c.JSON(400, gin.H{"status": "error"})
-			return
-		}
-
-		c.JSON(200, gin.H{"status": "okay", "id": id})
-	}
-}
-
-// REST handler for updating build notes
-func (self BuildNotesAPI) Update(c *gin.Context) {
-
-	id := c.Param("id")
-
-	if bson.IsObjectIdHex(id) == false {
-
-		c.JSON(400, gin.H{"status": "error", "message": "Can't perform action. Invalid id."})
+	// Validate payload & bind it.
+	if err := c.BindJSON(&payload); err != nil {
+		c.AbortWithError(400, err)
 		return
 	}
 
-	var form BuildResponseForm
-
-	if c.BindJSON(&form) == nil {
-
-		err := self.Store.UpdateNote(bson.ObjectIdHex(id), form.Title, form.Content, form.Price)
-
-		if err != nil {
-
-			c.JSON(400, gin.H{"status": "error"})
-			return
-		}
-
-		c.JSON(200, gin.H{"status": "okay"})
-	}
-}
-
-// REST handler for deleting build notes
-func (self BuildNotesAPI) Delete(c *gin.Context) {
-
-	id := c.Param("id")
-
-	if bson.IsObjectIdHex(id) == false {
-
-		c.JSON(400, gin.H{"status": "error", "message": "Can't perform action. Invalid id."})
-		return
-	}
-
-	err := self.Store.DeleteNote(bson.ObjectIdHex(id))
-
+	macro, err := store.UpsertMacro(deps.Container, payload)
 	if err != nil {
-
-		c.JSON(400, gin.H{"status": "error"})
+		c.AbortWithError(500, err)
 		return
 	}
 
-	c.JSON(200, gin.H{"status": "okay"})
+	c.JSON(200, macro)
 }
 
-type BuildResponseForm struct {
-	Title   string `json:"title" binding:"required"`
-	Content string `json:"content" binding:"required"`
-	Price   int `json:"price" binding:"required"`
+func DeleteMacro(c *gin.Context) {
+	id := bson.ObjectIdHex(c.Param("id"))
+	removed, err := store.DeleteMacros(deps.Container, common.ById(id))
+	if err != nil {
+		c.AbortWithError(500, err)
+		return
+	}
+
+	c.JSON(200, gin.H{"removed": removed})
 }

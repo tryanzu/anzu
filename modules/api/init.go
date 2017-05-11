@@ -47,7 +47,6 @@ type Module struct {
 	Acl               handle.AclAPI
 	Gaming            handle.GamingAPI
 	Store             controller.StoreAPI
-	BuildNotes        controller.BuildNotesAPI
 	Mail              controller.MailAPI
 	PostsFactory      posts.API
 	Components        controller.ComponentAPI
@@ -97,7 +96,6 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.Store},
 		&inject.Object{Value: &module.Builds},
 		&inject.Object{Value: &module.Oauth},
-		&inject.Object{Value: &module.BuildNotes},
 		&inject.Object{Value: &module.Mail},
 		&inject.Object{Value: &module.Components},
 		&inject.Object{Value: &module.Massdrop},
@@ -369,11 +367,9 @@ func (module *Module) Run() {
 				}
 
 				// Build notes routes
-				backoffice.GET("/notes", module.BuildNotes.All)
-				backoffice.POST("/notes", module.BuildNotes.Create)
-				backoffice.GET("/notes/:id", module.BuildNotes.One)
-				backoffice.PUT("/notes/:id", module.BuildNotes.Update)
-				backoffice.DELETE("/notes/:id", module.BuildNotes.Delete)
+				backoffice.GET("/macros", controller.AllMacros)
+				backoffice.PUT("/macros", controller.UpsertMacro)
+				backoffice.DELETE("/macros/:id", module.Middlewares.ValidateBsonID("id"), controller.DeleteMacro)
 
 				// Components routes
 				backoffice.PUT("/spree/:part", module.ComponentsFactory.SpreeExport)
