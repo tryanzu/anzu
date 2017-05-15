@@ -319,7 +319,7 @@ func (module *Module) GetSortedOrders(limit, skip int, search, group string) []O
 		}
 	}
 
-	query := database.C("orders").Find(clause).Select(bson.M{"score": bson.M{"$meta": "textScore"}}).Sort("$textScore:score", "-updated_at")
+	query := database.C("orders").Find(clause).Select(bson.M{"score": bson.M{"$meta": "textScore"}}).Sort("-updated_at", "$textScore:score")
 
 	if _, aggregated := clause["_id"]; !aggregated {
 		query = query.Limit(limit).Skip(skip)
