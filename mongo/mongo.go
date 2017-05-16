@@ -24,7 +24,7 @@ func NewService(connection string, name string) *Service {
 	database := session.DB(name)
 
 	// Set monotonic session behavior
-	session.SetMode(mgo.Monotonic, true)
+	//session.SetMode(mgo.Monotonic, true)
 
 	return &Service{Session: session, Database: database, Name: name}
 }

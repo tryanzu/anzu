@@ -23,7 +23,7 @@ func IgniteMongoDB(container Deps) (Deps, error) {
 	database := session.DB(dbName)
 
 	// See https://godoc.org/gopkg.in/mgo.v2#Session.SetMode
-	session.SetMode(mgo.Monotonic, true)
+	//session.SetMode(mgo.Monotonic, true)
 
 	container.DatabaseSessionProvider = session
 	container.DatabaseProvider = database
