@@ -6,6 +6,7 @@ import (
 	"github.com/cosn/firebase"
 	"github.com/facebookgo/inject"
 	"github.com/fernandez14/go-siftscience"
+	"github.com/fernandez14/spartangeek-blacker/core/shell"
 	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/interfaces"
 	"github.com/fernandez14/spartangeek-blacker/modules/acl"
@@ -233,6 +234,17 @@ func main() {
 		os.Exit(1)
 	}
 
+	shellCmd := &cobra.Command{
+		Use:   "shell",
+		Short: "Starts interactive shell",
+		Long: `Starts blacker interactive shell
+		with helper tasks.
+        `,
+		Run: func(cmd *cobra.Command, args []string) {
+			shell.RunShell()
+		},
+	}
+
 	var cmdApi = &cobra.Command{
 		Use:   "api",
 		Short: "Starts API web server",
@@ -375,6 +387,7 @@ func main() {
 	rootCmd.AddCommand(cmdJobs)
 	rootCmd.AddCommand(cmdRunRoutine)
 	rootCmd.AddCommand(cmdRunTransmit)
+	rootCmd.AddCommand(shellCmd)
 	rootCmd.AddCommand(cmdPreprocessor)
 	rootCmd.Execute()
 

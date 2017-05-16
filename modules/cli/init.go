@@ -52,7 +52,6 @@ func (module Module) Run(name string) {
 		"migrate-ccomments":  module.MigrateChosenComment,
 		"export-components":  module.ExportComponents,
 		"count-components":   module.GenerateComponentViews,
-		"clean-duplicates":   module.CleanupDuplicates,
 		"clean-references":   module.CleanupReferences,
 
 		"spree-taxons":              module.SpreeTaxons,

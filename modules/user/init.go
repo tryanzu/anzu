@@ -116,7 +116,6 @@ func (module *Module) GetTopDonators() []map[string]interface{} {
 
 // Signup a user with email and username checks
 func (module *Module) SignUp(email, username, password, referral string) (*One, error) {
-
 	context := module
 	database := module.Mongo.Database
 	slug := helpers.StrSlug(username)

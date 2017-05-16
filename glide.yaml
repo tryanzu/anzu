@@ -68,3 +68,4 @@ import:
 - package: github.com/op/go-logging
 - package: github.com/newrelic/go-agent
   version: ^1.9.0
+- package: github.com/abiosoft/ishell

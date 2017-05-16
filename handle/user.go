@@ -446,16 +446,12 @@ func (di *UserAPI) UserUpdateProfile(c *gin.Context) {
 	}
 
 	if c.BindWith(&form, binding.JSON) == nil {
-
 		set := bson.M{}
 
 		if username, exists := form["username"]; exists && user.NameChanges < 1 {
-
 			valid_username, _ := regexp.Compile(`^[0-9a-zA-Z\-]{0,32}$`)
 
 			if valid_username.MatchString(username) {
-
-				// Generate a slug for the username
 				username_slug := sanitize.Path(sanitize.Accents(username))
 
 				// Check whether user exists
@@ -478,7 +474,6 @@ func (di *UserAPI) UserUpdateProfile(c *gin.Context) {
 		}
 
 		if email, exists := form["email"]; exists && user.Email != email {
-
 			if !helpers.IsEmail(email) {
 				c.JSON(400, gin.H{"status": "error", "message": "Invalid email address.", "details": "invalid-email", "fields": []string{"email"}})
 				return
