@@ -24,6 +24,10 @@ func (self StoreAPI) PlaceOrder(c *gin.Context) {
 	)
 
 	if c.BindJSON(&form) == nil {
+		if len(form.Ref) == 0 {
+			form.Ref = "unknown"
+		}
+
 		order := store.OrderModel{
 			User: store.OrderUserModel{
 				Name:  form.User.Name,
@@ -31,14 +35,15 @@ func (self StoreAPI) PlaceOrder(c *gin.Context) {
 				Phone: form.User.Phone,
 				Ip:    ip,
 			},
-			Content:  form.Content,
-			Budget:   form.Budget,
-			Currency: "MXN",
-			State:    form.State,
-			Games:    form.Games,
-			Extra:    form.Extra,
-			Usage:    form.Usage,
-			BuyDelay: form.BuyDelay,
+			Content:   form.Content,
+			Budget:    form.Budget,
+			Currency:  "MXN",
+			State:     form.State,
+			Games:     form.Games,
+			Extra:     form.Extra,
+			Usage:     form.Usage,
+			BuyDelay:  form.BuyDelay,
+			Reference: form.Ref,
 		}
 
 		self.Store.CreateOrder(order)
@@ -377,6 +382,7 @@ type OrderForm struct {
 	BuyDelay int           `json:"buydelay" binding:"required"`
 	State    string        `json:"estado" binding:"required"`
 	Usage    string        `json:"usage"`
+	Ref      string        `json:"reference"`
 	Games    []string      `json:"games"`
 	Extra    []string      `json:"extra"`
 }
