@@ -6,114 +6,159 @@ import (
 	"github.com/googollee/go-socket.io"
 	"gopkg.in/mgo.v2/bson"
 
-	"encoding/json"
 	"strings"
 	"time"
 )
 
+type MessageBuilder func(string) map[string]interface{}
+
+type ChannelMessage struct {
+	Channel string
+	Message string
+}
+
+type PackedMessage struct {
+	Channel string
+	Message map[string]interface{}
+}
+
+// Anonymous message builder.
+func anonymousMessage(str string) map[string]interface{} {
+	str = strings.TrimSpace(str)
+
+	if len(str) >= 200 {
+		str = str[:200] + "..."
+	}
+
+	return map[string]interface{}{
+		"content":   str,
+		"user_id":   "guest",
+		"username":  "guest",
+		"avatar":    false,
+		"timestamp": time.Now().Unix(),
+	}
+}
+
+// Handle socket request authentication token.
+func handleTokenAuth(token, secret string, deps Deps) MessageBuilder {
+	if len(token) == 0 {
+		return anonymousMessage
+	}
+
+	signed, err := jwt.Parse(token, func(passed_token *jwt.Token) (interface{}, error) {
+		// since we only use the one private key to sign the tokens,
+		// we also only use its public counter part to verify
+		return []byte(secret), nil
+	})
+
+	if err != nil {
+		return anonymousMessage
+	}
+
+	claims := signed.Claims.(jwt.MapClaims)
+	sid := claims["user_id"].(string)
+	oid := bson.ObjectIdHex(sid)
+	usr, err := user.FindId(deps, oid)
+	if err != nil {
+		return anonymousMessage
+	}
+
+	return func(message string) map[string]interface{} {
+		message = strings.TrimSpace(message)
+
+		if len(message) >= 200 {
+			message = message[:200] + "..."
+		}
+
+		return map[string]interface{}{
+			"content":   message,
+			"user_id":   usr.Id,
+			"username":  usr.UserName,
+			"avatar":    usr.Image,
+			"timestamp": time.Now().Unix(),
+		}
+	}
+}
+
+// Pack a list of messages.
+func list(messages ...map[string]interface{}) map[string]interface{} {
+	return map[string]interface{}{
+		"list": messages,
+	}
+}
+
 // Handles a socket.io connection & performs some basic ops (auth, channel joining, etc.)
 func handleConnection(deps Deps) func(so socketio.Socket) {
 	log := deps.Log()
-	redis := deps.Cache()
 	secret, err := deps.Config().String("application.secret")
 
 	if err != nil {
 		log.Fatal("Could not get application secret. Can't handle auth.")
 	}
 
+	historic := map[string][]map[string]interface{}{}
+	history := make(chan PackedMessage, 100)
+
+	// History buffer consumer.
+	go func() {
+		for {
+			h := <-history
+
+			if _, exists := historic[h.Channel]; !exists {
+				historic[h.Channel] = []map[string]interface{}{}
+			}
+
+			// Shift first item in the historic
+			if len(historic[h.Channel]) >= 30 {
+				historic[h.Channel] = historic[h.Channel][1:]
+			}
+
+			historic[h.Channel] = append(historic[h.Channel], h.Message)
+		}
+	}()
+
 	return func(so socketio.Socket) {
 		token := so.Request().URL.Query().Get("token")
+		builder := handleTokenAuth(token, secret, deps)
 
-		if len(token) > 0 {
-			signed, err := jwt.Parse(token, func(passed_token *jwt.Token) (interface{}, error) {
-				// since we only use the one private key to sign the tokens,
-				// we also only use its public counter part to verify
-				return []byte(secret), nil
-			})
+		// Messaging buffer holding pending messages to broadcast progressively
+		messaging := make(chan ChannelMessage, 10)
 
-			if err == nil {
-				claims := signed.Claims.(jwt.MapClaims)
-				sid := claims["user_id"].(string)
-				oid := bson.ObjectIdHex(sid)
-				usr, err := user.FindId(deps, oid)
+		// Messaging buffer consumer.
+		go func() {
+			for {
+				m := <-messaging
 
-				if err == nil {
-					log.Debugf("Handled user %s connection.", usr.UserName)
+				// Build message to be sent over the wire.
+				message := builder(m.Message)
+				packed := list(message)
 
-					so.On("chat send", func(channel, message string) {
-						message = strings.TrimSpace(message)
+				so.Emit("chat "+m.Channel, packed)
+				so.BroadcastTo("chat", "chat "+m.Channel, packed)
 
-						if len(channel) < 1 || len(message) < 1 {
-							return
-						}
+				// Send to history
+				history <- PackedMessage{m.Channel, message}
 
-						if len(message) >= 200 {
-							message = message[:200] + "..."
-						}
-
-						one := map[string]interface{}{
-							"content":   message,
-							"user_id":   usr.Id,
-							"username":  usr.UserName,
-							"avatar":    usr.Image,
-							"timestamp": time.Now().Unix(),
-						}
-
-						chat := map[string]interface{}{
-							"list": []map[string]interface{}{
-								one,
-							},
-						}
-
-						so.Emit("chat "+channel, chat)
-
-						n, err := redis.Incr("chat:rates:m:" + usr.Id.Hex())
-						if err != nil {
-							log.Errorf("Error on rate limitter: %v", err)
-							return
-						}
-
-						if n == 1 {
-							redis.Expire("chat:rates:m:"+usr.Id.Hex(), 60)
-						}
-
-						if n > 10 {
-							log.Debugf("Rate limit exceeded by %s", usr.UserName)
-							return
-						}
-
-						if perSecond, err := redis.Exists("chat:rates:s:" + usr.Id.Hex()); perSecond && err == nil {
-							log.Debugf("Rate limit exceeded by %s, no more than one message per second.", usr.UserName)
-							return
-						}
-
-						so.BroadcastTo("chat", "chat "+channel, chat)
-
-						_, err = redis.Incr("chat:rates:s:" + usr.Id.Hex())
-						if err != nil {
-							log.Error(err)
-						}
-
-						redis.Expire("chat:rates:s:"+usr.Id.Hex(), 1)
-
-						// Async message saving.
-						msg := Message{
-							Room:    "chat",
-							Event:   "chat " + channel,
-							Message: one,
-						}
-
-						if _, err := redis.LPush(msg.RoomID(), msg.Encode()); err != nil {
-							log.Error("error:", err)
-						}
-
-						log.Debugf("Handling message %s to %s", message, channel)
-					})
-				}
+				// Rate limit.
+				time.Sleep(time.Second)
 			}
-		} else {
-			log.Debugf("Handled anonymous connection.")
-		}
+		}()
+
+		so.On("chat send", func(channel, message string) {
+			m := ChannelMessage{
+				Channel: channel,
+				Message: message,
+			}
+
+			messaging <- m
+		})
+
+		so.On("chat update-me", func(channel string) {
+			if hlist, exists := historic[channel]; exists {
+				packed := list(hlist...)
+				so.Emit("chat "+channel, packed)
+			}
+		})
 
 		so.Join("feed")
 		so.Join("post")
@@ -123,27 +168,6 @@ func handleConnection(deps Deps) func(so socketio.Socket) {
 
 		so.On("disconnection", func() {
 			log.Debugf("Diconnection handled.")
-		})
-
-		so.On("chat update-me", func(channel string) {
-			redis.LTrim("chat:"+channel, 0, 30)
-			last, err := redis.LRange("chat:"+channel, 0, 30)
-			if err == nil {
-				// Allocate space for messages list.
-				messages := Messages{
-					List: []map[string]interface{}{},
-				}
-
-				for i := len(last) - 1; i >= 0; i-- {
-					var m Message
-					if err := json.Unmarshal([]byte(last[i]), &m); err != nil {
-						continue
-					}
-					messages.List = append(messages.List, m.Message)
-				}
-
-				so.Emit("chat "+channel, messages)
-			}
 		})
 	}
 }
