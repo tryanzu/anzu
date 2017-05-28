@@ -31,11 +31,12 @@ func anonymousMessage(str string) map[string]interface{} {
 	}
 
 	return map[string]interface{}{
-		"content":   str,
-		"user_id":   "guest",
-		"username":  "guest",
-		"avatar":    false,
-		"timestamp": time.Now().Unix(),
+		"content":        str,
+		"user_id":        "guest",
+		"username":       "guest",
+		"avatar":         false,
+		"timestamp":      time.Now().Unix(),
+		"timestamp_nano": time.Now().UnixNano(),
 	}
 }
 
@@ -71,11 +72,12 @@ func handleTokenAuth(token, secret string, deps Deps) MessageBuilder {
 		}
 
 		return map[string]interface{}{
-			"content":   message,
-			"user_id":   usr.Id,
-			"username":  usr.UserName,
-			"avatar":    usr.Image,
-			"timestamp": time.Now().Unix(),
+			"content":        message,
+			"user_id":        usr.Id,
+			"username":       usr.UserName,
+			"avatar":         usr.Image,
+			"timestamp":      time.Now().Unix(),
+			"timestamp_nano": time.Now().UnixNano(),
 		}
 	}
 }
@@ -90,6 +92,7 @@ func list(messages ...map[string]interface{}) map[string]interface{} {
 // Handles a socket.io connection & performs some basic ops (auth, channel joining, etc.)
 func handleConnection(deps Deps) func(so socketio.Socket) {
 	log := deps.Log()
+	mgo := deps.Mgo()
 	secret, err := deps.Config().String("application.secret")
 
 	if err != nil {
@@ -98,6 +101,7 @@ func handleConnection(deps Deps) func(so socketio.Socket) {
 
 	historic := map[string][]map[string]interface{}{}
 	history := make(chan PackedMessage, 100)
+	registry := make(chan PackedMessage, 100)
 
 	// History buffer consumer.
 	go func() {
@@ -114,6 +118,29 @@ func handleConnection(deps Deps) func(so socketio.Socket) {
 			}
 
 			historic[h.Channel] = append(historic[h.Channel], h.Message)
+
+			go func() {
+				select {
+				case registry <- h:
+					log.Debug("Chat message got to the registry.")
+				case <-time.After(time.Second * 5):
+					log.Critical("Could not get chat to the registry.")
+				}
+			}()
+		}
+	}()
+
+	go func() {
+		for {
+			r := <-registry
+			ts := r.Message["timestamp_nano"].(int64)
+			message := r.Message
+			message["lag"] = time.Now().UnixNano() - ts
+			err := mgo.C("chat_messages").Insert(message)
+
+			if err != nil {
+				log.Criticalf("Could not log chat message: %v", err)
+			}
 		}
 	}()
 
