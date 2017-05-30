@@ -93,7 +93,7 @@ func BLeadToOrder(deps Deps, lead BLead) BLead {
 	}
 
 	usage = defs(lead.Answers, "usage", "unknown")
-	name = defs(lead.Answers, "name", "unknown")
+	name = defs(lead.Answers, "names", "unknown")
 	email = defs(lead.Answers, "email", "unknown")
 	phone = defs(lead.Answers, "phone", "unknown")
 	software = defs(lead.Answers, "software", "")
