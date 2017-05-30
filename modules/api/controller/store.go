@@ -12,6 +12,24 @@ import (
 	"time"
 )
 
+func UpsertBLead(c *gin.Context) {
+	var form store.BLead
+	if err := c.BindJSON(&form); err != nil {
+		c.JSON(400, gin.H{"status": "error", "message": err.Error()})
+		return
+	}
+
+	form.Address = c.ClientIP()
+
+	lead, err := store.UpsertBLead(deps.Container, form)
+	if err != nil {
+		c.JSON(400, gin.H{"status": "error", "message": err.Error()})
+		return
+	}
+
+	c.JSON(200, lead)
+}
+
 type StoreAPI struct {
 	Store *store.Module `inject:""`
 }

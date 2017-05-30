@@ -251,6 +251,7 @@ func (module *Module) Run() {
 		store := v1.Group("/store")
 		{
 			store.POST("/order", module.Store.PlaceOrder)
+			store.PUT("/order", controller.UpsertBLead)
 
 			// Cart routes
 			store.GET("/cart", module.CartFactory.Get)

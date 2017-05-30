@@ -31,10 +31,12 @@ type OrderModel struct {
 	Content    string          `bson:"content" json:"content"`
 	Budget     int             `bson:"budget" json:"budget"`
 	Currency   string          `bson:"currency" json:"currency"`
+	Priority   string          `bson:"priority,omitempty" json:"currency,omitempty"`
 	State      string          `bson:"state" json:"state"`
 	Usage      string          `bson:"usage" json:"usage"`
 	Reference  string          `bson:"reference" json:"reference"`
 	Games      []string        `bson:"games" json:"games"`
+	Challenges []string        `bson:"challenges,omitempty" json:"challenges,omitempty"`
 	Extra      []string        `bson:"extras" json:"extra"`
 	BuyDelay   int             `bson:"buydelay" json:"buydelay"`
 	Readed     []bson.ObjectId `bson:"readed" json:"-"`
