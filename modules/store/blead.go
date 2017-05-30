@@ -65,35 +65,52 @@ func IsBLeadCompleted(lead BLead) bool {
 }
 
 func BLeadToOrder(deps Deps, lead BLead) BLead {
-	name := lead.Answers["names"].(string)
-	email := lead.Answers["email"].(string)
-	phone := lead.Answers["phone"].(string)
-	software := lead.Answers["software"].(string)
-	content := lead.Answers["comments"].(string)
-	budget := lead.Answers["budget"].(float64)
-	priority := lead.Answers["priority"].(string)
-	location := lead.Answers["location"].(string)
-	usage := lead.Answers["usage"].(string)
-	icomponents := lead.Answers["components"].([]interface{})
-	ichallenges := lead.Answers["challenges"].([]interface{})
-	games := ""
+	var usage, name, email, phone, software, content, priority, location, games string
+	var components, challenges []string
 
-	if g, exists := lead.Answers["gameTypes"]; exists {
-		games = g.(string)
+	defs := func(m map[string]interface{}, name, def string) string {
+		if v, exists := m[name]; exists {
+			return v.(string)
+		}
+
+		return def
 	}
+
+	defl := func(m map[string]interface{}, name string) []string {
+		if v, exists := m[name]; exists {
+			switch t := v.(type) {
+			case []interface{}:
+				list := []string{}
+				for _, str := range t {
+					list = append(list, str.(string))
+				}
+
+				return list
+			}
+		}
+
+		return []string{}
+	}
+
+	usage = defs(lead.Answers, "usage", "unknown")
+	name = defs(lead.Answers, "name", "unknown")
+	email = defs(lead.Answers, "email", "unknown")
+	phone = defs(lead.Answers, "phone", "unknown")
+	software = defs(lead.Answers, "software", "")
+	content = defs(lead.Answers, "comments", "")
+	priority = defs(lead.Answers, "priority", "unknown")
+	location = defs(lead.Answers, "location", "unknown")
+	games = defs(lead.Answers, "gameTypes", "unknown")
+	components = defl(lead.Answers, "components")
+	challenges = defl(lead.Answers, "challenges")
 
 	if len(software) > 0 {
 		content = content + "\n\n Software requerido: " + software
 	}
 
-	components := make([]string, len(icomponents))
-	for i, item := range icomponents {
-		components[i] = item.(string)
-	}
-
-	challenges := make([]string, len(ichallenges))
-	for i, item := range ichallenges {
-		challenges[i] = item.(string)
+	budget := float64(0)
+	if v, exists := lead.Answers["budget"]; exists {
+		budget = v.(float64)
 	}
 
 	order := OrderModel{
