@@ -22,6 +22,16 @@ func (self *One) Data() *OrderModel {
 	return self.data
 }
 
+func (self *One) LoadBLead() {
+	var blead BLead
+	db := self.di.Mongo.Database
+	err := db.C("blead").FindId(self.data.Id).Select(bson.M{"changes": 0}).One(&blead)
+
+	if err == nil {
+		self.data.BLead = blead
+	}
+}
+
 func (self *One) LoadDuplicates() {
 
 	list := make([]OrderModel, 0)

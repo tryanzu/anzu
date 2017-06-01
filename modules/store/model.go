@@ -55,6 +55,7 @@ type OrderModel struct {
 	RelatedUsers interface{}  `bson:"-" json:"related_users,omitempty"`
 	Duplicates   []OrderModel `bson:"-" json:"duplicates,omitempty"`
 	Invoice      *Invoice     `bson:"-" json:"invoice,omitempty"`
+	BLead        BLead        `bson:"-" json:"blead,omitempty"`
 }
 
 type OrderUserModel struct {
