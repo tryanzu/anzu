@@ -160,7 +160,6 @@ func handleConnection(deps Deps) func(so socketio.Socket) {
 				message := builder(m.Message)
 				packed := list(message)
 
-				so.Emit("chat "+m.Channel, packed)
 				so.BroadcastTo("chat", "chat "+m.Channel, packed)
 
 				// Send to history
