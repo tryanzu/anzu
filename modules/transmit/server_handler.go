@@ -6,6 +6,7 @@ import (
 	"github.com/googollee/go-socket.io"
 	"gopkg.in/mgo.v2/bson"
 
+	"errors"
 	"strings"
 	"time"
 )
@@ -41,9 +42,9 @@ func anonymousMessage(str string) map[string]interface{} {
 }
 
 // Handle socket request authentication token.
-func handleTokenAuth(token, secret string, deps Deps) MessageBuilder {
+func handleTokenAuth(token, secret string, deps Deps) (MessageBuilder, error) {
 	if len(token) == 0 {
-		return anonymousMessage
+		return anonymousMessage, errors.New("Empty token.")
 	}
 
 	signed, err := jwt.Parse(token, func(passed_token *jwt.Token) (interface{}, error) {
@@ -54,7 +55,7 @@ func handleTokenAuth(token, secret string, deps Deps) MessageBuilder {
 
 	if err != nil {
 		deps.Log().Errorf("Could not authenticate user, err: %v\n\nToken: %v", err, token)
-		return anonymousMessage
+		return anonymousMessage, err
 	}
 
 	claims := signed.Claims.(jwt.MapClaims)
@@ -62,7 +63,7 @@ func handleTokenAuth(token, secret string, deps Deps) MessageBuilder {
 	oid := bson.ObjectIdHex(sid)
 	usr, err := user.FindId(deps, oid)
 	if err != nil {
-		return anonymousMessage
+		return anonymousMessage, err
 	}
 
 	return func(message string) map[string]interface{} {
@@ -80,7 +81,7 @@ func handleTokenAuth(token, secret string, deps Deps) MessageBuilder {
 			"timestamp":      time.Now().Unix(),
 			"timestamp_nano": time.Now().UnixNano(),
 		}
-	}
+	}, nil
 }
 
 // Pack a list of messages.
@@ -147,7 +148,14 @@ func handleConnection(deps Deps) func(so socketio.Socket) {
 
 	return func(so socketio.Socket) {
 		token := so.Request().URL.Query().Get("token")
-		builder := handleTokenAuth(token, secret, deps)
+		builder, err := handleTokenAuth(token, secret, deps)
+
+		// Reject invalid connections.
+		if err != nil {
+			log.Debug("Could not handle user auth: %v", err)
+			so.Emit("disconnect")
+			return
+		}
 
 		// Messaging buffer holding pending messages to broadcast progressively
 		messaging := make(chan ChannelMessage, 10)
