@@ -152,8 +152,7 @@ func handleConnection(deps Deps) func(so socketio.Socket) {
 
 		// Reject invalid connections.
 		if err != nil {
-			log.Debug("Could not handle user auth: %v", err)
-			so.Emit("disconnect")
+			log.Debugf("Could not handle user auth: %v", err)
 			return
 		}
 

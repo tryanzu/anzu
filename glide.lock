@@ -1,14 +1,14 @@
 hash: e6c3f16d3fa5c2837fc776abf7cc1a5b7c46095b1a6cfe68283e8f6b51fddea2
-updated: 2017-05-15T17:05:27.089561583-05:00
+updated: 2017-06-03T14:00:39.800274496-05:00
 imports:
 - name: github.com/abiosoft/ishell
-  version: 7c65f7cab11c321b775e99dc897a5d640a170f7d
+  version: 882d93fdb8756b26764a5e225dbcf0a416375fc3
 - name: github.com/algolia/algoliasearch-client-go
   version: 72addd6549095b979c0f9aab865615718e94a4c6
   subpackages:
   - algoliasearch
 - name: github.com/blevesearch/bleve
-  version: 5c9915c6f41b05317744a2ec0340a2f71973025a
+  version: 3351c3b0467c10fb0968118fd5bad535c6e69fbc
   subpackages:
   - analysis
   - analysis/analyzer/standard
@@ -43,20 +43,25 @@ imports:
   - search/searcher
 - name: github.com/blevesearch/go-porterstemmer
   version: 23a2c8e5cf1f380f27722c6d2ae8896431dc7d0e
+  repo: https://github.com/blevesearch/go-porterstemmer
 - name: github.com/blevesearch/segment
-  version: 762005e7a34fd909a84586299f1dd457371d36ee
+  version: db70c57796cc8c310613541dfade3dce627d09c7
+  repo: https://github.com/blevesearch/segment
 - name: github.com/boj/redistore
   version: 4562487a4bee9a7c272b72bfaeda4917d0a47ab9
 - name: github.com/boltdb/bolt
-  version: e9cf4fae01b5a8ff89d0ec6b32f0d9c9f79aefdd
+  version: 144418e1475d8bf7abbdc48583500f1a20c62ea7
+  repo: https://github.com/boltdb/bolt
 - name: github.com/brandfolder/gin-gorelic
   version: b3200fd6d4c7c434fd4d4d7ecb39a3c43aa8253c
 - name: github.com/cactus/go-statsd-client
-  version: d8eabe07bc70ff9ba6a56836cde99d1ea3d005f7
+  version: 1139cdac1a56e404b5382e3a3503a2c587d2c0c3
   subpackages:
   - statsd
 - name: github.com/certifi/gocertifi
   version: a9c833d2837d3b16888d55d5aafa9ffe9afb22b0
+- name: github.com/chzyer/readline
+  version: 41eea22f717c616615e1e59aa06cf831f9901f35
 - name: github.com/CloudCom/fireauth
   version: a9bc3901b2ed3797c49c67d78f748a69806cc237
 - name: github.com/cosn/firebase
@@ -73,6 +78,8 @@ imports:
   version: cc1aa653e50f6a9893bcaef89e673e5b24e1e97b
 - name: github.com/facebookgo/structtag
   version: 217e25fb96916cc60332e399c9aa63f5c422ceed
+- name: github.com/fatih/color
+  version: 62e9147c64a1ed519147b62a56a14e83e2be02c1
 - name: github.com/fernandez14/go-enlacefiscal
   version: efc34ef617b29a746f5dea729377a637d6a3144b
 - name: github.com/fernandez14/go-siftscience
@@ -82,14 +89,14 @@ imports:
 - name: github.com/ftrvxmtrx/gravatar
   version: 5aaa334f4e974f251f8049520e0decd9b50ae53f
 - name: github.com/garyburd/redigo
-  version: 433969511232c397de61b1442f9fd49ec06ae9ba
+  version: 95d11dba2d44531bdb8022752b98912baafae03a
   subpackages:
   - internal
   - redis
 - name: github.com/getsentry/raven-go
-  version: 5c07ee42021d8df0718f06bc7ea6b17123a44f9c
+  version: 4fa2ac0d29f801e79a063c0da82d37b5ff2873b2
 - name: github.com/gin-gonic/contrib
-  version: ffa12cf90b52a4af3ae604f6452e61f8218a517c
+  version: d4fc5a96cc0d29cb0e862bb1312dd6f4fedfcaee
   subpackages:
   - sessions
 - name: github.com/gin-gonic/gin
@@ -116,7 +123,7 @@ imports:
   - transport
   - websocket
 - name: github.com/googollee/go-socket.io
-  version: e9f0a9b7a61267e1476f9f0a0429337813c39edd
+  version: 5447e71f36d394766bf855d5714a487596809f0d
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/securecookie
@@ -139,7 +146,7 @@ imports:
   - language/typeInfo
   - language/visitor
 - name: github.com/hashicorp/consul
-  version: ad40a855bd5003eb5d4c48f791479828d6a9393e
+  version: 240413f5d6c0b077376dc9fb184b2e4823c7f812
   subpackages:
   - api
   - watch
@@ -148,7 +155,7 @@ imports:
 - name: github.com/hashicorp/go-rootcerts
   version: 6bb64b370b90e7ef1fa532be9e591a81c3493e00
 - name: github.com/hashicorp/serf
-  version: 65c2babe73c7a096cd24e9eeec67613eb4e436c9
+  version: dfab144618a063232d5753eaa4250a09865106c5
   subpackages:
   - coordinate
 - name: github.com/hjr265/postmark.go
@@ -178,9 +185,12 @@ imports:
 - name: github.com/manucorporat/sse
   version: ee05b128a739a0fb76c7ebd3ae4810c1de808d6d
 - name: github.com/markbates/goth
-  version: d26e8742a1d6ebc4978e6dc8d4b8e32f7f6fb6fb
+  version: c04864b86001affde4fd368f960f698a27fb9d13
   subpackages:
   - providers/facebook
+- name: github.com/mattn/go-colorable
+  version: 5411d3eea5978e6cdc258b30de592b60df6aba96
+  repo: https://github.com/mattn/go-colorable
 - name: github.com/mattn/go-isatty
   version: fc9e8d8ef48496124e79ae0df75490096eccf6fe
 - name: github.com/messagebird/go-rest-api
@@ -188,7 +198,7 @@ imports:
 - name: github.com/micro/go-log
   version: cbfa9447f9b655f8e66583237e51f40ca9bff860
 - name: github.com/micro/go-micro
-  version: 4cb22b59697baa5a526e335e68a17c4e26ab8712
+  version: 097395c5cbcce37d0d8ee673163a6a3f62824c4a
   subpackages:
   - broker
   - broker/codec
@@ -228,31 +238,30 @@ imports:
 - name: github.com/pborman/uuid
   version: 1b00554d822231195d1babd97ff4a781231955c9
 - name: github.com/pebbe/zmq4
-  version: 7157c0d6df4e6bfcae60a6f20cffaee88ac1ab30
+  version: 651d7b11cd31b16fb4c76741c234e258b6a8039b
 - name: github.com/pmezard/go-difflib
   version: 792786c7400a136282c1664665ae0a8db921c6c2
   subpackages:
   - difflib
 - name: github.com/robfig/cron
-  version: df38d32658d8788cd446ba74db4bb5375c4b0cb3
+  version: 736158dc09e10f1911ca3a1e1b01f11b566ce5db
 - name: github.com/rs/cors
-  version: 2d7dd2a10331137ae3f931ba08c21fd00cbf208d
-- name: github.com/rs/xhandler
-  version: ed27b6fd65218132ee50cd95f38474a3d8a2cd12
+  version: bf64c5349c0f7e5e1554921e798e052958e0fe2f
 - name: github.com/satori/go.uuid
   version: 5bf94b69c6b68ee1b541973bb8e1144db23a194b
 - name: github.com/spf13/cobra
-  version: 4cdb38c072b86bf795d2c81de50784d9fdd6eb77
+  version: 8d4ce3549a0bf0e3569df3aae7423b7743cd05a9
 - name: github.com/spf13/pflag
   version: e57e3eeb33f795204c1ca35f56c44f83227c6e66
 - name: github.com/steveyen/gtreap
   version: 0abe01ef9be25c4aedc174758ec2d917314d6d70
+  repo: https://github.com/steveyen/gtreap
 - name: github.com/stretchr/testify
   version: f390dcf405f7b83c997eac1b06768bb9f44dec18
   subpackages:
   - assert
 - name: github.com/stripe/stripe-go
-  version: ebb464e72f7a61c02355a409e6e6e1c0fb4010ce
+  version: 21787176ce9293820f3169b29b8d7fe92afb1a5a
   subpackages:
   - account
   - balance
@@ -273,6 +282,7 @@ imports:
   - fileupload
   - invoice
   - invoiceitem
+  - loginlink
   - order
   - orderitem
   - orderreturn
@@ -296,7 +306,7 @@ imports:
 - name: github.com/xuyu/goredis
   version: 89fbe9474b3758ff3adf0b7b29c95aeed115fb7b
 - name: golang.org/x/crypto
-  version: ab89591268e0c8b748cbe4047b00197516011af5
+  version: e1a4589e7d3ea14a3352255d04b6f1a418845e5e
   subpackages:
   - ssh
 - name: golang.org/x/net
@@ -306,20 +316,20 @@ imports:
   - html
   - html/atom
 - name: golang.org/x/oauth2
-  version: ad516a297a9f2a74ecc244861b298c94bdd28b9d
+  version: f047394b6d14284165300fd82dad67edb3a4d7f6
   subpackages:
   - internal
 - name: golang.org/x/sys
-  version: 1e99a4f9d247b28c670884b9a8d6801f39a47b77
+  version: b90f89a1e7a9c1f6b918820b3daa7f08488c8594
   subpackages:
   - unix
 - name: golang.org/x/text
-  version: 19e51611da83d6be54ddafce4a4af510cb3e9ea4
+  version: 5ee49cfe751141f8017047bab800d1f528ee3be1
   subpackages:
   - transform
   - unicode/norm
 - name: google.golang.org/appengine
-  version: 170382fa85b10b94728989dfcf6cc818b335c952
+  version: a2f4131514e563cedfdb6e7d267df9ad48591e93
   subpackages:
   - internal
   - internal/base
@@ -345,24 +355,22 @@ imports:
   - internal/scram
 - name: gopkg.in/op/go-logging.v1
   version: b2cb9fa56473e98db8caba80237377e83fe44db5
-- name: gopkg.in/readline.v1
-  version: 62c6fe6193755f722b8b8788aa7357be55a50ff1
 - name: gopkg.in/yaml.v2
   version: cd8b52f8269e0feb286dfeef29f8fe4d5b397e0b
 testImports:
 - name: github.com/gopherjs/gopherjs
-  version: 9659c814f1d54d63f9c623449a7111d3864c1361
+  version: 7cde3d36aea3e1b3be7827c4dcbe6bbae73d012e
   subpackages:
   - js
 - name: github.com/jtolds/gls
   version: 77f18212c9c7edc9bd6a33d383a7b545ce62f064
 - name: github.com/smartystreets/assertions
-  version: f8459f92181409546d2762c9e9c4bedc23c92d76
+  version: 8d53f0381cdc56c7e0f06f4995d21cd04c5a53a8
   subpackages:
   - internal/go-render/render
   - internal/oglematchers
 - name: github.com/smartystreets/goconvey
-  version: af8e7d560364b90f732a1d119d17b5506e50447d
+  version: 9e8dc3f972df6c8fcc0375ef492c24d0bb204857
   subpackages:
   - convey
   - convey/gotest
