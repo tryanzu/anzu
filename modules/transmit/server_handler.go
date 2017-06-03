@@ -53,6 +53,7 @@ func handleTokenAuth(token, secret string, deps Deps) MessageBuilder {
 	})
 
 	if err != nil {
+		deps.Log().Errorf("Could not authenticate user, err: %v", err)
 		return anonymousMessage
 	}
 
