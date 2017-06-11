@@ -1,14 +1,14 @@
-hash: e6c3f16d3fa5c2837fc776abf7cc1a5b7c46095b1a6cfe68283e8f6b51fddea2
-updated: 2017-06-03T14:00:39.800274496-05:00
+hash: 5b064c57636a5764e48b05ccc59b5252866e477031cb8034a2df6b9b4b7e9bb0
+updated: 2017-06-10T19:38:08.199012215-05:00
 imports:
 - name: github.com/abiosoft/ishell
   version: 882d93fdb8756b26764a5e225dbcf0a416375fc3
 - name: github.com/algolia/algoliasearch-client-go
-  version: 72addd6549095b979c0f9aab865615718e94a4c6
+  version: 99a58b624928559d5104dcbffd82953b55e001fe
   subpackages:
   - algoliasearch
 - name: github.com/blevesearch/bleve
-  version: 3351c3b0467c10fb0968118fd5bad535c6e69fbc
+  version: 48ac9862db1c5149fc1837464b0e6ea752657d3a
   subpackages:
   - analysis
   - analysis/analyzer/standard
@@ -71,7 +71,7 @@ imports:
   subpackages:
   - spew
 - name: github.com/dgrijalva/jwt-go
-  version: 6c8dedd55f8a2e41f605de6d5d66e51ed1f299fc
+  version: a539ee1a749a2b895533f979515ac7e6e0f5b650
 - name: github.com/dustin/go-humanize
   version: 259d2a102b871d17f30e3cd9881a642961a1e486
 - name: github.com/facebookgo/inject
@@ -94,7 +94,7 @@ imports:
   - internal
   - redis
 - name: github.com/getsentry/raven-go
-  version: 4fa2ac0d29f801e79a063c0da82d37b5ff2873b2
+  version: b9f2aa2550bb0e89ab351d6fd59decd608b84ac1
 - name: github.com/gin-gonic/contrib
   version: d4fc5a96cc0d29cb0e862bb1312dd6f4fedfcaee
   subpackages:
@@ -146,7 +146,7 @@ imports:
   - language/typeInfo
   - language/visitor
 - name: github.com/hashicorp/consul
-  version: 240413f5d6c0b077376dc9fb184b2e4823c7f812
+  version: 7696a9f8be6a9e03b2074b4c88eee5ed3c4f0599
   subpackages:
   - api
   - watch
@@ -155,7 +155,7 @@ imports:
 - name: github.com/hashicorp/go-rootcerts
   version: 6bb64b370b90e7ef1fa532be9e591a81c3493e00
 - name: github.com/hashicorp/serf
-  version: dfab144618a063232d5753eaa4250a09865106c5
+  version: 781adcfd703795082facaacaf76bbef9b03897d3
   subpackages:
   - coordinate
 - name: github.com/hjr265/postmark.go
@@ -185,7 +185,7 @@ imports:
 - name: github.com/manucorporat/sse
   version: ee05b128a739a0fb76c7ebd3ae4810c1de808d6d
 - name: github.com/markbates/goth
-  version: c04864b86001affde4fd368f960f698a27fb9d13
+  version: b42646a8c004dbf41e95cc94838a7c73ba9097d8
   subpackages:
   - providers/facebook
 - name: github.com/mattn/go-colorable
@@ -221,7 +221,7 @@ imports:
   - aws
   - s3
 - name: github.com/mitchellh/hashstructure
-  version: 9204ce590301a868e3e86938bc12eadd416b211e
+  version: 2bca23e0e452137f789efbc8610126fd8b94f73b
 - name: github.com/newrelic/go-agent
   version: 29ec3cd1bb2f21d21d36da37dae52695cb2c3a17
   subpackages:
@@ -246,13 +246,15 @@ imports:
 - name: github.com/robfig/cron
   version: 736158dc09e10f1911ca3a1e1b01f11b566ce5db
 - name: github.com/rs/cors
-  version: bf64c5349c0f7e5e1554921e798e052958e0fe2f
+  version: 8dd4211afb5d08dbb39a533b9bb9e4b486351df6
 - name: github.com/satori/go.uuid
   version: 5bf94b69c6b68ee1b541973bb8e1144db23a194b
 - name: github.com/spf13/cobra
-  version: 8d4ce3549a0bf0e3569df3aae7423b7743cd05a9
+  version: d7cfb134748502f60bc1797cd26fcc3e4eb4b927
 - name: github.com/spf13/pflag
   version: e57e3eeb33f795204c1ca35f56c44f83227c6e66
+- name: github.com/stackimpact/stackimpact-go
+  version: c1b1c80d824719d3707b33ccdf7bec89695957f2
 - name: github.com/steveyen/gtreap
   version: 0abe01ef9be25c4aedc174758ec2d917314d6d70
   repo: https://github.com/steveyen/gtreap
@@ -306,7 +308,7 @@ imports:
 - name: github.com/xuyu/goredis
   version: 89fbe9474b3758ff3adf0b7b29c95aeed115fb7b
 - name: golang.org/x/crypto
-  version: e1a4589e7d3ea14a3352255d04b6f1a418845e5e
+  version: e7ba82683099cae71475961448ab8f903ea77c26
   subpackages:
   - ssh
 - name: golang.org/x/net
@@ -320,7 +322,7 @@ imports:
   subpackages:
   - internal
 - name: golang.org/x/sys
-  version: b90f89a1e7a9c1f6b918820b3daa7f08488c8594
+  version: 0b25a408a50076fbbcae6b7ac0ea5fbb0b085e79
   subpackages:
   - unix
 - name: golang.org/x/text
@@ -359,13 +361,13 @@ imports:
   version: cd8b52f8269e0feb286dfeef29f8fe4d5b397e0b
 testImports:
 - name: github.com/gopherjs/gopherjs
-  version: 7cde3d36aea3e1b3be7827c4dcbe6bbae73d012e
+  version: dc374d32704510cb387457180ca9d5193978b555
   subpackages:
   - js
 - name: github.com/jtolds/gls
   version: 77f18212c9c7edc9bd6a33d383a7b545ce62f064
 - name: github.com/smartystreets/assertions
-  version: 8d53f0381cdc56c7e0f06f4995d21cd04c5a53a8
+  version: 4ea54c1f28ad3ae597e76607dea3871fa177e263
   subpackages:
   - internal/go-render/render
   - internal/oglematchers

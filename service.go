@@ -38,6 +38,7 @@ import (
 	"github.com/op/go-logging"
 	"github.com/robfig/cron"
 	"github.com/spf13/cobra"
+	"github.com/stackimpact/stackimpact-go"
 	"github.com/stripe/stripe-go/client"
 	"github.com/xuyu/goredis"
 
@@ -365,6 +366,12 @@ func main() {
 		includes a socket-io instance and a zeromq pull server
         `,
 		Run: func(cmd *cobra.Command, args []string) {
+			agent := stackimpact.NewAgent()
+			agent.Start(stackimpact.Options{
+				AgentKey: "30116b8c76c87e84ef9f761271339605bb23b8df",
+				AppName:  "Blacker",
+			})
+
 			socketPort, err := configService.String("ports.socket")
 			if err != nil {
 				log.Fatal("Socket port not found in config.")
