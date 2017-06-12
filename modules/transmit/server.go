@@ -15,7 +15,7 @@ func RunServer(deps Deps, socketPort, pullPort string) {
 	var wg sync.WaitGroup
 	wg.Add(2)
 
-	redis := deps.Cache()
+	//redis := deps.Cache()
 	messages := make(chan Message, 100)
 
 	go func() {
@@ -46,15 +46,6 @@ func RunServer(deps Deps, socketPort, pullPort string) {
 
 			// Once message is unmarshaled send it back to processing channel
 			messages <- message
-
-			// Async message saving.
-			go func() {
-				if message.Room == "chat" {
-					if _, err := redis.LPush(message.RoomID(), msg); err != nil {
-						log.Println("error:", err)
-					}
-				}
-			}()
 
 			log.Println("Broadcasted message to " + message.Room)
 		}

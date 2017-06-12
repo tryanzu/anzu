@@ -161,8 +161,7 @@ func handleConnection(deps Deps) func(so socketio.Socket) {
 
 		// Messaging buffer consumer.
 		go func() {
-			for {
-				m := <-messaging
+			for m := range messaging {
 
 				// Build message to be sent over the wire.
 				message := builder(m.Message)
@@ -202,6 +201,8 @@ func handleConnection(deps Deps) func(so socketio.Socket) {
 
 		so.On("disconnection", func() {
 			log.Debugf("Diconnection handled.")
+
+			close(messaging)
 		})
 	}
 }
