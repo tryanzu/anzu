@@ -61,16 +61,15 @@ func RunServer(deps Deps, socketPort, pullPort string) {
 			log.Fatal(err)
 		}
 
-		server.On("connection", handleConnection(deps))
+		handler := handleConnection(deps)
+
+		server.On("connection", handler)
 		server.On("error", func(so socketio.Socket, err error) {
 			log.Println("error:", err)
 		})
 
 		go func() {
-			for {
-				msg := <-messages
-				log.Printf("%v\n", msg)
-
+			for msg := range messages {
 				go server.BroadcastTo(msg.Room, msg.Event, msg.Message)
 			}
 		}()

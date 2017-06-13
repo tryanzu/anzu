@@ -9,6 +9,7 @@ import (
 	"errors"
 	"strings"
 	"time"
+	"github.com/gorilla/context"
 )
 
 type MessageBuilder func(string) map[string]interface{}
@@ -107,9 +108,7 @@ func handleConnection(deps Deps) func(so socketio.Socket) {
 
 	// History buffer consumer.
 	go func() {
-		for {
-			h := <-history
-
+		for h := range history {
 			if _, exists := historic[h.Channel]; !exists {
 				historic[h.Channel] = []map[string]interface{}{}
 			}
@@ -133,8 +132,7 @@ func handleConnection(deps Deps) func(so socketio.Socket) {
 	}()
 
 	go func() {
-		for {
-			r := <-registry
+		for r := range registry {
 			ts := r.Message["timestamp_nano"].(int64)
 			message := r.Message
 			message["lag"] = time.Now().UnixNano() - ts
@@ -149,6 +147,9 @@ func handleConnection(deps Deps) func(so socketio.Socket) {
 	return func(so socketio.Socket) {
 		token := so.Request().URL.Query().Get("token")
 		builder, err := handleTokenAuth(token, secret, deps)
+
+		// Need to clear context request?...
+		context.Clear(so.Request())
 
 		// Reject invalid connections.
 		if err != nil {
@@ -203,7 +204,6 @@ func handleConnection(deps Deps) func(so socketio.Socket) {
 
 		so.On("disconnection", func() {
 			log.Debugf("Diconnection handled.")
-
 			close(messaging)
 		})
 	}
