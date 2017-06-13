@@ -175,6 +175,8 @@ func handleConnection(deps Deps) func(so socketio.Socket) {
 				// Rate limit.
 				time.Sleep(time.Second)
 			}
+
+			return
 		}()
 
 		so.On("chat send", func(channel, message string) {

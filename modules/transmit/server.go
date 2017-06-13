@@ -3,7 +3,6 @@ package transmit
 import (
 	"github.com/googollee/go-socket.io"
 	zmq "github.com/pebbe/zmq4"
-	"github.com/rs/cors"
 
 	"encoding/json"
 	"log"
@@ -78,13 +77,9 @@ func RunServer(deps Deps, socketPort, pullPort string) {
 
 		log.Println("Started sockets server at localhost:" + socketPort + "...")
 
-		mux := http.NewServeMux()
-		mux.Handle("/socket.io/", server)
-		handler := cors.New(cors.Options{
-			AllowCredentials: true,
-		}).Handler(mux)
+		http.Handle("/socket.io/", server)
 
-		log.Fatal(http.ListenAndServe(":"+socketPort, handler))
+		log.Fatal(http.ListenAndServe(":"+socketPort, nil))
 	}()
 
 	log.Println("Waiting To Finish")
