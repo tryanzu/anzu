@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"sync"
+	"time"
 )
 
 func RunServer(deps Deps, socketPort, pullPort string) {
@@ -78,7 +79,15 @@ func RunServer(deps Deps, socketPort, pullPort string) {
 
 		http.Handle("/socket.io/", server)
 
-		log.Fatal(http.ListenAndServe(":"+socketPort, nil))
+		s := &http.Server{
+			Addr:           ":"+socketPort,
+			Handler:        nil,
+			ReadTimeout:    60 * time.Second,
+			WriteTimeout:   60 * time.Second,
+			MaxHeaderBytes: 1 << 20,
+		}
+
+		log.Fatal(s.ListenAndServe())
 	}()
 
 	log.Println("Waiting To Finish")
