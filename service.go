@@ -24,7 +24,6 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/search"
 	"github.com/fernandez14/spartangeek-blacker/modules/security"
 	"github.com/fernandez14/spartangeek-blacker/modules/store"
-	"github.com/fernandez14/spartangeek-blacker/modules/transmit"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/getsentry/raven-go"
@@ -253,6 +252,11 @@ func main() {
         in the specified env port
         `,
 		Run: func(cmd *cobra.Command, args []string) {
+			agent := stackimpact.NewAgent()
+			agent.Start(stackimpact.Options{
+				AgentKey: "30116b8c76c87e84ef9f761271339605bb23b8df",
+				AppName:  "blacker.api",
+			})
 
 			// Populate dependencies using the already instantiated DI
 			api.Populate(g)
@@ -359,41 +363,12 @@ func main() {
 		},
 	}
 
-	var cmdRunTransmit = &cobra.Command{
-		Use:   "transmit",
-		Short: "Run transmit server",
-		Long: `Run transmit server, which
-		includes a socket-io instance and a zeromq pull server
-        `,
-		Run: func(cmd *cobra.Command, args []string) {
-			agent := stackimpact.NewAgent()
-			agent.Start(stackimpact.Options{
-				AgentKey: "30116b8c76c87e84ef9f761271339605bb23b8df",
-				AppName:  "Blacker",
-			})
-
-			socketPort, err := configService.String("ports.socket")
-			if err != nil {
-				log.Fatal("Socket port not found in config.")
-			}
-
-			pullPort, err := configService.String("zmq.pull")
-
-			if err != nil {
-				log.Fatal("ZMQ pull port not found in config.")
-			}
-
-			transmit.RunServer(deps.Container, socketPort, pullPort)
-		},
-	}
-
 	var rootCmd = &cobra.Command{Use: "blacker"}
 	rootCmd.AddCommand(cmdApi)
 	rootCmd.AddCommand(cmdSyncGamification)
 	rootCmd.AddCommand(cmdSyncRanking)
 	rootCmd.AddCommand(cmdJobs)
 	rootCmd.AddCommand(cmdRunRoutine)
-	rootCmd.AddCommand(cmdRunTransmit)
 	rootCmd.AddCommand(shellCmd)
 	rootCmd.AddCommand(cmdPreprocessor)
 	rootCmd.Execute()
