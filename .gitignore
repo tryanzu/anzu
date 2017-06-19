@@ -16,3 +16,4 @@ experiments/xxx.go
 experiments/
 .DS_Store
 vendor
+/.idea
