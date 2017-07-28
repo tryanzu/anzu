@@ -46,7 +46,6 @@ func (this OrdersAPI) Get(c *gin.Context) {
 	meta := bson.M{}
 
 	if search != "" {
-
 		meta = bson.M{
 			"$or": []bson.M{
 				{
@@ -124,7 +123,6 @@ func (this OrdersAPI) GetOne(c *gin.Context) {
 	address_id, exists := order.Shipping.Meta["related_id"]
 
 	if exists {
-
 		address, err := customer.Address(address_id.(bson.ObjectId))
 
 		if err != nil {

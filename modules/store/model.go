@@ -43,7 +43,6 @@ type OrderModel struct {
 	UserReaded bool            `bson:"-" json:"readed"`
 	Messages   Messages        `bson:"messages,omitempty" json:"messages"`
 	Tags       []TagModel      `bson:"tags,omitempty" json:"tags"`
-	Activities []ActivityModel `bson:"activities,omitempty" json:"activities"`
 	Pipeline   PipelineModel   `bson:"pipeline,omitempty" json:"pipeline"`
 	Trusted    bool            `bson:"trusted_flag" json:"trusted_flag"`
 	Favorite   bool            `bson:"favorite_flag" json:"favorite_flag"`
@@ -56,6 +55,7 @@ type OrderModel struct {
 	Duplicates   []OrderModel `bson:"-" json:"duplicates,omitempty"`
 	Invoice      *Invoice     `bson:"-" json:"invoice,omitempty"`
 	BLead        BLead        `bson:"-" json:"blead,omitempty"`
+	Activities   Activities   `bson:"-" json:"activities,omitempty"`
 }
 
 type OrderUserModel struct {

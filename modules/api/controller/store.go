@@ -129,6 +129,7 @@ func (self StoreAPI) One(c *gin.Context) {
 	// Load assets
 	order.LoadAssets()
 	order.LoadDuplicates()
+	order.LoadActivities()
 	order.LoadBLead()
 
 	data := store.HasBeenRead(*order.Data(), user.Id)

@@ -18,7 +18,6 @@ type One struct {
 }
 
 func (self *One) Data() *OrderModel {
-
 	return self.data
 }
 
@@ -29,6 +28,17 @@ func (self *One) LoadBLead() {
 
 	if err == nil {
 		self.data.BLead = blead
+	}
+}
+
+func (self *One) LoadActivities() {
+	var list Activities
+
+	db := self.di.Mongo.Database
+	err := db.C("activities").Find(bson.M{"lead_id": self.data.Id}).All(&list)
+
+	if err == nil {
+		self.data.Activities = list
 	}
 }
 
@@ -113,7 +123,6 @@ func (self *One) LoadAssets() {
 }
 
 func (self *One) LoadInvoice() {
-
 	var invoice Invoice
 
 	database := self.di.Mongo.Database
@@ -141,25 +150,6 @@ func (self *One) PushTag(tag string) {
 
 func (o *One) DeleteTag(name string) error {
 	return o.di.Mongo.Database.C("orders").Update(bson.M{"_id": o.data.Id}, bson.M{"$pull": bson.M{"tags": bson.M{"name": name}}})
-}
-
-func (self *One) PushActivity(name, description string, due_at time.Time) {
-
-	database := self.di.Mongo.Database
-	activity := ActivityModel{
-		Name:        name,
-		Description: description,
-		Done:        false,
-		Due:         due_at,
-		Created:     time.Now(),
-		Updated:     time.Now(),
-	}
-
-	err := database.C("orders").Update(bson.M{"_id": self.data.Id}, bson.M{"$push": bson.M{"activities": activity}})
-
-	if err != nil {
-		panic(err)
-	}
 }
 
 func (self *One) PushInboundAnswer(text string, mail bson.ObjectId) {
