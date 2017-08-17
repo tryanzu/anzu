@@ -19,6 +19,20 @@ func SoftDelete(query bson.M) bson.M {
 	return query
 }
 
+func FulltextSearch(search string) Scope {
+	return func(query bson.M) bson.M {
+		query["$text"] = bson.M{"$search": search}
+		return query
+	}
+}
+
+func FieldExists(field string, exists bool) Scope {
+	return func(query bson.M) bson.M {
+		query[field] = bson.M{"$exists": exists}
+		return query
+	}
+}
+
 func WithinID(list []bson.ObjectId) Scope {
 	return func(query bson.M) bson.M {
 		query["_id"] = bson.M{"$in": list}

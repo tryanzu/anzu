@@ -230,7 +230,22 @@ func FetchLeads(deps Deps, query Query) (list Leads, err error) {
 // Take new leads query.
 func NewLeads(take, skip int) Query {
 	return func(col *mgo.Collection) *mgo.Query {
+		return col.Find(bsonq(SoftDelete, FieldExists("messages", false))).Limit(take).Skip(skip).Sort("-updated_at")
+	}
+}
+
+// Take new leads query.
+func AllLeads(take, skip int) Query {
+	return func(col *mgo.Collection) *mgo.Query {
 		return col.Find(bsonq(SoftDelete)).Limit(take).Skip(skip).Sort("-updated_at")
+	}
+}
+
+// Take leads that match search query.
+func SearchLeads(search string, take, skip int) Query {
+	return func(col *mgo.Collection) *mgo.Query {
+		query := col.Find(bsonq(SoftDelete, FulltextSearch(search)))
+		return query.Select(bson.M{"score": bson.M{"$meta": "textScore"}}).Limit(take).Skip(skip).Sort("-updated_at", "$textScore:score")
 	}
 }
 

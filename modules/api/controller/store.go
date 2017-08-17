@@ -34,6 +34,7 @@ func Leads(c *gin.Context) {
 	var (
 		limit  int    = 0
 		offset int    = 0
+		search string = c.Query("search")
 		group  string = c.Query("group")
 		list   store.Leads
 		err    error
@@ -49,10 +50,14 @@ func Leads(c *gin.Context) {
 
 	// After processing input compute output data.
 	switch {
+	case len(search) > 0:
+		list, err = store.FetchLeads(deps.Container, store.SearchLeads(search, limit, offset))
 	case group == "brandNew":
 		list, err = store.FetchLeads(deps.Container, store.NewLeads(limit, offset))
 	case group == "nextUp":
 		list, err = store.FetchLeads(deps.Container, store.NextUpLeads(deps.Container, limit, offset))
+	default:
+		list, err = store.FetchLeads(deps.Container, store.AllLeads(limit, offset))
 	}
 
 	if err != nil {
