@@ -349,6 +349,7 @@ func (module *Module) Run() {
 				backoffice.POST("/deals/invoice", module.Deals.GenerateInvoice)
 				backoffice.GET("/order-report", module.Store.OrdersAggregate)
 				backoffice.GET("/activities", module.Store.Activities)
+				backoffice.GET("/leads", http.UserMiddleware(), controller.Leads)
 				backoffice.GET("/order", http.UserMiddleware(), module.Store.Orders)
 
 				order := backoffice.Group("/order")

@@ -10,6 +10,7 @@ import (
 
 	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/modules/mail"
+	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -47,6 +48,17 @@ type Lead struct {
 	readIndex int64
 }
 
+func (lead Lead) HadRead(userId bson.ObjectId) Lead {
+	for _, r := range lead.Readed {
+		if r == userId {
+			lead.UserReaded = true
+			break
+		}
+	}
+
+	return lead
+}
+
 type Leads []Lead
 
 func (list Leads) ToMap() map[string]Lead {
@@ -56,6 +68,23 @@ func (list Leads) ToMap() map[string]Lead {
 	}
 
 	return m
+}
+
+func (list Leads) IDList() []string {
+	keys := make([]string, len(list))
+	for k, v := range list {
+		keys[k] = v.Id.Hex()
+	}
+
+	return keys
+}
+
+func (list Leads) HadRead(userId bson.ObjectId) Leads {
+	for k, v := range list {
+		list[k] = v.HadRead(userId)
+	}
+
+	return list
 }
 
 // Reply logic over a lead.
@@ -185,16 +214,64 @@ func FindLead(deps Deps, id bson.ObjectId) (*Lead, error) {
 }
 
 // Fetch multiple leads by conditions
-func FetchLeads(deps Deps, query Query) (Leads, error) {
-	var list Leads
-	err := query(deps.Mgo().C("orders")).All(&list)
+func FetchLeads(deps Deps, query Query) (list Leads, err error) {
+	err = query(deps.Mgo().C("orders")).All(&list)
 	if err != nil {
-		return Leads{}, err
+		return
 	}
 
+	// Sort inner message lists.
 	for index, _ := range list {
 		sort.Sort(list[index].Messages)
 	}
+	return
+}
 
-	return list, nil
+// Take new leads query.
+func NewLeads(take, skip int) Query {
+	return func(col *mgo.Collection) *mgo.Query {
+		return col.Find(bsonq(SoftDelete)).Limit(take).Skip(skip).Sort("-updated_at")
+	}
+}
+
+// Take next to answer leads query.
+func NextUpLeads(deps Deps, take, skip int) Query {
+	var boundaries []struct {
+		Id bson.ObjectId `bson:"_id"`
+	}
+
+	err := deps.Mgo().C("orders").Pipe([]bson.M{
+		{
+			"$match": bson.M{"deleted_at": bson.M{"$exists": false}, "messages": bson.M{"$exists": true}},
+		},
+		{
+			"$sort": bson.M{"updated_at": -1},
+		},
+		{
+			"$project": bson.M{"lastMessage": bson.M{"$arrayElemAt": []interface{}{"$messages", -1}}},
+		},
+		{
+			"$match": bson.M{"lastMessage.type": "inbound"},
+		},
+		{
+			"$skip": skip,
+		},
+		{
+			"$limit": take,
+		},
+	}).All(&boundaries)
+
+	// Panic this weird exception.
+	if err != nil {
+		panic(err)
+	}
+
+	list := make([]bson.ObjectId, len(boundaries))
+	for index, item := range boundaries {
+		list[index] = item.Id
+	}
+
+	return func(col *mgo.Collection) *mgo.Query {
+		return col.Find(bsonq(WithinID(list))).Limit(take).Skip(skip).Sort("-updated_at")
+	}
 }

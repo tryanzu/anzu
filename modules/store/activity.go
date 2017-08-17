@@ -28,7 +28,7 @@ func (list Activities) ToMap() map[string]Activity {
 	return m
 }
 
-func (list Activities) QueryLeads() Query {
+func (list Activities) LeadsQuery() Query {
 	id := make([]bson.ObjectId, len(list))
 	for i, activity := range list {
 		id[i] = activity.LeadId

@@ -30,6 +30,42 @@ func UpsertBLead(c *gin.Context) {
 	c.JSON(200, lead)
 }
 
+func Leads(c *gin.Context) {
+	var (
+		limit  int    = 0
+		offset int    = 0
+		group  string = c.Query("group")
+		list   store.Leads
+		err    error
+	)
+
+	user := c.MustGet("user").(user.User)
+	if n, err := strconv.Atoi(c.DefaultQuery("offset", "0")); err == nil {
+		offset = n
+	}
+	if n, err := strconv.Atoi(c.DefaultQuery("limit", "10")); err == nil {
+		limit = n
+	}
+
+	// After processing input compute output data.
+	switch {
+	case group == "brandNew":
+		list, err = store.FetchLeads(deps.Container, store.NewLeads(limit, offset))
+	case group == "nextUp":
+		list, err = store.FetchLeads(deps.Container, store.NextUpLeads(deps.Container, limit, offset))
+	}
+
+	if err != nil {
+		c.JSON(500, err)
+		return
+	}
+
+	// Compute runtime field UserReaded for each item in the list.
+	list = list.HadRead(user.Id)
+
+	c.JSON(200, gin.H{"entities": list.ToMap(), "results": list.IDList()})
+}
+
 type StoreAPI struct {
 	Store *store.Module `inject:""`
 }
@@ -390,7 +426,7 @@ func (self *StoreAPI) Activities(c *gin.Context) {
 		return
 	}
 
-	leads, err := store.FetchLeads(deps.Container, activities.QueryLeads())
+	leads, err := store.FetchLeads(deps.Container, activities.LeadsQuery())
 
 	c.JSON(200, gin.H{"leads": leads.ToMap(), "activities": activities.ToMap()})
 }
