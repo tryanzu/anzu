@@ -18,14 +18,12 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
 	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
 	"github.com/fernandez14/spartangeek-blacker/modules/notifications"
-	"github.com/fernandez14/spartangeek-blacker/modules/payments"
 	"github.com/fernandez14/spartangeek-blacker/modules/preprocessor"
 	"github.com/fernandez14/spartangeek-blacker/modules/security"
 	"github.com/fernandez14/spartangeek-blacker/modules/store"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/getsentry/raven-go"
-	"github.com/leebenson/paypal"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/providers/facebook"
 	"github.com/micro/go-micro/broker"
@@ -36,7 +34,6 @@ import (
 	"github.com/robfig/cron"
 	"github.com/spf13/cobra"
 	"github.com/stackimpact/stackimpact-go"
-	"github.com/stripe/stripe-go/client"
 	"github.com/xuyu/goredis"
 
 	"os"
@@ -122,65 +119,6 @@ func main() {
 	firebaseBroadcaster := notifications.FirebaseBroadcaster{Firebase: firebaseService}
 	broadcaster := interfaces.NotificationBroadcaster(firebaseBroadcaster)
 
-	// Payments module
-	paymentGateways := map[string]payments.Gateway{}
-	paypalConfig, err := configService.Get("ecommerce.paypal")
-	{
-		if err != nil {
-			panic("Could not get paypal configuration to initialize payments module.")
-		}
-
-		clientID, err := paypalConfig.String("clientID")
-
-		if err != nil {
-			panic("Could not get config data to initialize paypal client. (cid)")
-		}
-
-		secret, err := paypalConfig.String("secret")
-
-		if err != nil {
-			panic("Could not get config data to initialize paypal client. (secret)")
-		}
-
-		sandbox, err := paypalConfig.Bool("sandbox")
-
-		if err != nil {
-			panic("Could not get config data to initialize paypal client. (sd)")
-		}
-
-		var r string = paypal.APIBaseSandBox
-
-		if !sandbox {
-			r = paypal.APIBaseLive
-		}
-
-		paypalClient := paypal.NewClient(clientID, secret, r)
-		paypalGateway := &payments.Paypal{
-			Client: paypalClient,
-		}
-
-		paymentGateways["paypal"] = paypalGateway
-	}
-
-	stripeConfig, err := configService.Get("ecommerce.stripe")
-	{
-		secret, err := stripeConfig.String("secret")
-
-		if err != nil {
-			panic("Could not get config data to initialize stripe client. (secret)")
-		}
-
-		stripeClient := &client.API{}
-		stripeClient.Init(secret, nil)
-		stripeGateway := &payments.Stripe{
-			Client: stripeClient,
-		}
-
-		paymentGateways["stripe"] = stripeGateway
-	}
-
-	paymentGateways["offline"] = &payments.Offline{}
-
 	if err := broker.Init(); err != nil {
 		log.Fatalf("Broker Init error: %v", err)
 	}
@@ -188,8 +126,6 @@ func main() {
 	if err := broker.Connect(); err != nil {
 		log.Fatalf("Broker Connect error: %v", err)
 	}
-
-	p := payments.GetModule(paymentGateways)
 
 	// Provide graph with service instances
 	err = g.Provide(
@@ -208,7 +144,6 @@ func main() {
 		&inject.Object{Value: userService, Complete: false},
 		&inject.Object{Value: componentsService, Complete: false},
 		&inject.Object{Value: gamingService, Complete: false},
-		&inject.Object{Value: p, Complete: false},
 		&inject.Object{Value: broadcaster, Complete: true, Name: "Notifications"},
 		&inject.Object{Value: &cliModule},
 		&inject.Object{Value: &securityModule},

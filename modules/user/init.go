@@ -3,7 +3,6 @@ package user
 import (
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
-	"github.com/fernandez14/spartangeek-blacker/modules/payments"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/markbates/goth"
 	"github.com/op/go-logging"
@@ -67,51 +66,6 @@ func (module *Module) Get(usr interface{}) (*One, error) {
 
 	user := &One{data: model, di: context}
 	return user, nil
-}
-
-func (module *Module) GetTopDonators() []map[string]interface{} {
-
-	var payments []payments.Payment
-
-	database := module.Mongo.Database
-	err := database.C("payments").Find(bson.M{"type": "donation", "status": "confirmed"}).Sort("-amount").Limit(20).All(&payments)
-
-	if err != nil {
-		panic(err)
-	}
-
-	var list []bson.ObjectId
-
-	for _, p := range payments {
-		list = append(list, p.UserId)
-	}
-
-	var users []UserSimple
-
-	usersMap := map[string]UserSimple{}
-	err = database.C("users").Find(bson.M{"_id": bson.M{"$in": list}}).Select(UserSimpleFields).All(&users)
-
-	if err != nil {
-		panic(err)
-	}
-
-	for _, u := range users {
-		usersMap[u.Id.Hex()] = u
-	}
-
-	data := []map[string]interface{}{}
-
-	for _, p := range payments {
-
-		usr := usersMap[p.UserId.Hex()]
-		data = append(data, map[string]interface{}{
-			"created_at": p.Created,
-			"amount":     p.Amount,
-			"user":       usr,
-		})
-	}
-
-	return data
 }
 
 // Signup a user with email and username checks
