@@ -6,7 +6,6 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/components"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
-	"github.com/fernandez14/spartangeek-blacker/modules/gcommerce"
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/fernandez14/spartangeek-blacker/modules/search"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
@@ -28,7 +27,6 @@ type Module struct {
 	Errors     *exceptions.ExceptionsModule `inject:""`
 	User       *user.Module                 `inject:""`
 	Feed       *feed.FeedModule             `inject:""`
-	GCommerce  *gcommerce.Module            `inject:""`
 	Components *components.Module           `inject:""`
 	Config     *config.Config               `inject:""`
 	Neoism     *neoism.Database             `inject:""`
@@ -45,9 +43,6 @@ func (module Module) Run(name string) {
 		"send-confirmations": module.ConfirmationEmails,
 		"replace-url":        module.ReplaceURL,
 		"first-newsletter":   module.FirstNewsletter,
-		"massdrop-invoicing": module.GenerateMassdropInvoices,
-		"custom-invoicing":   module.GenerateCustomInvoice,
-		"custom-invoices":    module.GenerateCustomInvoices,
 		"migrate-comments":   module.MigrateDeletedComment,
 		"migrate-ccomments":  module.MigrateChosenComment,
 		"export-components":  module.ExportComponents,

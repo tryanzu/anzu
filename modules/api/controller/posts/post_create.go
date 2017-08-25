@@ -1,6 +1,7 @@
 package posts
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/core/user"
 	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
@@ -41,19 +42,19 @@ func (this API) Create(c *gin.Context) {
 			return
 		}
 
-		user := this.Acl.User(bson_id)
+		usr := this.Acl.User(bson_id)
 
-		if user.CanWrite(category) == false || user.HasValidated() == false {
+		if usr.CanWrite(category) == false || usr.HasValidated() == false {
 			c.JSON(403, gin.H{"status": "error", "message": "Not enough permissions."})
 			return
 		}
 
-		if form.Pinned == true && user.Can("pin-board-posts") == false {
+		if form.Pinned == true && usr.Can("pin-board-posts") == false {
 			c.JSON(400, gin.H{"status": "error", "message": "Not enough permissions to pin."})
 			return
 		}
 
-		if form.Lock == true && user.Can("block-own-post-comments") == false {
+		if form.Lock == true && usr.Can("block-own-post-comments") == false {
 			c.JSON(400, gin.H{"status": "error", "message": "Not enough permissions to lock."})
 			return
 		}
@@ -82,11 +83,9 @@ func (this API) Create(c *gin.Context) {
 
 		switch form.Kind {
 		case "recommendations":
-
 			components := form.Components
 
 			if len(components) > 0 {
-
 				budget, bo := components["budget"]
 				budget_type, bto := components["budget_type"]
 				budget_currency, bco := components["budget_currency"]
@@ -182,7 +181,17 @@ func (this API) Create(c *gin.Context) {
 				// Now bind the components to the post
 				publish.Components = publish_components
 
-				err := database.C("posts").Insert(publish)
+				u, err := user.FindId(deps.Container, bson_id)
+				if err != nil {
+					c.AbortWithError(500, err)
+					return
+				}
+
+				if user.CanBeTrusted(u) == false {
+					publish.Deleted = time.Now()
+				}
+
+				err = database.C("posts").Insert(publish)
 
 				if err != nil {
 					panic(err)
@@ -253,7 +262,17 @@ func (this API) Create(c *gin.Context) {
 				Updated:    time.Now(),
 			}
 
-			err := database.C("posts").Insert(publish)
+			u, err := user.FindId(deps.Container, bson_id)
+			if err != nil {
+				c.AbortWithError(500, err)
+				return
+			}
+
+			if user.CanBeTrusted(u) == false {
+				publish.Deleted = time.Now()
+			}
+
+			err = database.C("posts").Insert(publish)
 
 			if err != nil {
 				panic(err)

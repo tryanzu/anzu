@@ -3,7 +3,6 @@ package controller
 import (
 	"github.com/fernandez14/spartangeek-blacker/modules/components"
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
-	"github.com/fernandez14/spartangeek-blacker/modules/gcommerce"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
@@ -13,7 +12,6 @@ type ComponentAPI struct {
 	Components *components.Module `inject:""`
 	Feed       *feed.FeedModule   `inject:""`
 	User       *user.Module       `inject:""`
-	GCommerce  *gcommerce.Module  `inject:""`
 }
 
 // Get component by slug
@@ -63,13 +61,6 @@ func (this ComponentAPI) Get(c *gin.Context) {
 
 			data["votes"] = cvotes
 		}
-	}
-
-	products := this.GCommerce.Products()
-	product, err := products.GetByBson(bson.M{"attributes.component_id": component.Id})
-
-	if err == nil {
-		data["product_id"] = product.Id.Hex()
 	}
 
 	data["category"] = data["type"]

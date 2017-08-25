@@ -17,7 +17,6 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
 	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
-	"github.com/fernandez14/spartangeek-blacker/modules/gcommerce"
 	"github.com/fernandez14/spartangeek-blacker/modules/notifications"
 	"github.com/fernandez14/spartangeek-blacker/modules/payments"
 	"github.com/fernandez14/spartangeek-blacker/modules/preprocessor"
@@ -70,7 +69,6 @@ func main() {
 	var notificationsModule notifications.NotificationsModule
 	var feedModule feed.FeedModule
 	var exceptions exceptions.ExceptionsModule
-	var gcommerceModule gcommerce.Module
 
 	var log *logging.Logger = logging.MustGetLogger("blacker")
 	var format logging.Formatter = logging.MustStringFormatter(
@@ -225,7 +223,6 @@ func main() {
 		&inject.Object{Value: &securityModule},
 		&inject.Object{Value: &notificationsModule},
 		&inject.Object{Value: &feedModule},
-		&inject.Object{Value: &gcommerceModule},
 		&inject.Object{Value: &exceptions},
 	)
 

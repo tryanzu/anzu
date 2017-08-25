@@ -98,43 +98,16 @@ func (di PostAPI) FeedGet(c *gin.Context) {
 	}
 
 	search := make(bson.M)
-
-	if f != "" && bson.IsObjectIdHex(f) {
-
+	if bson.IsObjectIdHex(f) {
 		search["category"] = bson.ObjectIdHex(f)
-
-		if signed_in {
-
-			// Reset the counter for the user
-			//di.resetUserCategoryCounter(f, bson.ObjectIdHex(user_id.(string)))
-		}
 	}
 
-	if after != "" {
-
-		t, err := time.Parse(time.RFC3339Nano, after)
-
-		if err == nil {
-
-			if signed_in {
-
-				userPath := "users/" + user_id.(string)
-				userRef := di.Firebase.Child(userPath, nil, nil)
-
-				userRef.Set("pending", 0, nil)
-			}
-
-			search["created_at"] = bson.M{"$lt": t}
-		}
+	if t, err := time.Parse(time.RFC3339Nano, after); after != "" && err == nil {
+		search["created_at"] = bson.M{"$lt": t}
 	}
 
-	if before != "" {
-
-		t, err := time.Parse(time.RFC3339Nano, before)
-
-		if err == nil {
-			search["created_at"] = bson.M{"$gt": t}
-		}
+	if t, err := time.Parse(time.RFC3339Nano, before); before != "" && err == nil {
+		search["created_at"] = bson.M{"$gt": t}
 	}
 
 	user_order := false
@@ -196,7 +169,6 @@ func (di PostAPI) FeedGet(c *gin.Context) {
 		}
 
 		if len(user_categories) > 0 {
-
 			search["category"] = bson.M{"$in": user_categories}
 		}
 
@@ -271,7 +243,14 @@ func (di PostAPI) FeedGet(c *gin.Context) {
 	} else {
 
 		// Get all but deleted
-		search["deleted"] = bson.M{"$exists": false}
+		if signed_in {
+			search["$or"] = []bson.M{
+				{"deleted_at": bson.M{"$exists": false}},
+				{"user_id": bson.ObjectIdHex(user_id.(string))},
+			}
+		} else {
+			search["deleted_at"] = bson.M{"$exists": false}
+		}
 
 		// Prepare the database to fetch the feed
 		posts_collection := database.C("posts")
@@ -279,7 +258,6 @@ func (di PostAPI) FeedGet(c *gin.Context) {
 
 		// Add the sort depending on the context
 		if user_order {
-
 			count, _ = get_feed.Count()
 			get_feed = get_feed.Sort("-created_at")
 		} else {
@@ -303,7 +281,6 @@ func (di PostAPI) FeedGet(c *gin.Context) {
 	var users []model.User
 
 	for _, post := range feed {
-
 		list = append(list, post.Id)
 		authors = append(authors, post.UserId)
 	}

@@ -25,8 +25,10 @@ type User struct {
 	Profile       map[string]interface{} `bson:"profile,omitempty" json:"profile,omitempty"`
 	//Gaming        UserGaming             `bson:"gaming,omitempty" json:"gaming,omitempty"`
 	//Stats         UserStats              `bson:"stats,omitempty" json:"stats,omitempty"`
-	Version   string    `bson:"version,omitempty" json:"version,omitempty"`
-	Validated bool      `bson:"validated" json:"validated"`
-	Created   time.Time `bson:"created_at" json:"created_at"`
-	Updated   time.Time `bson:"updated_at" json:"updated_at"`
+	Version   string `bson:"version,omitempty" json:"version,omitempty"`
+	Validated bool   `bson:"validated" json:"validated"`
+
+	Warnings int       `bson:"warnings" json:"-"`
+	Created  time.Time `bson:"created_at" json:"created_at"`
+	Updated  time.Time `bson:"updated_at" json:"updated_at"`
 }

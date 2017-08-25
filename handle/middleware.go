@@ -130,7 +130,6 @@ func (di *MiddlewareAPI) Authorization() gin.HandlerFunc {
 
 			// Check for the JWT inside the header
 			if token[0:6] == "Bearer" {
-
 				jtw_token := token[7:len(token)]
 				secret, err := di.ConfigService.String("application.secret")
 
