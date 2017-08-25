@@ -7,7 +7,6 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
-	"github.com/fernandez14/spartangeek-blacker/modules/search"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/olebedev/config"
@@ -23,7 +22,6 @@ import (
 
 type Module struct {
 	Mongo      *mongo.Service               `inject:""`
-	Search     *search.Module               `inject:""`
 	Errors     *exceptions.ExceptionsModule `inject:""`
 	User       *user.Module                 `inject:""`
 	Feed       *feed.FeedModule             `inject:""`

@@ -20,7 +20,6 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/notifications"
 	"github.com/fernandez14/spartangeek-blacker/modules/payments"
 	"github.com/fernandez14/spartangeek-blacker/modules/preprocessor"
-	"github.com/fernandez14/spartangeek-blacker/modules/search"
 	"github.com/fernandez14/spartangeek-blacker/modules/security"
 	"github.com/fernandez14/spartangeek-blacker/modules/store"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
@@ -94,13 +93,6 @@ func main() {
 	firebaseService.Init(string_value(configService.String("firebase.url")), string_value(configService.String("firebase.secret")), nil)
 
 	gosift.ApiKey = string_value(configService.String("ecommerce.siftscience.api_key"))
-	searchConfig, err := configService.Get("algolia")
-
-	if err != nil {
-		panic(err)
-	}
-
-	searchService := search.Boot(searchConfig)
 	assetsService := assets.Boot()
 
 	// Authentication services
@@ -210,7 +202,6 @@ func main() {
 		&inject.Object{Value: s3BucketService, Complete: true},
 		&inject.Object{Value: firebaseService, Complete: true},
 		&inject.Object{Value: statsService, Complete: true},
-		&inject.Object{Value: searchService, Complete: true},
 		&inject.Object{Value: aclService, Complete: false},
 		&inject.Object{Value: storeService, Complete: false},
 		&inject.Object{Value: assetsService, Complete: false},
