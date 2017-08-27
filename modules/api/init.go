@@ -6,7 +6,6 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/handle"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/builds"
-	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/chat"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/comments"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/components"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/oauth"
@@ -214,11 +213,6 @@ func (module *Module) Run() {
 		authorized := v1.Group("")
 		authorized.Use(module.Middlewares.NeedAuthorization())
 		{
-			withUser := authorized.Group("").Use(http.UserMiddleware())
-			{
-				withUser.POST("/chat/messages", chat.SendMessage)
-			}
-
 			authorized.GET("/contest-lead", module.Lead.GetContestLead)
 			authorized.PUT("/contest-lead", module.Lead.UpdateContestLead)
 			authorized.POST("/build", module.PostsFactory.Create)
