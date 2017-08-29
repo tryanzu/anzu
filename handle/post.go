@@ -89,7 +89,7 @@ func (di PostAPI) FeedGet(c *gin.Context) {
 
 		lim, err := strconv.Atoi(l)
 
-		if err != nil || lim <= 0 || lim > 25 {
+		if err != nil || lim <= 0 || lim > 40 {
 			c.JSON(401, gin.H{"message": "Invalid request, check params.", "status": "error", "code": 901})
 			return
 		}
