@@ -6,23 +6,14 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/handle"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/builds"
-	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/cart"
-	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/chat"
-	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/checkout"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/comments"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/components"
-	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/deals"
-	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/massdrop"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/oauth"
-	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/payments"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/posts"
-	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/products"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/users"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/votes"
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
-	"github.com/newrelic/go-agent"
-	"github.com/newrelic/go-agent/_integrations/nrgin/v1"
 	"github.com/olebedev/config"
 
 	"fmt"
@@ -50,19 +41,11 @@ type Module struct {
 	Mail              controller.MailAPI
 	PostsFactory      posts.API
 	Components        controller.ComponentAPI
-	CartFactory       cart.API
-	Checkout          checkout.API
-	Products          products.API
-	Massdrop          massdrop.API
-	Deals             deals.API
 	Builds            builds.API
-	Customer          controller.CustomerAPI
-	Orders            controller.OrdersAPI
 	Owners            controller.OwnersAPI
 	Lead              controller.LeadAPI
 	ComponentsFactory components.API
 	UsersFactory      users.API
-	Payments          payments.API
 }
 
 type ModuleDI struct {
@@ -78,9 +61,6 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.PostsFactory},
 		&inject.Object{Value: &module.ComponentsFactory},
 		&inject.Object{Value: &module.UsersFactory},
-		&inject.Object{Value: &module.CartFactory},
-		&inject.Object{Value: &module.Checkout},
-		&inject.Object{Value: &module.Products},
 		&inject.Object{Value: &module.Votes},
 		&inject.Object{Value: &module.VotesFactory},
 		&inject.Object{Value: &module.Users},
@@ -98,13 +78,8 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.Oauth},
 		&inject.Object{Value: &module.Mail},
 		&inject.Object{Value: &module.Components},
-		&inject.Object{Value: &module.Massdrop},
-		&inject.Object{Value: &module.Customer},
-		&inject.Object{Value: &module.Orders},
 		&inject.Object{Value: &module.Owners},
-		&inject.Object{Value: &module.Deals},
 		&inject.Object{Value: &module.Lead},
-		&inject.Object{Value: &module.Payments},
 	)
 
 	if err != nil {
@@ -149,18 +124,10 @@ func (module *Module) Run() {
 		panic(err)
 	}
 
-	config := newrelic.NewConfig("Blacker", "45fd4c0a34ce36ba2b0209d5a332bc5d13e22eb1")
-	config.Enabled = !debug
-	app, err := newrelic.NewApplication(config)
-	if err != nil {
-		panic(err)
-	}
-
 	// Start gin classic middlewares
 	router := gin.Default()
 
 	// Middlewares setup
-	router.Use(nrgin.Middleware(app))
 	router.Use(sessions.Sessions("session", store))
 	router.Use(module.Middlewares.ErrorTracking(debug))
 	router.Use(module.Middlewares.CORS())
@@ -176,17 +143,10 @@ func (module *Module) Run() {
 
 	v1.Use(module.Middlewares.Authorization())
 	{
-		v1.GET("/whoami", func(c *gin.Context) {
-			result := gin.H{"address": c.ClientIP()}
-
-			c.JSON(200, result)
-		})
-
 		// Authentication routes
 		v1.GET("/oauth/:provider", module.Oauth.GetAuthRedirect)
 		v1.GET("/oauth/:provider/callback", module.Oauth.CompleteAuth)
 
-		v1.GET("/payments/donators", module.Payments.GetTopDonators)
 		v1.POST("/subscribe", module.Users.UserSubscribe)
 		v1.POST("/leads", module.Lead.Post)
 
@@ -208,11 +168,7 @@ func (module *Module) Run() {
 
 		// Search routes
 		v1.GET("/search/posts", module.PostsFactory.Search)
-		v1.GET("/search/products", module.Products.Search)
 		v1.GET("/search/components", module.ComponentsFactory.Search)
-
-		// Massdrop routes
-		v1.GET("/massdrop", module.Massdrop.Get)
 
 		// // Election routes
 		v1.POST("/election/:id", module.Elections.ElectionAddOption)
@@ -252,42 +208,11 @@ func (module *Module) Run() {
 		{
 			store.POST("/order", module.Store.PlaceOrder)
 			store.PUT("/order", controller.UpsertBLead)
-
-			// Cart routes
-			store.GET("/cart", module.CartFactory.Get)
-			store.POST("/cart", module.CartFactory.Add)
-			store.DELETE("/cart/:id", module.CartFactory.Delete)
-
-			// Products routes
-			store.GET("/product/:id", module.Products.Get)
-
-			// Store routes with auth
-			astore := store.Group("")
-
-			astore.Use(module.Middlewares.NeedAuthorization())
-			{
-				astore.POST("/checkout", module.Checkout.Place)
-				astore.POST("/checkout/massdrop", module.Checkout.Massdrop)
-
-				// Massdrop insterested
-				store.PUT("/product/:id/massdrop", module.Products.Massdrop)
-
-				// Customer routes
-				astore.GET("/customer", module.Customer.Get)
-				astore.POST("/customer/address", module.Customer.CreateAddress)
-				astore.DELETE("/customer/address/:id", module.Customer.DeleteAddress)
-				astore.PUT("/customer/address/:id", module.Customer.UpdateAddress)
-			}
 		}
 
 		authorized := v1.Group("")
 		authorized.Use(module.Middlewares.NeedAuthorization())
 		{
-			withUser := authorized.Group("").Use(http.UserMiddleware())
-			{
-				withUser.POST("/chat/messages", chat.SendMessage)
-			}
-
 			authorized.GET("/contest-lead", module.Lead.GetContestLead)
 			authorized.PUT("/contest-lead", module.Lead.UpdateContestLead)
 			authorized.POST("/build", module.PostsFactory.Create)
@@ -295,10 +220,6 @@ func (module *Module) Run() {
 			// Auth routes
 			authorized.GET("/auth/logout", module.Users.UserLogout)
 			authorized.GET("/auth/resend-confirmation", module.UsersFactory.ResendConfirmation)
-
-			// Payments routes
-			authorized.POST("/payments", module.Payments.Place)
-			authorized.POST("/payments/execute", module.Payments.PaypalExecute)
 
 			// Comment routes
 			authorized.POST("/post/comment/:id", module.CommentsFactory.Add)
@@ -335,18 +256,6 @@ func (module *Module) Run() {
 			backoffice := authorized.Group("backoffice")
 			backoffice.Use(module.Middlewares.NeedAclAuthorization("sensitive-data"))
 			{
-				store := backoffice.Group("/store")
-				{
-					store.GET("/order", module.Orders.Get)
-					store.Use(module.Middlewares.ValidateBsonID("id"))
-					{
-						store.GET("/order/:id", module.Orders.GetOne)
-						store.POST("/order/:id/send-confirmation", module.Orders.SendOrderConfirmation)
-						store.PUT("/order/:id/status", module.Orders.ChangeStatus)
-					}
-				}
-
-				backoffice.POST("/deals/invoice", module.Deals.GenerateInvoice)
 				backoffice.GET("/order-report", module.Store.OrdersAggregate)
 				backoffice.GET("/activities", module.Store.Activities)
 				backoffice.GET("/leads", http.UserMiddleware(), controller.Leads)

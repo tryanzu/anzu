@@ -46,7 +46,7 @@ func (a API) GetAuthRedirect(c *gin.Context) {
 		return
 	}
 
-	if !strings.HasPrefix(c.Query("redir"), siteUrl) {
+	if !strings.HasPrefix(c.Query("redir"), siteUrl) && !strings.HasPrefix(c.Query("redir"), "https://buldar.com") {
 		c.JSON(401, gin.H{"status": "unauthorized."})
 		return
 	}

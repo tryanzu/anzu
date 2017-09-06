@@ -108,8 +108,6 @@ func (component *ComponentModel) UpdatePrice(vendors map[string]map[string]inter
 	}
 
 	component.Activated = true
-
-	go component.UpdateAlgolia()
 }
 
 func (component *ComponentModel) DeletePrice() {
@@ -140,8 +138,6 @@ func (component *ComponentModel) DeletePrice() {
 	if err != nil {
 		panic(err)
 	}
-
-	go component.UpdateAlgolia()
 }
 
 func (component *ComponentModel) GetAggregatedUsrVotes(kind string) map[string]int {
@@ -190,48 +186,4 @@ func (component *ComponentModel) GetAggregatedUsrVotes(kind string) map[string]i
 	aggregated["total"] = total
 
 	return aggregated
-}
-
-// Perform component's algolia's record sync
-func (component *ComponentModel) UpdateAlgolia() {
-
-	index := component.di.Search.Get("components")
-
-	// Compose algolia item
-	full_name := component.FullName
-
-	if full_name == "" {
-		full_name = component.Name
-	}
-
-	var image string
-
-	if len(component.Images) > 0 {
-		image = component.Images[0]
-	}
-
-	object := make(map[string]interface{})
-	object["objectID"] = component.Id.Hex()
-	object["name"] = component.Name
-	object["full_name"] = full_name
-	object["part_number"] = component.PartNumber
-	object["slug"] = component.Slug
-	object["image"] = image
-	object["type"] = component.Type
-	object["activated"] = component.Activated
-
-	v, err := component.GetVendor("spartangeek")
-
-	if err == nil {
-
-		object["price"] = v.Price
-		object["priority"] = v.Priority
-		object["stock"] = v.Stock
-	}
-
-	_, err = index.UpdateObject(object)
-
-	if err != nil {
-		panic(err)
-	}
 }

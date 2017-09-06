@@ -2,7 +2,6 @@ package components
 
 import (
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
-	"github.com/fernandez14/spartangeek-blacker/modules/search"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/op/go-logging"
 	"gopkg.in/mgo.v2/bson"
@@ -17,7 +16,6 @@ func Boot() *Module {
 
 type Module struct {
 	Mongo  *mongo.Service               `inject:""`
-	Search *search.Module               `inject:""`
 	Errors *exceptions.ExceptionsModule `inject:""`
 	Logger *logging.Logger              `inject:""`
 }

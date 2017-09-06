@@ -4,7 +4,6 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/content"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	//"github.com/fernandez14/spartangeek-blacker/modules/notifications"
-	"github.com/fernandez14/spartangeek-blacker/modules/search"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/xuyu/goredis"
@@ -18,7 +17,6 @@ type FeedModule struct {
 	Errors *exceptions.ExceptionsModule `inject:""`
 	//Notifications *notifications.NotificationsModule `inject:""`
 	CacheService *goredis.Redis  `inject:""`
-	Search       *search.Module  `inject:""`
 	User         *user.Module    `inject:""`
 	Content      *content.Module `inject:""`
 }
