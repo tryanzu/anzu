@@ -4,9 +4,9 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
-	"strings"
 	"net/http"
 	"regexp"
+	"strings"
 )
 
 type PostAPI struct {
@@ -15,7 +15,7 @@ type PostAPI struct {
 }
 
 func (this *PostAPI) Get(c *gin.Context) {
-	
+
 	post_id := c.Param("id")
 	slug := c.Param("slug")
 
@@ -41,14 +41,14 @@ func (this *PostAPI) Get(c *gin.Context) {
 	if slug != post_data.Slug {
 
 		// Invalid slug, redirect to correct one permanently
-		c.Redirect(http.StatusMovedPermanently, "/p/" + post_data.Slug + "/" + post_data.Id.Hex())
+		c.Redirect(http.StatusMovedPermanently, "/p/"+post_data.Slug+"/"+post_data.Id.Hex())
 		return
 	}
 
 	var description string = truncate(post_data.Content, 155) + "..."
 	var page string = this.Page
 
-	page = strings.Replace(page, "SpartanGeek.com | Comunidad de tecnología, geeks y más", "SpartanGeek.com | " + post_data.Title, 1)
+	page = strings.Replace(page, "Buldar | Comunidad de tecnología, geeks y más", "SpartanGeek.com | "+post_data.Title, 1)
 	page = strings.Replace(page, "{{ page.title }}", post_data.Title, 1)
 	page = strings.Replace(page, "{{ page.description }}", description, 2)
 
@@ -66,7 +66,7 @@ func (this *PostAPI) Get(c *gin.Context) {
 	} else {
 
 		// Fallback to default image
-		page = strings.Replace(page, "{{ page.image }}", "http://spartangeek.com/images/default-post.jpg", 1)
+		page = strings.Replace(page, "{{ page.image }}", "https://buldar.com/images/default-post.jpg", 1)
 	}
 
 	c.Header("Content-Type", "text/html; charset=utf-8")
@@ -82,10 +82,10 @@ func (this *PostAPI) ByPass(c *gin.Context) {
 func truncate(s string, length int) string {
 	var numRunes = 0
 	for index, _ := range s {
-	 numRunes++
-	 if numRunes > length {
-	      return s[:index]
-	 }
+		numRunes++
+		if numRunes > length {
+			return s[:index]
+		}
 	}
 	return s
 }
