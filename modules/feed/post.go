@@ -198,19 +198,6 @@ func (self *Post) PushComment(c string, user_id bson.ObjectId) *Comment {
 	// Ensure user is participating
 	self.PushUser(user_id)
 
-	if self.UserId != user_id {
-
-		go func(post *Post, comment *Comment, user_id bson.ObjectId) {
-
-			// Tell the new comment for gamification
-			//post.DI().Gaming.Get(user_id).Did("comment")
-
-			// Notify the author about this comment
-			//post.DI().Notifications.Comment(post, comment, user_id)
-
-		}(self, comment, user_id)
-	}
-
 	// Finally parse tags in content for runtime usage
 	content.ParseTags(comment)
 
