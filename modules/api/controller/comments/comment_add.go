@@ -3,6 +3,7 @@ package comments
 import (
 	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
+	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -58,8 +59,7 @@ func (this API) Add(c *gin.Context) {
 			go func(post *feed.Post, comment *feed.Comment, user_id bson.ObjectId) {
 
 				if post.Category.Hex() != "55dc16593f6ba1005d000007" {
-					// Tell the new comment for gamification
-					this.Gaming.Get(user_id).Did("comment")
+					gaming.UserHasCommented(deps.Container, user_id)
 				}
 
 				// Notify the author about this comment

@@ -6,26 +6,25 @@ import (
 	"time"
 )
 
+func UserHasPublished(d Deps, id bson.ObjectId) error {
+	return IncreaseUserSwords(d, id, 1)
+}
+
+func UserHasCommented(d Deps, id bson.ObjectId) error {
+	return IncreaseUserSwords(d, id, 1)
+}
+
+func IncreaseUserSwords(d Deps, id bson.ObjectId, swords int) (err error) {
+	users := d.Mgo().C("users")
+
+	// Perform update using $inc operator.
+	err = users.Update(bson.M{"_id": id}, bson.M{"$inc": bson.M{"gaming.swords": swords}})
+	return
+}
+
 type User struct {
 	user *user.One
 	di   *Module
-}
-
-// Update user gamification stats because of something he did
-func (self *User) Did(action string) {
-
-	defer self.di.Errors.Recover()
-
-	var swords int
-
-	switch action {
-	case "comment":
-		swords = 1
-	case "publish":
-		swords = 1
-	}
-
-	self.Swords(swords)
 }
 
 // Sync user gamification relevant facts
@@ -68,9 +67,9 @@ func (self *User) SyncToLevel(reset bool) {
 				// Update the user gamification facts
 				err := database.C("users").Update(bson.M{"_id": user.Id}, bson.M{"$set": fact_set})
 
- 				if err != nil {
- 					panic(err)
- 				}
+				if err != nil {
+					panic(err)
+				}
 
 				// Runtime update
 				self.user.RUpdate(user)
@@ -229,5 +228,5 @@ func (self *User) Sync() {
 	validated := self.user.Data().Validated
 
 	// Sync user stuff
-	self.di.Firebase.Set("users/" + id + "/validated", validated, nil)
+	self.di.Firebase.Set("users/"+id+"/validated", validated, nil)
 }

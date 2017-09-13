@@ -3,11 +3,13 @@ package post
 import (
 	"github.com/fernandez14/spartangeek-blacker/core/events"
 	"github.com/fernandez14/spartangeek-blacker/deps"
+	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
 	"gopkg.in/mgo.v2/bson"
 )
 
+// Bind event handlers for posts related actions...
 func init() {
-	events.On(POSTS_NEW, func(e events.Event) error {
+	events.On(events.POSTS_NEW, func(e events.Event) error {
 		post, err := FindId(deps.Container, e.Params["id"].(bson.ObjectId))
 		if err != nil {
 			return err
@@ -23,11 +25,11 @@ func init() {
 
 		deps.Container.Transmit().Emit("feed", "action", params)
 
-		if publish.Category.Hex() != "55dc16593f6ba1005d000007" {
-			usr := this.Gaming.Get(bson_id)
-			usr.Did("publish")
+		// Ignore hard-coded category.
+		if publish.Category.Hex() == "55dc16593f6ba1005d000007" {
+			return nil
 		}
 
-		return nil
+		return gaming.UserHasPublished(deps.Container, post.UserId)
 	})
 }

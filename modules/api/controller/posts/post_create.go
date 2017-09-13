@@ -1,6 +1,7 @@
 package posts
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/core/events"
 	"github.com/fernandez14/spartangeek-blacker/core/user"
 	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/model"
@@ -202,26 +203,8 @@ func (this API) Create(c *gin.Context) {
 					go this.savePostImages(asset, publish.Id)
 				}
 
-				// Add the gamification contribution
-				go func() {
-
-					// Catch errors on runtime
-					defer this.Errors.Recover()
-					params := map[string]interface{}{
-						"fire":     "new-post",
-						"category": publish.Category.Hex(),
-						"user_id":  publish.UserId.Hex(),
-						"id":       publish.Id.Hex(),
-						"slug":     publish.Slug,
-					}
-
-					deps.Container.Transmit().Emit("feed", "action", params)
-
-					if publish.Category.Hex() != "55dc16593f6ba1005d000007" {
-						usr := this.Gaming.Get(bson_id)
-						usr.Did("publish")
-					}
-				}()
+				// Notify events pool.
+				events.In <- events.PostNew(publish.Id)
 
 				// Finished creating the post
 				c.JSON(200, gin.H{"status": "okay", "code": 200, "post": gin.H{"id": post_id, "slug": slug}})
@@ -283,24 +266,8 @@ func (this API) Create(c *gin.Context) {
 				go this.savePostImages(asset, publish.Id)
 			}
 
-			go func() {
-				defer this.Errors.Recover()
-
-				params := map[string]interface{}{
-					"fire":     "new-post",
-					"category": publish.Category.Hex(),
-					"user_id":  publish.UserId.Hex(),
-					"id":       publish.Id.Hex(),
-					"slug":     publish.Slug,
-				}
-
-				deps.Container.Transmit().Emit("feed", "action", params)
-
-				if publish.Category.Hex() != "55dc16593f6ba1005d000007" {
-					usr := this.Gaming.Get(bson_id)
-					usr.Did("publish")
-				}
-			}()
+			// Notify events pool.
+			events.In <- events.PostNew(publish.Id)
 
 			// Finished creating the post
 			c.JSON(200, gin.H{"status": "okay", "code": 200, "post": gin.H{"id": post_id, "slug": slug}})
