@@ -26,7 +26,6 @@ import (
 	"github.com/getsentry/raven-go"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/providers/facebook"
-	"github.com/micro/go-micro/broker"
 	"github.com/mitchellh/goamz/aws"
 	"github.com/mitchellh/goamz/s3"
 	"github.com/olebedev/config"
@@ -118,14 +117,6 @@ func main() {
 	// Implementations will be fullfilled manually
 	firebaseBroadcaster := notifications.FirebaseBroadcaster{Firebase: firebaseService}
 	broadcaster := interfaces.NotificationBroadcaster(firebaseBroadcaster)
-
-	if err := broker.Init(); err != nil {
-		log.Fatalf("Broker Init error: %v", err)
-	}
-
-	if err := broker.Connect(); err != nil {
-		log.Fatalf("Broker Connect error: %v", err)
-	}
 
 	// Provide graph with service instances
 	err = g.Provide(

@@ -6,7 +6,6 @@ import (
 
 func RunShell() {
 	shell := ishell.New()
-	shell.Println("Blacker Interactive Shell 0.1")
 
 	shell.AddCmd(&ishell.Cmd{
 		Name: "cleanup-emails",
@@ -14,6 +13,12 @@ func RunShell() {
 		Func: CleanupDuplicatedEmails,
 	})
 
+	shell.AddCmd(&ishell.Cmd{
+		Name: "test-events",
+		Help: "Test events abstraction.",
+		Func: TestEventHandler,
+	})
+
 	// start shell
-	shell.Start()
+	shell.Run()
 }

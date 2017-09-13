@@ -99,9 +99,8 @@ func (this API) Create(c *gin.Context) {
 				delete(components, "budget_flexibility")
 				delete(components, "software")
 
+				// Some important information is missing for this kind of post
 				if !bo || !bto || !bco || !bfo || !so {
-
-					// Some important information is missing for this kind of post
 					c.JSON(400, gin.H{"status": "error", "message": "Couldnt create post, missing information...", "code": 4001})
 					return
 				}
