@@ -26,7 +26,7 @@ func init() {
 		deps.Container.Transmit().Emit("feed", "action", params)
 
 		// Ignore hard-coded category.
-		if publish.Category.Hex() == "55dc16593f6ba1005d000007" {
+		if post.Category.Hex() == "55dc16593f6ba1005d000007" {
 			return nil
 		}
 

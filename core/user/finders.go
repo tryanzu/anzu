@@ -15,3 +15,12 @@ func FindId(deps Deps, id bson.ObjectId) (user User, err error) {
 
 	return
 }
+
+func FindEmail(deps Deps, email string) (user User, err error) {
+	err = deps.Mgo().C("users").Find(bson.M{"email": email}).One(&user)
+	if err != nil {
+		return user, UserNotFound
+	}
+
+	return
+}

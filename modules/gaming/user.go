@@ -6,19 +6,72 @@ import (
 	"time"
 )
 
-func UserHasPublished(d Deps, id bson.ObjectId) error {
+// Compute rewards for user making one pos.
+func UserHasPublished(d Deps, id bson.ObjectId) (err error) {
 	return IncreaseUserSwords(d, id, 1)
 }
 
+// Compute rewards for user making one comment.
 func UserHasCommented(d Deps, id bson.ObjectId) error {
 	return IncreaseUserSwords(d, id, 1)
 }
 
+// Increase swords of given user (id).
 func IncreaseUserSwords(d Deps, id bson.ObjectId, swords int) (err error) {
 	users := d.Mgo().C("users")
 
 	// Perform update using $inc operator.
 	err = users.Update(bson.M{"_id": id}, bson.M{"$inc": bson.M{"gaming.swords": swords}})
+	if err != nil {
+		return
+	}
+
+	err = syncLevelStats(d, id, false)
+	return
+}
+
+// Reset gamification temporal stuff based on user level.
+func syncLevelStats(d Deps, id bson.ObjectId, forceSync bool) (err error) {
+	var usr struct {
+		G struct {
+			Swords int `bson:"swords"`
+			Level  int `bson:"level"`
+		} `bson:"gaming"`
+	}
+
+	users := d.Mgo().C("users")
+	err = users.FindId(id).Select(bson.M{"gaming.swords": 1}).One(&usr)
+	if err != nil {
+		return
+	}
+
+	swords := usr.G.Swords
+	level := usr.G.Level
+	for _, r := range d.GamingConfig().Rules {
+
+		// Continue when out of bounds.
+		if r.Start >= swords && r.End <= swords {
+			continue
+		}
+
+		// The user level just changed
+		if level != r.Level || forceSync {
+			update := bson.M{
+				"gaming.level":   r.Level,
+				"gaming.shit":    r.Shit,
+				"gaming.tribute": r.Tribute,
+			}
+
+			// Update the user gamification facts
+			err = users.Update(bson.M{"_id": id}, bson.M{"$set": update})
+			if err != nil {
+				return
+			}
+		}
+
+		break
+	}
+
 	return
 }
 

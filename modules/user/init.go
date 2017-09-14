@@ -16,10 +16,7 @@ import (
 )
 
 func Boot() *Module {
-
-	module := &Module{}
-
-	return module
+	return &Module{}
 }
 
 type Module struct {
@@ -157,9 +154,6 @@ func (module *Module) SignUp(email, username, password, referral string) (*One, 
 	}
 
 	user := &One{data: usr, di: context}
-
-	// Send the confirmation email in other thread
-	go user.SendConfirmationEmail()
 
 	return user, nil
 }

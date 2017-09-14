@@ -3,8 +3,8 @@ package shell
 import (
 	"github.com/abiosoft/ishell"
 	"github.com/fernandez14/spartangeek-blacker/core/events"
-	"math/rand"
-	"time"
+	"github.com/fernandez14/spartangeek-blacker/core/post"
+	"gopkg.in/mgo.v2/bson"
 )
 
 func TestEventHandler(c *ishell.Context) {
@@ -13,25 +13,7 @@ func TestEventHandler(c *ishell.Context) {
 
 	c.Println("Testing events mechanism")
 
-	// Define listeners
-	events.On("post:new", func(e events.Event) error {
-		c.Println("[new-post]: rand id is", e.Params["n"])
-		return nil
-	})
+	p := post.Post{Id: bson.ObjectIdHex("59b9a86ccdab0b530f68259b")}
 
-	n := 0
-	for {
-		source := rand.NewSource(time.Now().UnixNano())
-		r := rand.New(source)
-
-		events.In <- events.Event{
-			Name: "new-post",
-			Params: map[string]interface{}{
-				"id":   n,
-				"rand": r.Intn(10),
-			},
-		}
-
-		n = n + 1
-	}
+	events.In <- events.PostNew(p.Id)
 }

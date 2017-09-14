@@ -1,37 +1,36 @@
 package users
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
+	"github.com/fernandez14/spartangeek-blacker/core/user"
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/model"
+	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
-	"gopkg.in/mgo.v2/bson"
 )
 
 func (this API) RequestPasswordRecovery(c *gin.Context) {
-
-	email := c.Query("email")
-
-	if helpers.IsEmail(email) == false {
+	if helpers.IsEmail(c.Query("email")) == false {
 		c.JSON(400, gin.H{"status": "error", "message": "Invalid request, need valid email."})
 		return
-	} 
+	}
 
-	// Get the user using its id
-	usr, err := this.User.Get(bson.M{"email": email})
-
+	usr, err := user.FindEmail(deps.Container, c.Query("email"))
 	if err != nil {
 		c.JSON(400, gin.H{"status": "error", "message": err.Error()})
 		return
 	}
 
-	go usr.SendRecoveryEmail()
+	err = usr.ConfirmationEmail(deps.Container)
+	if err != nil {
+		c.JSON(400, gin.H{"status": "error", "message": err.Error()})
+		return
+	}
 
 	c.JSON(200, gin.H{"status": "okay"})
 }
 
 func (this API) UpdatePasswordFromToken(c *gin.Context) {
-
 	token := c.Param("token")
 
 	if len(token) < 4 {

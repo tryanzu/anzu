@@ -1,6 +1,7 @@
 package deps
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
 	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/fernandez14/spartangeek-blacker/modules/transmit"
 	"github.com/olebedev/config"
@@ -11,6 +12,7 @@ import (
 
 type Deps struct {
 	ConfigProvider          *config.Config
+	GamingConfigProvider    *gaming.Rules
 	DatabaseSessionProvider *mgo.Session
 	DatabaseProvider        *mgo.Database
 	LoggerProvider          *logging.Logger
@@ -21,6 +23,10 @@ type Deps struct {
 
 func (d Deps) Config() *config.Config {
 	return d.ConfigProvider
+}
+
+func (d Deps) GamingConfig() *gaming.Rules {
+	return d.GamingConfigProvider
 }
 
 func (d Deps) Log() *logging.Logger {

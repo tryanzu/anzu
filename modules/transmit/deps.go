@@ -1,6 +1,7 @@
 package transmit
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/olebedev/config"
 	"github.com/op/go-logging"
 	"github.com/xuyu/goredis"
@@ -12,4 +13,5 @@ type Deps interface {
 	Cache() *goredis.Redis
 	Config() *config.Config
 	Log() *logging.Logger
+	Mailer() mail.Mailer
 }

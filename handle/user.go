@@ -6,6 +6,8 @@ import (
 	"github.com/CloudCom/fireauth"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/fernandez14/go-siftscience"
+	u "github.com/fernandez14/spartangeek-blacker/core/user"
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/modules/acl"
 	"github.com/fernandez14/spartangeek-blacker/modules/content"
@@ -530,11 +532,9 @@ func (di *UserAPI) UserUpdateProfile(c *gin.Context) {
 		db.C("users").Update(bson.M{"_id": user.Id}, bson.M{"$set": set})
 
 		if _, emailChanged := set["email"]; emailChanged {
-
-			usr, err := di.User.Get(user.Id)
-
+			usr, err := u.FindId(deps.Container, user.Id)
 			if err == nil {
-				usr.SendConfirmationEmail()
+				usr.ConfirmationEmail(deps.Container)
 			}
 		}
 
@@ -564,30 +564,37 @@ func (di *UserAPI) UserValidateEmail(c *gin.Context) {
 }
 
 func (di *UserAPI) UserRegisterAction(c *gin.Context) {
-
 	var form model.UserRegisterForm
 
-	if c.BindWith(&form, binding.JSON) == nil {
-
-		// Get the user using its id
-		usr, err := di.User.SignUp(form.Email, form.UserName, form.Password, form.Referral)
-
-		if err != nil {
-
-			c.JSON(400, gin.H{"status": "error", "message": err.Error()})
-			return
-		}
-
-		// Generate token if auth is going to perform
-		token, firebase := di.generateUserToken(usr.Data().Id, usr.Data().Roles, 72)
-
-		// Finished creating the post
-		c.JSON(200, gin.H{"status": "okay", "code": 200, "token": token, "firebase": firebase})
+	if c.BindJSON(&form) != nil {
+		c.JSON(400, gin.H{"status": "error", "message": "Missing information to process the request", "code": 400})
 		return
 	}
 
-	// Couldn't process the request though
-	c.JSON(400, gin.H{"status": "error", "message": "Missing information to process the request", "code": 400})
+	usr, err := di.User.SignUp(form.Email, form.UserName, form.Password, form.Referral)
+	if err != nil {
+		c.JSON(400, gin.H{"status": "error", "message": err.Error()})
+		return
+	}
+
+	// Confirmation email.
+	user, err := u.FindId(deps.Container, usr.Data().Id)
+	if err != nil {
+		c.JSON(400, gin.H{"status": "error", "message": err.Error()})
+		return
+	}
+
+	err = user.ConfirmationEmail(deps.Container)
+	if err != nil {
+		c.JSON(400, gin.H{"status": "error", "message": err.Error()})
+		return
+	}
+
+	// Generate token if auth is going to perform
+	token, firebase := di.generateUserToken(usr.Data().Id, usr.Data().Roles, 72)
+
+	// Finished creating the post
+	c.JSON(200, gin.H{"status": "okay", "code": 200, "token": token, "firebase": firebase})
 }
 
 func (di *UserAPI) UserGetActivity(c *gin.Context) {

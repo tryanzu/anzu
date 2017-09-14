@@ -1,28 +1,44 @@
 package deps
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"os"
 
 	"github.com/olebedev/config"
 )
 
-func IgniteConfig(container Deps) (Deps, error) {
+func IgniteConfig(d Deps) (container Deps, err error) {
 	envfile := os.Getenv("ENV_FILE")
 	if envfile == "" {
-		curr, err := os.Getwd()
-		if err != nil {
-			return container, err
+		if curr, err := os.Getwd(); err == nil {
+			envfile = curr + "/env.json"
 		}
-
-		envfile = curr + "/env.json"
 	}
 
-	conf, err := config.ParseJsonFile(envfile)
+	parsed, err := config.ParseJsonFile(envfile)
 	if err != nil {
-		return container, err
+		return
 	}
 
-	container.ConfigProvider = conf
+	// Load other files with important config.
+	gaming, err := parsed.String("application.gaming")
+	if err != nil {
+		return
+	}
+
+	gamingRules, err := ioutil.ReadFile(gaming)
+	if err != nil {
+		return
+	}
+
+	err = json.Unmarshal(gamingRules, &d.GamingConfigProvider)
+	if err != nil {
+		return
+	}
+
+	d.ConfigProvider = parsed
+	container = d
 	container.Log().Debugf("Configuration ignited using %s", envfile)
-	return container, nil
+	return
 }

@@ -8,4 +8,5 @@ import (
 type Deps interface {
 	Mgo() *mgo.Database
 	Cache() *goredis.Redis
+	GamingConfig() *Rules
 }
