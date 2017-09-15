@@ -2,10 +2,10 @@ package shell
 
 import (
 	"github.com/abiosoft/ishell"
+	_ "github.com/fernandez14/spartangeek-blacker/board/comments"
 	"github.com/fernandez14/spartangeek-blacker/core/events"
 	_ "github.com/fernandez14/spartangeek-blacker/core/post"
 	"gopkg.in/mgo.v2/bson"
-	"time"
 )
 
 func TestEventHandler(c *ishell.Context) {
@@ -14,8 +14,5 @@ func TestEventHandler(c *ishell.Context) {
 
 	c.Println("Testing events mechanism")
 
-	for {
-		events.In <- events.PostNew(bson.ObjectIdHex("59b9a86ccdab0b530f68259b"))
-		time.Sleep(time.Millisecond * 100)
-	}
+	events.In <- events.PostComment(bson.ObjectIdHex("59a9a33bcdab0b5dcb31d4b0"))
 }

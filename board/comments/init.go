@@ -1,8 +1,8 @@
 package comments
 
 import (
+	notify "github.com/fernandez14/spartangeek-blacker/board/notifications"
 	"github.com/fernandez14/spartangeek-blacker/core/events"
-	notify "github.com/fernandez14/spartangeek-blacker/core/notifications"
 	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
 	"gopkg.in/mgo.v2/bson"
@@ -29,13 +29,6 @@ func init() {
 				"id":      comment.PostId.Hex(),
 				"user_id": comment.UserId.Hex(),
 			}}
-
-			deps.Container.Transmit().Emit("feed", "action", params)
-
-			// Ignore hard-coded category.
-			if post.Category.Hex() == "55dc16593f6ba1005d000007" {
-				return nil
-			}
 
 			return gaming.UserHasCommented(deps.Container, comment.UserId)
 		},

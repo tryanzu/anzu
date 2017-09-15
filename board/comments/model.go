@@ -3,6 +3,8 @@ package comments
 import (
 	"github.com/fernandez14/spartangeek-blacker/board/votes"
 	"gopkg.in/mgo.v2/bson"
+
+	"time"
 )
 
 type Comment struct {
