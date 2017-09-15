@@ -1,6 +1,7 @@
 package post
 
 import (
+	notify "github.com/fernandez14/spartangeek-blacker/board/notifications"
 	"github.com/fernandez14/spartangeek-blacker/core/events"
 	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
@@ -17,15 +18,13 @@ func init() {
 				return err
 			}
 
-			params := map[string]interface{}{
+			notify.Transmit <- notify.Socket{"feed", "action", map[string]interface{}{
 				"fire":     "new-post",
 				"category": post.Category.Hex(),
 				"user_id":  post.UserId.Hex(),
 				"id":       post.Id.Hex(),
 				"slug":     post.Slug,
-			}
-
-			deps.Container.Transmit().Emit("feed", "action", params)
+			}}
 
 			// Ignore hard-coded category.
 			if post.Category.Hex() == "55dc16593f6ba1005d000007" {

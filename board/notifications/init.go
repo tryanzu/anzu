@@ -20,5 +20,6 @@ func init() {
 
 	for n := 0; n < PoolSize; n++ {
 		go databaseWorker(n, deps.Container)
+		go transmitWorker(n)
 	}
 }
