@@ -4,21 +4,19 @@ type Handler func(Event) error
 
 // The input channel will receive
 var In chan Event
+var On chan EventHandler
 
 // Map of handlers that will react to events.
 var Handlers map[string][]Handler
 
+type EventHandler struct {
+	On      string
+	Handler Handler
+}
+
 type Event struct {
 	Name   string
 	Params map[string]interface{}
-}
-
-func On(event string, h Handler) {
-	if _, exists := Handlers[event]; !exists {
-		Handlers[event] = []Handler{}
-	}
-
-	Handlers[event] = append(Handlers[event], h)
 }
 
 func execHandlers(list []Handler, event Event) {
@@ -32,18 +30,26 @@ func execHandlers(list []Handler, event Event) {
 	}
 }
 
-func inputEvents(ch chan Event) {
-	for event := range ch {
+func inputEvents(in chan Event, on chan EventHandler) {
+	select {
+	case event := <-in:
 		if ls, exists := Handlers[event.Name]; exists {
 			go execHandlers(ls, event)
 		}
+	case h := <-on:
+		if _, exists := Handlers[h.On]; !exists {
+			Handlers[h.On] = []Handler{}
+		}
+
+		Handlers[h.On] = append(Handlers[h.On], h.Handler)
 	}
 }
 
 // Initialize channel of input events, consumer & map of handlers.
 func init() {
 	In = make(chan Event, 10)
+	On = make(chan EventHandler)
 	Handlers = make(map[string][]Handler)
 
-	go inputEvents(In)
+	go inputEvents(In, On)
 }

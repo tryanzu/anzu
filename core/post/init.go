@@ -9,27 +9,30 @@ import (
 
 // Bind event handlers for posts related actions...
 func init() {
-	events.On(events.POSTS_NEW, func(e events.Event) error {
-		post, err := FindId(deps.Container, e.Params["id"].(bson.ObjectId))
-		if err != nil {
-			return err
-		}
+	events.On <- events.EventHandler{
+		On: events.POSTS_NEW,
+		Handler: func(e events.Event) error {
+			post, err := FindId(deps.Container, e.Params["id"].(bson.ObjectId))
+			if err != nil {
+				return err
+			}
 
-		params := map[string]interface{}{
-			"fire":     "new-post",
-			"category": post.Category.Hex(),
-			"user_id":  post.UserId.Hex(),
-			"id":       post.Id.Hex(),
-			"slug":     post.Slug,
-		}
+			params := map[string]interface{}{
+				"fire":     "new-post",
+				"category": post.Category.Hex(),
+				"user_id":  post.UserId.Hex(),
+				"id":       post.Id.Hex(),
+				"slug":     post.Slug,
+			}
 
-		deps.Container.Transmit().Emit("feed", "action", params)
+			deps.Container.Transmit().Emit("feed", "action", params)
 
-		// Ignore hard-coded category.
-		if post.Category.Hex() == "55dc16593f6ba1005d000007" {
-			return nil
-		}
+			// Ignore hard-coded category.
+			if post.Category.Hex() == "55dc16593f6ba1005d000007" {
+				return nil
+			}
 
-		return gaming.UserHasPublished(deps.Container, post.UserId)
-	})
+			return gaming.UserHasPublished(deps.Container, post.UserId)
+		},
+	}
 }

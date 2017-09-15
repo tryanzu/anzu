@@ -13,7 +13,7 @@ func UserHasPublished(d Deps, id bson.ObjectId) (err error) {
 
 // Compute rewards for user making one comment.
 func UserHasCommented(d Deps, id bson.ObjectId) error {
-	return IncreaseUserSwords(d, id, 1)
+	return IncreaseUserSwords(d, id, 0)
 }
 
 // Increase swords of given user (id).

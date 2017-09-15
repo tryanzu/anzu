@@ -1,9 +1,8 @@
 package comments
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/deps"
+	"github.com/fernandez14/spartangeek-blacker/core/events"
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
-	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -42,26 +41,10 @@ func (this API) Add(c *gin.Context) {
 		}
 
 		comment := post.PushComment(form.Content, user_id)
-
-		go func(id bson.ObjectId, usrId bson.ObjectId) {
-
-			carrierParams := map[string]interface{}{
-				"fire":    "new-comment",
-				"id":      id.Hex(),
-				"user_id": usrId.Hex(),
-			}
-
-			deps.Container.Transmit().Emit("feed", "action", carrierParams)
-
-		}(post.Id, user_id)
+		events.In <- events.PostComment(comment.Id)
 
 		if post.UserId != user_id {
 			go func(post *feed.Post, comment *feed.Comment, user_id bson.ObjectId) {
-
-				if post.Category.Hex() != "55dc16593f6ba1005d000007" {
-					gaming.UserHasCommented(deps.Container, user_id)
-				}
-
 				// Notify the author about this comment
 				this.Notifications.Comment(post.Slug, post.Title, comment.Position, post.Id, post.UserId, user_id)
 
