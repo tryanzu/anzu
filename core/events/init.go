@@ -21,7 +21,6 @@ type Event struct {
 
 func execHandlers(list []Handler, event Event) {
 	var err error
-
 	for h := range list {
 		err = list[h](event)
 		if err != nil {
@@ -30,18 +29,20 @@ func execHandlers(list []Handler, event Event) {
 	}
 }
 
-func inputEvents(in chan Event, on chan EventHandler) {
-	select {
-	case event := <-in:
-		if ls, exists := Handlers[event.Name]; exists {
-			go execHandlers(ls, event)
-		}
-	case h := <-on:
-		if _, exists := Handlers[h.On]; !exists {
-			Handlers[h.On] = []Handler{}
-		}
+func sink(in chan Event, on chan EventHandler) {
+	for {
+		select {
+		case event := <-in:
+			if ls, exists := Handlers[event.Name]; exists {
+				go execHandlers(ls, event)
+			}
+		case h := <-on:
+			if _, exists := Handlers[h.On]; !exists {
+				Handlers[h.On] = []Handler{}
+			}
 
-		Handlers[h.On] = append(Handlers[h.On], h.Handler)
+			Handlers[h.On] = append(Handlers[h.On], h.Handler)
+		}
 	}
 }
 
@@ -51,5 +52,5 @@ func init() {
 	On = make(chan EventHandler)
 	Handlers = make(map[string][]Handler)
 
-	go inputEvents(In, On)
+	go sink(In, On)
 }
