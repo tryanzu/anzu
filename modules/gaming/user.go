@@ -1,6 +1,7 @@
 package gaming
 
 import (
+	notify "github.com/fernandez14/spartangeek-blacker/board/notifications"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"gopkg.in/mgo.v2/bson"
 	"time"
@@ -18,12 +19,14 @@ func UserHasCommented(d Deps, id bson.ObjectId) error {
 
 // Increase swords of given user (id).
 func IncreaseUserSwords(d Deps, id bson.ObjectId, swords int) (err error) {
-	users := d.Mgo().C("users")
+	if swords > 0 {
+		users := d.Mgo().C("users")
 
-	// Perform update using $inc operator.
-	err = users.Update(bson.M{"_id": id}, bson.M{"$inc": bson.M{"gaming.swords": swords}})
-	if err != nil {
-		return
+		// Perform update using $inc operator.
+		err = users.Update(bson.M{"_id": id}, bson.M{"$inc": bson.M{"gaming.swords": swords}})
+		if err != nil {
+			return
+		}
 	}
 
 	err = syncLevelStats(d, id, false)
@@ -33,14 +36,12 @@ func IncreaseUserSwords(d Deps, id bson.ObjectId, swords int) (err error) {
 // Reset gamification temporal stuff based on user level.
 func syncLevelStats(d Deps, id bson.ObjectId, forceSync bool) (err error) {
 	var usr struct {
-		G struct {
-			Swords int `bson:"swords"`
-			Level  int `bson:"level"`
-		} `bson:"gaming"`
+		G user.UserGaming `bson:"gaming"`
 	}
 
 	users := d.Mgo().C("users")
-	err = users.FindId(id).Select(bson.M{"gaming.swords": 1}).One(&usr)
+	fields := bson.M{"gaming.swords": 1, "gaming.level": 1, "gaming.tribute": 1}
+	err = users.FindId(id).Select(fields).One(&usr)
 	if err != nil {
 		return
 	}
@@ -50,7 +51,7 @@ func syncLevelStats(d Deps, id bson.ObjectId, forceSync bool) (err error) {
 	for _, r := range d.GamingConfig().Rules {
 
 		// Continue when out of bounds.
-		if r.Start >= swords && r.End <= swords {
+		if swords > r.End || swords < r.Start {
 			continue
 		}
 
@@ -67,6 +68,13 @@ func syncLevelStats(d Deps, id bson.ObjectId, forceSync bool) (err error) {
 			if err != nil {
 				return
 			}
+
+			// Send updated data over the wire
+			notify.Transmit <- notify.Socket{"user " + id.Hex(), "gaming", map[string]interface{}{
+				"level":   r.Level,
+				"tribute": r.Tribute,
+				"shit":    r.Shit,
+			}}
 		}
 
 		break

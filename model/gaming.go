@@ -5,11 +5,11 @@ import (
 )
 
 type GamingRules struct {
-	Updated time.Time    `json:"updated_at"`
-	Rules   []GamingRule `json:"rules"`
+	Updated time.Time   `json:"updated_at"`
+	Rules   []RuleModel `json:"rules"`
 }
 
-type GamingRule struct {
+type RuleModel struct {
 	Level   int    `json:"level"`
 	Name    string `json:"name"`
 	Start   int    `json:"swords_start"`
