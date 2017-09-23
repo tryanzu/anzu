@@ -100,7 +100,7 @@ func (all Notifications) Humanize(deps Deps) (list []map[string]interface{}, err
 			user := umap[comment.UserId.Hex()]
 
 			list = append(list, map[string]interface{}{
-				"target":    "/p/" + post.Slug + "/" + post.Id.Hex() + "#c" + comment.Id.Hex(),
+				"target":    "/p/" + post.Slug + "/" + post.Id.Hex(), /*+ "#c" + comment.Id.Hex()*/
 				"title":     "@" + user.UserName + " te mencionó en un comentario",
 				"subtitle":  post.Title,
 				"createdAt": n.Created,

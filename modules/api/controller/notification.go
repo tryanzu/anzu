@@ -36,6 +36,11 @@ func Notifications(c *gin.Context) {
 		return
 	}
 
+	if len(batch) == 0 {
+		c.JSON(200, make([]string, 0))
+		return
+	}
+
 	err = user.ResetNotifications(deps.Container, usr.Id)
 	if err != nil {
 		c.AbortWithError(500, err)
