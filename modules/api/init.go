@@ -213,6 +213,7 @@ func (module *Module) Run() {
 		authorized := v1.Group("")
 		authorized.Use(module.Middlewares.NeedAuthorization())
 		{
+			authorized.GET("/notifications", http.UserMiddleware(), controller.Notifications)
 			authorized.GET("/contest-lead", module.Lead.GetContestLead)
 			authorized.PUT("/contest-lead", module.Lead.UpdateContestLead)
 			authorized.POST("/build", module.PostsFactory.Create)
@@ -259,7 +260,6 @@ func (module *Module) Run() {
 				backoffice.GET("/order-report", module.Store.OrdersAggregate)
 				backoffice.GET("/activities", module.Store.Activities)
 				backoffice.GET("/leads", http.UserMiddleware(), controller.Leads)
-				backoffice.GET("/order", http.UserMiddleware(), module.Store.Orders)
 
 				order := backoffice.Group("/order")
 				order.Use(module.Middlewares.ValidateBsonID("id"))

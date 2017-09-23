@@ -1,6 +1,7 @@
 package content
 
 import (
+	notify "github.com/fernandez14/spartangeek-blacker/board/notifications"
 	"gopkg.in/mgo.v2/bson"
 
 	"regexp"
@@ -104,7 +105,6 @@ func (self Module) NotifyMentionsAsync(o Parseable, ls []Mention) {
 	entity := o.GetParseableMeta()
 
 	if related, exists := entity["type"].(string); exists {
-
 		if related_id, exists := entity["id"].(bson.ObjectId); exists {
 
 			var owner_id bson.ObjectId
@@ -139,6 +139,14 @@ func (self Module) NotifyMentionsAsync(o Parseable, ls []Mention) {
 					continue
 				}
 
+				notify.Database <- notify.Notification{
+					UserId:    to.UserId,
+					Type:      "mention",
+					RelatedId: related_id,
+					Users:     []bson.ObjectId{owner_id},
+				}
+
+				// TODO: persist new mentions here instead...
 				self.Notifications.Mention(entity, owner_id, to.UserId)
 			}
 

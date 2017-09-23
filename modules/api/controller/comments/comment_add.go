@@ -2,7 +2,6 @@ package comments
 
 import (
 	"github.com/fernandez14/spartangeek-blacker/core/events"
-	"github.com/fernandez14/spartangeek-blacker/modules/feed"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -17,7 +16,6 @@ func (this API) Add(c *gin.Context) {
 	}
 
 	post, err := this.Feed.Post(bson.ObjectIdHex(id))
-
 	if err != nil {
 		c.JSON(404, gin.H{"status": "error", "message": "Post not found."})
 		return
@@ -27,7 +25,6 @@ func (this API) Add(c *gin.Context) {
 	user_id := bson.ObjectIdHex(user_str.(string))
 
 	if c.Bind(&form) == nil {
-
 		if post.IsLocked() {
 			c.JSON(403, gin.H{"status": "error", "message": "Comments not longer allowed in this post."})
 			return
@@ -41,15 +38,9 @@ func (this API) Add(c *gin.Context) {
 		}
 
 		comment := post.PushComment(form.Content, user_id)
+
+		// Notify events pool.
 		events.In <- events.PostComment(comment.Id)
-
-		if post.UserId != user_id {
-			go func(post *feed.Post, comment *feed.Comment, user_id bson.ObjectId) {
-				// Notify the author about this comment
-				this.Notifications.Comment(post.Slug, post.Title, comment.Position, post.Id, post.UserId, user_id)
-
-			}(post, comment, user_id)
-		}
 
 		c.JSON(200, gin.H{"status": "okay", "message": comment.Content, "position": comment.Position})
 		return

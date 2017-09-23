@@ -1,19 +1,20 @@
-package post
+package events
 
 import (
 	notify "github.com/fernandez14/spartangeek-blacker/board/notifications"
-	"github.com/fernandez14/spartangeek-blacker/core/events"
+	posts "github.com/fernandez14/spartangeek-blacker/board/posts"
+	ev "github.com/fernandez14/spartangeek-blacker/core/events"
 	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
 	"gopkg.in/mgo.v2/bson"
 )
 
 // Bind event handlers for posts related actions...
-func init() {
-	events.On <- events.EventHandler{
-		On: events.POSTS_NEW,
-		Handler: func(e events.Event) error {
-			post, err := FindId(deps.Container, e.Params["id"].(bson.ObjectId))
+func postsEvents() {
+	ev.On <- ev.EventHandler{
+		On: ev.POSTS_NEW,
+		Handler: func(e ev.Event) error {
+			post, err := posts.FindId(deps.Container, e.Params["id"].(bson.ObjectId))
 			if err != nil {
 				return err
 			}

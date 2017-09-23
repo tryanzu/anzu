@@ -2,6 +2,7 @@ package user
 
 import (
 	"errors"
+	"github.com/fernandez14/spartangeek-blacker/core/common"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -22,5 +23,10 @@ func FindEmail(deps Deps, email string) (user User, err error) {
 		return user, UserNotFound
 	}
 
+	return
+}
+
+func FindList(deps Deps, scopes ...common.Scope) (users Users, err error) {
+	err = deps.Mgo().C("users").Find(common.ByScope(scopes...)).All(&users)
 	return
 }

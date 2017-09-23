@@ -19,9 +19,8 @@ type User struct {
 	Roles        []UserRole    `bson:"roles" json:"roles,omitempty"`
 	Permissions  []string      `bson:"permissions" json:"permissions,omitempty"`
 
-	Notifications interface{}            `bson:"notifications,omitempty" json:"notifications,omitempty"`
-	Profile       map[string]interface{} `bson:"profile,omitempty" json:"profile,omitempty"`
-	Gaming        UserGaming             `bson:"gaming,omitempty" json:"gaming,omitempty"`
+	Profile map[string]interface{} `bson:"profile,omitempty" json:"profile,omitempty"`
+	Gaming  UserGaming             `bson:"gaming,omitempty" json:"gaming,omitempty"`
 
 	Phone       string `bson:"phone,omitempty" json:"phone"`
 	Country     string `bson:"country,omitempty" json:"country"`
@@ -44,6 +43,7 @@ type UserPrivate struct {
 	User             `bson:",inline"`
 	Password         string          `bson:"password,omitempty" json:"-"`
 	Step             int             `bson:"step,omitempty" json:"step"`
+	Notifications    int             `bson:"notifications,omitempty" json:"notifications"`
 	Email            string          `bson:"email,omitempty" json:"email,omitempty"`
 	Categories       []bson.ObjectId `bson:"categories,omitempty" json:"categories,omitempty"`
 	Facebook         interface{}     `bson:"facebook,omitempty" json:"facebook,omitempty"`

@@ -6,6 +6,7 @@ import (
 	"github.com/cosn/firebase"
 	"github.com/facebookgo/inject"
 	"github.com/fernandez14/go-siftscience"
+	_ "github.com/fernandez14/spartangeek-blacker/board/events"
 	"github.com/fernandez14/spartangeek-blacker/core/shell"
 	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/interfaces"

@@ -17,5 +17,24 @@ func databaseWorker(n int) {
 		if err != nil {
 			panic(err)
 		}
+
+		err = deps.Container.Mgo().C("users").Update(bson.M{"_id": n.UserId}, bson.M{"$inc": bson.M{"notifications": 1}})
+		if err != nil {
+			panic(err)
+		}
+
+		var u struct {
+			Count int `bson:"notifications"`
+		}
+
+		err = deps.Container.Mgo().C("users").FindId(n.UserId).Select(bson.M{"notifications": 1}).One(&u)
+		if err != nil {
+			panic(err)
+		}
+
+		Transmit <- Socket{"user " + n.UserId.Hex(), "notification", map[string]interface{}{
+			"fire":  "notification",
+			"count": u.Count,
+		}}
 	}
 }

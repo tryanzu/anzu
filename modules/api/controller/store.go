@@ -111,40 +111,6 @@ func (self StoreAPI) PlaceOrder(c *gin.Context) {
 	}
 }
 
-// Get all orders sorted by convenience
-func (self StoreAPI) Orders(c *gin.Context) {
-	var limit, offset int = 10, 0
-
-	if n, err := strconv.Atoi(c.DefaultQuery("offset", "0")); err == nil {
-		offset = n
-	}
-	if n, err := strconv.Atoi(c.DefaultQuery("limit", "10")); err == nil {
-		limit = n
-	}
-
-	user := c.MustGet("user").(user.User)
-	search := c.Query("search")
-	group := c.Query("group")
-	version := c.Query("version")
-	orders := self.Store.GetSortedOrders(limit, offset, search, group)
-	orders = store.HaveRead(orders, user.Id)
-
-	if version == "v2" {
-		list := make([]string, len(orders))
-		entities := make(map[string]interface{}, len(orders))
-
-		for index, order := range orders {
-			list[index] = order.Id.Hex()
-			entities[order.Id.Hex()] = order
-		}
-
-		c.JSON(200, gin.H{"entities": entities, "results": list})
-		return
-	}
-
-	c.JSON(200, orders)
-}
-
 func (s StoreAPI) OrdersAggregate(c *gin.Context) {
 
 	tags := s.Store.GetOrdersAggregation()

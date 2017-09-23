@@ -35,6 +35,17 @@ type User struct {
 	Updated     time.Time  `bson:"updated_at" json:"updated_at"`
 }
 
+type Users []User
+
+func (list Users) Map() map[string]User {
+	m := make(map[string]User, len(list))
+	for _, item := range list {
+		m[item.Id.Hex()] = item
+	}
+
+	return m
+}
+
 type RecoveryToken struct {
 	Id      bson.ObjectId `bson:"_id,omitempty" json:"id"`
 	Token   string        `bson:"token" json:"token"`
