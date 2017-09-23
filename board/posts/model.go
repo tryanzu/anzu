@@ -26,3 +26,14 @@ type Post struct {
 	Updated           time.Time       `bson:"updated_at" json:"updated_at"`
 	Deleted           time.Time       `bson:"deleted_at,omitempty" json:"deleted_at,omitempty"`
 }
+
+type Posts []Post
+
+func (list Posts) Map() map[string]Post {
+	m := make(map[string]Post, len(list))
+	for _, item := range list {
+		m[item.Id.Hex()] = item
+	}
+
+	return m
+}

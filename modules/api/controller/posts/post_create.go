@@ -1,6 +1,7 @@
 package posts
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/core/events"
 	"github.com/fernandez14/spartangeek-blacker/core/user"
 	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/model"
@@ -99,9 +100,8 @@ func (this API) Create(c *gin.Context) {
 				delete(components, "budget_flexibility")
 				delete(components, "software")
 
+				// Some important information is missing for this kind of post
 				if !bo || !bto || !bco || !bfo || !so {
-
-					// Some important information is missing for this kind of post
 					c.JSON(400, gin.H{"status": "error", "message": "Couldnt create post, missing information...", "code": 4001})
 					return
 				}
@@ -203,26 +203,8 @@ func (this API) Create(c *gin.Context) {
 					go this.savePostImages(asset, publish.Id)
 				}
 
-				// Add the gamification contribution
-				go func() {
-
-					// Catch errors on runtime
-					defer this.Errors.Recover()
-					params := map[string]interface{}{
-						"fire":     "new-post",
-						"category": publish.Category.Hex(),
-						"user_id":  publish.UserId.Hex(),
-						"id":       publish.Id.Hex(),
-						"slug":     publish.Slug,
-					}
-
-					deps.Container.Transmit().Emit("feed", "action", params)
-
-					if publish.Category.Hex() != "55dc16593f6ba1005d000007" {
-						usr := this.Gaming.Get(bson_id)
-						usr.Did("publish")
-					}
-				}()
+				// Notify events pool.
+				events.In <- events.PostNew(publish.Id)
 
 				// Finished creating the post
 				c.JSON(200, gin.H{"status": "okay", "code": 200, "post": gin.H{"id": post_id, "slug": slug}})
@@ -273,35 +255,18 @@ func (this API) Create(c *gin.Context) {
 			}
 
 			err = database.C("posts").Insert(publish)
-
 			if err != nil {
 				panic(err)
 			}
+
+			// Notify events pool immediately after performing save.
+			events.In <- events.PostNew(publish.Id)
 
 			for _, asset := range assets {
 
 				// Non blocking image download
 				go this.savePostImages(asset, publish.Id)
 			}
-
-			go func() {
-				defer this.Errors.Recover()
-
-				params := map[string]interface{}{
-					"fire":     "new-post",
-					"category": publish.Category.Hex(),
-					"user_id":  publish.UserId.Hex(),
-					"id":       publish.Id.Hex(),
-					"slug":     publish.Slug,
-				}
-
-				deps.Container.Transmit().Emit("feed", "action", params)
-
-				if publish.Category.Hex() != "55dc16593f6ba1005d000007" {
-					usr := this.Gaming.Get(bson_id)
-					usr.Did("publish")
-				}
-			}()
 
 			// Finished creating the post
 			c.JSON(200, gin.H{"status": "okay", "code": 200, "post": gin.H{"id": post_id, "slug": slug}})

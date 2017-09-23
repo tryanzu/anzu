@@ -36,16 +36,15 @@ type fn func()
 func (module Module) Run(name string) {
 
 	commands := map[string]fn{
-		"slug-fix":           module.SlugFix,
-		"codes-fix":          module.Codes,
-		"send-confirmations": module.ConfirmationEmails,
-		"replace-url":        module.ReplaceURL,
-		"first-newsletter":   module.FirstNewsletter,
-		"migrate-comments":   module.MigrateDeletedComment,
-		"migrate-ccomments":  module.MigrateChosenComment,
-		"export-components":  module.ExportComponents,
-		"count-components":   module.GenerateComponentViews,
-		"clean-references":   module.CleanupReferences,
+		"slug-fix":          module.SlugFix,
+		"codes-fix":         module.Codes,
+		"replace-url":       module.ReplaceURL,
+		"first-newsletter":  module.FirstNewsletter,
+		"migrate-comments":  module.MigrateDeletedComment,
+		"migrate-ccomments": module.MigrateChosenComment,
+		"export-components": module.ExportComponents,
+		"count-components":  module.GenerateComponentViews,
+		"clean-references":  module.CleanupReferences,
 
 		"spree-taxons":              module.SpreeTaxons,
 		"spree-products":            module.SpreeProducts,
@@ -327,35 +326,6 @@ func (module Module) Codes() {
 		if usr.ReferralCode != "" && usr.VerificationCode != "" {
 
 			fmt.Printf(".")
-		}
-	}
-}
-
-func (module Module) ConfirmationEmails() {
-
-	var usr user.UserPrivate
-	database := module.Mongo.Database
-
-	// Get all users
-	from := time.Now()
-	from = from.Add(-time.Duration(time.Hour * 24 * 10))
-
-	query := database.C("users").Find(bson.M{"validated": false, "gamificated_at": bson.M{"$gt": from}, "created_at": bson.M{"$lt": from}})
-	count, _ := query.Count()
-
-	fmt.Printf("Found %v at %v\n", count, from)
-
-	iter := query.Iter()
-
-	for iter.Next(&usr) {
-
-		usr_copy := &usr
-		usr_obj, err := module.User.Get(usr_copy)
-
-		if err == nil {
-
-			// Send the confirmation email
-			usr_obj.SendConfirmationEmail()
 		}
 	}
 }

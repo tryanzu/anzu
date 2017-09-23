@@ -25,10 +25,32 @@ type User struct {
 	Profile       map[string]interface{} `bson:"profile,omitempty" json:"profile,omitempty"`
 	//Gaming        UserGaming             `bson:"gaming,omitempty" json:"gaming,omitempty"`
 	//Stats         UserStats              `bson:"stats,omitempty" json:"stats,omitempty"`
-	Version   string `bson:"version,omitempty" json:"version,omitempty"`
-	Validated bool   `bson:"validated" json:"validated"`
+	Version          string `bson:"version,omitempty" json:"version,omitempty"`
+	Validated        bool   `bson:"validated" json:"validated"`
+	VerificationCode string `bson:"ver_code,omitempty" json:"ver_code"`
 
-	Warnings int       `bson:"warnings" json:"-"`
-	Created  time.Time `bson:"created_at" json:"created_at"`
-	Updated  time.Time `bson:"updated_at" json:"updated_at"`
+	Warnings    int        `bson:"warnings" json:"-"`
+	ConfirmSent *time.Time `bson:"confirm_sent_at" json:"-"`
+	Created     time.Time  `bson:"created_at" json:"created_at"`
+	Updated     time.Time  `bson:"updated_at" json:"updated_at"`
+}
+
+type Users []User
+
+func (list Users) Map() map[string]User {
+	m := make(map[string]User, len(list))
+	for _, item := range list {
+		m[item.Id.Hex()] = item
+	}
+
+	return m
+}
+
+type RecoveryToken struct {
+	Id      bson.ObjectId `bson:"_id,omitempty" json:"id"`
+	Token   string        `bson:"token" json:"token"`
+	UserId  bson.ObjectId `bson:"user_id" json:"user_id"`
+	Used    bool          `bson:"used" json:"used"`
+	Created time.Time     `bson:"created_at" json:"created_at"`
+	Updated time.Time     `bson:"updated_at" json:"updated_at"`
 }

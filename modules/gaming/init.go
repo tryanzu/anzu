@@ -46,7 +46,7 @@ type Module struct {
 	Config   *config.Config               `inject:""`
 	Firebase *firebase.Client             `inject:""`
 	Errors   *exceptions.ExceptionsModule `inject:""`
-	Rules    RulesModel
+	Rules    Rules
 }
 
 // Get user gaming struct
@@ -110,7 +110,7 @@ func (self *Module) Post(post interface{}) *Post {
 }
 
 // Get gamification model with badges
-func (self *Module) GetRules() RulesModel {
+func (self *Module) GetRules() Rules {
 
 	database := self.Mongo.Database
 	rules := self.Rules

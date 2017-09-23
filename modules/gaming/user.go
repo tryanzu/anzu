@@ -1,31 +1,91 @@
 package gaming
 
 import (
+	notify "github.com/fernandez14/spartangeek-blacker/board/notifications"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"gopkg.in/mgo.v2/bson"
 	"time"
 )
 
+// Compute rewards for user making one pos.
+func UserHasPublished(d Deps, id bson.ObjectId) (err error) {
+	return IncreaseUserSwords(d, id, 1)
+}
+
+// Compute rewards for user making one comment.
+func UserHasCommented(d Deps, id bson.ObjectId) error {
+	return IncreaseUserSwords(d, id, 0)
+}
+
+// Increase swords of given user (id).
+func IncreaseUserSwords(d Deps, id bson.ObjectId, swords int) (err error) {
+	if swords > 0 {
+		users := d.Mgo().C("users")
+
+		// Perform update using $inc operator.
+		err = users.Update(bson.M{"_id": id}, bson.M{"$inc": bson.M{"gaming.swords": swords}})
+		if err != nil {
+			return
+		}
+	}
+
+	err = syncLevelStats(d, id, false)
+	return
+}
+
+// Reset gamification temporal stuff based on user level.
+func syncLevelStats(d Deps, id bson.ObjectId, forceSync bool) (err error) {
+	var usr struct {
+		G user.UserGaming `bson:"gaming"`
+	}
+
+	users := d.Mgo().C("users")
+	fields := bson.M{"gaming.swords": 1, "gaming.level": 1, "gaming.tribute": 1}
+	err = users.FindId(id).Select(fields).One(&usr)
+	if err != nil {
+		return
+	}
+
+	swords := usr.G.Swords
+	level := usr.G.Level
+	for _, r := range d.GamingConfig().Rules {
+
+		// Continue when out of bounds.
+		if swords > r.End || swords < r.Start {
+			continue
+		}
+
+		// The user level just changed
+		if level != r.Level || forceSync {
+			update := bson.M{
+				"gaming.level":   r.Level,
+				"gaming.shit":    r.Shit,
+				"gaming.tribute": r.Tribute,
+			}
+
+			// Update the user gamification facts
+			err = users.Update(bson.M{"_id": id}, bson.M{"$set": update})
+			if err != nil {
+				return
+			}
+
+			// Send updated data over the wire
+			notify.Transmit <- notify.Socket{"user " + id.Hex(), "gaming", map[string]interface{}{
+				"level":   r.Level,
+				"tribute": r.Tribute,
+				"shit":    r.Shit,
+			}}
+		}
+
+		break
+	}
+
+	return
+}
+
 type User struct {
 	user *user.One
 	di   *Module
-}
-
-// Update user gamification stats because of something he did
-func (self *User) Did(action string) {
-
-	defer self.di.Errors.Recover()
-
-	var swords int
-
-	switch action {
-	case "comment":
-		swords = 1
-	case "publish":
-		swords = 1
-	}
-
-	self.Swords(swords)
 }
 
 // Sync user gamification relevant facts
@@ -68,9 +128,9 @@ func (self *User) SyncToLevel(reset bool) {
 				// Update the user gamification facts
 				err := database.C("users").Update(bson.M{"_id": user.Id}, bson.M{"$set": fact_set})
 
- 				if err != nil {
- 					panic(err)
- 				}
+				if err != nil {
+					panic(err)
+				}
 
 				// Runtime update
 				self.user.RUpdate(user)
@@ -229,5 +289,5 @@ func (self *User) Sync() {
 	validated := self.user.Data().Validated
 
 	// Sync user stuff
-	self.di.Firebase.Set("users/" + id + "/validated", validated, nil)
+	self.di.Firebase.Set("users/"+id+"/validated", validated, nil)
 }

@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-type RulesModel struct {
+type Rules struct {
 	Updated time.Time    `json:"updated_at"`
 	Rules   []RuleModel  `json:"rules"`
 	Badges  []BadgeModel `json:"badges,omitempty"`
@@ -60,7 +60,7 @@ type RankingUserModel struct {
 }
 
 type RankPosition struct {
-	Id string
+	Id    string
 	Value int
 }
 
