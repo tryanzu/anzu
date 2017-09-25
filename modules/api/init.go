@@ -140,7 +140,6 @@ func (module *Module) Run() {
 	router.GET("/sitemap_components.xml", module.Sitemap.GetComponentsSitemap)
 
 	v1 := router.Group("/v1")
-
 	v1.Use(module.Middlewares.Authorization())
 	{
 		// Authentication routes
@@ -219,7 +218,6 @@ func (module *Module) Run() {
 			authorized.POST("/build", module.PostsFactory.Create)
 
 			// Auth routes
-			authorized.GET("/auth/logout", module.Users.UserLogout)
 			authorized.GET("/auth/resend-confirmation", module.UsersFactory.ResendConfirmation)
 
 			// Comment routes

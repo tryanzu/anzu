@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"github.com/cosn/firebase"
 	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/modules/acl"
@@ -37,7 +36,6 @@ type PostAPI struct {
 	Collector     CollectorAPI                 `inject:"inline"`
 	Errors        *exceptions.ExceptionsModule `inject:""`
 	S3Bucket      *s3.Bucket                   `inject:""`
-	Firebase      *firebase.Client             `inject:""`
 	Gaming        *gaming.Module               `inject:""`
 	ConfigService *config.Config               `inject:""`
 	Acl           *acl.Module                  `inject:""`

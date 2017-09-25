@@ -3,9 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/cactus/go-statsd-client/statsd"
-	"github.com/cosn/firebase"
 	"github.com/facebookgo/inject"
-	"github.com/fernandez14/go-siftscience"
 	_ "github.com/fernandez14/spartangeek-blacker/board/events"
 	"github.com/fernandez14/spartangeek-blacker/core/shell"
 	"github.com/fernandez14/spartangeek-blacker/deps"
@@ -32,7 +30,6 @@ import (
 	"github.com/op/go-logging"
 	"github.com/robfig/cron"
 	"github.com/spf13/cobra"
-	"github.com/stackimpact/stackimpact-go"
 	"github.com/xuyu/goredis"
 
 	"os"
@@ -64,7 +61,6 @@ func main() {
 	var notificationsModule notifications.NotificationsModule
 	var feedModule feed.FeedModule
 	var exceptions exceptions.ExceptionsModule
-
 	var log *logging.Logger = logging.MustGetLogger("blacker")
 	var format logging.Formatter = logging.MustStringFormatter(
 		`%{color}%{time:15:04:05.000} %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}`,
@@ -85,10 +81,6 @@ func main() {
 	mongoService := mongo.NewService(string_value(configService.String("database.uri")), string_value(configService.String("database.name")))
 	errorService, _ := raven.NewClient(string_value(configService.String("sentry.dns")), nil)
 	cacheService, _ := goredis.Dial(&goredis.DialConfig{Address: string_value(configService.String("cache.redis"))})
-	firebaseService := new(firebase.Client)
-	firebaseService.Init(string_value(configService.String("firebase.url")), string_value(configService.String("firebase.secret")), nil)
-
-	gosift.ApiKey = string_value(configService.String("ecommerce.siftscience.api_key"))
 	assetsService := assets.Boot()
 
 	// Authentication services
@@ -123,7 +115,6 @@ func main() {
 		&inject.Object{Value: cacheService, Complete: true},
 		&inject.Object{Value: s3Service, Complete: true},
 		&inject.Object{Value: s3BucketService, Complete: true},
-		&inject.Object{Value: firebaseService, Complete: true},
 		&inject.Object{Value: statsService, Complete: true},
 		&inject.Object{Value: aclService, Complete: false},
 		&inject.Object{Value: storeService, Complete: false},
@@ -161,11 +152,6 @@ func main() {
         in the specified env port
         `,
 		Run: func(cmd *cobra.Command, args []string) {
-			agent := stackimpact.NewAgent()
-			agent.Start(stackimpact.Options{
-				AgentKey: "30116b8c76c87e84ef9f761271339605bb23b8df",
-				AppName:  "blacker.api",
-			})
 
 			// Populate dependencies using the already instantiated DI
 			api.Populate(g)
@@ -286,7 +272,6 @@ func main() {
 }
 
 func string_value(value string, err error) string {
-
 	if err != nil {
 		panic(err)
 	}

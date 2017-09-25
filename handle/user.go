@@ -3,9 +3,7 @@ package handle
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"github.com/CloudCom/fireauth"
 	"github.com/dgrijalva/jwt-go"
-	"github.com/fernandez14/go-siftscience"
 	u "github.com/fernandez14/spartangeek-blacker/core/user"
 	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/model"
@@ -18,7 +16,6 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/security"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
-	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/kennygrant/sanitize"
@@ -295,7 +292,7 @@ func (di UserAPI) UserGetJwtToken(c *gin.Context) {
 	}
 
 	// Generate JWT with the information about the user
-	token, firebase := di.generateUserToken(usr.Data().Id, usr.Data().Roles, remember)
+	token := di.generateUserToken(usr.Data().Id, usr.Data().Roles, remember)
 
 	// Save the activity
 	user_id, signed_in := c.Get("user_id")
@@ -318,41 +315,7 @@ func (di UserAPI) UserGetJwtToken(c *gin.Context) {
 		go di.Collector.Activity(model.Activity{UserId: bson.ObjectIdHex(user_id.(string)), Event: "user-view", RelatedId: usr.Data().Id})
 	}
 
-	c.JSON(200, gin.H{"status": "okay", "token": token, "session_id": session_id, "firebase": firebase, "expires": remember})
-}
-
-func (this UserAPI) UserLogout(c *gin.Context) {
-
-	id, signed_in := c.Get("user_id")
-
-	if signed_in {
-
-		if id != "" {
-			go func(id string) {
-
-				defer this.Errors.Recover()
-
-				err := gosift.Track("$logout", map[string]interface{}{
-					"$user_id": id,
-				})
-
-				if err != nil {
-					panic(err)
-				}
-			}(id.(string))
-		}
-
-		bucket := sessions.Default(c)
-
-		// Clear bucket
-		bucket.Clear()
-		bucket.Save()
-
-		c.JSON(200, gin.H{"status": "okay"})
-		return
-	}
-
-	c.JSON(200, gin.H{"status": "okay"})
+	c.JSON(200, gin.H{"status": "okay", "token": token, "session_id": session_id, "expires": remember})
 }
 
 func (di *UserAPI) UserUpdateProfileAvatar(c *gin.Context) {
@@ -591,10 +554,10 @@ func (di *UserAPI) UserRegisterAction(c *gin.Context) {
 	}
 
 	// Generate token if auth is going to perform
-	token, firebase := di.generateUserToken(usr.Data().Id, usr.Data().Roles, 72)
+	token := di.generateUserToken(usr.Data().Id, usr.Data().Roles, 72)
 
 	// Finished creating the post
-	c.JSON(200, gin.H{"status": "okay", "code": 200, "token": token, "firebase": firebase})
+	c.JSON(200, gin.H{"status": "okay", "code": 200, "token": token})
 }
 
 func (di *UserAPI) UserGetActivity(c *gin.Context) {
@@ -751,7 +714,7 @@ type UserToken struct {
 	jwt.StandardClaims
 }
 
-func (di *UserAPI) generateUserToken(id bson.ObjectId, roles []user.UserRole, expiration int) (string, string) {
+func (di *UserAPI) generateUserToken(id bson.ObjectId, roles []user.UserRole, expiration int) string {
 
 	scope := []string{}
 	for _, role := range roles {
@@ -775,45 +738,10 @@ func (di *UserAPI) generateUserToken(id bson.ObjectId, roles []user.UserRole, ex
 		panic(err)
 	}
 
-	firebase_secret, err := di.ConfigService.String("firebase.secret")
-	if err != nil {
-		panic(err)
-	}
-
 	tokenString, err := token.SignedString([]byte(secret))
 	if err != nil {
 		panic(err)
 	}
 
-	// Generate firebase auth token for further usage
-	firebase_auth := fireauth.New(firebase_secret)
-	firebase_data := fireauth.Data{"uid": id.Hex()}
-
-	firebase_token, err := firebase_auth.CreateToken(firebase_data, nil)
-	if err != nil {
-		panic(err)
-	}
-
-	return tokenString, firebase_token
-}
-
-func (di *UserAPI) trackSiftScienceLogin(user_id, session_id string, success bool) {
-
-	defer di.Errors.Recover()
-
-	status := "$success"
-
-	if !success {
-		status = "$failure"
-	}
-
-	err := gosift.Track("$login", map[string]interface{}{
-		"$user_id":      user_id,
-		"$session_id":   session_id,
-		"$login_status": status,
-	})
-
-	if err != nil {
-		panic(err)
-	}
+	return tokenString
 }

@@ -43,18 +43,10 @@ func (module Module) Run(name string) {
 		"migrate-comments":  module.MigrateDeletedComment,
 		"migrate-ccomments": module.MigrateChosenComment,
 		"export-components": module.ExportComponents,
-		"count-components":  module.GenerateComponentViews,
 		"clean-references":  module.CleanupReferences,
-
-		"spree-taxons":              module.SpreeTaxons,
-		"spree-products":            module.SpreeProducts,
-		"spree-products-images":     module.SpreeProductsImages,
-		"spree-products-flush":      module.SpreeProductsFlush,
-		"spree-products-properties": module.SpreeProductsProperties,
 	}
 
 	if handler, exists := commands[name]; exists {
-
 		handler()
 		return
 	}
