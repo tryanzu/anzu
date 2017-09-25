@@ -1,7 +1,6 @@
 package notifications
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/interfaces"
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
@@ -10,10 +9,9 @@ import (
 )
 
 type NotificationsModule struct {
-	Mongo       *mongo.Service                     `inject:""`
-	Broadcaster interfaces.NotificationBroadcaster `inject:"Notifications"`
-	Errors      *exceptions.ExceptionsModule       `inject:""`
-	User        *user.Module                       `inject:""`
+	Mongo  *mongo.Service               `inject:""`
+	Errors *exceptions.ExceptionsModule `inject:""`
+	User   *user.Module                 `inject:""`
 }
 
 type MentionParseObject struct {

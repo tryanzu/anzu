@@ -18,7 +18,6 @@ type Mention struct {
 }
 
 func (self *NotificationsModule) Mention(parseableMeta map[string]interface{}, user_id, target_user bson.ObjectId) {
-
 	defer self.Errors.Recover()
 
 	database := self.Mongo.Database
@@ -44,25 +43,7 @@ func (self *NotificationsModule) Mention(parseableMeta map[string]interface{}, u
 	}
 
 	err = database.C("mentions").Insert(mention)
-
 	if err != nil {
 		panic(err)
 	}
-
-	/*notification := model.UserFirebaseNotification{
-		UserId:       target_user,
-		RelatedId:    post_id,
-		RelatedExtra: post_slug,
-		Position:     strconv.Itoa(position),
-		Username:     usr.Name(),
-		Text:         post_title,
-		Related:      "mention",
-		Seen:         false,
-		Image:        usr.Data().Image,
-		Created:      time.Now(),
-		Updated:      time.Now(),
-	}
-
-	broadcaster := self.Broadcaster
-	broadcaster.Send(notification)*/
 }

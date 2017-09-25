@@ -9,7 +9,6 @@ import (
 	_ "github.com/fernandez14/spartangeek-blacker/board/events"
 	"github.com/fernandez14/spartangeek-blacker/core/shell"
 	"github.com/fernandez14/spartangeek-blacker/deps"
-	"github.com/fernandez14/spartangeek-blacker/interfaces"
 	"github.com/fernandez14/spartangeek-blacker/modules/acl"
 	"github.com/fernandez14/spartangeek-blacker/modules/api"
 	"github.com/fernandez14/spartangeek-blacker/modules/assets"
@@ -115,10 +114,6 @@ func main() {
 		panic(err)
 	}
 
-	// Implementations will be fullfilled manually
-	firebaseBroadcaster := notifications.FirebaseBroadcaster{Firebase: firebaseService}
-	broadcaster := interfaces.NotificationBroadcaster(firebaseBroadcaster)
-
 	// Provide graph with service instances
 	err = g.Provide(
 		&inject.Object{Value: log, Complete: true},
@@ -136,7 +131,6 @@ func main() {
 		&inject.Object{Value: userService, Complete: false},
 		&inject.Object{Value: componentsService, Complete: false},
 		&inject.Object{Value: gamingService, Complete: false},
-		&inject.Object{Value: broadcaster, Complete: true, Name: "Notifications"},
 		&inject.Object{Value: &cliModule},
 		&inject.Object{Value: &securityModule},
 		&inject.Object{Value: &notificationsModule},
