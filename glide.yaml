@@ -2,15 +2,10 @@ package: github.com/fernandez14/spartangeek-blacker
 ignore:
 - github.com/fernandez14/spartangeek-blacker
 import:
-- package: github.com/CloudCom/fireauth
-- package: github.com/algolia/algoliasearch-client-go
-  subpackages:
-  - algoliasearch
 - package: github.com/brandfolder/gin-gorelic
 - package: github.com/cactus/go-statsd-client
   subpackages:
   - statsd
-- package: github.com/cosn/firebase
 - package: github.com/dgrijalva/jwt-go
 - package: github.com/facebookgo/inject
 - package: github.com/ftrvxmtrx/gravatar
@@ -60,7 +55,6 @@ import:
 - package: github.com/fernandez14/go-enlacefiscal
 - package: github.com/fernandez14/go-siftscience
 - package: github.com/leebenson/paypal
-- package: gopkg.in/jmcvetta/neoism.v1
 - package: gopkg.in/op/go-logging.v1
 - package: github.com/markbates/goth
 - package: github.com/messagebird/go-rest-api
