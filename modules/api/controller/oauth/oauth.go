@@ -5,7 +5,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/CloudCom/fireauth"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/fernandez14/spartangeek-blacker/modules/security"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
@@ -139,8 +138,8 @@ func (a API) CompleteAuth(c *gin.Context) {
 	}
 
 	// Generate JWT with the information about the user
-	token, firebase := a.generateUserToken(id, u.Data().Roles, 72)
-	url := fmt.Sprintf("%s/?token=%s&fbToken=%s", forward, token, firebase)
+	token := a.generateUserToken(id, u.Data().Roles, 72)
+	url := fmt.Sprintf("%s/?token=%s", forward, token)
 
 	c.Redirect(303, url)
 }
@@ -151,8 +150,7 @@ type UserToken struct {
 	jwt.StandardClaims
 }
 
-func (a API) generateUserToken(id bson.ObjectId, roles []user.UserRole, expiration int) (string, string) {
-
+func (a API) generateUserToken(id bson.ObjectId, roles []user.UserRole, expiration int) string {
 	scope := []string{}
 	for _, role := range roles {
 		scope = append(scope, role.Name)
@@ -175,24 +173,10 @@ func (a API) generateUserToken(id bson.ObjectId, roles []user.UserRole, expirati
 		panic(err)
 	}
 
-	firebase_secret, err := a.Config.String("firebase.secret")
-	if err != nil {
-		panic(err)
-	}
-
 	tokenString, err := token.SignedString([]byte(secret))
 	if err != nil {
 		panic(err)
 	}
 
-	// Generate firebase auth token for further usage
-	firebase_auth := fireauth.New(firebase_secret)
-	firebase_data := fireauth.Data{"uid": id.Hex()}
-
-	firebase_token, err := firebase_auth.CreateToken(firebase_data, nil)
-	if err != nil {
-		panic(err)
-	}
-
-	return tokenString, firebase_token
+	return tokenString
 }
