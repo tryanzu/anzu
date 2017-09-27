@@ -69,7 +69,7 @@ func (u User) RecoveryPasswordEmail(d Deps) (err error) {
 				},
 			},
 			Variables: map[string]interface{}{
-				"recover_url": "https://spartangeek.com/user/lost_password/" + r.Token,
+				"recover_url": "https://buldar.com/user/lost_password/" + r.Token,
 			},
 		},
 		461461,

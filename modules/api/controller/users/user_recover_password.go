@@ -21,7 +21,7 @@ func (this API) RequestPasswordRecovery(c *gin.Context) {
 		return
 	}
 
-	err = usr.ConfirmationEmail(deps.Container)
+	err = usr.RecoveryPasswordEmail(deps.Container)
 	if err != nil {
 		c.JSON(400, gin.H{"status": "error", "message": err.Error()})
 		return
