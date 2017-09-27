@@ -65,3 +65,5 @@ import:
 - package: github.com/abiosoft/ishell
 - package: github.com/stackimpact/stackimpact-go
   version: ^1.4.4
+- package: github.com/boj/redistore
+  version: ^1.2.0
