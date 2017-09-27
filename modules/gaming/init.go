@@ -2,7 +2,6 @@ package gaming
 
 import (
 	"encoding/json"
-	"github.com/cosn/firebase"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
@@ -39,14 +38,13 @@ func logFunc(message string) {
 }
 
 type Module struct {
-	Mongo    *mongo.Service               `inject:""`
-	User     *user.Module                 `inject:""`
-	Feed     *feed.FeedModule             `inject:""`
-	Redis    *goredis.Redis               `inject:""`
-	Config   *config.Config               `inject:""`
-	Firebase *firebase.Client             `inject:""`
-	Errors   *exceptions.ExceptionsModule `inject:""`
-	Rules    Rules
+	Mongo  *mongo.Service               `inject:""`
+	User   *user.Module                 `inject:""`
+	Feed   *feed.FeedModule             `inject:""`
+	Redis  *goredis.Redis               `inject:""`
+	Config *config.Config               `inject:""`
+	Errors *exceptions.ExceptionsModule `inject:""`
+	Rules  Rules
 }
 
 // Get user gaming struct

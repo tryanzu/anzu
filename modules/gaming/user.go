@@ -139,8 +139,6 @@ func (self *User) SyncToLevel(reset bool) {
 			break
 		}
 	}
-
-	self.SyncRealtimeFirebase(user.Gaming)
 }
 
 // Does the daily login logic for the user
@@ -267,27 +265,4 @@ func (self *User) Shit(how_many int) {
 
 	// Check for level changes and stuff
 	self.SyncToLevel(false)
-}
-
-func (self *User) SyncRealtimeFirebase(data user.UserGaming) {
-
-	// Recover from any panic even inside this goroutine
-	defer self.di.Errors.Recover()
-
-	// Get the user path from firebase
-	userPath := "users/" + self.user.Data().Id.Hex()
-
-	// Update the gaming part
-	self.di.Firebase.Set(userPath+"/gaming", data, nil)
-}
-
-func (self *User) Sync() {
-
-	defer self.di.Errors.Recover()
-
-	id := self.user.Data().Id.Hex()
-	validated := self.user.Data().Validated
-
-	// Sync user stuff
-	self.di.Firebase.Set("users/"+id+"/validated", validated, nil)
 }
