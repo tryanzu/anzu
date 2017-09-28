@@ -1,0 +1,3 @@
+[submodule "static/frontend"]
+	path = static/frontend
+	url = git@github.com:suicidegang/anzu.git

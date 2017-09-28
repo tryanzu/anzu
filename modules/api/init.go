@@ -95,7 +95,6 @@ func (module *Module) Populate(g inject.Graph) {
 }
 
 func (module *Module) Run() {
-
 	var debug bool = true
 	environment, err := module.Dependencies.Config.String("environment")
 	if err != nil {
@@ -124,8 +123,8 @@ func (module *Module) Run() {
 		panic(err)
 	}
 
-	// Start gin classic middlewares
 	router := gin.Default()
+	router.LoadHTMLGlob("templates/**/*")
 
 	// Middlewares setup
 	router.Use(sessions.Sessions("session", store))
@@ -138,6 +137,8 @@ func (module *Module) Run() {
 	// Sitemap generator
 	router.GET("/sitemap.xml", module.Sitemap.GetSitemap)
 	router.GET("/sitemap_components.xml", module.Sitemap.GetComponentsSitemap)
+
+	router.GET("/", controller.HomePage)
 
 	v1 := router.Group("/v1")
 	v1.Use(module.Middlewares.Authorization())
