@@ -1,0 +1,55 @@
+package controller
+
+import (
+	posts "github.com/fernandez14/spartangeek-blacker/board/posts"
+	"github.com/fernandez14/spartangeek-blacker/core/user"
+	"github.com/fernandez14/spartangeek-blacker/deps"
+	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
+	"github.com/gin-gonic/gin"
+	"gopkg.in/mgo.v2/bson"
+)
+
+func HomePage(c *gin.Context) {
+	c.HTML(200, "pages/home.tmpl", gin.H{
+		"title":       c.MustGet("siteName").(string),
+		"description": c.MustGet("siteDescription").(string),
+		"image":       c.MustGet("siteUrl").(string) + "/images/default-post.jpg",
+	})
+}
+
+func UserPage(c *gin.Context) {
+	id := bson.ObjectIdHex(c.Param("id"))
+	usr, err := user.FindId(deps.Container, id)
+
+	if err != nil {
+		c.AbortWithStatus(404)
+		return
+	}
+
+	c.HTML(200, "pages/home.tmpl", gin.H{
+		"title":       usr.UserName + " - Perfil de usuario",
+		"description": "Explora las aportaciones y el perfil de " + usr.UserName + " en Buldar",
+		"image":       c.MustGet("siteUrl").(string) + "/images/default-post.jpg",
+	})
+}
+
+func PostPage(c *gin.Context) {
+	id := bson.ObjectIdHex(c.Param("id"))
+	post, err := posts.FindId(deps.Container, id)
+
+	if err != nil {
+		c.AbortWithStatus(404)
+		return
+	}
+
+	if post.Slug != c.Param("slug") {
+		c.Redirect(301, c.MustGet("siteUrl").(string)+"/p/"+post.Slug+"/"+post.Id.Hex())
+		return
+	}
+
+	c.HTML(200, "pages/home.tmpl", gin.H{
+		"title":       post.Title,
+		"description": helpers.Truncate(post.Content, 160),
+		"image":       c.MustGet("siteUrl").(string) + "/images/default-post.jpg",
+	})
+}

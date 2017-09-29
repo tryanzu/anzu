@@ -3,27 +3,28 @@
 <html ng-app="board">
 <head>
     <link rel="manifest" href="/manifest.json">
-    <title ng-bind="page.title">Buldar | Comunidad de tecnología, geeks y más</title>
+    <title ng-bind="page.title">{{ .title }}</title>
+
     <base href="/">
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="">
-    <meta property="og:description" content="">
-    <meta property="og:title" content="">
-    <meta property="og:image" content="">
+    <meta name="description" content="{{ .description }}">
+    <meta property="og:description" content="{{ .description }}">
+    <meta property="og:title" content="{{ .title }}">
+    <meta property="og:image" content="{{ .image }}">
     <meta content="#131d3a" name="theme-color" />
 
     <!-- Favicon -->
-    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico"/>
+    <link rel="shortcut icon" type="image/x-icon" href="/images/favicon.ico"/>
     <meta name="msapplication-TileColor" content="#ffffff">
     <meta name="theme-color" content="#ffffff">
 
-    <link type="text/css" rel="stylesheet" href="/css/app.css">
-    <script type="text/javascript" src="js/offline.js"></script>
+    <link type="text/css" rel="stylesheet" href="/assets/css/app.css">
+    <script type="text/javascript" src="/assets/js/offline.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.3/socket.io.js"></script>
-    <script type="text/javascript" src="js/config.js"></script>
-    <script type="text/javascript" src="dist/core.js"></script>
-    <script type="text/javascript" src="js/main.js"></script>
+    <script type="text/javascript" src="/assets/js/config.js"></script>
+    <script type="text/javascript" src="/assets/dist/core.js"></script>
+    <script type="text/javascript" src="/assets/js/main.js"></script>
 
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css"/>
     <link rel="stylesheet" href="//unpkg.com/tachyons@4.8.0/css/tachyons.min.css"/>

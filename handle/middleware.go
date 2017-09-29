@@ -39,7 +39,7 @@ func (di *MiddlewareAPI) CORS() gin.HandlerFunc {
 
 		origin := c.Request.Header.Get("Origin")
 
-		c.Writer.Header().Set("Content-Type", "application/json")
+		//c.Writer.Header().Set("Content-Type", "application/json")
 		c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET,POST,OPTIONS,PUT,DELETE,PATCH")
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")

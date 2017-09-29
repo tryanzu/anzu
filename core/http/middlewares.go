@@ -7,6 +7,42 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
+// Load site config into middlewares pipe context.
+func SiteMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		config := deps.Container.Config()
+		siteName, err := config.String("site.name")
+		if err != nil {
+			c.AbortWithError(500, err)
+			return
+		}
+
+		description, err := config.String("site.description")
+		if err != nil {
+			c.AbortWithError(500, err)
+			return
+		}
+
+		url, err := config.String("site.url")
+		if err != nil {
+			c.AbortWithError(500, err)
+			return
+		}
+
+		c.Set("siteName", siteName)
+		c.Set("siteDescription", description)
+		c.Set("siteUrl", url)
+		c.Next()
+	}
+}
+
+func TitleMiddleware(title string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Set("siteName", title)
+		c.Next()
+	}
+}
+
 // User middleware loads signed user data for further use.
 func UserMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {

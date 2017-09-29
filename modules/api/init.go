@@ -133,12 +133,26 @@ func (module *Module) Run() {
 	router.Use(module.Middlewares.MongoRefresher())
 	router.Use(module.Middlewares.StatsdTiming())
 	router.Use(module.Middlewares.TrustIP())
+	router.Use(http.SiteMiddleware())
 
-	// Sitemap generator
-	router.GET("/sitemap.xml", module.Sitemap.GetSitemap)
-	router.GET("/sitemap_components.xml", module.Sitemap.GetComponentsSitemap)
+	/**
+	 * Routes section.
+	 * - All route definitions will go below this point.
+	 */
+	router.Static("/assets", "./static/frontend/public")
+	router.Static("/js", "./static/frontend/public/js")
+	router.Static("/css", "./static/frontend/public/css")
+	router.Static("/images", "./static/frontend/public/images")
+	router.Static("/app", "./static/frontend/public/app")
 
 	router.GET("/", controller.HomePage)
+	router.GET("/chat", http.TitleMiddleware("Chat oficial"), controller.HomePage)
+	router.GET("/reglamento", http.TitleMiddleware("Reglamento y código de conducta"), controller.HomePage)
+	router.GET("/about", http.TitleMiddleware("Acerca de"), controller.HomePage)
+	router.GET("/terminos-y-condiciones", http.TitleMiddleware("Terminos y condiciones"), controller.HomePage)
+	router.GET("/p/:slug/:id", controller.PostPage)
+	router.GET("/u/:username/:id", controller.UserPage)
+	router.GET("/sitemap.xml", module.Sitemap.GetSitemap)
 
 	v1 := router.Group("/v1")
 	v1.Use(module.Middlewares.Authorization())
