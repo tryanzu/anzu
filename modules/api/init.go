@@ -123,8 +123,13 @@ func (module *Module) Run() {
 		panic(err)
 	}
 
+	templates, err := module.Dependencies.Config.String("application.templates")
+	if err != nil {
+		panic(err)
+	}
+
 	router := gin.Default()
-	router.LoadHTMLGlob("templates/**/*")
+	router.LoadHTMLGlob(templates)
 
 	// Middlewares setup
 	router.Use(sessions.Sessions("session", store))
