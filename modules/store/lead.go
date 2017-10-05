@@ -191,7 +191,8 @@ func (lead *Lead) Reply(answer, kind string) (string, error) {
 		bson.M{
 			"$push": bson.M{"messages": message},
 			"$set":  bson.M{"updated_at": time.Now()},
-		})
+		},
+	)
 
 	if err != nil {
 		return "", err

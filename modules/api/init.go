@@ -7,7 +7,6 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/builds"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/comments"
-	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/components"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/oauth"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/posts"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/users"
@@ -21,31 +20,29 @@ import (
 )
 
 type Module struct {
-	Dependencies      ModuleDI
-	Posts             handle.PostAPI
-	Votes             handle.VoteAPI
-	VotesFactory      votes.API
-	Oauth             oauth.API
-	Users             handle.UserAPI
-	Categories        handle.CategoryAPI
-	Elections         handle.ElectionAPI
-	CommentsFactory   comments.API
-	Parts             handle.PartAPI
-	Stats             handle.StatAPI
-	Middlewares       handle.MiddlewareAPI
-	Collector         handle.CollectorAPI
-	Sitemap           handle.SitemapAPI
-	Acl               handle.AclAPI
-	Gaming            handle.GamingAPI
-	Store             controller.StoreAPI
-	Mail              controller.MailAPI
-	PostsFactory      posts.API
-	Components        controller.ComponentAPI
-	Builds            builds.API
-	Owners            controller.OwnersAPI
-	Lead              controller.LeadAPI
-	ComponentsFactory components.API
-	UsersFactory      users.API
+	Dependencies    ModuleDI
+	Posts           handle.PostAPI
+	Votes           handle.VoteAPI
+	VotesFactory    votes.API
+	Oauth           oauth.API
+	Users           handle.UserAPI
+	Categories      handle.CategoryAPI
+	Elections       handle.ElectionAPI
+	CommentsFactory comments.API
+	Parts           handle.PartAPI
+	Stats           handle.StatAPI
+	Middlewares     handle.MiddlewareAPI
+	Collector       handle.CollectorAPI
+	Sitemap         handle.SitemapAPI
+	Acl             handle.AclAPI
+	Gaming          handle.GamingAPI
+	Store           controller.StoreAPI
+	Mail            controller.MailAPI
+	PostsFactory    posts.API
+	Builds          builds.API
+	Owners          controller.OwnersAPI
+	Lead            controller.LeadAPI
+	UsersFactory    users.API
 }
 
 type ModuleDI struct {
@@ -59,7 +56,6 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.Collector},
 		&inject.Object{Value: &module.Posts},
 		&inject.Object{Value: &module.PostsFactory},
-		&inject.Object{Value: &module.ComponentsFactory},
 		&inject.Object{Value: &module.UsersFactory},
 		&inject.Object{Value: &module.Votes},
 		&inject.Object{Value: &module.VotesFactory},
@@ -77,7 +73,6 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.Builds},
 		&inject.Object{Value: &module.Oauth},
 		&inject.Object{Value: &module.Mail},
-		&inject.Object{Value: &module.Components},
 		&inject.Object{Value: &module.Owners},
 		&inject.Object{Value: &module.Lead},
 	)
@@ -187,7 +182,6 @@ func (module *Module) Run() {
 
 		// Search routes
 		v1.GET("/search/posts", module.PostsFactory.Search)
-		v1.GET("/search/components", module.ComponentsFactory.Search)
 
 		// // Election routes
 		v1.POST("/election/:id", module.Elections.ElectionAddOption)
@@ -210,8 +204,6 @@ func (module *Module) Run() {
 		v1.GET("/part", module.Parts.GetPartTypes)
 		v1.GET("/part/:type/manufacturers", module.Parts.GetPartManufacturers)
 		v1.GET("/part/:type/models", module.Parts.GetPartManufacturerModels)
-		v1.GET("/component/:id", module.Components.Get)
-		v1.GET("/component/:id/posts", module.Components.GetPosts)
 
 		// Stats routes
 		v1.GET("/stats/board", module.Stats.BoardGet)
@@ -299,11 +291,6 @@ func (module *Module) Run() {
 				backoffice.GET("/macros", controller.AllMacros)
 				backoffice.PUT("/macros", controller.UpsertMacro)
 				backoffice.DELETE("/macros/:id", module.Middlewares.ValidateBsonID("id"), controller.DeleteMacro)
-
-				// Components routes
-				backoffice.PUT("/spree/:part", module.ComponentsFactory.SpreeExport)
-				backoffice.PUT("/component/:slug/price", module.Components.UpdatePrice)
-				backoffice.DELETE("/component/:slug/price", module.Components.DeletePrice)
 			}
 		}
 

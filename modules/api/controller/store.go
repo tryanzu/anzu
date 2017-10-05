@@ -147,7 +147,6 @@ func (self StoreAPI) One(c *gin.Context) {
 }
 
 func (self StoreAPI) Ignore(c *gin.Context) {
-
 	id := c.Param("id")
 
 	if bson.IsObjectIdHex(id) == false {
