@@ -25,7 +25,7 @@ commands:
         run: ls -1d $REL_PATH/releases/* | \sort -rg | \tail -n +4 | \xargs /bin/rm -rf
     restart:
         desc: Restart all pm2 processes
-        run: pm2 restart all
+        run: pm2 restart blacker-api && pm2 restart blacker-dev
     logs:
         desc: Watch pm2 logs
         run: pm2 logs
@@ -54,4 +54,3 @@ targets:
         - restart
         - cleanup-releases
         - notify-sentry
-        - notify-slack

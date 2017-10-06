@@ -30,7 +30,7 @@ func (u User) ConfirmationEmail(d Deps) (err error) {
 				},
 			},
 			Variables: map[string]interface{}{
-				"confirm_url": "https://spartangeek.com/signup/confirm/" + u.VerificationCode,
+				"confirm_url": "https://buldar.com/signup/confirm/" + u.VerificationCode,
 			},
 		},
 		250222,
