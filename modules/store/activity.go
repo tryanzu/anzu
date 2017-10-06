@@ -66,7 +66,7 @@ func FindActivities(deps Deps, betweenDates []time.Time, offset, limit int) (Act
 		}
 	}
 
-	err := deps.Mgo().C("activities").Find(params).Limit(limit).Skip(offset).All(&list)
+	err := deps.Mgo().C("activities").Find(params).Sort("date").Limit(limit).Skip(offset).All(&list)
 	if err != nil {
 		return list, err
 	}
