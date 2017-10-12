@@ -5,7 +5,6 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/core/http"
 	"github.com/fernandez14/spartangeek-blacker/handle"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller"
-	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/builds"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/comments"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/oauth"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/posts"
@@ -27,9 +26,7 @@ type Module struct {
 	Oauth           oauth.API
 	Users           handle.UserAPI
 	Categories      handle.CategoryAPI
-	Elections       handle.ElectionAPI
 	CommentsFactory comments.API
-	Parts           handle.PartAPI
 	Stats           handle.StatAPI
 	Middlewares     handle.MiddlewareAPI
 	Collector       handle.CollectorAPI
@@ -39,9 +36,7 @@ type Module struct {
 	Store           controller.StoreAPI
 	Mail            controller.MailAPI
 	PostsFactory    posts.API
-	Builds          builds.API
 	Owners          controller.OwnersAPI
-	Lead            controller.LeadAPI
 	UsersFactory    users.API
 }
 
@@ -61,20 +56,16 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.VotesFactory},
 		&inject.Object{Value: &module.Users},
 		&inject.Object{Value: &module.Categories},
-		&inject.Object{Value: &module.Elections},
 		&inject.Object{Value: &module.CommentsFactory},
-		&inject.Object{Value: &module.Parts},
 		&inject.Object{Value: &module.Stats},
 		&inject.Object{Value: &module.Middlewares},
 		&inject.Object{Value: &module.Acl},
 		&inject.Object{Value: &module.Sitemap},
 		&inject.Object{Value: &module.Gaming},
 		&inject.Object{Value: &module.Store},
-		&inject.Object{Value: &module.Builds},
 		&inject.Object{Value: &module.Oauth},
 		&inject.Object{Value: &module.Mail},
 		&inject.Object{Value: &module.Owners},
-		&inject.Object{Value: &module.Lead},
 	)
 
 	if err != nil {
@@ -162,7 +153,6 @@ func (module *Module) Run() {
 		v1.GET("/oauth/:provider/callback", module.Oauth.CompleteAuth)
 
 		v1.POST("/subscribe", module.Users.UserSubscribe)
-		v1.POST("/leads", module.Lead.Post)
 
 		// Gamification routes
 		v1.GET("/gamification", module.Gaming.GetRules)
@@ -174,17 +164,11 @@ func (module *Module) Run() {
 		// Post routes
 		v1.GET("/feed", module.Posts.FeedGet)
 		v1.GET("/post", module.Posts.FeedGet)
-		v1.GET("/posts/:id", module.PostsFactory.Get)
-		v1.GET("/postss/:id", module.Posts.PostsGetOne)
 		v1.GET("/posts/:id/comments", module.PostsFactory.GetPostComments)
 		v1.GET("/posts/:id/light", module.Posts.GetLightweight)
-		v1.GET("/post/s/:id", module.Posts.PostsGetOne)
 
 		// Search routes
 		v1.GET("/search/posts", module.PostsFactory.Search)
-
-		// // Election routes
-		v1.POST("/election/:id", module.Elections.ElectionAddOption)
 
 		// User routes
 		v1.POST("/user", module.Users.UserRegisterAction)
@@ -200,19 +184,8 @@ func (module *Module) Run() {
 		// Categories routes
 		v1.GET("/category", module.Categories.CategoriesGet)
 
-		// Parts routes
-		v1.GET("/part", module.Parts.GetPartTypes)
-		v1.GET("/part/:type/manufacturers", module.Parts.GetPartManufacturers)
-		v1.GET("/part/:type/models", module.Parts.GetPartManufacturerModels)
-
 		// Stats routes
 		v1.GET("/stats/board", module.Stats.BoardGet)
-
-		// Build routes
-		v1.GET("/builds", module.Builds.ListAction)
-		v1.GET("/build", module.Builds.GetAction)
-		v1.GET("/build/:id", module.Builds.GetAction)
-		v1.PUT("/build/:id", module.Builds.UpdateAction)
 
 		// Store routes
 		store := v1.Group("/store")
@@ -225,8 +198,6 @@ func (module *Module) Run() {
 		authorized.Use(module.Middlewares.NeedAuthorization())
 		{
 			authorized.GET("/notifications", http.UserMiddleware(), controller.Notifications)
-			authorized.GET("/contest-lead", module.Lead.GetContestLead)
-			authorized.PUT("/contest-lead", module.Lead.UpdateContestLead)
 			authorized.POST("/build", module.PostsFactory.Create)
 
 			// Auth routes
