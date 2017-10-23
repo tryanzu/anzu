@@ -33,10 +33,7 @@ type Module struct {
 	Sitemap         handle.SitemapAPI
 	Acl             handle.AclAPI
 	Gaming          handle.GamingAPI
-	Store           controller.StoreAPI
-	Mail            controller.MailAPI
 	PostsFactory    posts.API
-	Owners          controller.OwnersAPI
 	UsersFactory    users.API
 }
 
@@ -62,10 +59,7 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.Acl},
 		&inject.Object{Value: &module.Sitemap},
 		&inject.Object{Value: &module.Gaming},
-		&inject.Object{Value: &module.Store},
 		&inject.Object{Value: &module.Oauth},
-		&inject.Object{Value: &module.Mail},
-		&inject.Object{Value: &module.Owners},
 	)
 
 	if err != nil {
@@ -188,13 +182,6 @@ func (module *Module) Run() {
 		// Stats routes
 		v1.GET("/stats/board", module.Stats.BoardGet)
 
-		// Store routes
-		store := v1.Group("/store")
-		{
-			store.POST("/order", module.Store.PlaceOrder)
-			store.PUT("/order", controller.UpsertBLead)
-		}
-
 		authorized := v1.Group("")
 		authorized.Use(module.Middlewares.NeedAuthorization())
 		{
@@ -224,8 +211,6 @@ func (module *Module) Run() {
 			authorized.PATCH("/me/:field", module.UsersFactory.Patch)
 			authorized.PUT("/category/subscription/:id", module.Users.UserCategorySubscribe)
 			authorized.DELETE("/category/subscription/:id", module.Users.UserCategoryUnsubscribe)
-			authorized.POST("/user/own/:kind/:id", module.Owners.Post)
-			authorized.DELETE("/user/own/:kind/:id", module.Owners.Delete)
 
 			// Gamification routes
 			authorized.POST("/badges/buy/:id", module.Gaming.BuyBadge)
@@ -234,44 +219,6 @@ func (module *Module) Run() {
 			authorized.POST("/vote/comment/:id", module.VotesFactory.Comment)
 			authorized.POST("/vote/component/:id", module.Votes.VoteComponent)
 			authorized.POST("/vote/post/:id", module.Votes.VotePost)
-
-			// Backoffice routes
-			backoffice := authorized.Group("backoffice")
-			backoffice.Use(module.Middlewares.NeedAclAuthorization("sensitive-data"))
-			{
-				backoffice.GET("/order-report", module.Store.OrdersAggregate)
-				backoffice.GET("/activities", module.Store.Activities)
-				backoffice.GET("/leads", http.UserMiddleware(), controller.Leads)
-
-				order := backoffice.Group("/order")
-				order.Use(module.Middlewares.ValidateBsonID("id"))
-				order.Use(http.UserMiddleware())
-				{
-					order.GET("/:id", module.Store.One)
-					order.DELETE("/:id", module.Store.Ignore)
-					order.POST("/:id", module.Store.Answer)
-					order.POST("/:id/tag", module.Store.Tag)
-					order.POST("/:id/unread", module.Store.Unread)
-					order.DELETE("/:id/tag", module.Store.DeleteTag)
-					order.POST("/:id/activity", module.Store.Activity)
-					order.POST("/:id/trust", module.Store.Trust)
-					order.POST("/:id/favorite", module.Store.Favorite)
-					order.POST("/:id/stage", module.Store.Stage)
-				}
-
-				// Build notes routes
-				backoffice.GET("/macros", controller.AllMacros)
-				backoffice.PUT("/macros", controller.UpsertMacro)
-				backoffice.DELETE("/macros/:id", module.Middlewares.ValidateBsonID("id"), controller.DeleteMacro)
-			}
-		}
-
-		mail := v1.Group("/mail")
-		{
-			mail.HEAD("/inbound/:address", func(c *gin.Context) { c.String(200, ":)") })
-			mail.POST("/inbound/:address", module.Mail.Inbound)
-			mail.POST("/postmark-bounced", module.Mail.BounceWebhook)
-			mail.POST("/postmark-opened", module.Mail.OpenWebhook)
 		}
 	}
 
