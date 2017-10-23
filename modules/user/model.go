@@ -28,15 +28,10 @@ type User struct {
 	BattlenetId string `bson:"battlenet_id,omitempty" json:"battlenet_id"`
 	SteamId     string `bson:"steam_id,omitempty" json:"steam_id"`
 
-	Version     string    `bson:"version,omitempty" json:"version,omitempty"`
-	Validated   bool      `bson:"validated" json:"validated"`
-	SiftAccount bool      `bson:"siftscience" json:"siftscience"`
-	Banned      bool      `bson:"banned" json:"banned"`
-	Created     time.Time `bson:"created_at" json:"created_at"`
-
-	// Runtime generated
-	Referrals  ReferralsModel   `bson:"-" json:"referrals,omitempty"`
-	Components []OwnedComponent `bson:"-" json:"components,omitempty"`
+	Version   string    `bson:"version,omitempty" json:"version,omitempty"`
+	Validated bool      `bson:"validated" json:"validated"`
+	Banned    bool      `bson:"banned" json:"banned"`
+	Created   time.Time `bson:"created_at" json:"created_at"`
 }
 
 type UserPrivate struct {
@@ -53,7 +48,6 @@ type UserPrivate struct {
 	SessionId        string          `bson:"-" json:"session_id"`
 	Duplicates       []bson.ObjectId `bson:"duplicates" json:"-"`
 	ConfirmationSent *time.Time      `bson:"confirm_sent_at" json:"-"`
-	OnesignalID      string          `bson:"onesignal_id" json:"onesignal_id"`
 	Updated          time.Time       `bson:"updated_at" json:"updated_at"`
 	Gamificated      time.Time       `bson:"gamificated_at" json:"gamificated_at"`
 }

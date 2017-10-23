@@ -179,8 +179,6 @@ func (di *UserAPI) UserGetOne(c *gin.Context) {
 		return
 	}
 
-	usr.Load("components")
-
 	// Save the activity
 	user_logged_id, signed_in := c.Get("user_id")
 
@@ -190,7 +188,7 @@ func (di *UserAPI) UserGetOne(c *gin.Context) {
 		go di.Collector.Activity(model.Activity{UserId: bson.ObjectIdHex(user_logged_id.(string)), Event: "user", RelatedId: usr.Data().Id})
 	}
 
-	c.JSON(200, usr.Load("referrals").Data().User)
+	c.JSON(200, usr.Data().User)
 }
 
 func (di *UserAPI) UserGetByToken(c *gin.Context) {

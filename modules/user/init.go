@@ -119,8 +119,8 @@ func (module *Module) SignUp(email, username, password, referral string) (*One, 
 	}
 
 	profile := map[string]interface{}{
-		"country": "México",
-		"bio":     "Just another spartan geek",
+		"country": "",
+		"bio":     "",
 	}
 
 	usr := &UserPrivate{

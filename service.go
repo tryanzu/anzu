@@ -17,7 +17,6 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
 	"github.com/fernandez14/spartangeek-blacker/modules/notifications"
 	"github.com/fernandez14/spartangeek-blacker/modules/security"
-	"github.com/fernandez14/spartangeek-blacker/modules/store"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/getsentry/raven-go"
@@ -68,8 +67,6 @@ func main() {
 	backendFormatter := logging.NewBackendFormatter(backend, format)
 	logging.SetBackend(backendFormatter)
 
-	storeService := store.Boot()
-
 	// Services for the DI
 	configService, _ := config.ParseJsonFile(envfile)
 	aclService := acl.Boot(string_value(configService.String("application.acl")))
@@ -115,7 +112,6 @@ func main() {
 		&inject.Object{Value: s3BucketService, Complete: true},
 		&inject.Object{Value: statsService, Complete: true},
 		&inject.Object{Value: aclService, Complete: false},
-		&inject.Object{Value: storeService, Complete: false},
 		&inject.Object{Value: assetsService, Complete: false},
 		&inject.Object{Value: userService, Complete: false},
 		&inject.Object{Value: componentsService, Complete: false},
