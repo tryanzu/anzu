@@ -3,7 +3,6 @@ package cli
 import (
 	"fmt"
 	"github.com/fernandez14/spartangeek-blacker/model"
-	"github.com/fernandez14/spartangeek-blacker/modules/components"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
@@ -11,7 +10,6 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/olebedev/config"
 	"github.com/op/go-logging"
-	"gopkg.in/jmcvetta/neoism.v1"
 	"gopkg.in/mgo.v2/bson"
 	"log"
 	"regexp"
@@ -21,14 +19,12 @@ import (
 )
 
 type Module struct {
-	Mongo      *mongo.Service               `inject:""`
-	Errors     *exceptions.ExceptionsModule `inject:""`
-	User       *user.Module                 `inject:""`
-	Feed       *feed.FeedModule             `inject:""`
-	Components *components.Module           `inject:""`
-	Config     *config.Config               `inject:""`
-	Neoism     *neoism.Database             `inject:""`
-	Logger     *logging.Logger              `inject:""`
+	Mongo  *mongo.Service               `inject:""`
+	Errors *exceptions.ExceptionsModule `inject:""`
+	User   *user.Module                 `inject:""`
+	Feed   *feed.FeedModule             `inject:""`
+	Config *config.Config               `inject:""`
+	Logger *logging.Logger              `inject:""`
 }
 
 type fn func()
@@ -42,7 +38,6 @@ func (module Module) Run(name string) {
 		"first-newsletter":  module.FirstNewsletter,
 		"migrate-comments":  module.MigrateDeletedComment,
 		"migrate-ccomments": module.MigrateChosenComment,
-		"export-components": module.ExportComponents,
 		"clean-references":  module.CleanupReferences,
 	}
 

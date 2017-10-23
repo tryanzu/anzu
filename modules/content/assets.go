@@ -119,8 +119,10 @@ func (self Module) RegisterOwnAsset(remoteUrl string, o Parseable) *Asset {
 		fmt.Printf("%v is %v \n", asset.Id.Hex(), dataType)
 
 		if dataType[0:5] == "image" {
-
-			var extension, name string
+			var (
+				extension string
+				name      string
+			)
 
 			// Parse the filename
 			u, err := url.Parse(remoteUrl)

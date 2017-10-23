@@ -2,7 +2,6 @@ package feed
 
 import (
 	"github.com/fernandez14/spartangeek-blacker/model"
-	"github.com/fernandez14/spartangeek-blacker/modules/components"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
@@ -504,32 +503,4 @@ func (self *Post) Comment(index int) (*Comment, error) {
 // Alias of TrueCommentCount
 func (self *Post) GetCommentCount() int {
 	return self.di.TrueCommentCount(self.Id)
-}
-
-// Attach related entity to post
-func (self *Post) Attach(entity interface{}) {
-
-	database := self.di.Mongo.Database
-
-	switch entity.(type) {
-	case *components.ComponentModel:
-
-		component := entity.(*components.ComponentModel)
-		id := component.Id
-
-		// Check if we need to relate the component
-		exists, _ := helpers.InArray(id, self.RelatedComponents)
-
-		if !exists {
-
-			err := database.C("posts").Update(bson.M{"_id": self.Id}, bson.M{"$push": bson.M{"related_components": id}})
-
-			if err != nil {
-				panic(err)
-			}
-		}
-
-	default:
-		panic("Unkown argument")
-	}
 }

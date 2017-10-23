@@ -4,7 +4,6 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"gopkg.in/mgo.v2/bson"
 
-	"errors"
 	"time"
 )
 
@@ -62,31 +61,6 @@ func (self *One) TrackUserSignin(client_address string) {
 }
 
 // Helper method to track a signin from the user
-func (self *One) Owns(status *string, entity string, id bson.ObjectId) {
-
-	self.ROwns(entity, id)
-
-	if status != nil {
-		di := self.di
-		database := di.Mongo.Database
-
-		record := &OwnModel{
-			UserId:    self.data.Id,
-			Related:   entity,
-			RelatedId: id,
-			Type:      *status,
-			Created:   time.Now(),
-		}
-
-		err := database.C("user_owns").Insert(record)
-
-		if err != nil {
-			panic(err)
-		}
-	}
-}
-
-// Helper method to track a signin from the user
 func (self *One) ROwns(entity string, id bson.ObjectId) {
 
 	di := self.di
@@ -97,21 +71,6 @@ func (self *One) ROwns(entity string, id bson.ObjectId) {
 	if err != nil {
 		panic(err)
 	}
-}
-
-func (self *One) GetVoteStatus(name string, id bson.ObjectId) (string, error) {
-
-	var model OwnModel
-
-	di := self.di
-	database := di.Mongo.Database
-	err := database.C("user_owns").Find(bson.M{"related": name, "related_id": id, "user_id": self.data.Id, "removed": bson.M{"$exists": false}}).Sort("-created_at").One(&model)
-
-	if err != nil {
-		return "", errors.New("not-available")
-	}
-
-	return model.Type, nil
 }
 
 func (self *One) TrackView(entity string, entity_id bson.ObjectId) {

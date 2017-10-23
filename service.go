@@ -11,7 +11,6 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/api"
 	"github.com/fernandez14/spartangeek-blacker/modules/assets"
 	"github.com/fernandez14/spartangeek-blacker/modules/cli"
-	"github.com/fernandez14/spartangeek-blacker/modules/components"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
 	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
@@ -72,7 +71,6 @@ func main() {
 	aclService := acl.Boot(string_value(configService.String("application.acl")))
 	gamingService := gaming.Boot(string_value(configService.String("application.gaming")))
 	userService := user.Boot()
-	componentsService := components.Boot()
 	mongoService := mongo.NewService(string_value(configService.String("database.uri")), string_value(configService.String("database.name")))
 	errorService, _ := raven.NewClient(string_value(configService.String("sentry.dns")), nil)
 	cacheService, _ := goredis.Dial(&goredis.DialConfig{Address: string_value(configService.String("cache.redis"))})
@@ -114,7 +112,6 @@ func main() {
 		&inject.Object{Value: aclService, Complete: false},
 		&inject.Object{Value: assetsService, Complete: false},
 		&inject.Object{Value: userService, Complete: false},
-		&inject.Object{Value: componentsService, Complete: false},
 		&inject.Object{Value: gamingService, Complete: false},
 		&inject.Object{Value: &cliModule},
 		&inject.Object{Value: &securityModule},

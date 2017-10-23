@@ -1,7 +1,6 @@
 package user
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/modules/components"
 	"gopkg.in/mgo.v2/bson"
 
 	"time"
@@ -205,41 +204,6 @@ type CheckinModel struct {
 	UserId  bson.ObjectId `bson:"user_id" json:"user_id"`
 	Address string        `bson:"client_ip" json:"client_ip"`
 	Date    time.Time     `bson:"date" json:"date"`
-}
-
-type ReferralModel struct {
-	Id        bson.ObjectId `bson:"_id,omitempty" json:"id"`
-	OwnerId   bson.ObjectId `bson:"owner_id" json:"owner_id"`
-	UserId    bson.ObjectId `bson:"user_id" json:"user_id"`
-	Code      string        `bson:"ref_code" json:"ref_code"`
-	Confirmed bool          `bson:"confirmed" json:"confirmed"`
-	Created   time.Time     `bson:"created_at" json:"created_at"`
-	Updated   time.Time     `bson:"updated_at" json:"updated_at"`
-}
-
-type ReferralsModel struct {
-	Count int              `json:"count"`
-	List  []UserLightModel `json:"users"`
-}
-
-type OwnModel struct {
-	Id        bson.ObjectId `bson:"_id,omitempty" json:"id"`
-	UserId    bson.ObjectId `bson:"user_id" json:"user_id"`
-	RelatedId bson.ObjectId `bson:"related_id" json:"related_id"`
-	Related   string        `bson:"related" json:"related"`
-	Type      string        `bson:"type" json:"type"`
-	Created   time.Time     `bson:"created_at" json:"created_at"`
-}
-
-type OwnRelationship struct {
-	Type    string    `bson:"-" json:"type"`
-	Created time.Time `bson:"-" json:"created_at"`
-}
-
-type OwnedComponent struct {
-	components.Component `bson:",inline"`
-
-	Relationship OwnRelationship `bson:"-" json:"relationship"`
 }
 
 type ByCreatedAt []UserActivity

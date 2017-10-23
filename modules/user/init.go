@@ -94,30 +94,6 @@ func (module *Module) SignUp(email, username, password, referral string) (*One, 
 		return nil, exceptions.OutOfBounds{"User already exists."}
 	}
 
-	// Track the referral if we have to
-	if referral != "" {
-		var reference User
-		err := database.C("users").Find(bson.M{"ref_code": referral}).One(&reference)
-
-		// Track the referral link
-		if err == nil {
-			track := &ReferralModel{
-				OwnerId:   reference.Id,
-				UserId:    id,
-				Code:      referral,
-				Confirmed: false,
-				Created:   time.Now(),
-				Updated:   time.Now(),
-			}
-
-			err := database.C("referrals").Insert(track)
-
-			if err != nil {
-				panic(err)
-			}
-		}
-	}
-
 	profile := map[string]interface{}{
 		"country": "",
 		"bio":     "",

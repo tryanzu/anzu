@@ -2,7 +2,6 @@ package posts
 
 import (
 	"github.com/fernandez14/spartangeek-blacker/modules/acl"
-	"github.com/fernandez14/spartangeek-blacker/modules/components"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
 	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
@@ -16,12 +15,11 @@ import (
 var legalSlug = regexp.MustCompile(`^([a-zA-Z0-9\-\.|/]+)$`)
 
 type API struct {
-	Feed       *feed.FeedModule             `inject:""`
-	Acl        *acl.Module                  `inject:""`
-	Components *components.Module           `inject:""`
-	Gaming     *gaming.Module               `inject:""`
-	Mongo      *mongo.Service               `inject:""`
-	Errors     *exceptions.ExceptionsModule `inject:""`
-	Config     *config.Config               `inject:""`
-	S3         *s3.Bucket                   `inject:""`
+	Feed   *feed.FeedModule             `inject:""`
+	Acl    *acl.Module                  `inject:""`
+	Gaming *gaming.Module               `inject:""`
+	Mongo  *mongo.Service               `inject:""`
+	Errors *exceptions.ExceptionsModule `inject:""`
+	Config *config.Config               `inject:""`
+	S3     *s3.Bucket                   `inject:""`
 }
