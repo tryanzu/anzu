@@ -1,8 +1,9 @@
 package api
 
 import (
+	"github.com/desertbit/glue"
 	"github.com/facebookgo/inject"
-	"github.com/fernandez14/spartangeek-blacker/core/http"
+	chttp "github.com/fernandez14/spartangeek-blacker/core/http"
 	"github.com/fernandez14/spartangeek-blacker/handle"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/comments"
@@ -15,6 +16,8 @@ import (
 	"github.com/olebedev/config"
 
 	"fmt"
+	"log"
+	"net/http"
 	"os"
 )
 
@@ -118,7 +121,7 @@ func (module *Module) Run() {
 	router.Use(module.Middlewares.MongoRefresher())
 	router.Use(module.Middlewares.StatsdTiming())
 	router.Use(module.Middlewares.TrustIP())
-	router.Use(http.SiteMiddleware())
+	router.Use(chttp.SiteMiddleware())
 
 	/**
 	 * Routes section.
@@ -131,10 +134,10 @@ func (module *Module) Run() {
 	router.Static("/app", "./static/frontend/public/app")
 
 	router.GET("/", controller.HomePage)
-	router.GET("/chat", http.TitleMiddleware("Chat oficial"), controller.HomePage)
-	router.GET("/reglamento", http.TitleMiddleware("Reglamento y código de conducta"), controller.HomePage)
-	router.GET("/about", http.TitleMiddleware("Acerca de"), controller.HomePage)
-	router.GET("/terminos-y-condiciones", http.TitleMiddleware("Terminos y condiciones"), controller.HomePage)
+	router.GET("/chat", chttp.TitleMiddleware("Chat oficial"), controller.HomePage)
+	router.GET("/reglamento", chttp.TitleMiddleware("Reglamento y código de conducta"), controller.HomePage)
+	router.GET("/about", chttp.TitleMiddleware("Acerca de"), controller.HomePage)
+	router.GET("/terminos-y-condiciones", chttp.TitleMiddleware("Terminos y condiciones"), controller.HomePage)
 	router.GET("/p/:slug/:id", controller.PostPage)
 	router.GET("/u/:username/:id", controller.UserPage)
 	router.GET("/sitemap.xml", module.Sitemap.GetSitemap)
@@ -161,6 +164,7 @@ func (module *Module) Run() {
 		v1.GET("/posts/:id", module.PostsFactory.Get)
 		v1.GET("/posts/:id/comments", module.PostsFactory.GetPostComments)
 		v1.GET("/posts/:id/light", module.Posts.GetLightweight)
+		v1.GET("/comments/:post_id", controller.Comments)
 
 		// Search routes
 		v1.GET("/search/posts", module.PostsFactory.Search)
@@ -185,7 +189,7 @@ func (module *Module) Run() {
 		authorized := v1.Group("")
 		authorized.Use(module.Middlewares.NeedAuthorization())
 		{
-			authorized.GET("/notifications", http.UserMiddleware(), controller.Notifications)
+			authorized.GET("/notifications", chttp.UserMiddleware(), controller.Notifications)
 			authorized.POST("/build", module.PostsFactory.Create)
 
 			// Auth routes
@@ -227,5 +231,30 @@ func (module *Module) Run() {
 		port = "3000"
 	}
 
-	router.Run(":" + port)
+	glues := glue.NewServer(glue.Options{HTTPSocketType: glue.HTTPSocketTypeNone})
+	defer glues.Release()
+	glues.OnNewSocket(onNewSocket)
+
+	h := http.NewServeMux()
+	h.HandleFunc("/glue/", glues.ServeHTTP)
+	h.HandleFunc("/", router.ServeHTTP)
+
+	err = http.ListenAndServe(":"+port, h)
+	log.Fatal(err)
+}
+
+func onNewSocket(s *glue.Socket) {
+	// Set a function which is triggered as soon as the socket is closed.
+	s.OnClose(func() {
+		log.Printf("socket closed with remote address: %s", s.RemoteAddr())
+	})
+
+	// Set a function which is triggered during each received message.
+	s.OnRead(func(data string) {
+		// Echo the received data back to the client.
+		s.Write(data)
+	})
+
+	// Send a welcome string to the client.
+	s.Write("Hello Client")
 }

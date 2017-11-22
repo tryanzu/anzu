@@ -74,9 +74,7 @@ func (self *Post) LoadComments(take, skip int) {
 	}
 
 	if len(c) == 0 {
-
 		fmt.Println("No comments found", skip, limit, sortby)
-
 		self.Comments.Set = make([]*Comment, 0)
 		return
 	}

@@ -17,19 +17,61 @@ type Comment struct {
 	Position int           `bson:"position" json:"position"`
 	Liked    int           `bson:"-" json:"liked,omitempty"`
 	Content  string        `bson:"content" json:"content"`
+	ReplyTo  bson.ObjectId `bson:"reply_to,omitempty" json:"reply_to,omitempty"`
 	Chosen   bool          `bson:"chosen,omitempty" json:"chosen,omitempty"`
 	Created  time.Time     `bson:"created_at" json:"created_at"`
+
+	// Runtime generated fields.
+	Replies interface{} `bson:"-" json:"replies,omitempty"`
+}
+
+type Replies struct {
+	Id    bson.ObjectId `bson:"_id,omitempty" json:"-"`
+	Count int           `bson:"count" json:"count"`
+	List  Comments      `bson:"list" json:"list"`
 }
 
 type Comments []Comment
 
-func (list Comments) Map() map[string]Comment {
-	m := make(map[string]Comment, len(list))
-	for _, item := range list {
+func (all Comments) Map() map[string]Comment {
+	m := make(map[string]Comment, len(all))
+	for _, item := range all {
 		m[item.Id.Hex()] = item
 	}
 
 	return m
+}
+
+func (all Comments) WithReplies(deps Deps, max int) (Comments, error) {
+	list := make(Comments, len(all))
+	replies, err := FindReplies(deps, all, max)
+	if err != nil {
+		return Comments{}, err
+	}
+
+	for n, c := range all {
+		list[n] = c
+
+		for _, r := range replies {
+			if r.Id == c.Id {
+				list[n].Replies = r
+				break
+			}
+		}
+	}
+
+	return list, nil
+}
+
+func (all Comments) IDList() []bson.ObjectId {
+	list := make([]bson.ObjectId, len(all))
+	index := 0
+	for _, c := range all {
+		list[index] = c.Id
+		index++
+	}
+
+	return list
 }
 
 func (all Comments) PostsScope() common.Scope {

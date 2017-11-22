@@ -350,7 +350,6 @@ func (di PostAPI) GetLightweight(c *gin.Context) {
 	id := c.Params.ByName("id")
 
 	if bson.IsObjectIdHex(id) == false {
-
 		c.JSON(400, gin.H{"status": "error", "message": "Invalid user id."})
 		return
 	}
@@ -359,7 +358,6 @@ func (di PostAPI) GetLightweight(c *gin.Context) {
 	post, err := di.Feed.Post(post_id)
 
 	if err != nil {
-
 		c.JSON(400, gin.H{"status": "error", "message": err.Error()})
 		return
 	}

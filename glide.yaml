@@ -41,9 +41,6 @@ import:
   subpackages:
   - charge
 - package: github.com/xuyu/goredis
-- package: golang.org/x/crypto
-  subpackages:
-  - ssh
 - package: golang.org/x/text
   subpackages:
   - unicode/norm
@@ -67,3 +64,11 @@ import:
   version: ^1.4.4
 - package: github.com/boj/redistore
   version: ^1.2.0
+- package: github.com/desertbit/glue
+  version: ^1.9.1
+- package: github.com/blang/semver
+  version: ^3.5.1
+- package: golang.org/x/sys
+  subpackages:
+  - unix
+- package: github.com/gin-contrib/sse
