@@ -3,6 +3,7 @@ package comments
 import (
 	"github.com/fernandez14/spartangeek-blacker/board/votes"
 	"github.com/fernandez14/spartangeek-blacker/core/common"
+	"github.com/fernandez14/spartangeek-blacker/core/user"
 	"gopkg.in/mgo.v2/bson"
 
 	"time"
@@ -31,6 +32,8 @@ type Replies struct {
 	List  Comments      `bson:"list" json:"list"`
 }
 
+type RepliesList []Replies
+
 type Comments []Comment
 
 func (all Comments) Map() map[string]Comment {
@@ -49,12 +52,42 @@ func (all Comments) WithReplies(deps Deps, max int) (Comments, error) {
 		return Comments{}, err
 	}
 
+	for n, r := range replies {
+		replies[n].List, err = r.List.WithUsers(deps)
+
+		if err != nil {
+			return Comments{}, err
+		}
+	}
+
 	for n, c := range all {
 		list[n] = c
 
 		for _, r := range replies {
 			if r.Id == c.Id {
 				list[n].Replies = r
+				break
+			}
+			list[n].Replies = make([]string, 0)
+		}
+	}
+
+	return list, nil
+}
+
+func (all Comments) WithUsers(deps Deps) (Comments, error) {
+	list := make(Comments, len(all))
+	users, err := user.FindList(deps, all.UsersScope())
+	if err != nil {
+		return Comments{}, err
+	}
+
+	for n, c := range all {
+		list[n] = c
+
+		for _, r := range users {
+			if r.Id == c.UserId {
+				list[n].User = r
 				break
 			}
 		}
@@ -72,6 +105,24 @@ func (all Comments) IDList() []bson.ObjectId {
 	}
 
 	return list
+}
+
+func (all Comments) UsersScope() common.Scope {
+	users := map[bson.ObjectId]bool{}
+	for _, c := range all {
+		if _, exists := users[c.UserId]; !exists {
+			users[c.UserId] = true
+		}
+	}
+
+	list := make([]bson.ObjectId, len(users))
+	index := 0
+	for k, _ := range users {
+		list[index] = k
+		index++
+	}
+
+	return common.WithinID(list)
 }
 
 func (all Comments) PostsScope() common.Scope {

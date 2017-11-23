@@ -42,7 +42,7 @@ func FindReplies(deps Deps, list Comments, max int) (lists []Replies, err error)
 		{"$match": bson.M{"reply_to": bson.M{"$in": list.IDList()}}},
 		{"$sort": bson.M{"votes.up": 1, "votes.down": -1}},
 		{"$group": bson.M{"_id": "$reply_to", "count": bson.M{"$sum": 1}, "list": bson.M{"$push": "$$ROOT"}}},
-		//{"$project": bson.M{"count": 1, "list": []interface{}{"$list", 0, max}}},
+		{"$project": bson.M{"count": 1, "list": bson.M{"$slice": []interface{}{"$list", 0, max}}}},
 	}).All(&lists)
 	return
 }

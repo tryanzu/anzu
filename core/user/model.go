@@ -23,7 +23,7 @@ type User struct {
 	Facebook      interface{}            `bson:"facebook,omitempty" json:"facebook,omitempty"`
 	Notifications interface{}            `bson:"notifications,omitempty" json:"notifications,omitempty"`
 	Profile       map[string]interface{} `bson:"profile,omitempty" json:"profile,omitempty"`
-	//Gaming        UserGaming             `bson:"gaming,omitempty" json:"gaming,omitempty"`
+	Gaming        interface{}            `bson:"gaming,omitempty" json:"gaming,omitempty"`
 	//Stats         UserStats              `bson:"stats,omitempty" json:"stats,omitempty"`
 	Version          string `bson:"version,omitempty" json:"version,omitempty"`
 	Validated        bool   `bson:"validated" json:"validated"`

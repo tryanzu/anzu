@@ -39,6 +39,6 @@ func IgniteConfig(d Deps) (container Deps, err error) {
 
 	d.ConfigProvider = parsed
 	container = d
-	container.Log().Debugf("Configuration ignited using %s", envfile)
+	container.Log().Debugf("[CONFIG] Read %s", envfile)
 	return
 }

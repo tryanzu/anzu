@@ -36,5 +36,11 @@ func Comments(c *gin.Context) {
 		return
 	}
 
+	list, err = list.WithUsers(deps.Container)
+	if err != nil {
+		c.AbortWithError(500, err)
+		return
+	}
+
 	c.JSON(200, list)
 }
