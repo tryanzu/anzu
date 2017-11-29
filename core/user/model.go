@@ -23,7 +23,7 @@ type User struct {
 	Facebook      interface{}            `bson:"facebook,omitempty" json:"facebook,omitempty"`
 	Notifications interface{}            `bson:"notifications,omitempty" json:"notifications,omitempty"`
 	Profile       map[string]interface{} `bson:"profile,omitempty" json:"profile,omitempty"`
-	Gaming        interface{}            `bson:"gaming,omitempty" json:"gaming,omitempty"`
+	Gaming        Gaming                 `bson:"gaming,omitempty" json:"gaming,omitempty"`
 	//Stats         UserStats              `bson:"stats,omitempty" json:"stats,omitempty"`
 	Version          string `bson:"version,omitempty" json:"version,omitempty"`
 	Validated        bool   `bson:"validated" json:"validated"`
@@ -33,6 +33,14 @@ type User struct {
 	ConfirmSent *time.Time `bson:"confirm_sent_at" json:"-"`
 	Created     time.Time  `bson:"created_at" json:"created_at"`
 	Updated     time.Time  `bson:"updated_at" json:"updated_at"`
+}
+
+type Gaming struct {
+	Swords  int `bson:"swords" json:"swords"`
+	Tribute int `bson:"tribute" json:"tribute"`
+	Shit    int `bson:"shit" json:"shit"`
+	Coins   int `bson:"coins" json:"coins"`
+	Level   int `bson:"level" json:"level"`
 }
 
 type Users []User

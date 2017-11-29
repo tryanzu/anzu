@@ -17,7 +17,11 @@ func FetchBy(deps Deps, query common.Query) (list Comments, err error) {
 
 func Post(id bson.ObjectId, limit, offset int) common.Query {
 	return func(col *mgo.Collection) *mgo.Query {
-		return col.Find(bson.M{"post_id": id, "reply_to": bson.M{"$exists": false}}).Limit(limit).Skip(offset).Sort("-votes.up", "votes.down")
+		return col.Find(bson.M{
+			"post_id":    id,
+			"reply_to":   bson.M{"$exists": false},
+			"deleted_at": bson.M{"$exists": false},
+		}).Limit(limit).Skip(offset).Sort("-votes.up", "votes.down")
 	}
 }
 
