@@ -3,6 +3,7 @@ package comments
 import (
 	"github.com/fernandez14/spartangeek-blacker/board/votes"
 	"github.com/fernandez14/spartangeek-blacker/core/common"
+	"github.com/fernandez14/spartangeek-blacker/core/content"
 	"github.com/fernandez14/spartangeek-blacker/core/user"
 	"gopkg.in/mgo.v2/bson"
 
@@ -24,6 +25,19 @@ type Comment struct {
 
 	// Runtime generated fields.
 	Replies interface{} `bson:"-" json:"replies,omitempty"`
+}
+
+func (c Comment) GetContent() string {
+	return c.Content
+}
+
+func (c Comment) UpdateContent(content string) content.Parseable {
+	c.Content = content
+	return c
+}
+
+func (c Comment) GetParseableMeta() (meta map[string]interface{}) {
+	return
 }
 
 type Replies struct {

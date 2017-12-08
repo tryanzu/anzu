@@ -1,32 +1,16 @@
 package deps
 
 import (
-	"gopkg.in/mgo.v2"
+	"github.com/tidwall/buntdb"
 )
 
-func IgniteMongoDB(container Deps) (Deps, error) {
-	uri, err := container.Config().String("database.uri")
+func IgniteBuntDB(container Deps) (Deps, error) {
+	db, err := buntdb.Open(":memory:")
 	if err != nil {
-		return container, err
+		log.Fatal(err)
 	}
+	//defer db.Close()
 
-	dbName, err := container.Config().String("database.name")
-	if err != nil {
-		return container, err
-	}
-
-	session, err := mgo.Dial(uri)
-	if err != nil {
-		return container, err
-	}
-
-	database := session.DB(dbName)
-
-	// See https://godoc.org/gopkg.in/mgo.v2#Session.SetMode
-	//session.SetMode(mgo.Monotonic, true)
-
-	container.DatabaseSessionProvider = session
-	container.DatabaseProvider = database
-
+	container.BuntProvider = db
 	return container, nil
 }

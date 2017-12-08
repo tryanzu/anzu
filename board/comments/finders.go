@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/fernandez14/spartangeek-blacker/core/common"
+	"github.com/fernandez14/spartangeek-blacker/core/content"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -12,6 +13,20 @@ var CommentNotFound = errors.New("Comment has not been found by given criteria."
 
 func FetchBy(deps Deps, query common.Query) (list Comments, err error) {
 	err = query(deps.Mgo().C("comments")).All(&list)
+	if err != nil {
+		return
+	}
+
+	var processed content.Parseable
+	for n, c := range list {
+		processed, err = content.Postprocess(deps, c)
+		if err != nil {
+			return
+		}
+
+		list[n] = processed.(Comment)
+	}
+
 	return
 }
 
@@ -21,7 +36,7 @@ func Post(id bson.ObjectId, limit, offset int) common.Query {
 			"post_id":    id,
 			"reply_to":   bson.M{"$exists": false},
 			"deleted_at": bson.M{"$exists": false},
-		}).Limit(limit).Skip(offset).Sort("-votes.up", "votes.down")
+		}).Limit(limit).Skip(offset).Sort("-votes.up", "votes.down", "-created_at")
 	}
 }
 

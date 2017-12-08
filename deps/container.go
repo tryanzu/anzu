@@ -18,6 +18,7 @@ func Bootstrap() {
 	ignitors := []Ignitor{
 		IgniteLogger,
 		IgniteConfig,
+		IgniteBuntDB,
 		IgniteMongoDB,
 		IgniteCache,
 		IgniteMailer,

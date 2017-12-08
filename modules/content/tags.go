@@ -216,7 +216,6 @@ func (self Module) ParseTags(o Parseable) error {
 	mtags := tag_regex.FindAllString(c, -1)
 
 	for _, tag := range mtags {
-
 		params := tag_params_regex.FindAllString(tag, -1)
 		count := len(params) - 1
 

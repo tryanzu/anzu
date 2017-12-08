@@ -42,7 +42,7 @@ func (this API) Add(c *gin.Context) {
 		// Notify events pool.
 		events.In <- events.PostComment(comment.Id)
 
-		c.JSON(200, gin.H{"status": "okay", "message": comment.Content, "position": comment.Position})
+		c.JSON(200, gin.H{"status": "okay", "message": comment.Content, "comment": comment, "position": comment.Position})
 		return
 	}
 

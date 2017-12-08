@@ -6,6 +6,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/transmit"
 	"github.com/olebedev/config"
 	"github.com/op/go-logging"
+	"github.com/tidwall/buntdb"
 	"github.com/xuyu/goredis"
 	"gopkg.in/mgo.v2"
 )
@@ -19,6 +20,7 @@ type Deps struct {
 	MailerProvider          mail.Mailer
 	TransmitProvider        transmit.Sender
 	CacheProvider           *goredis.Redis
+	BuntProvider            *buntdb.DB
 }
 
 func (d Deps) Config() *config.Config {
@@ -35,6 +37,10 @@ func (d Deps) Log() *logging.Logger {
 
 func (d Deps) Mgo() *mgo.Database {
 	return d.DatabaseProvider
+}
+
+func (d Deps) BuntDB() *buntdb.DB {
+	return d.BuntProvider
 }
 
 func (d Deps) Mailer() mail.Mailer {
