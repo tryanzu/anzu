@@ -1,10 +1,10 @@
-### SpartanGeek / Blacker
+# Welcome!, time to meet Anzu. 
 
-#### How to start blacker with pm2
-```ENV_FILE=/home/spartan/blacker/current/env.json pm2 start /home/spartan/blacker/current/blacker --interpreter none --name="blacker-api" -f -x -- api```
+Anzu its our hardest attempt to build the most rad, simple & reactive forum software out there since the javascript revolution. This repository contains the core backend and frontend submodule link. We're still working in the first alpha official release so little previous knowledge about the stack is required to set things up. 
 
-RUN_OVER=3001 ENV_FILE=/home/spartan/dist/blacker/shared/development.json pm2 start /home/spartan/blacker/current/blacker --interpreter none --name="blacker-dev" -f -x -- api
-
-
-### Wercker CI
-[![wercker status](https://app.wercker.com/status/29dc1611f3b1b3d734f8a0d895ad43ab/m "wercker status")](https://app.wercker.com/project/bykey/29dc1611f3b1b3d734f8a0d895ad43ab)
+## Anzu's stack
+- Golang.
+- Redis (to be replaced)
+- BuntDB (embedded cache)
+- MongoDB (DB)
+- Cycle.JS (A functional and reactive JavaScript framework)
