@@ -1,6 +1,7 @@
 package user
 
 import (
+	"github.com/tidwall/buntdb"
 	"gopkg.in/mgo.v2/bson"
 	"time"
 )
@@ -52,6 +53,16 @@ func (list Users) Map() map[string]User {
 	}
 
 	return m
+}
+
+func (list Users) UpdateBuntCache(tx *buntdb.Tx) (err error) {
+	for _, u := range list {
+		_, _, err = tx.Set("user:"+u.Id.Hex()+":names", u.UserName, nil)
+		if err != nil {
+			return
+		}
+	}
+	return
 }
 
 type RecoveryToken struct {

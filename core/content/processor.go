@@ -1,7 +1,9 @@
 package content
 
 import (
+	"log"
 	"strings"
+	"time"
 
 	"github.com/fernandez14/spartangeek-blacker/core/common"
 	"github.com/fernandez14/spartangeek-blacker/core/user"
@@ -13,6 +15,7 @@ type Processor func(Deps, Parseable, tags) (Parseable, error)
 
 // Postprocess a parseable type.
 func Postprocess(deps Deps, c Parseable) (processed Parseable, err error) {
+	starts := time.Now()
 	list := parseTags(c)
 	pipeline := []Processor{
 		replaceMentionTags,
@@ -28,6 +31,8 @@ func Postprocess(deps Deps, c Parseable) (processed Parseable, err error) {
 		}
 	}
 
+	elapsed := time.Since(starts)
+	log.Printf("Parsable postprocess took: %v\n", elapsed)
 	return
 }
 
@@ -44,22 +49,22 @@ func replaceMentionTags(deps Deps, c Parseable, list tags) (processed Parseable,
 		return
 	}
 
-	var users user.Users
-	users, err = user.FindList(deps, common.WithinID(usersId))
+	var users common.UsersStringMap
+	users, err = user.FindNames(deps, usersId...)
 	if err != nil {
 		return
 	}
 
 	content := processed.GetContent()
-	usersMap := users.Map()
+
 	for _, tag := range mentions {
 		if id := tag.Params[0]; bson.IsObjectIdHex(id) {
-			usr, exists := usersMap[id]
+			name, exists := users[bson.ObjectIdHex(id)]
 			if exists == false {
 				continue
 			}
 
-			link := `<a class="user-mention" data-id="` + id + `" data-username="` + usr.UserName + `">@` + usr.UserName + `</a>`
+			link := `<a class="user-mention" data-id="` + id + `" data-username="` + name + `">@` + name + `</a>`
 			content = strings.Replace(content, tag.Original, link, -1)
 		}
 	}
