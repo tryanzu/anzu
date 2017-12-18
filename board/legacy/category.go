@@ -1,8 +1,8 @@
 package handle
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/board/legacy/model"
 	"github.com/fernandez14/spartangeek-blacker/deps"
-	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/modules/acl"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"

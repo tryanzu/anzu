@@ -2,7 +2,7 @@ package notifications
 
 import (
 	"fmt"
-	"github.com/fernandez14/spartangeek-blacker/model"
+	"github.com/fernandez14/spartangeek-blacker/board/legacy/model"
 )
 
 type FakeBroadcaster struct {

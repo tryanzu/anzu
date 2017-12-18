@@ -1,8 +1,8 @@
 package feed
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/board/legacy/model"
 	"github.com/fernandez14/spartangeek-blacker/deps"
-	"github.com/fernandez14/spartangeek-blacker/model"
 	"gopkg.in/mgo.v2/bson"
 	"strconv"
 )

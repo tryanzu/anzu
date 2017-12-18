@@ -2,8 +2,8 @@ package handle
 
 import (
 	"encoding/json"
+	"github.com/fernandez14/spartangeek-blacker/board/legacy/model"
 	"github.com/fernandez14/spartangeek-blacker/deps"
-	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/gin-gonic/gin"
 	"github.com/xuyu/goredis"
 	"gopkg.in/mgo.v2/bson"

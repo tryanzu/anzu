@@ -1,7 +1,7 @@
 package acl
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/model"
+	"github.com/fernandez14/spartangeek-blacker/board/legacy/model"
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"gopkg.in/mgo.v2/bson"

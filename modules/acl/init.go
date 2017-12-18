@@ -2,8 +2,8 @@ package acl
 
 import (
 	"encoding/json"
+	"github.com/fernandez14/spartangeek-blacker/board/legacy/model"
 	"github.com/fernandez14/spartangeek-blacker/deps"
-	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/mikespook/gorbac"
 	"gopkg.in/mgo.v2/bson"
 	"io/ioutil"

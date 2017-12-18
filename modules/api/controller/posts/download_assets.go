@@ -1,8 +1,8 @@
 package posts
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/board/legacy/model"
 	"github.com/fernandez14/spartangeek-blacker/deps"
-	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/mitchellh/goamz/s3"
 	"gopkg.in/mgo.v2/bson"
 

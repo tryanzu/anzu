@@ -3,9 +3,9 @@ package events
 import (
 	"time"
 
+	"github.com/fernandez14/spartangeek-blacker/board/legacy/model"
 	pool "github.com/fernandez14/spartangeek-blacker/core/events"
 	"github.com/fernandez14/spartangeek-blacker/deps"
-	"github.com/fernandez14/spartangeek-blacker/model"
 )
 
 // Bind event handlers for activity related actions...

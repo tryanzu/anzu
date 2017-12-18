@@ -1,11 +1,10 @@
 package api
 
 import (
-	"github.com/desertbit/glue"
 	"github.com/facebookgo/inject"
+	"github.com/fernandez14/spartangeek-blacker/board/legacy"
 	"github.com/fernandez14/spartangeek-blacker/board/realtime"
 	chttp "github.com/fernandez14/spartangeek-blacker/core/http"
-	"github.com/fernandez14/spartangeek-blacker/handle"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/comments"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller/oauth"
@@ -45,7 +44,6 @@ type ModuleDI struct {
 }
 
 func (module *Module) Populate(g inject.Graph) {
-
 	err := g.Provide(
 		&inject.Object{Value: &module.Dependencies},
 		&inject.Object{Value: &module.Posts},
@@ -235,20 +233,4 @@ func (module *Module) Run() {
 
 	err = http.ListenAndServe(":"+port, h)
 	log.Fatal(err)
-}
-
-func onNewSocket(s *glue.Socket) {
-	// Set a function which is triggered as soon as the socket is closed.
-	s.OnClose(func() {
-		log.Printf("socket closed with remote address: %s", s.RemoteAddr())
-	})
-
-	// Set a function which is triggered during each received message.
-	s.OnRead(func(data string) {
-		// Echo the received data back to the client.
-		s.Write(data)
-	})
-
-	// Send a welcome string to the client.
-	s.Write("Hello Client")
 }
