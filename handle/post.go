@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"github.com/fernandez14/spartangeek-blacker/core/events"
 	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/modules/acl"
@@ -30,7 +31,6 @@ type PostAPI struct {
 	DataService   *mongo.Service               `inject:""`
 	CacheService  *goredis.Redis               `inject:""`
 	Feed          *feed.FeedModule             `inject:""`
-	Collector     CollectorAPI                 `inject:"inline"`
 	Errors        *exceptions.ExceptionsModule `inject:""`
 	S3Bucket      *s3.Bucket                   `inject:""`
 	Gaming        *gaming.Module               `inject:""`
@@ -281,9 +281,11 @@ func (di PostAPI) FeedGet(c *gin.Context) {
 	}
 
 	if signed_in {
-
-		// Save the activity in other routine
-		go di.Collector.Activity(model.Activity{UserId: bson.ObjectIdHex(user_id.(string)), Event: "feed", List: list})
+		events.In <- events.TrackActivity(model.Activity{
+			UserId: bson.ObjectIdHex(user_id.(string)),
+			Event:  "feed",
+			List:   list,
+		})
 	}
 
 	// Update the feed rates for the most important stuff

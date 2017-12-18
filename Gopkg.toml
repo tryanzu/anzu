@@ -1,0 +1,114 @@
+
+# Gopkg.toml example
+#
+# Refer to https://github.com/golang/dep/blob/master/docs/Gopkg.toml.md
+# for detailed Gopkg.toml documentation.
+#
+# required = ["github.com/user/thing/cmd/thing"]
+# ignored = ["github.com/user/project/pkgX", "bitbucket.org/user/project/pkgA/pkgY"]
+#
+# [[constraint]]
+#   name = "github.com/user/project"
+#   version = "1.0.0"
+#
+# [[constraint]]
+#   name = "github.com/user/project2"
+#   branch = "dev"
+#   source = "github.com/myfork/project2"
+#
+# [[override]]
+#  name = "github.com/x/y"
+#  version = "2.4.0"
+
+ignored = ["github.com/fernandez14/spartangeek-blacker", "golang.org/x/crypto/ssh/terminal"]
+
+[[constraint]]
+  name = "github.com/abiosoft/ishell"
+
+[[constraint]]
+  name = "github.com/cactus/go-statsd-client"
+
+[[constraint]]
+  name = "github.com/desertbit/glue"
+  version = "1.9.1"
+
+[[constraint]]
+  name = "github.com/dgrijalva/jwt-go"
+
+[[constraint]]
+  name = "github.com/facebookgo/inject"
+
+[[constraint]]
+  name = "github.com/getsentry/raven-go"
+
+[[constraint]]
+  name = "github.com/gin-gonic/contrib"
+
+[[constraint]]
+  name = "github.com/gin-gonic/gin"
+
+[[constraint]]
+  name = "github.com/goinggo/work"
+
+[[constraint]]
+  name = "github.com/googollee/go-socket.io"
+
+[[constraint]]
+  name = "github.com/gorilla/context"
+
+[[constraint]]
+  name = "github.com/hjr265/postmark.go"
+
+[[constraint]]
+  name = "github.com/kennygrant/sanitize"
+
+[[constraint]]
+  name = "github.com/markbates/goth"
+
+[[constraint]]
+  name = "github.com/mikespook/gorbac"
+
+[[constraint]]
+  name = "github.com/mitchellh/goamz"
+
+[[constraint]]
+  name = "github.com/olebedev/config"
+
+[[constraint]]
+  name = "github.com/op/go-logging"
+
+[[constraint]]
+  name = "github.com/pebbe/zmq4"
+
+[[constraint]]
+  name = "github.com/robfig/cron"
+
+[[constraint]]
+  name = "github.com/satori/go.uuid"
+
+[[constraint]]
+  name = "github.com/smartystreets/goconvey"
+
+[[constraint]]
+  name = "github.com/spf13/cobra"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/tidwall/buntdb"
+
+[[constraint]]
+  name = "github.com/xuyu/goredis"
+
+[[constraint]]
+  name = "gopkg.in/h2non/bimg.v0"
+
+[[constraint]]
+  name = "gopkg.in/mgo.v2"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/SierraSoftworks/multicast"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/henrylee2cn/goutil"

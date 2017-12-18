@@ -3,6 +3,7 @@ package api
 import (
 	"github.com/desertbit/glue"
 	"github.com/facebookgo/inject"
+	"github.com/fernandez14/spartangeek-blacker/board/realtime"
 	chttp "github.com/fernandez14/spartangeek-blacker/core/http"
 	"github.com/fernandez14/spartangeek-blacker/handle"
 	"github.com/fernandez14/spartangeek-blacker/modules/api/controller"
@@ -32,7 +33,6 @@ type Module struct {
 	CommentsFactory comments.API
 	Stats           handle.StatAPI
 	Middlewares     handle.MiddlewareAPI
-	Collector       handle.CollectorAPI
 	Sitemap         handle.SitemapAPI
 	Acl             handle.AclAPI
 	Gaming          handle.GamingAPI
@@ -48,7 +48,6 @@ func (module *Module) Populate(g inject.Graph) {
 
 	err := g.Provide(
 		&inject.Object{Value: &module.Dependencies},
-		&inject.Object{Value: &module.Collector},
 		&inject.Object{Value: &module.Posts},
 		&inject.Object{Value: &module.PostsFactory},
 		&inject.Object{Value: &module.UsersFactory},
@@ -231,12 +230,8 @@ func (module *Module) Run() {
 		port = "3000"
 	}
 
-	glues := glue.NewServer(glue.Options{HTTPSocketType: glue.HTTPSocketTypeNone})
-	defer glues.Release()
-	glues.OnNewSocket(onNewSocket)
-
 	h := http.NewServeMux()
-	h.HandleFunc("/glue/", glues.ServeHTTP)
+	h.HandleFunc("/glue/", realtime.ServeHTTP())
 	h.HandleFunc("/", router.ServeHTTP)
 
 	err = http.ListenAndServe(":"+port, h)

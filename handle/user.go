@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/fernandez14/spartangeek-blacker/core/events"
 	u "github.com/fernandez14/spartangeek-blacker/core/user"
 	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/model"
@@ -22,7 +23,7 @@ import (
 	"github.com/mitchellh/goamz/s3"
 	"github.com/olebedev/config"
 	"github.com/xuyu/goredis"
-	"gopkg.in/h2non/bimg.v0"
+	//"gopkg.in/h2non/bimg.v0"
 	"gopkg.in/mgo.v2/bson"
 	"io/ioutil"
 	"net/http"
@@ -44,7 +45,6 @@ type UserAPI struct {
 	Gaming        *gaming.Module               `inject:""`
 	Acl           *acl.Module                  `inject:""`
 	Security      *security.Module             `inject:""`
-	Collector     CollectorAPI                 `inject:"inline"`
 }
 
 func (di *UserAPI) UserSubscribe(c *gin.Context) {
@@ -183,9 +183,11 @@ func (di *UserAPI) UserGetOne(c *gin.Context) {
 	user_logged_id, signed_in := c.Get("user_id")
 
 	if signed_in {
-
-		// Save the activity in other routine
-		go di.Collector.Activity(model.Activity{UserId: bson.ObjectIdHex(user_logged_id.(string)), Event: "user", RelatedId: usr.Data().Id})
+		events.In <- events.TrackActivity(model.Activity{
+			UserId:    bson.ObjectIdHex(user_logged_id.(string)),
+			Event:     "user",
+			RelatedId: usr.Data().Id,
+		})
 	}
 
 	c.JSON(200, usr.Data().User)
@@ -306,9 +308,11 @@ func (di UserAPI) UserGetJwtToken(c *gin.Context) {
 	}
 
 	if signed_in {
-
-		// Save the activity in other routine
-		go di.Collector.Activity(model.Activity{UserId: bson.ObjectIdHex(user_id.(string)), Event: "user-view", RelatedId: usr.Data().Id})
+		events.In <- events.TrackActivity(model.Activity{
+			UserId:    bson.ObjectIdHex(user_id.(string)),
+			Event:     "user-view",
+			RelatedId: usr.Data().Id,
+		})
 	}
 
 	c.JSON(200, gin.H{"status": "okay", "token": token, "session_id": session_id, "expires": remember})
@@ -358,27 +362,28 @@ func (di *UserAPI) UserUpdateProfileAvatar(c *gin.Context) {
 			panic(err)
 		}
 
-		options := bimg.Options{
-			Width:   120,
-			Height:  120,
-			Embed:   true,
-			Crop:    true,
-			Quality: 100,
-		}
+		/*
+			options := bimg.Options{
+				Width:   120,
+				Height:  120,
+				Embed:   true,
+				Crop:    true,
+				Quality: 100,
+			}
 
-		thumbnail, err := bimg.NewImage(data).Process(options)
+			thumbnail, err := bimg.NewImage(data).Process(options)
 
-		if err != nil {
-			c.JSON(400, gin.H{"status": "error", "message": "Unsupported image type..."})
-			return
-		}
+			if err != nil {
+				c.JSON(400, gin.H{"status": "error", "message": "Unsupported image type..."})
+				return
+			}
 
-		path = "users/" + name + "-120x120" + extension
-		err = di.S3Bucket.Put(path, thumbnail, dataType, s3.ACL("public-read"))
+			path = "users/" + name + "-120x120" + extension
+			err = di.S3Bucket.Put(path, thumbnail, dataType, s3.ACL("public-read"))
 
-		if err != nil {
-			panic(err)
-		}
+			if err != nil {
+				panic(err)
+			}*/
 
 		s3_url := "https://s3-us-west-1.amazonaws.com/spartan-board/" + path
 

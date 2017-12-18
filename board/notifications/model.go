@@ -112,7 +112,7 @@ func (all Notifications) Humanize(deps Deps) (list []map[string]interface{}, err
 }
 
 type Socket struct {
-	Chan   string
-	Action string
-	Params map[string]interface{}
+	Chan   string                 `json:"c"`
+	Action string                 `json:"action"`
+	Params map[string]interface{} `json:"p"`
 }

@@ -1,6 +1,7 @@
 package events
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/model"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -18,6 +19,15 @@ func PostComment(id bson.ObjectId) Event {
 		Name: POSTS_COMMENT,
 		Params: map[string]interface{}{
 			"id": id,
+		},
+	}
+}
+
+func TrackActivity(m model.Activity) Event {
+	return Event{
+		Name: RECENT_ACTIVITY,
+		Params: map[string]interface{}{
+			"activity": m,
 		},
 	}
 }
