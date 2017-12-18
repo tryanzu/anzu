@@ -1,9 +1,9 @@
 package notifications
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/op/go-logging"
 	"github.com/tidwall/buntdb"
+	"github.com/tryanzu/core/modules/mail"
 	"gopkg.in/mgo.v2"
 )
 

@@ -1,11 +1,11 @@
 package controller
 
 import (
-	posts "github.com/fernandez14/spartangeek-blacker/board/posts"
-	"github.com/fernandez14/spartangeek-blacker/core/user"
-	"github.com/fernandez14/spartangeek-blacker/deps"
-	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/gin-gonic/gin"
+	posts "github.com/tryanzu/core/board/posts"
+	"github.com/tryanzu/core/core/user"
+	"github.com/tryanzu/core/deps"
+	"github.com/tryanzu/core/modules/helpers"
 	"gopkg.in/mgo.v2/bson"
 )
 

@@ -1,7 +1,7 @@
 package gaming
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/modules/feed"
+	"github.com/tryanzu/core/modules/feed"
 )
 
 type Post struct {

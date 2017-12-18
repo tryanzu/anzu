@@ -1,8 +1,8 @@
 package assets
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/mitchellh/goamz/s3"
+	"github.com/tryanzu/core/deps"
 	"gopkg.in/mgo.v2/bson"
 
 	"encoding/base64"

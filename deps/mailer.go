@@ -1,7 +1,7 @@
 package deps
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/modules/mail"
+	"github.com/tryanzu/core/modules/mail"
 )
 
 // Bootstraps mailer driver.

@@ -1,12 +1,12 @@
 package users
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/board/legacy/model"
-	"github.com/fernandez14/spartangeek-blacker/core/user"
-	"github.com/fernandez14/spartangeek-blacker/deps"
-	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
+	"github.com/tryanzu/core/board/legacy/model"
+	"github.com/tryanzu/core/core/user"
+	"github.com/tryanzu/core/deps"
+	"github.com/tryanzu/core/modules/helpers"
 )
 
 func (this API) RequestPasswordRecovery(c *gin.Context) {

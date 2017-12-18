@@ -3,7 +3,7 @@ package notifications
 import (
 	"encoding/json"
 
-	"github.com/fernandez14/spartangeek-blacker/board/realtime"
+	"github.com/tryanzu/core/board/realtime"
 )
 
 func transmitWorker(n int) {

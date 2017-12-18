@@ -1,11 +1,11 @@
 package feed
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/modules/content"
-	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
-	//"github.com/fernandez14/spartangeek-blacker/modules/notifications"
-	"github.com/fernandez14/spartangeek-blacker/deps"
-	"github.com/fernandez14/spartangeek-blacker/modules/user"
+	"github.com/tryanzu/core/modules/content"
+	"github.com/tryanzu/core/modules/exceptions"
+	//"github.com/tryanzu/core/modules/notifications"
+	"github.com/tryanzu/core/deps"
+	"github.com/tryanzu/core/modules/user"
 	"github.com/xuyu/goredis"
 	"gopkg.in/mgo.v2/bson"
 )

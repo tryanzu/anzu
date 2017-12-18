@@ -1,8 +1,8 @@
 package events
 
 import (
-	notify "github.com/fernandez14/spartangeek-blacker/board/notifications"
-	pool "github.com/fernandez14/spartangeek-blacker/core/events"
+	notify "github.com/tryanzu/core/board/notifications"
+	pool "github.com/tryanzu/core/core/events"
 )
 
 // Bind event handlers for global unrelated actions...

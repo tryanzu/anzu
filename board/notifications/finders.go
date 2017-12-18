@@ -3,7 +3,7 @@ package notifications
 import (
 	"errors"
 
-	"github.com/fernandez14/spartangeek-blacker/core/common"
+	"github.com/tryanzu/core/core/common"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )

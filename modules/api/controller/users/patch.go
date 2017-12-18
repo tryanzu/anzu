@@ -1,8 +1,8 @@
 package users
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/gin-gonic/gin"
+	"github.com/tryanzu/core/modules/helpers"
 	"gopkg.in/mgo.v2/bson"
 )
 

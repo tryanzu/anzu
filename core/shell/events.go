@@ -2,9 +2,9 @@ package shell
 
 import (
 	"github.com/abiosoft/ishell"
-	_ "github.com/fernandez14/spartangeek-blacker/board/comments"
-	_ "github.com/fernandez14/spartangeek-blacker/board/posts"
-	"github.com/fernandez14/spartangeek-blacker/core/events"
+	_ "github.com/tryanzu/core/board/comments"
+	_ "github.com/tryanzu/core/board/posts"
+	"github.com/tryanzu/core/core/events"
 	"gopkg.in/mgo.v2/bson"
 )
 

@@ -1,12 +1,12 @@
 package posts
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/modules/acl"
-	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
-	"github.com/fernandez14/spartangeek-blacker/modules/feed"
-	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
 	"github.com/mitchellh/goamz/s3"
 	"github.com/olebedev/config"
+	"github.com/tryanzu/core/modules/acl"
+	"github.com/tryanzu/core/modules/exceptions"
+	"github.com/tryanzu/core/modules/feed"
+	"github.com/tryanzu/core/modules/gaming"
 
 	"regexp"
 )

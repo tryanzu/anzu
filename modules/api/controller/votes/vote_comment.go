@@ -1,12 +1,12 @@
 package votes
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/board/legacy/model"
-	"github.com/fernandez14/spartangeek-blacker/core/events"
-	"github.com/fernandez14/spartangeek-blacker/deps"
-	"github.com/fernandez14/spartangeek-blacker/modules/feed"
-	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/gin-gonic/gin"
+	"github.com/tryanzu/core/board/legacy/model"
+	"github.com/tryanzu/core/core/events"
+	"github.com/tryanzu/core/deps"
+	"github.com/tryanzu/core/modules/feed"
+	"github.com/tryanzu/core/modules/user"
 	"gopkg.in/mgo.v2/bson"
 
 	"strconv"

@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fernandez14/spartangeek-blacker/core/common"
-	"github.com/fernandez14/spartangeek-blacker/core/user"
+	"github.com/tryanzu/core/core/common"
+	"github.com/tryanzu/core/core/user"
 	"gopkg.in/mgo.v2/bson"
 )
 

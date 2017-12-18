@@ -1,8 +1,8 @@
 package content
 
 import (
-	notify "github.com/fernandez14/spartangeek-blacker/board/notifications"
-	"github.com/fernandez14/spartangeek-blacker/deps"
+	notify "github.com/tryanzu/core/board/notifications"
+	"github.com/tryanzu/core/deps"
 	"gopkg.in/mgo.v2/bson"
 
 	"regexp"

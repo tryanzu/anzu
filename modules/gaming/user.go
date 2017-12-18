@@ -1,9 +1,9 @@
 package gaming
 
 import (
-	notify "github.com/fernandez14/spartangeek-blacker/board/notifications"
-	"github.com/fernandez14/spartangeek-blacker/deps"
-	"github.com/fernandez14/spartangeek-blacker/modules/user"
+	notify "github.com/tryanzu/core/board/notifications"
+	"github.com/tryanzu/core/deps"
+	"github.com/tryanzu/core/modules/user"
 	"gopkg.in/mgo.v2/bson"
 	"time"
 )

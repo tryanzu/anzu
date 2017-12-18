@@ -2,8 +2,8 @@ package shell
 
 import (
 	"github.com/abiosoft/ishell"
-	"github.com/fernandez14/spartangeek-blacker/deps"
-	"github.com/fernandez14/spartangeek-blacker/modules/user"
+	"github.com/tryanzu/core/deps"
+	"github.com/tryanzu/core/modules/user"
 	"gopkg.in/mgo.v2/bson"
 	"strconv"
 	"strings"

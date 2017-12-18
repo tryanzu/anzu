@@ -2,12 +2,12 @@ package gaming
 
 import (
 	"encoding/json"
-	"github.com/fernandez14/spartangeek-blacker/deps"
-	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
-	"github.com/fernandez14/spartangeek-blacker/modules/feed"
-	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/goinggo/work"
 	"github.com/olebedev/config"
+	"github.com/tryanzu/core/deps"
+	"github.com/tryanzu/core/modules/exceptions"
+	"github.com/tryanzu/core/modules/feed"
+	"github.com/tryanzu/core/modules/user"
 	"github.com/xuyu/goredis"
 	"gopkg.in/mgo.v2/bson"
 	"io/ioutil"

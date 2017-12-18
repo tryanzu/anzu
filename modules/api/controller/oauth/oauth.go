@@ -6,12 +6,12 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
-	"github.com/fernandez14/spartangeek-blacker/modules/security"
-	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/markbates/goth"
 	"github.com/olebedev/config"
+	"github.com/tryanzu/core/modules/security"
+	"github.com/tryanzu/core/modules/user"
 	"gopkg.in/mgo.v2/bson"
 )
 

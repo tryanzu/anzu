@@ -1,8 +1,8 @@
 package posts
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/core/events"
 	"github.com/gin-gonic/gin"
+	"github.com/tryanzu/core/core/events"
 	"gopkg.in/mgo.v2/bson"
 
 	"strconv"

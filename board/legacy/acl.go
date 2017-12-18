@@ -1,8 +1,8 @@
 package handle
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/modules/acl"
 	"github.com/gin-gonic/gin"
+	"github.com/tryanzu/core/modules/acl"
 )
 
 type AclAPI struct {

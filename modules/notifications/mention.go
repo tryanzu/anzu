@@ -1,7 +1,7 @@
 package notifications
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/deps"
+	"github.com/tryanzu/core/deps"
 	"gopkg.in/mgo.v2/bson"
 
 	"fmt"

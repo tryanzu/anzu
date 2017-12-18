@@ -2,8 +2,8 @@ package user
 
 import (
 	"errors"
-	"github.com/fernandez14/spartangeek-blacker/core/common"
 	"github.com/tidwall/buntdb"
+	"github.com/tryanzu/core/core/common"
 	"gopkg.in/mgo.v2/bson"
 )
 

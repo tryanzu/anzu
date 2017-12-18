@@ -1,11 +1,11 @@
 package deps
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/board/legacy/model"
-	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/olebedev/config"
 	"github.com/op/go-logging"
 	"github.com/tidwall/buntdb"
+	"github.com/tryanzu/core/board/legacy/model"
+	"github.com/tryanzu/core/modules/mail"
 	"github.com/xuyu/goredis"
 	"gopkg.in/mgo.v2"
 )

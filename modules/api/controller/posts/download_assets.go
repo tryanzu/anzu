@@ -1,9 +1,9 @@
 package posts
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/board/legacy/model"
-	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/mitchellh/goamz/s3"
+	"github.com/tryanzu/core/board/legacy/model"
+	"github.com/tryanzu/core/deps"
 	"gopkg.in/mgo.v2/bson"
 
 	"crypto/tls"

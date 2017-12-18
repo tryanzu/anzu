@@ -1,8 +1,8 @@
 package handle
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
 	"github.com/gin-gonic/gin"
+	"github.com/tryanzu/core/modules/gaming"
 	"gopkg.in/mgo.v2/bson"
 )
 

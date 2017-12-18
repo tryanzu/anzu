@@ -20,7 +20,7 @@
 #  name = "github.com/x/y"
 #  version = "2.4.0"
 
-ignored = ["github.com/fernandez14/spartangeek-blacker", "golang.org/x/crypto/ssh/terminal"]
+ignored = ["github.com/tryanzu/core", "golang.org/x/crypto/ssh/terminal"]
 
 [[constraint]]
   name = "github.com/abiosoft/ishell"

@@ -3,8 +3,8 @@ package comments
 import (
 	"errors"
 
-	"github.com/fernandez14/spartangeek-blacker/core/common"
-	"github.com/fernandez14/spartangeek-blacker/core/content"
+	"github.com/tryanzu/core/core/common"
+	"github.com/tryanzu/core/core/content"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )

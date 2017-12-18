@@ -1,10 +1,10 @@
 package controller
 
 import (
-	notify "github.com/fernandez14/spartangeek-blacker/board/notifications"
-	"github.com/fernandez14/spartangeek-blacker/core/user"
-	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/gin-gonic/gin"
+	notify "github.com/tryanzu/core/board/notifications"
+	"github.com/tryanzu/core/core/user"
+	"github.com/tryanzu/core/deps"
 	"strconv"
 )
 

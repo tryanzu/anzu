@@ -1,14 +1,14 @@
 package votes
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/modules/acl"
-	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
-	"github.com/fernandez14/spartangeek-blacker/modules/feed"
-	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
-	"github.com/fernandez14/spartangeek-blacker/modules/notifications"
-	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/mitchellh/goamz/s3"
 	"github.com/olebedev/config"
+	"github.com/tryanzu/core/modules/acl"
+	"github.com/tryanzu/core/modules/exceptions"
+	"github.com/tryanzu/core/modules/feed"
+	"github.com/tryanzu/core/modules/gaming"
+	"github.com/tryanzu/core/modules/notifications"
+	"github.com/tryanzu/core/modules/user"
 )
 
 type API struct {

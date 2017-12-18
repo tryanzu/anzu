@@ -2,15 +2,15 @@ package handle
 
 import (
 	"github.com/dgrijalva/jwt-go"
-	"github.com/fernandez14/spartangeek-blacker/deps"
-	"github.com/fernandez14/spartangeek-blacker/modules/acl"
-	"github.com/fernandez14/spartangeek-blacker/modules/security"
 	"github.com/getsentry/raven-go"
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/olebedev/config"
 	"github.com/op/go-logging"
 	"github.com/satori/go.uuid"
+	"github.com/tryanzu/core/deps"
+	"github.com/tryanzu/core/modules/acl"
+	"github.com/tryanzu/core/modules/security"
 	"gopkg.in/mgo.v2/bson"
 
 	"errors"

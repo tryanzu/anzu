@@ -1,11 +1,11 @@
 package events
 
 import (
-	notify "github.com/fernandez14/spartangeek-blacker/board/notifications"
-	posts "github.com/fernandez14/spartangeek-blacker/board/posts"
-	ev "github.com/fernandez14/spartangeek-blacker/core/events"
-	"github.com/fernandez14/spartangeek-blacker/deps"
-	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
+	notify "github.com/tryanzu/core/board/notifications"
+	posts "github.com/tryanzu/core/board/posts"
+	ev "github.com/tryanzu/core/core/events"
+	"github.com/tryanzu/core/deps"
+	"github.com/tryanzu/core/modules/gaming"
 	"gopkg.in/mgo.v2/bson"
 )
 

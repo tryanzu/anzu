@@ -1,8 +1,8 @@
 package user
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/deps"
-	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
+	"github.com/tryanzu/core/deps"
+	"github.com/tryanzu/core/modules/helpers"
 	"gopkg.in/mgo.v2/bson"
 
 	"time"

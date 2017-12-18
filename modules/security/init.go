@@ -1,8 +1,8 @@
 package security
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/deps"
-	"github.com/fernandez14/spartangeek-blacker/modules/user"
+	"github.com/tryanzu/core/deps"
+	"github.com/tryanzu/core/modules/user"
 	"github.com/xuyu/goredis"
 	"gopkg.in/mgo.v2/bson"
 

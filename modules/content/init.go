@@ -1,10 +1,10 @@
 package content
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
-	"github.com/fernandez14/spartangeek-blacker/modules/notifications"
 	"github.com/mitchellh/goamz/s3"
 	"github.com/olebedev/config"
+	"github.com/tryanzu/core/modules/exceptions"
+	"github.com/tryanzu/core/modules/notifications"
 	"github.com/xuyu/goredis"
 )
 

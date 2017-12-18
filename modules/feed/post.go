@@ -1,11 +1,11 @@
 package feed
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/board/legacy/model"
-	"github.com/fernandez14/spartangeek-blacker/deps"
-	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
-	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
-	"github.com/fernandez14/spartangeek-blacker/modules/user"
+	"github.com/tryanzu/core/board/legacy/model"
+	"github.com/tryanzu/core/deps"
+	"github.com/tryanzu/core/modules/exceptions"
+	"github.com/tryanzu/core/modules/helpers"
+	"github.com/tryanzu/core/modules/user"
 	"gopkg.in/mgo.v2/bson"
 
 	"fmt"

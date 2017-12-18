@@ -1,9 +1,9 @@
 package handle
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/board/legacy/model"
-	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/gin-gonic/gin"
+	"github.com/tryanzu/core/board/legacy/model"
+	"github.com/tryanzu/core/deps"
 	"github.com/xuyu/goredis"
 
 	"time"

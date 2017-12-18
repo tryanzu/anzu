@@ -1,10 +1,10 @@
 package notifications
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/board/comments"
-	posts "github.com/fernandez14/spartangeek-blacker/board/posts"
-	"github.com/fernandez14/spartangeek-blacker/core/common"
-	"github.com/fernandez14/spartangeek-blacker/core/user"
+	"github.com/tryanzu/core/board/comments"
+	posts "github.com/tryanzu/core/board/posts"
+	"github.com/tryanzu/core/core/common"
+	"github.com/tryanzu/core/core/user"
 	"gopkg.in/mgo.v2/bson"
 	"time"
 )

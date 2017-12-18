@@ -1,8 +1,8 @@
 package events
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/board/legacy/model"
-	notify "github.com/fernandez14/spartangeek-blacker/board/notifications"
+	"github.com/tryanzu/core/board/legacy/model"
+	notify "github.com/tryanzu/core/board/notifications"
 	"gopkg.in/mgo.v2/bson"
 )
 

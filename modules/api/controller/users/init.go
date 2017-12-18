@@ -1,8 +1,8 @@
 package users
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/modules/feed"
-	"github.com/fernandez14/spartangeek-blacker/modules/user"
+	"github.com/tryanzu/core/modules/feed"
+	"github.com/tryanzu/core/modules/user"
 )
 
 type API struct {

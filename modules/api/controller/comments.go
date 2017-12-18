@@ -1,9 +1,9 @@
 package controller
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/board/comments"
-	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/gin-gonic/gin"
+	"github.com/tryanzu/core/board/comments"
+	"github.com/tryanzu/core/deps"
 	"gopkg.in/mgo.v2/bson"
 
 	"strconv"

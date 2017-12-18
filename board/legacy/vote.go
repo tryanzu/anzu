@@ -2,13 +2,13 @@ package handle
 
 import (
 	"bytes"
-	"github.com/fernandez14/spartangeek-blacker/board/legacy/model"
-	"github.com/fernandez14/spartangeek-blacker/core/events"
-	"github.com/fernandez14/spartangeek-blacker/deps"
-	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
-	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
+	"github.com/tryanzu/core/board/legacy/model"
+	"github.com/tryanzu/core/core/events"
+	"github.com/tryanzu/core/deps"
+	"github.com/tryanzu/core/modules/gaming"
+	"github.com/tryanzu/core/modules/user"
 	"gopkg.in/mgo.v2/bson"
 	"strconv"
 	"time"

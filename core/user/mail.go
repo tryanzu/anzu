@@ -4,8 +4,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
-	"github.com/fernandez14/spartangeek-blacker/modules/mail"
+	"github.com/tryanzu/core/modules/helpers"
+	"github.com/tryanzu/core/modules/mail"
 	"gopkg.in/mgo.v2/bson"
 )
 

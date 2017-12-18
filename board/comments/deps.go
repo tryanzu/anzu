@@ -1,8 +1,8 @@
 package comments
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/modules/mail"
 	"github.com/tidwall/buntdb"
+	"github.com/tryanzu/core/modules/mail"
 	"gopkg.in/mgo.v2"
 )
 
