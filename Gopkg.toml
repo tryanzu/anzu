@@ -26,9 +26,6 @@ ignored = ["github.com/fernandez14/spartangeek-blacker", "golang.org/x/crypto/ss
   name = "github.com/abiosoft/ishell"
 
 [[constraint]]
-  name = "github.com/cactus/go-statsd-client"
-
-[[constraint]]
   name = "github.com/desertbit/glue"
   version = "1.9.1"
 
@@ -49,9 +46,6 @@ ignored = ["github.com/fernandez14/spartangeek-blacker", "golang.org/x/crypto/ss
 
 [[constraint]]
   name = "github.com/goinggo/work"
-
-[[constraint]]
-  name = "github.com/googollee/go-socket.io"
 
 [[constraint]]
   name = "github.com/gorilla/context"
@@ -98,11 +92,3 @@ ignored = ["github.com/fernandez14/spartangeek-blacker", "golang.org/x/crypto/ss
 
 [[constraint]]
   name = "gopkg.in/mgo.v2"
-
-[[constraint]]
-  branch = "master"
-  name = "github.com/SierraSoftworks/multicast"
-
-[[constraint]]
-  branch = "master"
-  name = "github.com/henrylee2cn/goutil"

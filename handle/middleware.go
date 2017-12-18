@@ -1,7 +1,6 @@
 package handle
 
 import (
-	"github.com/cactus/go-statsd-client/statsd"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/modules/acl"
@@ -21,13 +20,11 @@ import (
 	"os"
 	"strings"
 	"syscall"
-	"time"
 )
 
 type MiddlewareAPI struct {
 	ErrorService  *raven.Client    `inject:""`
 	ConfigService *config.Config   `inject:""`
-	StatsService  *statsd.Client   `inject:""`
 	Acl           *acl.Module      `inject:""`
 	Logger        *logging.Logger  `inject:""`
 	Security      *security.Module `inject:""`
@@ -73,21 +70,6 @@ func (di *MiddlewareAPI) ValidateBsonID(name string) gin.HandlerFunc {
 			return
 		}
 		c.Next()
-	}
-}
-
-func (di *MiddlewareAPI) StatsdTiming() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		t := time.Now()
-		c.Next()
-
-		latency := time.Since(t)
-		name := c.HandlerName()
-		name = strings.Replace(name, "github.com/fernandez14/spartangeek-blacker/handle.*", "", -1)
-		name = name[0 : len(name)-4]
-
-		// Send the latency information about the handler
-		di.StatsService.TimingDuration(name, latency, 1.0)
 	}
 }
 

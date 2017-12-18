@@ -118,7 +118,6 @@ func (module *Module) Run() {
 	router.Use(module.Middlewares.ErrorTracking(debug))
 	router.Use(module.Middlewares.CORS())
 	router.Use(module.Middlewares.MongoRefresher())
-	router.Use(module.Middlewares.StatsdTiming())
 	router.Use(module.Middlewares.TrustIP())
 	router.Use(chttp.SiteMiddleware())
 

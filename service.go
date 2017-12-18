@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/cactus/go-statsd-client/statsd"
 	"github.com/facebookgo/inject"
 	_ "github.com/fernandez14/spartangeek-blacker/board/events"
 	"github.com/fernandez14/spartangeek-blacker/core/shell"
@@ -90,13 +89,6 @@ func main() {
 	s3Service := s3.New(amazonAuth, s3Region)
 	s3BucketService := s3Service.Bucket(string_value(configService.String("amazon.s3.bucket")))
 
-	// Statsd - Tracking
-	prefix := "blacker."
-	statsService, err := statsd.NewClient("127.0.0.1:8125", prefix)
-	if err != nil {
-		panic(err)
-	}
-
 	// Provide graph with service instances
 	err = g.Provide(
 		&inject.Object{Value: log, Complete: true},
@@ -105,7 +97,6 @@ func main() {
 		&inject.Object{Value: cacheService, Complete: true},
 		&inject.Object{Value: s3Service, Complete: true},
 		&inject.Object{Value: s3BucketService, Complete: true},
-		&inject.Object{Value: statsService, Complete: true},
 		&inject.Object{Value: aclService, Complete: false},
 		&inject.Object{Value: assetsService, Complete: false},
 		&inject.Object{Value: userService, Complete: false},

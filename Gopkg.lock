@@ -24,12 +24,6 @@
   version = "v1.2"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/cactus/go-statsd-client"
-  packages = ["statsd"]
-  revision = "ce77ca9ecdee1c3ffd097e32f9bb832825ccb203"
-
-[[projects]]
   name = "github.com/certifi/gocertifi"
   packages = ["."]
   revision = "a4ab0227d360091084658029ec8ae45f989fba3e"
@@ -330,6 +324,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "73b719635f673ca1130b1eb6ccf00aff844de9eeeb20c53c488e06ee9e098754"
+  inputs-digest = "70225da55ce7d02ff732e0bf56ea76aa60bd6af7447607d04c02855979001253"
   solver-name = "gps-cdcl"
   solver-version = 1
