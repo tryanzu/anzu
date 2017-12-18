@@ -28,7 +28,8 @@ func DeleteComment(postId, id bson.ObjectId) Event {
 	return Event{
 		Name: COMMENT_DELETE,
 		Params: map[string]interface{}{
-			"id": id,
+			"id":      id,
+			"post_id": postId,
 		},
 	}
 }
@@ -37,7 +38,8 @@ func UpdateComment(postId, id bson.ObjectId) Event {
 	return Event{
 		Name: COMMENT_UPDATE,
 		Params: map[string]interface{}{
-			"id": id,
+			"id":      id,
+			"post_id": postId,
 		},
 	}
 }

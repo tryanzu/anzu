@@ -4,7 +4,7 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/board/comments"
 	notify "github.com/fernandez14/spartangeek-blacker/board/notifications"
 	"github.com/fernandez14/spartangeek-blacker/board/posts"
-	ev "github.com/fernandez14/spartangeek-blacker/core/events"
+	pool "github.com/fernandez14/spartangeek-blacker/core/events"
 	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
 	"gopkg.in/mgo.v2/bson"
@@ -12,9 +12,9 @@ import (
 
 // Bind event handlers for comment related actions...
 func commentsEvents() {
-	ev.On <- ev.EventHandler{
-		On: ev.POSTS_COMMENT,
-		Handler: func(e ev.Event) error {
+	pool.On <- pool.EventHandler{
+		On: pool.POSTS_COMMENT,
+		Handler: func(e pool.Event) error {
 			comment, err := comments.FindId(deps.Container, e.Params["id"].(bson.ObjectId))
 			if err != nil {
 				return err
@@ -41,6 +41,41 @@ func commentsEvents() {
 			}}
 
 			return gaming.UserHasCommented(deps.Container, comment.UserId)
+		},
+	}
+
+	pool.On <- pool.EventHandler{
+		On: pool.COMMENT_DELETE,
+		Handler: func(e pool.Event) error {
+			cid := e.Params["id"].(bson.ObjectId)
+			pid := e.Params["post_id"].(bson.ObjectId)
+
+			notify.Transmit <- notify.Socket{"feed", "action", map[string]interface{}{
+				"fire": "delete-comment",
+				"id":   pid.Hex(),
+			}}
+
+			notify.Transmit <- notify.Socket{"post", pid.Hex(), map[string]interface{}{
+				"fire": "delete-comment",
+				"id":   cid.Hex(),
+			}}
+
+			return nil
+		},
+	}
+
+	pool.On <- pool.EventHandler{
+		On: pool.COMMENT_UPDATE,
+		Handler: func(e pool.Event) error {
+			cid := e.Params["id"].(bson.ObjectId)
+			pid := e.Params["post_id"].(bson.ObjectId)
+
+			notify.Transmit <- notify.Socket{"post", pid.Hex(), map[string]interface{}{
+				"fire": "comment-updated",
+				"id":   cid.Hex(),
+			}}
+
+			return nil
 		},
 	}
 }
