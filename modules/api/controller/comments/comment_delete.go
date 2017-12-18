@@ -7,7 +7,6 @@ import (
 )
 
 func (this API) Delete(c *gin.Context) {
-
 	idstr := c.Params.ByName("id")
 
 	if bson.IsObjectIdHex(idstr) == false {
@@ -35,25 +34,8 @@ func (this API) Delete(c *gin.Context) {
 
 	comment.Delete()
 
+	// Notify events pool.
 	events.In <- events.DeleteComment(post.Id, comment.Id)
-	/**
-	go func(post_id bson.ObjectId, comment_id bson.ObjectId) {
-
-		carrierParams := map[string]interface{}{
-			"fire": "delete-comment",
-			"id":   post_id.Hex(),
-		}
-
-		deps.Container.Transmit().Emit("feed", "action", carrierParams)
-
-		carrierParams = map[string]interface{}{
-			"fire": "delete-comment",
-			"id":   comment_id.Hex(),
-		}
-
-		deps.Container.Transmit().Emit("post", post_id.Hex(), carrierParams)
-
-	}(post.Id, comment.Id)*/
 
 	c.JSON(200, gin.H{"status": "okay"})
 	return

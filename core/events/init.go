@@ -32,11 +32,11 @@ func execHandlers(list []Handler, event Event) {
 func sink(in chan Event, on chan EventHandler) {
 	for {
 		select {
-		case event := <-in:
+		case event := <-in: // For incoming events spawn a goroutine running handlers.
 			if ls, exists := Handlers[event.Name]; exists {
 				go execHandlers(ls, event)
 			}
-		case h := <-on:
+		case h := <-on: // Register new handlers.
 			if _, exists := Handlers[h.On]; !exists {
 				Handlers[h.On] = []Handler{}
 			}

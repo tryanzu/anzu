@@ -76,10 +76,7 @@ ignored = ["github.com/fernandez14/spartangeek-blacker", "golang.org/x/crypto/ss
 
 [[constraint]]
   name = "github.com/op/go-logging"
-
-[[constraint]]
-  name = "github.com/pebbe/zmq4"
-
+  
 [[constraint]]
   name = "github.com/robfig/cron"
 

@@ -39,19 +39,6 @@ func (this API) Update(c *gin.Context) {
 
 		events.In <- events.UpdateComment(post.Id, comment.Id)
 
-		/**
-		go func(id bson.ObjectId, position int, comment_id bson.ObjectId) {
-
-			carrierParams := map[string]interface{}{
-				"fire":  "comment-updated",
-				"index": position,
-				"id":    comment_id,
-			}
-
-			deps.Container.Transmit().Emit("post", id.Hex(), carrierParams)
-
-		}(post.Id, comment.Position, comment.Id)**/
-
 		c.JSON(200, gin.H{"status": "okay", "message": comment.Content})
 		return
 	}

@@ -117,18 +117,6 @@
 
 [[projects]]
   branch = "master"
-  name = "github.com/googollee/go-engine.io"
-  packages = [".","message","parser","polling","transport","websocket"]
-  revision = "80ae0e43aca17b4c5a6834999d0f2eaa16b9afda"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/googollee/go-socket.io"
-  packages = ["."]
-  revision = "5447e71f36d394766bf855d5714a487596809f0d"
-
-[[projects]]
-  branch = "master"
   name = "github.com/gopherjs/gopherjs"
   packages = ["js"]
   revision = "444abdf920945de5d4a977b572bcc6c674d1e4eb"
@@ -219,12 +207,6 @@
   name = "github.com/op/go-logging"
   packages = ["."]
   revision = "970db520ece77730c7e4724c61121037378659d9"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/pebbe/zmq4"
-  packages = ["."]
-  revision = "90d69e412a09549f2e90bac70fbb449081f1e5c1"
 
 [[projects]]
   name = "github.com/pkg/errors"
@@ -348,6 +330,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "b4d2e4445db1281c3d6b37358f1303139d2eaa460da44bd490311c981f32f3bb"
+  inputs-digest = "73b719635f673ca1130b1eb6ccf00aff844de9eeeb20c53c488e06ee9e098754"
   solver-name = "gps-cdcl"
   solver-version = 1
