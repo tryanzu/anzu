@@ -1,6 +1,7 @@
 package events
 
 import (
+	notify "github.com/fernandez14/spartangeek-blacker/board/notifications"
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -19,6 +20,51 @@ func PostComment(id bson.ObjectId) Event {
 		Name: POSTS_COMMENT,
 		Params: map[string]interface{}{
 			"id": id,
+		},
+	}
+}
+
+func DeleteComment(postId, id bson.ObjectId) Event {
+	return Event{
+		Name: COMMENT_DELETE,
+		Params: map[string]interface{}{
+			"id": id,
+		},
+	}
+}
+
+func UpdateComment(postId, id bson.ObjectId) Event {
+	return Event{
+		Name: COMMENT_UPDATE,
+		Params: map[string]interface{}{
+			"id": id,
+		},
+	}
+}
+
+func UpvoteCommentRemove(id bson.ObjectId) Event {
+	return Event{
+		Name: COMMENT_UPVOTE_REMOVE,
+		Params: map[string]interface{}{
+			"id": id,
+		},
+	}
+}
+
+func UpvoteComment(id bson.ObjectId) Event {
+	return Event{
+		Name: COMMENT_UPVOTE,
+		Params: map[string]interface{}{
+			"id": id,
+		},
+	}
+}
+
+func RawEmit(channel, event string, params map[string]interface{}) Event {
+	return Event{
+		Name: RAW_EMIT,
+		Params: map[string]interface{}{
+			"socket": notify.Socket{channel, event, params},
 		},
 	}
 }

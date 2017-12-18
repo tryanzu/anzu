@@ -1,7 +1,7 @@
 package comments
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/deps"
+	"github.com/fernandez14/spartangeek-blacker/core/events"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -35,6 +35,8 @@ func (this API) Delete(c *gin.Context) {
 
 	comment.Delete()
 
+	events.In <- events.DeleteComment(post.Id, comment.Id)
+	/**
 	go func(post_id bson.ObjectId, comment_id bson.ObjectId) {
 
 		carrierParams := map[string]interface{}{
@@ -51,7 +53,7 @@ func (this API) Delete(c *gin.Context) {
 
 		deps.Container.Transmit().Emit("post", post_id.Hex(), carrierParams)
 
-	}(post.Id, comment.Id)
+	}(post.Id, comment.Id)*/
 
 	c.JSON(200, gin.H{"status": "okay"})
 	return

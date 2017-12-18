@@ -100,9 +100,6 @@ ignored = ["github.com/fernandez14/spartangeek-blacker", "golang.org/x/crypto/ss
   name = "github.com/xuyu/goredis"
 
 [[constraint]]
-  name = "gopkg.in/h2non/bimg.v0"
-
-[[constraint]]
   name = "gopkg.in/mgo.v2"
 
 [[constraint]]

@@ -1,7 +1,7 @@
 package votes
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/deps"
+	"github.com/fernandez14/spartangeek-blacker/core/events"
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
@@ -27,7 +27,6 @@ func (this API) Comment(c *gin.Context) {
 	var vote CommentForm
 
 	if c.Bind(&vote) == nil {
-
 		id := bson.ObjectIdHex(id)
 		comment, err := this.Feed.GetComment(id)
 
@@ -51,7 +50,12 @@ func (this API) Comment(c *gin.Context) {
 		var alreadyVoted model.Vote
 		var voteValue int
 
-		err = database.C("votes").Find(bson.M{"type": "comment", "user_id": user_id, "related_id": post.Id, "nested_type": strconv.Itoa(comment.Position)}).One(&alreadyVoted)
+		err = database.C("votes").Find(bson.M{
+			"type":        "comment",
+			"user_id":     user_id,
+			"related_id":  post.Id,
+			"nested_type": strconv.Itoa(comment.Position),
+		}).One(&alreadyVoted)
 
 		if err == nil {
 
@@ -70,7 +74,6 @@ func (this API) Comment(c *gin.Context) {
 			}
 
 			err := database.C("comments").Update(bson.M{"_id": comment.Id}, bson.M{"$inc": bson.M{mutator: -1}})
-
 			if err != nil {
 				panic(err)
 			}
@@ -97,7 +100,7 @@ func (this API) Comment(c *gin.Context) {
 
 				}(usr, comment.UserId)
 
-				go deps.Container.Transmit().Emit("post", post.Id.Hex(), map[string]interface{}{
+				events.In <- events.RawEmit("post", post.Id.Hex(), map[string]interface{}{
 					"fire":  "comment-upvote-remove",
 					"id":    comment.Id.Hex(),
 					"index": comment.Position,
@@ -118,7 +121,7 @@ func (this API) Comment(c *gin.Context) {
 
 				}(usr, comment.UserId)
 
-				go deps.Container.Transmit().Emit("post", post.Id.Hex(), map[string]interface{}{
+				events.In <- events.RawEmit("post", post.Id.Hex(), map[string]interface{}{
 					"fire":  "comment-downvote-remove",
 					"id":    comment.Id.Hex(),
 					"index": comment.Position,
@@ -141,7 +144,7 @@ func (this API) Comment(c *gin.Context) {
 			voteValue = 1
 			mutator = "votes.up"
 
-			go deps.Container.Transmit().Emit("post", post.Id.Hex(), map[string]interface{}{
+			events.In <- events.RawEmit("post", post.Id.Hex(), map[string]interface{}{
 				"fire":  "comment-upvote",
 				"id":    comment.Id.Hex(),
 				"index": comment.Position,
@@ -151,7 +154,7 @@ func (this API) Comment(c *gin.Context) {
 		if vote.Direction == "down" {
 			voteValue = -1
 			mutator = "votes.down"
-			go deps.Container.Transmit().Emit("post", post.Id.Hex(), map[string]interface{}{
+			events.In <- events.RawEmit("post", post.Id.Hex(), map[string]interface{}{
 				"fire":  "comment-downvote",
 				"id":    comment.Id.Hex(),
 				"index": comment.Position,

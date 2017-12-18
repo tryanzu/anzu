@@ -22,7 +22,6 @@ func Bootstrap() {
 		IgniteMongoDB,
 		IgniteCache,
 		IgniteMailer,
-		IgniteTransmit,
 	}
 
 	var err error

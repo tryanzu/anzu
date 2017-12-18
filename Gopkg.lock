@@ -158,12 +158,6 @@
 
 [[projects]]
   branch = "master"
-  name = "github.com/henrylee2cn/goutil"
-  packages = ["."]
-  revision = "aea330607b57eeaec44da43ed2eef2e824e7f382"
-
-[[projects]]
-  branch = "master"
   name = "github.com/hjr265/postmark.go"
   packages = ["postmark"]
   revision = "5546b2897115a65a0b2a9f2763f8c4253fc6423a"
@@ -292,12 +286,6 @@
   revision = "d4a8a3d30d5729f85edfba1745241f3a621d0359"
 
 [[projects]]
-  name = "github.com/tj/go-debug"
-  packages = ["."]
-  revision = "ff4a55a20a86994118644bbddc6a216da193cc13"
-  version = "v2.0.0"
-
-[[projects]]
   name = "github.com/ugorji/go"
   packages = ["codec"]
   revision = "84cb69a8af8316eed8cf4a3c9368a56977850062"
@@ -346,12 +334,6 @@
   version = "v8.18.2"
 
 [[projects]]
-  name = "gopkg.in/h2non/bimg.v0"
-  packages = ["."]
-  revision = "a0fc602e695f180c997b219dea06b50229c252bd"
-  version = "v0.1.24"
-
-[[projects]]
   branch = "v2"
   name = "gopkg.in/mgo.v2"
   packages = [".","bson","internal/json","internal/sasl","internal/scram"]
@@ -366,6 +348,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "68d33cb50aff036055ae8c3d6ad75db8d1348bc0504eb3aaaf2a846fbd9192e9"
+  inputs-digest = "b4d2e4445db1281c3d6b37358f1303139d2eaa460da44bd490311c981f32f3bb"
   solver-name = "gps-cdcl"
   solver-version = 1

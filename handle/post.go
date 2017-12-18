@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/fernandez14/spartangeek-blacker/core/events"
-	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/modules/acl"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
@@ -462,7 +461,7 @@ func (di PostAPI) PostDelete(c *gin.Context) {
 		panic(err)
 	}
 
-	go deps.Container.Transmit().Emit("feed", "action", map[string]interface{}{
+	events.In <- events.RawEmit("feed", "action", map[string]interface{}{
 		"fire": "delete-post",
 		"id":   post.Id.Hex(),
 	})
@@ -481,7 +480,7 @@ func (di PostAPI) syncUsersFeed(post *model.Post) {
 		"slug":     post.Slug,
 	}
 
-	deps.Container.Transmit().Emit("feed", "action", params)
+	events.In <- events.RawEmit("feed", "action", params)
 }
 
 func (di PostAPI) downloadAssetFromUrl(from string, post_id bson.ObjectId) error {

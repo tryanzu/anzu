@@ -1,7 +1,7 @@
 package posts
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/deps"
+	"github.com/fernandez14/spartangeek-blacker/core/events"
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/gin-gonic/gin"
@@ -89,17 +89,12 @@ func (this API) Update(c *gin.Context) {
 				slug = helpers.StrSlugRandom(postForm.Name)
 			}
 
-			go func(id bson.ObjectId) {
-				params := map[string]interface{}{
-					"fire":  "changed-title",
-					"id":    id.Hex(),
-					"title": postForm.Name,
-					"slug":  slug,
-				}
-
-				deps.Container.Transmit().Emit("feed", "action", params)
-
-			}(post.Id)
+			events.In <- events.RawEmit("feed", "action", map[string]interface{}{
+				"fire":  "changed-title",
+				"id":    post.Id.Hex(),
+				"title": postForm.Name,
+				"slug":  slug,
+			})
 		}
 
 		content := html.EscapeString(postForm.Content)
@@ -119,15 +114,10 @@ func (this API) Update(c *gin.Context) {
 			update_directive["$set"] = set_directive
 
 			if post.Pinned == false {
-				go func(id bson.ObjectId) {
-					params := map[string]interface{}{
-						"fire": "pinned",
-						"id":   id.Hex(),
-					}
-
-					deps.Container.Transmit().Emit("feed", "action", params)
-
-				}(post.Id)
+				events.In <- events.RawEmit("feed", "action", map[string]interface{}{
+					"fire": "pinned",
+					"id":   post.Id.Hex(),
+				})
 			}
 
 		} else {
@@ -135,14 +125,10 @@ func (this API) Update(c *gin.Context) {
 			unset["pinned"] = ""
 
 			if post.Pinned == true {
-				go func(id bson.ObjectId) {
-					params := map[string]interface{}{
-						"fire": "unpinned",
-						"id":   id.Hex(),
-					}
-
-					deps.Container.Transmit().Emit("feed", "action", params)
-				}(post.Id)
+				events.In <- events.RawEmit("feed", "action", map[string]interface{}{
+					"fire": "unpinned",
+					"id":   post.Id.Hex(),
+				})
 			}
 		}
 
@@ -152,7 +138,7 @@ func (this API) Update(c *gin.Context) {
 			update_directive["$set"] = set_directive
 
 			if post.Lock == false {
-				go deps.Container.Transmit().Emit("post", post.Id.Hex(), map[string]interface{}{
+				events.In <- events.RawEmit("post", post.Id.Hex(), map[string]interface{}{
 					"fire": "locked",
 				})
 			}
@@ -162,7 +148,7 @@ func (this API) Update(c *gin.Context) {
 			unset["lock"] = ""
 
 			if post.Lock == true {
-				go deps.Container.Transmit().Emit("post", post.Id.Hex(), map[string]interface{}{
+				events.In <- events.RawEmit("post", post.Id.Hex(), map[string]interface{}{
 					"fire": "unlocked",
 				})
 			}
@@ -192,7 +178,7 @@ func (this API) Update(c *gin.Context) {
 			go this.savePostImages(asset, post.Id)
 		}
 
-		go deps.Container.Transmit().Emit("post", post.Id.Hex(), map[string]interface{}{
+		events.In <- events.RawEmit("post", post.Id.Hex(), map[string]interface{}{
 			"fire": "updated",
 		})
 

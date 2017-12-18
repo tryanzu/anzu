@@ -2,7 +2,7 @@ package handle
 
 import (
 	"bytes"
-	"github.com/fernandez14/spartangeek-blacker/deps"
+	"github.com/fernandez14/spartangeek-blacker/core/events"
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
@@ -312,7 +312,7 @@ func (di VoteAPI) VoteComment(c *gin.Context) {
 
 					}(usr, comment_)
 
-					go deps.Container.Transmit().Emit("post", post.Id.Hex(), map[string]interface{}{
+					events.In <- events.RawEmit("post", post.Id.Hex(), map[string]interface{}{
 						"fire":  "comment-upvote-remove",
 						"index": comment_index,
 					})
@@ -332,7 +332,7 @@ func (di VoteAPI) VoteComment(c *gin.Context) {
 
 					}(usr, comment_)
 
-					go deps.Container.Transmit().Emit("post", post.Id.Hex(), map[string]interface{}{
+					events.In <- events.RawEmit("post", post.Id.Hex(), map[string]interface{}{
 						"fire":  "comment-downvote-remove",
 						"index": comment_index,
 					})
@@ -357,7 +357,7 @@ func (di VoteAPI) VoteComment(c *gin.Context) {
 				vote_value = 1
 				add.WriteString(".votes.up")
 
-				go deps.Container.Transmit().Emit("post", post.Id.Hex(), map[string]interface{}{
+				events.In <- events.RawEmit("post", post.Id.Hex(), map[string]interface{}{
 					"fire":  "comment-upvote",
 					"index": comment_index,
 				})
@@ -367,7 +367,7 @@ func (di VoteAPI) VoteComment(c *gin.Context) {
 				vote_value = -1
 				add.WriteString(".votes.down")
 
-				go deps.Container.Transmit().Emit("post", post.Id.Hex(), map[string]interface{}{
+				events.In <- events.RawEmit("post", post.Id.Hex(), map[string]interface{}{
 					"fire":  "comment-downvote",
 					"index": comment_index,
 				})
@@ -566,7 +566,7 @@ func (di VoteAPI) VotePost(c *gin.Context) {
 
 				}(usr, post)
 
-				go deps.Container.Transmit().Emit("post", post.Id.Hex(), map[string]interface{}{
+				events.In <- events.RawEmit("post", post.Id.Hex(), map[string]interface{}{
 					"fire": "upvote-remove",
 				})
 
@@ -585,7 +585,7 @@ func (di VoteAPI) VotePost(c *gin.Context) {
 
 				}(usr, post)
 
-				go deps.Container.Transmit().Emit("post", post.Id.Hex(), map[string]interface{}{
+				events.In <- events.RawEmit("post", post.Id.Hex(), map[string]interface{}{
 					"fire": "downvote-remove",
 				})
 			}
@@ -609,7 +609,7 @@ func (di VoteAPI) VotePost(c *gin.Context) {
 			vote_value = 1
 			add.WriteString("up")
 
-			go deps.Container.Transmit().Emit("post", post.Id.Hex(), map[string]interface{}{
+			events.In <- events.RawEmit("post", post.Id.Hex(), map[string]interface{}{
 				"fire": "upvote",
 			})
 		}
@@ -618,7 +618,7 @@ func (di VoteAPI) VotePost(c *gin.Context) {
 			vote_value = -1
 			add.WriteString("down")
 
-			go deps.Container.Transmit().Emit("post", post.Id.Hex(), map[string]interface{}{
+			events.In <- events.RawEmit("post", post.Id.Hex(), map[string]interface{}{
 				"fire": "downvote",
 			})
 		}

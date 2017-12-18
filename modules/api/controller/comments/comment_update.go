@@ -1,17 +1,15 @@
 package comments
 
 import (
-	"github.com/fernandez14/spartangeek-blacker/deps"
+	"github.com/fernandez14/spartangeek-blacker/core/events"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
 )
 
 func (this API) Update(c *gin.Context) {
-
 	var form CommentForm
 
 	idstr := c.Params.ByName("id")
-
 	if bson.IsObjectIdHex(idstr) == false {
 		c.JSON(400, gin.H{"error": "Invalid request, no valid params.", "status": 701})
 		return
@@ -39,6 +37,9 @@ func (this API) Update(c *gin.Context) {
 
 		comment.Update(form.Content)
 
+		events.In <- events.UpdateComment(post.Id, comment.Id)
+
+		/**
 		go func(id bson.ObjectId, position int, comment_id bson.ObjectId) {
 
 			carrierParams := map[string]interface{}{
@@ -49,7 +50,7 @@ func (this API) Update(c *gin.Context) {
 
 			deps.Container.Transmit().Emit("post", id.Hex(), carrierParams)
 
-		}(post.Id, comment.Position, comment.Id)
+		}(post.Id, comment.Position, comment.Id)**/
 
 		c.JSON(200, gin.H{"status": "okay", "message": comment.Content})
 		return
