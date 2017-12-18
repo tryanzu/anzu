@@ -2,22 +2,21 @@ package handle
 
 import (
 	"encoding/json"
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/model"
-	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/gin-gonic/gin"
 	"github.com/xuyu/goredis"
 	"gopkg.in/mgo.v2/bson"
 )
 
 type StatAPI struct {
-	DataService  *mongo.Service `inject:""`
 	CacheService *goredis.Redis `inject:""`
 }
 
 func (di *StatAPI) BoardGet(c *gin.Context) {
 
 	// Get the database interface from the DI
-	database := di.DataService.Database
+	database := deps.Container.Mgo()
 	redis := di.CacheService
 
 	stats, _ := redis.Get("frontend.stats")

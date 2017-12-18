@@ -2,8 +2,8 @@ package acl
 
 import (
 	"encoding/json"
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/model"
-	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/mikespook/gorbac"
 	"gopkg.in/mgo.v2/bson"
 	"io/ioutil"
@@ -11,7 +11,6 @@ import (
 
 type Module struct {
 	Map         *gorbac.RBAC
-	Mongo       *mongo.Service `inject:""`
 	Rules       map[string]AclRole
 	Permissions map[string]gorbac.Permission
 }
@@ -19,7 +18,7 @@ type Module struct {
 func (module *Module) User(id bson.ObjectId) *User {
 
 	var usr model.User
-	database := module.Mongo.Database
+	database := deps.Container.Mgo()
 
 	// Get the user using it's id
 	err := database.C("users").FindId(id).One(&usr)

@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -9,7 +10,7 @@ func (m Module) CleanupReferences() {
 
 	var usr user.UserPrivate
 
-	db := m.Mongo.Database
+	db := deps.Container.Mgo()
 	log := m.Logger
 	log.Info("Starting to compute users with duplicated email")
 	pipe := db.C("users").Find(bson.M{"duplicates": bson.M{"$exists": true}}).Iter()

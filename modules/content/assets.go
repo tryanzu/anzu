@@ -1,6 +1,7 @@
 package content
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/mitchellh/goamz/s3"
 	"gopkg.in/mgo.v2/bson"
 
@@ -61,7 +62,7 @@ func (self Module) RegisterOwnAsset(remoteUrl string, o Parseable) *Asset {
 		Updated:  time.Now(),
 	}
 
-	database := self.Mongo.Database
+	database := deps.Container.Mgo()
 	err := database.C("remote_assets").Insert(asset)
 
 	if err != nil {
@@ -74,7 +75,7 @@ func (self Module) RegisterOwnAsset(remoteUrl string, o Parseable) *Asset {
 		defer module.Errors.Recover()
 
 		// Get the database interface from the DI
-		database := module.Mongo.Database
+		database := deps.Container.Mgo()
 		amazon_url, err := module.Config.String("amazon.url")
 
 		if err != nil {

@@ -3,10 +3,10 @@ package handle
 import (
 	"bytes"
 	"github.com/fernandez14/spartangeek-blacker/core/events"
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
-	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"gopkg.in/mgo.v2/bson"
@@ -15,7 +15,6 @@ import (
 )
 
 type VoteAPI struct {
-	Data   *mongo.Service `inject:""`
 	Gaming *gaming.Module `inject:""`
 	User   *user.Module   `inject:""`
 }
@@ -23,7 +22,7 @@ type VoteAPI struct {
 func (di VoteAPI) VoteComponent(c *gin.Context) {
 
 	// Get the database interface from the DI
-	database := di.Data.Database
+	database := deps.Container.Mgo()
 
 	id := c.Params.ByName("id")
 
@@ -199,7 +198,7 @@ func (di VoteAPI) VoteComponent(c *gin.Context) {
 func (di VoteAPI) VoteComment(c *gin.Context) {
 
 	// Get the database interface from the DI
-	database := di.Data.Database
+	database := deps.Container.Mgo()
 
 	id := c.Params.ByName("id")
 
@@ -465,7 +464,7 @@ func (di VoteAPI) VoteComment(c *gin.Context) {
 func (di VoteAPI) VotePost(c *gin.Context) {
 
 	// Get the database interface from the DI
-	database := di.Data.Database
+	database := deps.Container.Mgo()
 
 	id := c.Params.ByName("id")
 

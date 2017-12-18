@@ -17,7 +17,6 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/notifications"
 	"github.com/fernandez14/spartangeek-blacker/modules/security"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
-	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/getsentry/raven-go"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/providers/facebook"
@@ -71,7 +70,6 @@ func main() {
 	aclService := acl.Boot(string_value(configService.String("application.acl")))
 	gamingService := gaming.Boot(string_value(configService.String("application.gaming")))
 	userService := user.Boot()
-	mongoService := mongo.NewService(string_value(configService.String("database.uri")), string_value(configService.String("database.name")))
 	errorService, _ := raven.NewClient(string_value(configService.String("sentry.dns")), nil)
 	cacheService, _ := goredis.Dial(&goredis.DialConfig{Address: string_value(configService.String("cache.redis"))})
 	assetsService := assets.Boot()
@@ -103,7 +101,6 @@ func main() {
 	err = g.Provide(
 		&inject.Object{Value: log, Complete: true},
 		&inject.Object{Value: configService, Complete: true},
-		&inject.Object{Value: mongoService, Complete: true},
 		&inject.Object{Value: errorService, Complete: true},
 		&inject.Object{Value: cacheService, Complete: true},
 		&inject.Object{Value: s3Service, Complete: true},

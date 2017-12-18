@@ -18,7 +18,7 @@ import (
 
 func (this API) Create(c *gin.Context) {
 	var form model.PostForm
-	database := this.Mongo.Database
+	database := deps.Container.Mgo()
 
 	// Check for user token
 	user_id, _ := c.Get("user_id")

@@ -2,6 +2,7 @@ package content
 
 import (
 	notify "github.com/fernandez14/spartangeek-blacker/board/notifications"
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"gopkg.in/mgo.v2/bson"
 
 	"regexp"
@@ -27,7 +28,7 @@ func (self Module) ParseContentMentions(o Parseable) bool {
 
 		var users []string
 		possible := map[string]Mention{}
-		database := self.Mongo.Database
+		database := deps.Container.Mgo()
 
 		for _, usr := range list {
 
@@ -101,7 +102,7 @@ func (self Module) NotifyMentionsAsync(o Parseable, ls []Mention) {
 
 	defer self.Errors.Recover()
 
-	database := self.Mongo.Database
+	database := deps.Container.Mgo()
 	entity := o.GetParseableMeta()
 
 	if related, exists := entity["type"].(string); exists {

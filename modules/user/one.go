@@ -1,6 +1,7 @@
 package user
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"gopkg.in/mgo.v2/bson"
 
@@ -43,17 +44,13 @@ func (self *One) Name() string {
 
 // Helper method to track a signin from the user
 func (self *One) TrackUserSignin(client_address string) {
-
-	di := self.di
-	database := di.Mongo.Database
-
 	record := &CheckinModel{
 		UserId:  self.data.Id,
 		Address: client_address,
 		Date:    time.Now(),
 	}
 
-	err := database.C("checkins").Insert(record)
+	err := deps.Container.Mgo().C("checkins").Insert(record)
 
 	if err != nil {
 		panic(err)
@@ -62,11 +59,17 @@ func (self *One) TrackUserSignin(client_address string) {
 
 // Helper method to track a signin from the user
 func (self *One) ROwns(entity string, id bson.ObjectId) {
-
-	di := self.di
-	database := di.Mongo.Database
-
-	_, err := database.C("user_owns").UpdateAll(bson.M{"related": entity, "related_id": id, "user_id": self.data.Id, "removed": bson.M{"$exists": false}}, bson.M{"$set": bson.M{"removed": true, "removed_at": time.Now()}})
+	_, err := deps.Container.Mgo().C("user_owns").UpdateAll(
+		bson.M{
+			"related":    entity,
+			"related_id": id,
+			"user_id":    self.data.Id,
+			"removed":    bson.M{"$exists": false},
+		},
+		bson.M{
+			"$set": bson.M{"removed": true, "removed_at": time.Now()},
+		},
+	)
 
 	if err != nil {
 		panic(err)
@@ -74,8 +77,7 @@ func (self *One) ROwns(entity string, id bson.ObjectId) {
 }
 
 func (self *One) TrackView(entity string, entity_id bson.ObjectId) {
-
-	database := self.di.Mongo.Database
+	database := deps.Container.Mgo()
 	record := &ViewModel{
 		UserId:    self.data.Id,
 		Related:   entity,
@@ -90,7 +92,6 @@ func (self *One) TrackView(entity string, entity_id bson.ObjectId) {
 	}
 
 	if entity == "component" {
-
 		err := database.C("components").Update(bson.M{"_id": entity_id}, bson.M{"$inc": bson.M{"views": 1}})
 
 		if err != nil {
@@ -100,11 +101,7 @@ func (self *One) TrackView(entity string, entity_id bson.ObjectId) {
 }
 
 func (self *One) MarkAsValidated() {
-
-	di := self.di
-	database := di.Mongo.Database
-
-	err := database.C("users").Update(bson.M{"_id": self.data.Id}, bson.M{"$set": bson.M{"validated": true}})
+	err := deps.Container.Mgo().C("users").Update(bson.M{"_id": self.data.Id}, bson.M{"$set": bson.M{"validated": true}})
 
 	if err != nil {
 		panic(err)
@@ -120,24 +117,16 @@ func (o *One) IsValidated() bool {
 	return o.data.Validated
 }
 
-func (self *One) Update(data map[string]interface{}) error {
-
-	database := self.di.Mongo.Database
-
+func (self *One) Update(data map[string]interface{}) (err error) {
 	if password, exists := data["password"]; exists {
 		data["password"] = helpers.Sha256(password.(string))
 	}
 
-	err := database.C("users").Update(bson.M{"_id": self.data.Id}, bson.M{"$set": data})
-
-	return err
+	err = deps.Container.Mgo().C("users").Update(bson.M{"_id": self.data.Id}, bson.M{"$set": data})
+	return
 }
 
 func (self *One) followReferral() {
-
-	di := self.di
-	database := di.Mongo.Database
-
 	// Just update blindly
-	database.C("referrals").Update(bson.M{"user_id": self.data.Id}, bson.M{"$set": bson.M{"confirmed": true}})
+	deps.Container.Mgo().C("referrals").Update(bson.M{"user_id": self.data.Id}, bson.M{"$set": bson.M{"confirmed": true}})
 }

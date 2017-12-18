@@ -1,9 +1,9 @@
 package user
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
-	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/markbates/goth"
 	"github.com/op/go-logging"
 	"gopkg.in/mgo.v2"
@@ -20,7 +20,6 @@ func Boot() *Module {
 }
 
 type Module struct {
-	Mongo  *mongo.Service               `inject:""`
 	Errors *exceptions.ExceptionsModule `inject:""`
 	Logger *logging.Logger              `inject:""`
 }
@@ -30,7 +29,7 @@ func (module *Module) Get(usr interface{}) (*One, error) {
 
 	var model *UserPrivate
 	context := module
-	database := module.Mongo.Database
+	database := deps.Container.Mgo()
 
 	switch usr.(type) {
 	case bson.ObjectId:
@@ -68,7 +67,7 @@ func (module *Module) Get(usr interface{}) (*One, error) {
 // Signup a user with email and username checks
 func (module *Module) SignUp(email, username, password, referral string) (*One, error) {
 	context := module
-	database := module.Mongo.Database
+	database := deps.Container.Mgo()
 	slug := helpers.StrSlug(username)
 	valid_name, err := regexp.Compile(`^[a-zA-Z][a-zA-Z0-9]*[._-]?[a-zA-Z0-9]+$`)
 
@@ -156,7 +155,7 @@ func (m *Module) computeNickname(nicknames ...string) (string, error) {
 
 // Sign up user from oauth provider
 func (module *Module) OauthSignup(provider string, user goth.User) (*One, error) {
-	db := module.Mongo.Database
+	db := deps.Container.Mgo()
 	id := bson.NewObjectId()
 
 	profile := map[string]interface{}{
@@ -210,7 +209,7 @@ func (module *Module) OauthSignup(provider string, user goth.User) (*One, error)
 
 func (module *Module) IsValidRecoveryToken(token string) (bool, error) {
 
-	database := module.Mongo.Database
+	database := deps.Container.Mgo()
 
 	// Only tokens that are 15 minutes old
 	valid_date := time.Now().Add(-15 * time.Minute)
@@ -228,7 +227,7 @@ func (module *Module) GetUserFromRecoveryToken(token string) (*One, error) {
 
 	var model UserRecoveryToken
 
-	database := module.Mongo.Database
+	database := deps.Container.Mgo()
 	change := mgo.Change{
 		Update:    bson.M{"$set": bson.M{"used": true, "updated_at": time.Now()}},
 		ReturnNew: false,

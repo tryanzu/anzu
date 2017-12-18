@@ -1,6 +1,7 @@
 package gaming
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"gopkg.in/mgo.v2/bson"
@@ -11,7 +12,7 @@ func (self *User) AcquireBadge(id bson.ObjectId, validation bool) error {
 
 	var badge BadgeModel
 
-	database := self.di.Mongo.Database
+	database := deps.Container.Mgo()
 	usr := self.user.Data()
 
 	// Find the badge using it's id

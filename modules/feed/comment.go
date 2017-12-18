@@ -1,6 +1,7 @@
 package feed
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"gopkg.in/mgo.v2/bson"
 
 	"html"
@@ -78,7 +79,7 @@ func (self *Comment) GetPost() *Post {
 func (self *Comment) MarkAsAnswer() {
 
 	// Get database instance
-	database := self.post.DI().Mongo.Database
+	database := deps.Container.Mgo()
 
 	// Update straight forward
 	err := database.C("comments").Update(bson.M{"_id": self.Id}, bson.M{"$set": bson.M{"chosen": true}})
@@ -97,7 +98,7 @@ func (self *Comment) MarkAsAnswer() {
 func (self *Comment) Delete() {
 
 	// Get database instance
-	database := self.post.DI().Mongo.Database
+	database := deps.Container.Mgo()
 
 	// Update straight forward
 	err := database.C("comments").Update(bson.M{"_id": self.Id}, bson.M{"$set": bson.M{"deleted_at": time.Now()}})
@@ -125,7 +126,7 @@ func (self *Comment) Update(c string) {
 		self.Content = html.EscapeString(c)
 
 		// Use content module to run processors chain
-		database := self.post.DI().Mongo.Database
+		database := deps.Container.Mgo()
 		content := self.post.DI().Content
 		content.Parse(self)
 

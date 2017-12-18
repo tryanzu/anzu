@@ -16,7 +16,6 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/fernandez14/spartangeek-blacker/modules/security"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
-	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/kennygrant/sanitize"
@@ -36,7 +35,6 @@ import (
 
 type UserAPI struct {
 	Errors        *exceptions.ExceptionsModule `inject:""`
-	DataService   *mongo.Service               `inject:""`
 	CacheService  *goredis.Redis               `inject:""`
 	ConfigService *config.Config               `inject:""`
 	S3Bucket      *s3.Bucket                   `inject:""`
@@ -50,7 +48,7 @@ type UserAPI struct {
 func (di *UserAPI) UserSubscribe(c *gin.Context) {
 
 	// Get the database interface from the DI
-	database := di.DataService.Database
+	database := deps.Container.Mgo()
 
 	var register model.UserSubscribeForm
 
@@ -75,7 +73,7 @@ func (di *UserAPI) UserCategorySubscribe(c *gin.Context) {
 	var user model.User
 
 	// Get the database interface from the DI
-	database := di.DataService.Database
+	database := deps.Container.Mgo()
 	redis := di.CacheService
 	user_id := c.MustGet("user_id")
 	category_id := c.Param("id")
@@ -126,7 +124,7 @@ func (di *UserAPI) UserCategorySubscribe(c *gin.Context) {
 func (di *UserAPI) UserCategoryUnsubscribe(c *gin.Context) {
 
 	// Get the database interface from the DI
-	database := di.DataService.Database
+	database := deps.Container.Mgo()
 	redis := di.CacheService
 	user_id := c.MustGet("user_id")
 	category_id := c.Param("id")
@@ -388,7 +386,7 @@ func (di *UserAPI) UserUpdateProfileAvatar(c *gin.Context) {
 		s3_url := "https://s3-us-west-1.amazonaws.com/spartan-board/" + path
 
 		// Update the user image as well
-		di.DataService.Database.C("users").Update(bson.M{"_id": user_bson_id}, bson.M{"$set": bson.M{"image": s3_url}})
+		deps.Container.Mgo().C("users").Update(bson.M{"_id": user_bson_id}, bson.M{"$set": bson.M{"image": s3_url}})
 
 		// Done
 		c.JSON(200, gin.H{"status": "okay", "url": s3_url})
@@ -403,7 +401,7 @@ func (di *UserAPI) UserUpdateProfile(c *gin.Context) {
 	var user model.User
 	var form map[string]string
 
-	db := di.DataService.Database
+	db := deps.Container.Mgo()
 	id := c.MustGet("user_id").(string)
 	user_id := bson.ObjectIdHex(id)
 	err := db.C("users").FindId(user_id).One(&user)
@@ -566,7 +564,7 @@ func (di *UserAPI) UserGetActivity(c *gin.Context) {
 	var activity = make([]model.UserActivity, 0)
 
 	// Get the database interface from the DI
-	database := di.DataService.Database
+	database := deps.Container.Mgo()
 	content := di.Content
 	user_id := c.Param("id")
 	kind := c.Param("kind")
@@ -690,7 +688,7 @@ func (di *UserAPI) UserGetActivity(c *gin.Context) {
 func (di *UserAPI) UserAutocompleteGet(c *gin.Context) {
 
 	// Get the database interface from the DI
-	database := di.DataService.Database
+	database := deps.Container.Mgo()
 
 	var users []gin.H
 

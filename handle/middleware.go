@@ -3,9 +3,9 @@ package handle
 import (
 	"github.com/cactus/go-statsd-client/statsd"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/modules/acl"
 	"github.com/fernandez14/spartangeek-blacker/modules/security"
-	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/getsentry/raven-go"
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
@@ -27,7 +27,6 @@ import (
 type MiddlewareAPI struct {
 	ErrorService  *raven.Client    `inject:""`
 	ConfigService *config.Config   `inject:""`
-	DataService   *mongo.Service   `inject:""`
 	StatsService  *statsd.Client   `inject:""`
 	Acl           *acl.Module      `inject:""`
 	Logger        *logging.Logger  `inject:""`
@@ -95,10 +94,11 @@ func (di *MiddlewareAPI) StatsdTiming() gin.HandlerFunc {
 func (di *MiddlewareAPI) MongoRefresher() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
+		// Run everything before refreshing mgo
 		c.Next()
 
 		// Refresh the session after the request is done (mongo gets tooooo hot after a while)
-		go di.DataService.Session.Refresh()
+		deps.Container.MgoSession().Refresh()
 	}
 }
 

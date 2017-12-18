@@ -1,6 +1,7 @@
 package gaming
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"gopkg.in/mgo.v2/bson"
 	"log"
@@ -15,7 +16,7 @@ func (self *Module) GetRankingBy(sort string) []RankingModel {
 	var users []RankingUserModel
 	var users_id []bson.ObjectId
 
-	database := self.Mongo.Database
+	database := deps.Container.Mgo()
 
 	// Get the rankings with the sort parameter
 	iter := database.C("stats").Find(nil).Sort("-created_at", "position."+sort).Limit(50).Iter()
@@ -54,13 +55,13 @@ func (self *Module) ResetGeneralRanking() {
 	var swordsRank RankPositions
 	var wealthRank RankPositions
 	var badgesRank RankPositions
-	
+
 	rankings := map[string]RankingModel{}
 
 	// Recover from any panic even inside this goroutine
 	defer self.Errors.Recover()
 
-	database := self.Mongo.Database
+	database := deps.Container.Mgo()
 	current_batch := time.Now()
 
 	iter := database.C("users").Find(nil).Batch(1000).Prefetch(0.50).Iter()
@@ -104,17 +105,17 @@ func (self *Module) ResetGeneralRanking() {
 		}
 
 		swordsRank = append(swordsRank, RankPosition{
-			Id: usr.Id.Hex(),
+			Id:    usr.Id.Hex(),
 			Value: usr.Gaming.Swords,
 		})
 
 		wealthRank = append(wealthRank, RankPosition{
-			Id: usr.Id.Hex(),
+			Id:    usr.Id.Hex(),
 			Value: usr.Gaming.Coins,
 		})
 
 		badgesRank = append(badgesRank, RankPosition{
-			Id: usr.Id.Hex(),
+			Id:    usr.Id.Hex(),
 			Value: len(usr.Gaming.Badges),
 		})
 	}
@@ -122,7 +123,7 @@ func (self *Module) ResetGeneralRanking() {
 	sort.Sort(swordsRank)
 	sort.Sort(wealthRank)
 	sort.Sort(badgesRank)
-	
+
 	for pos, item := range swordsRank {
 
 		r := rankings[item.Id]

@@ -2,6 +2,7 @@ package votes
 
 import (
 	"github.com/fernandez14/spartangeek-blacker/core/events"
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
@@ -13,7 +14,7 @@ import (
 )
 
 func (this API) Comment(c *gin.Context) {
-	database := this.Mongo.Database
+	database := deps.Container.Mgo()
 	id := c.Params.ByName("id")
 
 	if bson.IsObjectIdHex(id) == false {

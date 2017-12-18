@@ -2,10 +2,10 @@ package gaming
 
 import (
 	"encoding/json"
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
-	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/goinggo/work"
 	"github.com/olebedev/config"
 	"github.com/xuyu/goredis"
@@ -38,7 +38,6 @@ func logFunc(message string) {
 }
 
 type Module struct {
-	Mongo  *mongo.Service               `inject:""`
 	User   *user.Module                 `inject:""`
 	Feed   *feed.FeedModule             `inject:""`
 	Redis  *goredis.Redis               `inject:""`
@@ -110,7 +109,7 @@ func (self *Module) Post(post interface{}) *Post {
 // Get gamification model with badges
 func (self *Module) GetRules() Rules {
 
-	database := self.Mongo.Database
+	database := deps.Container.Mgo()
 	rules := self.Rules
 
 	err := database.C("badges").Find(nil).All(&rules.Badges)
@@ -136,7 +135,7 @@ func (self *Module) ResetTempStuff() {
 		log.Fatalln(err)
 	}
 
-	database := self.Mongo.Database
+	database := deps.Container.Mgo()
 	count, _ := database.C("users").Find(nil).Count()
 	err = database.C("users").Find(nil).Select(bson.M{"_id": 1}).All(&list)
 

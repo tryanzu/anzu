@@ -5,12 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"github.com/fernandez14/spartangeek-blacker/core/events"
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/modules/acl"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
 	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
-	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/gin-gonic/gin"
 	"github.com/mitchellh/goamz/s3"
 	"github.com/olebedev/config"
@@ -27,7 +27,6 @@ import (
 )
 
 type PostAPI struct {
-	DataService   *mongo.Service               `inject:""`
 	CacheService  *goredis.Redis               `inject:""`
 	Feed          *feed.FeedModule             `inject:""`
 	Errors        *exceptions.ExceptionsModule `inject:""`
@@ -49,7 +48,7 @@ var avaliable_components = []string{
 func (di PostAPI) FeedGet(c *gin.Context) {
 
 	// Get the database interface from the DI
-	database := di.DataService.Database
+	database := deps.Container.Mgo()
 	redis := di.CacheService
 
 	var feed []model.FeedPost
@@ -424,7 +423,7 @@ func (di PostAPI) PostUploadAttachment(c *gin.Context) {
 func (di PostAPI) PostDelete(c *gin.Context) {
 
 	// Get the database interface from the DI
-	database := di.DataService.Database
+	database := deps.Container.Mgo()
 
 	// Get the post using the id
 	id := c.Params.ByName("id")
@@ -489,7 +488,7 @@ func (di PostAPI) downloadAssetFromUrl(from string, post_id bson.ObjectId) error
 	defer di.Errors.Recover()
 
 	// Get the database interface from the DI
-	database := di.DataService.Database
+	database := deps.Container.Mgo()
 	amazon_url, err := di.ConfigService.String("amazon.url")
 
 	if err != nil {
@@ -561,7 +560,7 @@ func (di PostAPI) downloadAssetFromUrl(from string, post_id bson.ObjectId) error
 				content := strings.Replace(post_content, from, amazon_url+path, -1)
 
 				// Update the comment
-				di.DataService.Database.C("posts").Update(bson.M{"_id": post_id}, bson.M{"$set": bson.M{"content": content}})
+				deps.Container.Mgo().C("posts").Update(bson.M{"_id": post_id}, bson.M{"$set": bson.M{"content": content}})
 			}
 
 		}
@@ -583,7 +582,7 @@ func (di PostAPI) resetUserCategoryCounter(category string, user_id bson.ObjectI
 	updated_at := "counters." + counter + ".updated_at"
 
 	// Update the collection of counters
-	err := di.DataService.Database.C("counters").Update(bson.M{"user_id": user_id}, bson.M{"$set": bson.M{find: 0, updated_at: time.Now()}})
+	err := deps.Container.Mgo().C("counters").Update(bson.M{"user_id": user_id}, bson.M{"$set": bson.M{find: 0, updated_at: time.Now()}})
 
 	if err != nil {
 		panic(err)
@@ -602,7 +601,7 @@ func (di PostAPI) addUserCategoryCounter(category string) {
 	find := "counters." + counter + ".counter"
 
 	// Update the collection of counters
-	di.DataService.Database.C("counters").UpdateAll(nil, bson.M{"$inc": bson.M{find: 1}})
+	deps.Container.Mgo().C("counters").UpdateAll(nil, bson.M{"$inc": bson.M{find: 1}})
 
 	return
 }

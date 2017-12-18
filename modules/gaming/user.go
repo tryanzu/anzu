@@ -2,6 +2,7 @@ package gaming
 
 import (
 	notify "github.com/fernandez14/spartangeek-blacker/board/notifications"
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
 	"gopkg.in/mgo.v2/bson"
 	"time"
@@ -91,7 +92,7 @@ type User struct {
 // Sync user gamification relevant facts
 func (self *User) SyncToLevel(reset bool) {
 
-	database := self.di.Mongo.Database
+	database := deps.Container.Mgo()
 	rules := self.di.Rules.Rules
 	user := self.user.Data()
 
@@ -144,7 +145,7 @@ func (self *User) SyncToLevel(reset bool) {
 // Does the daily login logic for the user
 func (self *User) DailyLogin() {
 
-	database := self.di.Mongo.Database
+	database := deps.Container.Mgo()
 	rules := self.di.Rules.Rules
 	usr := self.user.Data()
 
@@ -179,7 +180,7 @@ func (self *User) Swords(how_many int) {
 	defer self.di.Errors.Recover()
 
 	// Get the database interface from the DI
-	database := self.di.Mongo.Database
+	database := deps.Container.Mgo()
 	err := database.C("users").Update(bson.M{"_id": self.user.Data().Id}, bson.M{"$inc": bson.M{"gaming.swords": how_many}})
 
 	if err != nil {
@@ -203,7 +204,7 @@ func (self *User) Coins(how_many int) {
 	defer self.di.Errors.Recover()
 
 	// Get the database interface from the DI
-	database := self.di.Mongo.Database
+	database := deps.Container.Mgo()
 
 	err := database.C("users").Update(bson.M{"_id": self.user.Data().Id}, bson.M{"$inc": bson.M{"gaming.coins": how_many}})
 
@@ -228,7 +229,7 @@ func (self *User) Tribute(how_many int) {
 	defer self.di.Errors.Recover()
 
 	// Get the database interface from the DI
-	database := self.di.Mongo.Database
+	database := deps.Container.Mgo()
 	err := database.C("users").Update(bson.M{"_id": self.user.Data().Id}, bson.M{"$inc": bson.M{"gaming.tribute": how_many}})
 
 	if err != nil {
@@ -251,7 +252,7 @@ func (self *User) Shit(how_many int) {
 	defer self.di.Errors.Recover()
 
 	// Get the database interface from the DI
-	database := self.di.Mongo.Database
+	database := deps.Container.Mgo()
 	err := database.C("users").Update(bson.M{"_id": self.user.Data().Id}, bson.M{"$inc": bson.M{"gaming.shit": how_many}})
 
 	if err != nil {

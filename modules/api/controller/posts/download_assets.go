@@ -1,6 +1,7 @@
 package posts
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/mitchellh/goamz/s3"
 	"gopkg.in/mgo.v2/bson"
@@ -20,7 +21,7 @@ func (this API) savePostImages(from string, post_id bson.ObjectId) error {
 	defer this.Errors.Recover()
 
 	// Get the database interface from the DI
-	database := this.Mongo.Database
+	database := deps.Container.Mgo()
 	amazon_url, err := this.Config.String("amazon.url")
 
 	if err != nil {

@@ -2,12 +2,12 @@ package cli
 
 import (
 	"fmt"
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/feed"
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
-	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/olebedev/config"
 	"github.com/op/go-logging"
 	"gopkg.in/mgo.v2/bson"
@@ -19,7 +19,6 @@ import (
 )
 
 type Module struct {
-	Mongo  *mongo.Service               `inject:""`
 	Errors *exceptions.ExceptionsModule `inject:""`
 	User   *user.Module                 `inject:""`
 	Feed   *feed.FeedModule             `inject:""`
@@ -55,7 +54,7 @@ func (module Module) FirstNewsletter() {
 	var news NewsletterModel
 	var usr user.UserPrivate
 
-	database := module.Mongo.Database
+	database := deps.Container.Mgo()
 	iter := database.C("newsletter").Find(nil).Limit(200000).Iter()
 
 	for iter.Next(&news) {
@@ -88,7 +87,7 @@ func (module Module) ReplaceURL() {
 	var usr user.UserPrivate
 	var post model.Post
 
-	database := module.Mongo.Database
+	database := deps.Container.Mgo()
 
 	// Get all users
 	iter := database.C("users").Find(nil).Iter()
@@ -146,7 +145,7 @@ func (module Module) ReplaceURL() {
 func (module Module) SlugFix() {
 
 	var usr user.UserPrivate
-	database := module.Mongo.Database
+	database := deps.Container.Mgo()
 	valid_name, _ := regexp.Compile(`^[a-zA-Z][a-zA-Z0-9]*[._-]?[a-zA-Z0-9]+$`)
 
 	// Get all users
@@ -201,7 +200,7 @@ func (module Module) MigrateDeletedComment() {
 		} `bson:"comment"`
 	}
 
-	database := module.Mongo.Database
+	database := deps.Container.Mgo()
 	from, _ := time.Parse(time.RFC3339, "2012-11-01T22:08:41+00:00")
 
 	// Get all users
@@ -246,7 +245,7 @@ func (module Module) MigrateChosenComment() {
 		} `bson:"comment"`
 	}
 
-	database := module.Mongo.Database
+	database := deps.Container.Mgo()
 
 	// Get all users
 	pipeline := database.C("posts_backup").Pipe([]bson.M{
@@ -279,7 +278,7 @@ func (module Module) MigrateChosenComment() {
 func (module Module) Codes() {
 
 	var usr user.UserPrivate
-	database := module.Mongo.Database
+	database := deps.Container.Mgo()
 
 	// Get all users
 	iter := database.C("users").Find(nil).Select(bson.M{"_id": 1, "ref_code": 1, "ver_code": 1}).Iter()

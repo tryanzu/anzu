@@ -1,8 +1,8 @@
 package security
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
-	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/xuyu/goredis"
 	"gopkg.in/mgo.v2/bson"
 
@@ -10,7 +10,6 @@ import (
 )
 
 type Module struct {
-	Mongo *mongo.Service `inject:""`
 	Redis *goredis.Redis `inject:""`
 }
 
@@ -18,7 +17,7 @@ func (module Module) TrustUserIP(address string, usr *user.One) bool {
 
 	var ip IpAddress
 
-	database := module.Mongo.Database
+	database := deps.Container.Mgo()
 	err := database.C("trusted_addresses").Find(bson.M{"address": address}).One(&ip)
 
 	if err != nil {
@@ -72,11 +71,8 @@ func (module Module) TrustUserIP(address string, usr *user.One) bool {
 }
 
 func (module Module) TrustIP(address string) bool {
-
 	var ip IpAddress
-
-	database := module.Mongo.Database
-	err := database.C("trusted_addresses").Find(bson.M{"address": address}).One(&ip)
+	err := deps.Container.Mgo().C("trusted_addresses").Find(bson.M{"address": address}).One(&ip)
 
 	if err != nil {
 		return true

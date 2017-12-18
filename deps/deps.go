@@ -31,10 +31,15 @@ func (d Deps) GamingConfig() *model.GamingRules {
 
 func (d Deps) Log() *logging.Logger {
 	return d.LoggerProvider
+
 }
 
 func (d Deps) Mgo() *mgo.Database {
 	return d.DatabaseProvider
+}
+
+func (d Deps) MgoSession() *mgo.Session {
+	return d.DatabaseSessionProvider
 }
 
 func (d Deps) BuntDB() *buntdb.DB {

@@ -1,6 +1,7 @@
 package notifications
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"gopkg.in/mgo.v2/bson"
 
 	"fmt"
@@ -20,7 +21,7 @@ type Mention struct {
 func (self *NotificationsModule) Mention(parseableMeta map[string]interface{}, user_id, target_user bson.ObjectId) {
 	defer self.Errors.Recover()
 
-	database := self.Mongo.Database
+	database := deps.Container.Mgo()
 	usr, err := self.User.Get(user_id)
 
 	if err != nil {

@@ -1,23 +1,22 @@
 package handle
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/modules/acl"
-	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
 	"sort"
 )
 
 type CategoryAPI struct {
-	Acl         *acl.Module    `inject:""`
-	DataService *mongo.Service `inject:""`
+	Acl *acl.Module `inject:""`
 }
 
 func (di *CategoryAPI) CategoriesGet(c *gin.Context) {
 
 	// Get the database interface from the DI
-	database := di.DataService.Database
+	database := deps.Container.Mgo()
 
 	var categories []model.Category
 

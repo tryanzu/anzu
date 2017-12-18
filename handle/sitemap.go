@@ -1,8 +1,8 @@
 package handle
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/model"
-	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/gin-gonic/gin"
 	"github.com/xuyu/goredis"
 
@@ -10,7 +10,6 @@ import (
 )
 
 type SitemapAPI struct {
-	DataService  *mongo.Service `inject:""`
 	CacheService *goredis.Redis `inject:""`
 }
 
@@ -21,8 +20,7 @@ func (di *SitemapAPI) GetSitemap(c *gin.Context) {
 	var location string
 
 	// Get the database interface from the DI
-	database := di.DataService.Database
-
+	database := deps.Container.Mgo()
 	iter := database.C("posts").Find(nil).Iter()
 
 	for iter.Next(&post) {

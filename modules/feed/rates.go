@@ -1,6 +1,7 @@
 package feed
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"gopkg.in/mgo.v2/bson"
 	"strconv"
@@ -96,7 +97,7 @@ func (di *FeedModule) getPostReachViews(id bson.ObjectId) (int, int) {
 	var reached, viewed int
 
 	// Services we will need along the runtime
-	database := di.Mongo.Database
+	database := deps.Container.Mgo()
 	redis := di.CacheService
 
 	list_count, _ := redis.Get("feed:count:list:" + id.Hex())

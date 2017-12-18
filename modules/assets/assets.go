@@ -1,14 +1,14 @@
 package assets
 
-import(
+import (
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/mitchellh/goamz/s3"
-	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"gopkg.in/mgo.v2/bson"
 
-	"net/http"
 	"encoding/base64"
-	"time"
+	"net/http"
 	"path/filepath"
+	"time"
 )
 
 func Boot() *Module {
@@ -19,8 +19,7 @@ func Boot() *Module {
 }
 
 type Module struct {
-	Mongo *mongo.Service `inject:""`
-	S3    *s3.Bucket `inject:""`
+	S3 *s3.Bucket `inject:""`
 }
 
 func (module *Module) UploadBase64(content, filename, related string, related_id bson.ObjectId, meta interface{}) error {
@@ -47,13 +46,13 @@ func (module *Module) UploadBase64(content, filename, related string, related_id
 		return err
 	}
 
-	database := module.Mongo.Database
+	database := deps.Container.Mgo()
 	asset := &Asset{
-		Related: related,
+		Related:   related,
 		RelatedId: related_id,
-		Path: path,
-		Meta: meta,
-		Created: time.Now(),
+		Path:      path,
+		Meta:      meta,
+		Created:   time.Now(),
 	}
 
 	err = database.C("assets").Insert(asset)

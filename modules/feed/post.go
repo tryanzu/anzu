@@ -1,6 +1,7 @@
 package feed
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
@@ -57,7 +58,7 @@ func (self *Post) LoadComments(take, skip int) {
 
 	// Use content module to run processors chain
 	content := self.di.Content
-	database := self.di.Mongo.Database
+	database := deps.Container.Mgo()
 
 	if skip >= 0 {
 		sortby = "created_at"
@@ -132,7 +133,7 @@ func (self *Post) LoadCommentById(id bson.ObjectId) error {
 
 	// Use content module to run processors chain
 	content := self.di.Content
-	database := self.di.Mongo.Database
+	database := deps.Container.Mgo()
 	err := database.C("comments").Find(bson.M{"_id": id, "deleted_at": bson.M{"$exists": false}}).One(&c)
 
 	if err != nil {
@@ -179,7 +180,7 @@ func (self *Post) PushComment(c string, user_id bson.ObjectId) *Comment {
 	content.Parse(comment)
 
 	// Publish comment
-	database := self.di.Mongo.Database
+	database := deps.Container.Mgo()
 	err := database.C("comments").Insert(comment)
 
 	if err != nil {
@@ -214,8 +215,7 @@ func (p *Post) PushUser(user_id bson.ObjectId) bool {
 	}
 
 	if !pushed {
-		database := p.di.Mongo.Database
-		err := database.C("posts").Update(bson.M{"_id": p.Id}, bson.M{"$push": bson.M{"users": user_id}})
+		err := deps.Container.Mgo().C("posts").Update(bson.M{"_id": p.Id}, bson.M{"$push": bson.M{"users": user_id}})
 
 		if err != nil {
 			panic(err)
@@ -256,7 +256,7 @@ func (self *Post) LoadUsers() {
 
 	if len(list) > 0 {
 
-		database := self.di.Mongo.Database
+		database := deps.Container.Mgo()
 		err := database.C("users").Find(bson.M{"_id": bson.M{"$in": list}}).Select(user.UserSimpleFields).All(&users)
 
 		if err != nil {
@@ -298,7 +298,7 @@ func (self *Post) LoadUsers() {
 // Load voting status for certain user
 func (self *Post) LoadVotes(user_id bson.ObjectId) {
 
-	database := self.di.Mongo.Database
+	database := deps.Container.Mgo()
 
 	// Only when there's loaded comments on the post
 	if len(self.Comments.Set) > 0 {
@@ -346,7 +346,7 @@ func (self *Post) LoadVotes(user_id bson.ObjectId) {
 // Collects the post views
 func (self *Post) Viewed(user_id bson.ObjectId) {
 
-	database := self.di.Mongo.Database
+	database := deps.Container.Mgo()
 	redis := self.di.CacheService
 
 	activity := model.Activity{
@@ -430,7 +430,7 @@ func (self *Post) GetReachViews(id bson.ObjectId) (int, int) {
 	var reached, viewed int
 
 	// Services we will need along the runtime
-	database := self.di.Mongo.Database
+	database := deps.Container.Mgo()
 	redis := self.di.CacheService
 
 	list_count, _ := redis.Get("feed:count:list:" + id.Hex())
@@ -471,7 +471,7 @@ func (self *Post) GetCategory() model.Category {
 
 	var category model.Category
 
-	database := self.di.Mongo.Database
+	database := deps.Container.Mgo()
 	err := database.C("categories").Find(bson.M{"_id": self.Category}).One(&category)
 
 	if err != nil {
@@ -486,7 +486,7 @@ func (self *Post) Comment(index int) (*Comment, error) {
 
 	var comment *Comment
 
-	database := self.di.Mongo.Database
+	database := deps.Container.Mgo()
 	err := database.C("comments").Find(bson.M{"post_id": self.Id, "position": index, "deleted_at": bson.M{"$exists": false}}).One(&comment)
 
 	if err != nil {

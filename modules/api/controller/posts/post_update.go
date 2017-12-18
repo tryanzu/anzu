@@ -2,6 +2,7 @@ package posts
 
 import (
 	"github.com/fernandez14/spartangeek-blacker/core/events"
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/model"
 	"github.com/fernandez14/spartangeek-blacker/modules/helpers"
 	"github.com/gin-gonic/gin"
@@ -18,7 +19,7 @@ func (this API) Update(c *gin.Context) {
 	var postForm model.PostForm
 
 	// Get the database interface from the DI
-	database := this.Mongo.Database
+	database := deps.Container.Mgo()
 
 	// Get the post using the id
 	id := c.Params.ByName("id")

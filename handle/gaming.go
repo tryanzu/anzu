@@ -2,14 +2,12 @@ package handle
 
 import (
 	"github.com/fernandez14/spartangeek-blacker/modules/gaming"
-	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
 )
 
 type GamingAPI struct {
 	Gaming *gaming.Module `inject:""`
-	Mongo  *mongo.Service `inject:""`
 }
 
 // Get gamification rules (roles, badges)

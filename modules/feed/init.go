@@ -4,8 +4,8 @@ import (
 	"github.com/fernandez14/spartangeek-blacker/modules/content"
 	"github.com/fernandez14/spartangeek-blacker/modules/exceptions"
 	//"github.com/fernandez14/spartangeek-blacker/modules/notifications"
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"github.com/fernandez14/spartangeek-blacker/modules/user"
-	"github.com/fernandez14/spartangeek-blacker/mongo"
 	"github.com/xuyu/goredis"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -13,18 +13,16 @@ import (
 var lightPostFields bson.M = bson.M{"_id": 1, "title": 1, "slug": 1, "solved": 1, "lock": 1, "category": 1, "is_question": 1, "user_id": 1, "pinned": 1, "created_at": 1, "updated_at": 1, "type": 1, "content": 1}
 
 type FeedModule struct {
-	Mongo  *mongo.Service               `inject:""`
-	Errors *exceptions.ExceptionsModule `inject:""`
-	//Notifications *notifications.NotificationsModule `inject:""`
-	CacheService *goredis.Redis  `inject:""`
-	User         *user.Module    `inject:""`
-	Content      *content.Module `inject:""`
+	Errors       *exceptions.ExceptionsModule `inject:""`
+	CacheService *goredis.Redis               `inject:""`
+	User         *user.Module                 `inject:""`
+	Content      *content.Module              `inject:""`
 }
 
 func (module *FeedModule) SearchPosts(content string) ([]SearchPostModel, int) {
 
 	posts := make([]SearchPostModel, 0)
-	database := module.Mongo.Database
+	database := deps.Container.Mgo()
 
 	// Fields to retrieve
 	fields := bson.M{"_id": 1, "score": bson.M{"$meta": "textScore"}, "title": 1, "slug": 1, "solved": 1, "lock": 1, "category": 1, "user_id": 1, "pinned": 1, "created_at": 1, "updated_at": 1, "type": 1, "content": 1}
@@ -78,7 +76,7 @@ func (self *FeedModule) Post(post interface{}) (*Post, error) {
 	case bson.ObjectId:
 
 		var this *Post
-		database := self.Mongo.Database
+		database := deps.Container.Mgo()
 
 		// Use user module reference to get the user and then create the user gaming instance
 		err := database.C("posts").FindId(post.(bson.ObjectId)).One(&this)
@@ -94,7 +92,7 @@ func (self *FeedModule) Post(post interface{}) (*Post, error) {
 	case bson.M:
 
 		var this *Post
-		database := self.Mongo.Database
+		database := deps.Container.Mgo()
 
 		// Use user module reference to get the user and then create the user gaming instance
 		err := database.C("posts").Find(post.(bson.M)).One(&this)
@@ -125,7 +123,7 @@ func (module *FeedModule) LightPost(post interface{}) (*LightPost, error) {
 	case bson.ObjectId:
 
 		scope := LightPostModel{}
-		database := module.Mongo.Database
+		database := deps.Container.Mgo()
 
 		// Use light post model
 		err := database.C("posts").FindId(post.(bson.ObjectId)).Select(lightPostFields).One(&scope)
@@ -151,7 +149,7 @@ func (module *FeedModule) LightPosts(posts interface{}) ([]LightPostModel, error
 
 		var list []LightPostModel
 
-		database := module.Mongo.Database
+		database := deps.Container.Mgo()
 
 		// Use light post model
 		err := database.C("posts").Find(bson.M{"_id": bson.M{"$in": posts.([]bson.ObjectId)}}).Select(lightPostFields).All(&list)
@@ -167,7 +165,7 @@ func (module *FeedModule) LightPosts(posts interface{}) ([]LightPostModel, error
 
 		var list []LightPostModel
 
-		database := module.Mongo.Database
+		database := deps.Container.Mgo()
 
 		// Use light post model
 		err := database.C("posts").Find(posts.(bson.M)).Select(lightPostFields).All(&list)
@@ -187,7 +185,7 @@ func (f *FeedModule) GetComment(id bson.ObjectId) (*Comment, error) {
 
 	var c *Comment
 
-	database := f.Mongo.Database
+	database := deps.Container.Mgo()
 	err := database.C("comments").FindId(id).One(&c)
 
 	if err != nil {
@@ -216,7 +214,7 @@ func (module *FeedModule) FulfillBestAnswer(list []LightPostModel) []LightPostMo
 		ids = append(ids, post.Id)
 	}
 
-	database := module.Mongo.Database
+	database := deps.Container.Mgo()
 	pipeline_line := []bson.M{
 		{
 			"$match": bson.M{"_id": bson.M{"$in": ids}, "solved": true},
@@ -259,7 +257,7 @@ func (module *FeedModule) FulfillBestAnswer(list []LightPostModel) []LightPostMo
 func (module *FeedModule) TrueCommentCount(id bson.ObjectId) int {
 	var count int
 
-	database := module.Mongo.Database
+	database := deps.Container.Mgo()
 	count, err := database.C("comments").Find(bson.M{"post_id": id}).Count()
 
 	if err != nil {

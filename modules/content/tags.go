@@ -1,6 +1,7 @@
 package content
 
 import (
+	"github.com/fernandez14/spartangeek-blacker/deps"
 	"gopkg.in/mgo.v2/bson"
 
 	"fmt"
@@ -136,7 +137,7 @@ func (self Module) FetchUsersHelper(ls []string) map[string]string {
 			Username string        `bson:"username"`
 		}
 
-		database := self.Mongo.Database
+		database := deps.Container.Mgo()
 		err := database.C("users").Find(bson.M{"_id": bson.M{"$in": missing}}).Select(bson.M{"username": 1}).All(&targets)
 
 		if err == nil {
@@ -182,7 +183,7 @@ func (self Module) FetchAssetsHelper(ls []string) map[string]string {
 
 		var targets []Asset
 
-		database := self.Mongo.Database
+		database := deps.Container.Mgo()
 		err := database.C("remote_assets").Find(bson.M{"_id": bson.M{"$in": missing}}).All(&targets)
 
 		if err == nil {
