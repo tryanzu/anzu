@@ -3,9 +3,9 @@ package realtime
 import (
 	"log"
 	"net/http"
-	"sync"
 
 	"github.com/desertbit/glue"
+	"github.com/henrylee2cn/goutil"
 )
 
 // Input channel buffer size.
@@ -13,14 +13,14 @@ const BufferSize = 10
 
 var (
 	server  *glue.Server
-	sockets *sync.Map
+	sockets goutil.Map
 
 	// Public accesible
 	Broadcast chan string
 )
 
 func init() {
-	sockets = &sync.Map{}
+	sockets = goutil.AtomicMap()
 
 	// Prepare multicast channels before starting server
 	Broadcast = make(chan string, BufferSize)

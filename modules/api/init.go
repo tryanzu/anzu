@@ -16,6 +16,7 @@ import (
 	"github.com/tryanzu/core/modules/api/controller/votes"
 
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
@@ -109,6 +110,11 @@ func (module *Module) Run() {
 	}
 
 	router := gin.Default()
+	router.SetFuncMap(template.FuncMap{
+		"config": func(key string) string {
+			return module.Dependencies.Config.UString(key, fmt.Sprintf("[Fatal error] Cannot get config with key %s"))
+		},
+	})
 	router.LoadHTMLGlob(templates)
 
 	// Middlewares setup
@@ -222,9 +228,9 @@ func (module *Module) Run() {
 	}
 
 	// Run over the 3000 port
-	port := os.Getenv("RUN_OVER")
-	if port == "" {
-		port = "3000"
+	var port string = "3000"
+	if runOver := os.Getenv("RUN_OVER"); len(runOver) > 0 {
+		port = runOver
 	}
 
 	h := http.NewServeMux()

@@ -145,6 +145,12 @@
   revision = "5546b2897115a65a0b2a9f2763f8c4253fc6423a"
 
 [[projects]]
+  name = "github.com/inconshreveable/mousetrap"
+  packages = ["."]
+  revision = "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
+  version = "v1.0"
+
+[[projects]]
   name = "github.com/json-iterator/go"
   packages = ["."]
   revision = "ff2b70c1dbffdd98567bd8c2f9449d97c0d04c88"
@@ -224,6 +230,18 @@
   name = "github.com/smartystreets/goconvey"
   packages = ["convey","convey/gotest","convey/reporting"]
   revision = "e5b2b7c9111590d019a696c7800593f666e1a7f4"
+
+[[projects]]
+  name = "github.com/spf13/cobra"
+  packages = ["."]
+  revision = "7b2c5ac9fc04fc5efafb60700713d4fa609b777b"
+  version = "v0.0.1"
+
+[[projects]]
+  name = "github.com/spf13/pflag"
+  packages = ["."]
+  revision = "e57e3eeb33f795204c1ca35f56c44f83227c6e66"
+  version = "v1.0.0"
 
 [[projects]]
   branch = "master"
@@ -324,6 +342,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "70225da55ce7d02ff732e0bf56ea76aa60bd6af7447607d04c02855979001253"
+  inputs-digest = "786275541fd247a8e826306364944e036f0d40fe33bc6b74745251788601fa56"
   solver-name = "gps-cdcl"
   solver-version = 1
