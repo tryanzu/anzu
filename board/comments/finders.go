@@ -5,7 +5,7 @@ import (
 
 	"github.com/tryanzu/core/core/common"
 	"github.com/tryanzu/core/core/content"
-	"gopkg.in/mgo.v2"
+	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -33,8 +33,8 @@ func FetchBy(deps Deps, query common.Query) (list Comments, err error) {
 func Post(id bson.ObjectId, limit, offset int) common.Query {
 	return func(col *mgo.Collection) *mgo.Query {
 		return col.Find(bson.M{
-			"post_id":    id,
-			"reply_to":   bson.M{"$exists": false},
+			"reply_type": "post",
+			"reply_to":   id,
 			"deleted_at": bson.M{"$exists": false},
 		}).Limit(limit).Skip(offset).Sort("-votes.up", "votes.down", "-created_at")
 	}
@@ -58,7 +58,7 @@ func FindList(deps Deps, scopes ...common.Scope) (list Comments, err error) {
 
 func FindReplies(deps Deps, list Comments, max int) (lists []Replies, err error) {
 	err = deps.Mgo().C("comments").Pipe([]bson.M{
-		{"$match": bson.M{"reply_to": bson.M{"$in": list.IDList()}}},
+		{"$match": bson.M{"reply_type": "comment", "reply_to": bson.M{"$in": list.IDList()}}},
 		{"$sort": bson.M{"votes.up": 1, "votes.down": -1}},
 		{"$group": bson.M{"_id": "$reply_to", "count": bson.M{"$sum": 1}, "list": bson.M{"$push": "$$ROOT"}}},
 		{"$project": bson.M{"count": 1, "list": bson.M{"$slice": []interface{}{"$list", 0, max}}}},

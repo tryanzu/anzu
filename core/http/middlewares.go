@@ -36,6 +36,18 @@ func SiteMiddleware() gin.HandlerFunc {
 	}
 }
 
+// Limit number of simultaneous connections.
+func MaxAllowed(n int) gin.HandlerFunc {
+	sem := make(chan bool, n)
+	acquire := func() { sem <- true }
+	release := func() { <-sem }
+	return func(c *gin.Context) {
+		acquire()       // before request
+		defer release() // after request
+		c.Next()
+	}
+}
+
 func TitleMiddleware(title string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Set("siteName", title)

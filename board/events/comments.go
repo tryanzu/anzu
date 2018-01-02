@@ -20,7 +20,7 @@ func commentsEvents() {
 				return err
 			}
 
-			post, err := post.FindId(deps.Container, comment.PostId)
+			post, err := post.FindId(deps.Container, comment.RelatedID())
 			if err != nil {
 				return err
 			}

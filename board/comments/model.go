@@ -11,17 +11,19 @@ import (
 )
 
 type Comment struct {
-	Id       bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
-	PostId   bson.ObjectId `bson:"post_id" json:"post_id"`
-	UserId   bson.ObjectId `bson:"user_id" json:"user_id"`
-	Votes    votes.Votes   `bson:"votes" json:"votes"`
-	User     interface{}   `bson:"-" json:"author,omitempty"`
-	Position int           `bson:"position" json:"position"`
-	Liked    int           `bson:"-" json:"liked,omitempty"`
-	Content  string        `bson:"content" json:"content"`
-	ReplyTo  bson.ObjectId `bson:"reply_to,omitempty" json:"reply_to,omitempty"`
-	Chosen   bool          `bson:"chosen,omitempty" json:"chosen,omitempty"`
-	Created  time.Time     `bson:"created_at" json:"created_at"`
+	Id        bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
+	UserId    bson.ObjectId `bson:"user_id" json:"user_id"`
+	PostId    bson.ObjectId `bson:"post_id,omitempty" json:"post_id,omitempty"`
+	Votes     votes.Votes   `bson:"votes" json:"votes"`
+	User      interface{}   `bson:"-" json:"author,omitempty"`
+	Position  int           `bson:"position" json:"position"`
+	Liked     int           `bson:"-" json:"liked,omitempty"`
+	Content   string        `bson:"content" json:"content"`
+	ReplyTo   bson.ObjectId `bson:"reply_to,omitempty" json:"reply_to,omitempty"`
+	ReplyType string        `bson:"reply_type,omitempty" json:"reply_type,omitempty"`
+	Chosen    bool          `bson:"chosen,omitempty" json:"chosen,omitempty"`
+	Created   time.Time     `bson:"created_at" json:"created_at"`
+	Updated   time.Time     `bson:"updated_at" json:"updated_at"`
 
 	// Runtime generated fields.
 	Replies interface{} `bson:"-" json:"replies,omitempty"`
@@ -38,6 +40,14 @@ func (c Comment) UpdateContent(content string) content.Parseable {
 
 func (c Comment) GetParseableMeta() (meta map[string]interface{}) {
 	return
+}
+
+func (c Comment) RelatedID() bson.ObjectId {
+	if c.PostId.Valid() == false {
+		return c.ReplyTo
+	}
+
+	return c.PostId
 }
 
 type Replies struct {

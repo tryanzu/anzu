@@ -9,6 +9,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
+// HomePage is the site's entry point.
 func HomePage(c *gin.Context) {
 	c.HTML(200, "pages/home.tmpl", gin.H{
 		"title":       c.MustGet("siteName").(string),

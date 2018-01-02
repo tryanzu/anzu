@@ -13,6 +13,6 @@ func transmitWorker(n int) {
 			panic(err)
 		}
 
-		realtime.Broadcast <- string(m)
+		realtime.ToChan <- realtime.M{Channel: n.Chan, Content: string(m)}
 	}
 }

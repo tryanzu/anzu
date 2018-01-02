@@ -1,5 +1,7 @@
 package events
 
+import "log"
+
 type Handler func(Event) error
 
 // The input channel will receive
@@ -33,6 +35,7 @@ func sink(in chan Event, on chan EventHandler) {
 	for {
 		select {
 		case event := <-in: // For incoming events spawn a goroutine running handlers.
+			log.Printf("Incoming event: %+v", event)
 			if ls, exists := Handlers[event.Name]; exists {
 				go execHandlers(ls, event)
 			}

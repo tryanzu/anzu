@@ -124,6 +124,7 @@ func (module *Module) Run() {
 	router.Use(module.Middlewares.MongoRefresher())
 	router.Use(module.Middlewares.TrustIP())
 	router.Use(chttp.SiteMiddleware())
+	router.Use(chttp.MaxAllowed(5))
 
 	/**
 	 * Routes section.
@@ -198,6 +199,7 @@ func (module *Module) Run() {
 			authorized.GET("/auth/resend-confirmation", module.UsersFactory.ResendConfirmation)
 
 			// Comment routes
+			authorized.POST("/comments/:id", chttp.UserMiddleware(), controller.NewComment)
 			authorized.POST("/post/comment/:id", module.CommentsFactory.Add)
 			authorized.PUT("/post/comment/:id", module.CommentsFactory.Update)
 			authorized.DELETE("/post/comment/:id", module.CommentsFactory.Delete)

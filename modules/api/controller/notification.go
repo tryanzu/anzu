@@ -1,18 +1,19 @@
 package controller
 
 import (
+	"strconv"
+
 	"github.com/gin-gonic/gin"
 	notify "github.com/tryanzu/core/board/notifications"
 	"github.com/tryanzu/core/core/user"
 	"github.com/tryanzu/core/deps"
-	"strconv"
 )
 
-// Return user notifications
+// Notifications from current authenticated user.
 func Notifications(c *gin.Context) {
 	var (
-		take int = 10
-		skip int = 0
+		take = 10
+		skip = 0
 	)
 
 	if n, err := strconv.Atoi(c.Query("take")); err == nil && n <= 50 {
