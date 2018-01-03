@@ -30,6 +30,10 @@ func UpsertComment(deps Deps, c Comment) (comment Comment, err error) {
 		return
 	}
 
+	if c.ReplyType == "post" {
+		err = deps.Mgo().C("posts").UpdateId(c.ReplyTo, bson.M{"$inc": bson.M{"comments.count": 1}})
+	}
+
 	comment = c
 	return
 }

@@ -36,7 +36,7 @@ func commentsEvents() {
 
 			notify.Transmit <- notify.Socket{"feed", "action", map[string]interface{}{
 				"fire":    "new-comment",
-				"id":      comment.PostId.Hex(),
+				"id":      comment.ReplyTo.Hex(),
 				"user_id": comment.UserId.Hex(),
 			}}
 

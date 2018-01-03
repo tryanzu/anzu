@@ -1,16 +1,18 @@
 package realtime
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"time"
 
 	"github.com/desertbit/glue"
 	"github.com/henrylee2cn/goutil"
-	"github.com/tryanzu/core/core/user"
+	"github.com/tryanzu/core/deps"
 )
 
 var (
+	jwtSecret  []byte
 	server     *glue.Server
 	sockets    goutil.Map
 	clients    goutil.Map
@@ -32,35 +34,21 @@ type M struct {
 	Content string
 }
 
-// Client contains a message to be broadcasted to a channel
-type Client struct {
-	Raw      *glue.Socket
-	Channels map[string]*glue.Channel
-	User     *user.User
-	Read     chan<- readEvent
+type socketEvent struct {
+	Event  string                 `json:"event"`
+	Params map[string]interface{} `json:"params"`
 }
 
-type readEvent struct {
-	Event  string
-	Params map[string]interface{}
-}
-
-func (c *Client) send(packed []M) {
-	for _, m := range packed {
-		if m.Channel == "" {
-			c.Raw.Write(m.Content)
-			continue
-		}
-
-		if _, exists := c.Channels[m.Channel]; exists == false {
-			c.Channels[m.Channel] = c.Raw.Channel(m.Channel)
-		}
-
-		c.Channels[m.Channel].Write(m.Content)
+func (ev socketEvent) encode() string {
+	bytes, err := json.Marshal(ev)
+	if err != nil {
+		panic(err)
 	}
+
+	return string(bytes)
 }
 
-func init() {
+func prepare() {
 	sockets = goutil.AtomicMap()
 	clients = goutil.RwMap(1000)
 
@@ -74,6 +62,13 @@ func init() {
 		HTTPSocketType: glue.HTTPSocketTypeNone,
 	})
 
+	secret, err := deps.Container.Config().String("application.secret")
+	if err != nil {
+		log.Panic("Could not get JWT secret token. (missing config)", err)
+	}
+
+	jwtSecret = []byte(secret)
+
 	go func() {
 		buffered := make([]M, 0, 1000)
 
@@ -83,7 +78,7 @@ func init() {
 				buffered = append(buffered, M{Content: m})
 			case m := <-ToChan:
 				buffered = append(buffered, m)
-			case <-time.After(time.Second):
+			case <-time.After(time.Millisecond * 100):
 				if len(buffered) > 0 {
 					mark := elapsed("Flushing")
 					log.Println("Flushing buffer with", len(buffered), "items.")
@@ -115,8 +110,10 @@ func onNewSocket(s *glue.Socket) {
 		Raw:      s,
 		Channels: make(map[string]*glue.Channel),
 		User:     nil,
-		Read:     make(chan readEvent),
+		Read:     make(chan socketEvent),
 	}
+
+	go client.readWorker()
 
 	// Set a function which is triggered as soon as the socket is closed.
 	s.OnClose(func() {
@@ -126,9 +123,15 @@ func onNewSocket(s *glue.Socket) {
 
 	// Set a function which is triggered during each received message.
 	s.OnRead(func(data string) {
+		var event socketEvent
 
-		// Echo the received data back to the client.
-		s.Close()
+		err := json.Unmarshal([]byte(data), &event)
+		if err != nil {
+			log.Println("Could not unmarshal read event from client: ", data)
+			log.Println("Error: ", err)
+		}
+
+		client.Read <- event
 	})
 
 	// Send a welcome string to the client.
@@ -138,6 +141,9 @@ func onNewSocket(s *glue.Socket) {
 
 // ServeHTTP exposes http server handler for glue.
 func ServeHTTP() func(w http.ResponseWriter, r *http.Request) {
+	// Prepare server to handle requests.
+	prepare()
+
 	return server.ServeHTTP
 }
 

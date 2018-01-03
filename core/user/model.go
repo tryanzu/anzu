@@ -1,9 +1,10 @@
 package user
 
 import (
+	"time"
+
 	"github.com/tidwall/buntdb"
 	"gopkg.in/mgo.v2/bson"
-	"time"
 )
 
 type User struct {
@@ -28,7 +29,7 @@ type User struct {
 	//Stats         UserStats              `bson:"stats,omitempty" json:"stats,omitempty"`
 	Version          string `bson:"version,omitempty" json:"version,omitempty"`
 	Validated        bool   `bson:"validated" json:"validated"`
-	VerificationCode string `bson:"ver_code,omitempty" json:"ver_code"`
+	VerificationCode string `bson:"ver_code,omitempty" json:"-"`
 
 	Warnings    int        `bson:"warnings" json:"-"`
 	ConfirmSent *time.Time `bson:"confirm_sent_at" json:"-"`
