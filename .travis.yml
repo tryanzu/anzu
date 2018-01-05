@@ -1,6 +1,9 @@
 language: go
 go: 
- - 1.9
+  - 1.9
+
+install:
+  - dep ensure
 
 git:
   submodules: false
