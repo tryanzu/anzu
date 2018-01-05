@@ -137,6 +137,7 @@ func (module *Module) Run() {
 	router.Static("/app", "./static/frontend/public/app")
 
 	router.GET("/", controller.HomePage)
+	router.GET("/publicar", chttp.TitleMiddleware("Nueva publicación"), controller.HomePage)
 	router.GET("/chat", chttp.TitleMiddleware("Chat oficial"), controller.HomePage)
 	router.GET("/reglamento", chttp.TitleMiddleware("Reglamento y código de conducta"), controller.HomePage)
 	router.GET("/about", chttp.TitleMiddleware("Acerca de"), controller.HomePage)

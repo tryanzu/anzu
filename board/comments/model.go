@@ -152,8 +152,11 @@ func (all Comments) UsersScope() common.Scope {
 func (all Comments) PostsScope() common.Scope {
 	posts := map[bson.ObjectId]bool{}
 	for _, c := range all {
-		if _, exists := posts[c.PostId]; !exists {
-			posts[c.PostId] = true
+		if c.ReplyTo != "post" {
+			continue
+		}
+		if _, exists := posts[c.ReplyTo]; !exists {
+			posts[c.ReplyTo] = true
 		}
 	}
 

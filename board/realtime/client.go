@@ -53,6 +53,11 @@ func (c *Client) readWorker() {
 			}
 
 			c.Raw.Write(event.encode())
+		case "auth:clean":
+			c.User = nil
+			c.Raw.Write(socketEvent{
+				Event: "auth:cleaned",
+			}.encode())
 		}
 	}
 }

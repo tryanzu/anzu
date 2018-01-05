@@ -1,12 +1,13 @@
 package notifications
 
 import (
+	"time"
+
 	"github.com/tryanzu/core/board/comments"
 	posts "github.com/tryanzu/core/board/posts"
 	"github.com/tryanzu/core/core/common"
 	"github.com/tryanzu/core/core/user"
 	"gopkg.in/mgo.v2/bson"
-	"time"
 )
 
 type Notification struct {
@@ -64,16 +65,19 @@ func (all Notifications) CommentsScope() common.Scope {
 func (all Notifications) Humanize(deps Deps) (list []map[string]interface{}, err error) {
 	ulist, err := user.FindList(deps, all.UsersScope())
 	if err != nil {
+		panic(err)
 		return
 	}
 
 	clist, err := comments.FindList(deps, all.CommentsScope())
 	if err != nil {
+		panic(err)
 		return
 	}
 
 	plist, err := posts.FindList(deps, clist.PostsScope())
 	if err != nil {
+		panic(err)
 		return
 	}
 
@@ -85,7 +89,7 @@ func (all Notifications) Humanize(deps Deps) (list []map[string]interface{}, err
 		switch n.Type {
 		case "comment":
 			comment := cmap[n.RelatedId.Hex()]
-			post := pmap[comment.PostId.Hex()]
+			post := pmap[comment.ReplyTo.Hex()]
 			user := umap[comment.UserId.Hex()]
 
 			list = append(list, map[string]interface{}{
@@ -96,7 +100,7 @@ func (all Notifications) Humanize(deps Deps) (list []map[string]interface{}, err
 			})
 		case "mention":
 			comment := cmap[n.RelatedId.Hex()]
-			post := pmap[comment.PostId.Hex()]
+			post := pmap[comment.ReplyTo.Hex()]
 			user := umap[comment.UserId.Hex()]
 
 			list = append(list, map[string]interface{}{
