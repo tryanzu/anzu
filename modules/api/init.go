@@ -112,7 +112,7 @@ func (module *Module) Run() {
 	router := gin.Default()
 	router.SetFuncMap(template.FuncMap{
 		"config": func(key string) string {
-			return module.Dependencies.Config.UString(key, fmt.Sprintf("[Fatal error] Cannot get config with key %s"))
+			return module.Dependencies.Config.UString(key, fmt.Sprintf("[Fatal error] Cannot get config with key %s", key))
 		},
 	})
 	router.LoadHTMLGlob(templates)
@@ -139,6 +139,7 @@ func (module *Module) Run() {
 	router.GET("/", controller.HomePage)
 	router.GET("/publicar", chttp.TitleMiddleware("Nueva publicación"), controller.HomePage)
 	router.GET("/chat", chttp.TitleMiddleware("Chat oficial"), controller.HomePage)
+	router.GET("/c/:slug", chttp.TitleMiddleware("Categoria"), controller.HomePage)
 	router.GET("/reglamento", chttp.TitleMiddleware("Reglamento y código de conducta"), controller.HomePage)
 	router.GET("/about", chttp.TitleMiddleware("Acerca de"), controller.HomePage)
 	router.GET("/terminos-y-condiciones", chttp.TitleMiddleware("Terminos y condiciones"), controller.HomePage)
@@ -152,7 +153,6 @@ func (module *Module) Run() {
 		// Authentication routes
 		v1.GET("/oauth/:provider", module.Oauth.GetAuthRedirect)
 		v1.GET("/oauth/:provider/callback", module.Oauth.CompleteAuth)
-
 		v1.POST("/subscribe", module.Users.UserSubscribe)
 
 		// Gamification routes
@@ -231,7 +231,7 @@ func (module *Module) Run() {
 	}
 
 	// Run over the 3000 port
-	var port string = "3000"
+	var port = "3000"
 	if runOver := os.Getenv("RUN_OVER"); len(runOver) > 0 {
 		port = runOver
 	}

@@ -4,6 +4,15 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"html"
+	"io/ioutil"
+	"net/http"
+	"net/url"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/mitchellh/goamz/s3"
 	"github.com/olebedev/config"
@@ -16,14 +25,6 @@ import (
 	"github.com/tryanzu/core/modules/gaming"
 	"github.com/xuyu/goredis"
 	"gopkg.in/mgo.v2/bson"
-	"html"
-	"io/ioutil"
-	"net/http"
-	"net/url"
-	"path/filepath"
-	"strconv"
-	"strings"
-	"time"
 )
 
 type PostAPI struct {
@@ -46,63 +47,41 @@ var avaliable_components = []string{
 }
 
 func (di PostAPI) FeedGet(c *gin.Context) {
+	var (
+		feed   []model.FeedPost
+		search = bson.M{}
+		offset = 0
+		limit  = 10
+	)
+
+	if n, err := strconv.Atoi(c.Query("offset")); err == nil && n > 0 {
+		offset = n
+	}
+
+	if n, err := strconv.Atoi(c.Query("limit")); err == nil && n < 40 {
+		limit = n
+	}
+
+	if id := c.Query("category"); bson.IsObjectIdHex(id) {
+		search["category"] = bson.ObjectIdHex(id)
+	}
+
+	if t, err := time.Parse(time.RFC3339Nano, c.Query("after")); len(c.Query("after")) > 0 && err == nil {
+		search["created_at"] = bson.M{"$lt": t}
+	}
+
+	if t, err := time.Parse(time.RFC3339Nano, c.Query("before")); len(c.Query("before")) > 0 && err == nil {
+		search["created_at"] = bson.M{"$gt": t}
+	}
 
 	// Get the database interface from the DI
 	database := deps.Container.Mgo()
 	redis := di.CacheService
 
-	var feed []model.FeedPost
-	offset := 0
-	limit := 10
-
-	o := c.Query("offset")
-	l := c.Query("limit")
-	f := c.Query("category")
 	relevant := c.Query("relevant")
 	fltr_categories := c.Query("categories")
-	before := c.Query("before")
-	after := c.Query("after")
 	from_author := c.Query("user_id")
 	user_id, signed_in := c.Get("user_id")
-
-	// Check if offset has been specified
-	if o != "" {
-		off, err := strconv.Atoi(o)
-
-		if err != nil || off < 0 {
-			c.JSON(401, gin.H{"message": "Invalid request, check params.", "status": "error", "code": 901})
-			return
-		}
-
-		offset = off
-	}
-
-	// Check if limit has been specified
-	if l != "" {
-
-		lim, err := strconv.Atoi(l)
-
-		if err != nil || lim <= 0 || lim > 40 {
-			c.JSON(401, gin.H{"message": "Invalid request, check params.", "status": "error", "code": 901})
-			return
-		}
-
-		limit = lim
-	}
-
-	search := make(bson.M)
-	if bson.IsObjectIdHex(f) {
-		search["category"] = bson.ObjectIdHex(f)
-	}
-
-	if t, err := time.Parse(time.RFC3339Nano, after); after != "" && err == nil {
-		search["created_at"] = bson.M{"$lt": t}
-	}
-
-	if t, err := time.Parse(time.RFC3339Nano, before); before != "" && err == nil {
-		search["created_at"] = bson.M{"$gt": t}
-	}
-
 	user_order := false
 	count := 0
 
