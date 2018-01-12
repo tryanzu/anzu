@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/tryanzu/core.svg?branch=release%2Falpha)](https://travis-ci.org/tryanzu/core)
+
 # Meet Anzu
 
 Anzu is our greatest endeavor to build the most rad, simple & reactive forum software out there since the Javascript revolution. 
