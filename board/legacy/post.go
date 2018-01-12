@@ -48,10 +48,12 @@ var avaliable_components = []string{
 
 func (di PostAPI) FeedGet(c *gin.Context) {
 	var (
-		feed   []model.FeedPost
-		search = bson.M{}
-		offset = 0
-		limit  = 10
+		feed     []model.FeedPost
+		search   = bson.M{}
+		offset   = 0
+		limit    = 10
+		database = deps.Container.Mgo()
+		redis    = di.CacheService
 	)
 
 	if n, err := strconv.Atoi(c.Query("offset")); err == nil && n > 0 {
@@ -66,6 +68,16 @@ func (di PostAPI) FeedGet(c *gin.Context) {
 		search["category"] = bson.ObjectIdHex(id)
 	}
 
+	if slug := c.Query("category"); len(slug) > 0 && bson.IsObjectIdHex(slug) == false {
+		var category struct {
+			Id bson.ObjectId `bson:"_id,omitempty"`
+		}
+
+		if err := database.C("categories").Find(bson.M{"slug": slug}).Select(bson.M{"_id": 1}).One(&category); err == nil {
+			search["category"] = category.Id
+		}
+	}
+
 	if t, err := time.Parse(time.RFC3339Nano, c.Query("after")); len(c.Query("after")) > 0 && err == nil {
 		search["created_at"] = bson.M{"$lt": t}
 	}
@@ -73,10 +85,6 @@ func (di PostAPI) FeedGet(c *gin.Context) {
 	if t, err := time.Parse(time.RFC3339Nano, c.Query("before")); len(c.Query("before")) > 0 && err == nil {
 		search["created_at"] = bson.M{"$gt": t}
 	}
-
-	// Get the database interface from the DI
-	database := deps.Container.Mgo()
-	redis := di.CacheService
 
 	relevant := c.Query("relevant")
 	fltr_categories := c.Query("categories")
