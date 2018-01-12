@@ -10,7 +10,6 @@ import (
 	"github.com/mitchellh/goamz/s3"
 	"github.com/olebedev/config"
 	"github.com/op/go-logging"
-	"github.com/robfig/cron"
 	"github.com/spf13/cobra"
 	_ "github.com/tryanzu/core/board/events"
 	"github.com/tryanzu/core/core/shell"
@@ -140,34 +139,6 @@ func main() {
 		},
 	}
 
-	var cmdJobs = &cobra.Command{
-		Use:   "jobs",
-		Short: "Starts Jobs worker",
-		Long: `Starts jobs worker daemon
-        so things can run like crons
-        `,
-		Run: func(cmd *cobra.Command, args []string) {
-
-			// Populate the DI with the instances
-			if err := g.Populate(); err != nil {
-				fmt.Fprintln(os.Stderr, err)
-				os.Exit(1)
-			}
-
-			// Start the jobs
-			c := cron.New()
-
-			// Reset the user temporal stuff each X
-			c.AddFunc("@midnight", gamingService.ResetTempStuff)
-			c.AddFunc("@every 8h", gamingService.ResetGeneralRanking)
-
-			// Start the jobs
-			c.Start()
-
-			select {}
-		},
-	}
-
 	var cmdSyncGamification = &cobra.Command{
 		Use:   "sync-gamification",
 		Short: "Sync gamification",
@@ -225,7 +196,6 @@ func main() {
 	rootCmd.AddCommand(cmdApi)
 	rootCmd.AddCommand(cmdSyncGamification)
 	rootCmd.AddCommand(cmdSyncRanking)
-	rootCmd.AddCommand(cmdJobs)
 	rootCmd.AddCommand(cmdRunRoutine)
 	rootCmd.AddCommand(shellCmd)
 	rootCmd.Execute()

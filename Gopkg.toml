@@ -70,9 +70,6 @@ ignored = ["github.com/tryanzu/core", "golang.org/x/crypto/ssh/terminal"]
 
 [[constraint]]
   name = "github.com/op/go-logging"
-  
-[[constraint]]
-  name = "github.com/robfig/cron"
 
 [[constraint]]
   name = "github.com/satori/go.uuid"
