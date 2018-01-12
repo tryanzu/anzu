@@ -20,10 +20,6 @@
 #  name = "github.com/x/y"
 #  version = "2.4.0"
 
-ignored = ["github.com/tryanzu/core", "golang.org/x/crypto/ssh/terminal"]
-
-[[constraint]]
-  name = "github.com/abiosoft/ishell"
 
 [[constraint]]
   name = "github.com/desertbit/glue"
@@ -31,61 +27,88 @@ ignored = ["github.com/tryanzu/core", "golang.org/x/crypto/ssh/terminal"]
 
 [[constraint]]
   name = "github.com/dgrijalva/jwt-go"
+  version = "3.1.0"
 
 [[constraint]]
+  branch = "master"
   name = "github.com/facebookgo/inject"
 
 [[constraint]]
+  branch = "master"
   name = "github.com/getsentry/raven-go"
 
 [[constraint]]
+  branch = "master"
   name = "github.com/gin-gonic/contrib"
 
 [[constraint]]
   name = "github.com/gin-gonic/gin"
+  version = "1.2.0"
 
 [[constraint]]
+  branch = "master"
   name = "github.com/goinggo/work"
 
 [[constraint]]
-  name = "github.com/gorilla/context"
+  branch = "master"
+  name = "github.com/henrylee2cn/goutil"
 
 [[constraint]]
+  branch = "master"
   name = "github.com/hjr265/postmark.go"
 
 [[constraint]]
   name = "github.com/kennygrant/sanitize"
+  version = "1.2.3"
 
 [[constraint]]
   name = "github.com/markbates/goth"
+  version = "1.44.1"
 
 [[constraint]]
   name = "github.com/mikespook/gorbac"
+  version = "2.0.0"
 
 [[constraint]]
+  branch = "master"
   name = "github.com/mitchellh/goamz"
 
 [[constraint]]
+  branch = "master"
   name = "github.com/olebedev/config"
 
 [[constraint]]
   name = "github.com/op/go-logging"
+  version = "1.0.0"
 
 [[constraint]]
   name = "github.com/satori/go.uuid"
+  version = "1.2.0"
 
 [[constraint]]
   name = "github.com/smartystreets/goconvey"
+  version = "1.6.3"
 
 [[constraint]]
   name = "github.com/spf13/cobra"
+  version = "0.0.1"
 
 [[constraint]]
   branch = "master"
   name = "github.com/tidwall/buntdb"
 
 [[constraint]]
+  branch = "master"
   name = "github.com/xuyu/goredis"
 
 [[constraint]]
+  branch = "master"
+  name = "golang.org/x/text"
+
+[[constraint]]
+  branch = "v2"
   name = "gopkg.in/mgo.v2"
+
+[[constraint]]
+  branch = "v2"
+  name = "gopkg.in/abiosoft/ishell.v2"

@@ -1,8 +1,6 @@
 package shell
 
-import (
-	"github.com/abiosoft/ishell"
-)
+import "gopkg.in/abiosoft/ishell.v2"
 
 func RunShell() {
 	shell := ishell.New()
@@ -20,5 +18,5 @@ func RunShell() {
 	})
 
 	// start shell
-	shell.Run()
+	shell.Start()
 }
