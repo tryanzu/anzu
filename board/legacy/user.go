@@ -3,6 +3,7 @@ package handle
 import (
 	"crypto/sha256"
 	"encoding/hex"
+
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -23,7 +24,6 @@ import (
 	"github.com/tryanzu/core/modules/user"
 	"github.com/xuyu/goredis"
 	//"gopkg.in/h2non/bimg.v0"
-	"gopkg.in/mgo.v2/bson"
 	"io/ioutil"
 	"net/http"
 	"path/filepath"
@@ -31,6 +31,8 @@ import (
 	"sort"
 	"strconv"
 	"time"
+
+	"gopkg.in/mgo.v2/bson"
 )
 
 type UserAPI struct {
@@ -255,48 +257,40 @@ func (di UserAPI) UserGetJwtToken(c *gin.Context) {
 		return
 	}
 
-	// Check whether the password match the user password or not
-	password_encrypted := []byte(password)
-	sha256 := sha256.New()
-	sha256.Write(password_encrypted)
-	md := sha256.Sum(nil)
-	hash := hex.EncodeToString(md)
+	// Development mode
+	env := di.ConfigService.UString("environment", "development")
+	if env != "development" {
 
-	if usr.Data().Password != hash {
-		c.JSON(400, gin.H{"status": "error", "message": "Credentials are not correct", "code": 400})
-		return
+		// Check whether the password match the user password or not
+		sha256 := sha256.New()
+		sha256.Write([]byte(password))
+		md := sha256.Sum(nil)
+		hash := hex.EncodeToString(md)
+
+		if usr.Data().Password != hash {
+			c.JSON(400, gin.H{"status": "error", "message": "Credentials are not correct", "code": 400})
+			return
+		}
 	}
 
-	trusted_user := di.Security.TrustUserIP(c.ClientIP(), usr)
-
-	if !trusted_user {
+	trusted := di.Security.TrustUserIP(c.ClientIP(), usr)
+	if !trusted {
 		c.JSON(403, gin.H{"status": "error", "message": "Not trusted."})
 		return
 	}
 
-	session_id := c.MustGet("session_id").(string)
-
-	var remember int = 72
-	rememberParam := qs.Get("remember")
-
-	if rememberParam != "" {
-		rememberTime, rememberErr := strconv.Atoi(rememberParam)
-
-		if rememberErr == nil {
-			remember = rememberTime
-		}
+	sessionID := c.MustGet("session_id").(string)
+	remember := 72
+	if n, err := strconv.Atoi(qs.Get("remember")); err == nil {
+		remember = n
 	}
 
 	// Generate JWT with the information about the user
 	token := di.generateUserToken(usr.Data().Id, usr.Data().Roles, remember)
 
-	// Save the activity
-	user_id, signed_in := c.Get("user_id")
-
+	// Authenticate requesting permissions
 	permission := c.Query("permission")
-
 	if permission != "" {
-
 		perms := di.Acl.User(usr.Data().Id)
 
 		if perms.Can(permission) == false {
@@ -304,16 +298,7 @@ func (di UserAPI) UserGetJwtToken(c *gin.Context) {
 			return
 		}
 	}
-
-	if signed_in {
-		events.In <- events.TrackActivity(model.Activity{
-			UserId:    bson.ObjectIdHex(user_id.(string)),
-			Event:     "user-view",
-			RelatedId: usr.Data().Id,
-		})
-	}
-
-	c.JSON(200, gin.H{"status": "okay", "token": token, "session_id": session_id, "expires": remember})
+	c.JSON(200, gin.H{"status": "okay", "token": token, "session_id": sessionID, "expires": remember})
 }
 
 func (di *UserAPI) UserUpdateProfileAvatar(c *gin.Context) {
