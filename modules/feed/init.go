@@ -19,7 +19,7 @@ type FeedModule struct {
 	Content      *content.Module              `inject:""`
 }
 
-func (module *FeedModule) SearchPosts(content string) ([]SearchPostModel, int) {
+func (feed *FeedModule) SearchPosts(content string) ([]SearchPostModel, int) {
 
 	posts := make([]SearchPostModel, 0)
 	database := deps.Container.Mgo()
@@ -42,14 +42,16 @@ func (module *FeedModule) SearchPosts(content string) ([]SearchPostModel, int) {
 		panic(err)
 	}
 
-	var users_id []bson.ObjectId
-	var users []user.UserSimple
+	var (
+		userIds []bson.ObjectId
+		users []user.UserSimple
+	)
 
 	for _, post := range posts {
-		users_id = append(users_id, post.UserId)
+		userIds = append(userIds, post.UserId)
 	}
 
-	err = database.C("users").Find(bson.M{"_id": bson.M{"$in": users_id}}).Select(user.UserSimpleFields).All(&users)
+	err = database.C("users").Find(bson.M{"_id": bson.M{"$in": userIds}}).Select(user.UserSimpleFields).All(&users)
 	if err != nil {
 		panic(err)
 	}
@@ -69,55 +71,37 @@ func (module *FeedModule) SearchPosts(content string) ([]SearchPostModel, int) {
 	return posts, count
 }
 
-// Get post model pointer with DI available
-func (self *FeedModule) Post(post interface{}) (*Post, error) {
+func (feed *FeedModule) Post(where interface{}) (post *Post, err error) {
+	switch where.(type) {
+	case bson.ObjectId, bson.M:
+		var criteria = bson.M{"deleted_at": bson.M{"$exists": false}}
 
-	switch post.(type) {
-	case bson.ObjectId:
-
-		var this *Post
-		database := deps.Container.Mgo()
-
-		// Use user module reference to get the user and then create the user gaming instance
-		err := database.C("posts").FindId(post.(bson.ObjectId)).One(&this)
-
-		if err != nil {
-			return nil, exceptions.NotFound{"Invalid post id. Not found."}
+		switch where.(type) {
+		case bson.ObjectId:
+			criteria["_id"] = where.(bson.ObjectId)
+		case bson.M:
+			for k, v := range where.(bson.M) {
+				criteria[k] = v
+			}
 		}
 
-		this.SetDI(self)
-
-		return this, nil
-
-	case bson.M:
-
-		var this *Post
-		database := deps.Container.Mgo()
-
-		// Use user module reference to get the user and then create the user gaming instance
-		err := database.C("posts").Find(post.(bson.M)).One(&this)
-
+		// Use user feed reference to get the user and then create the user gaming instance
+		err = deps.Container.Mgo().C("posts").Find(criteria).One(post)
 		if err != nil {
-			return nil, exceptions.NotFound{"Invalid post id. Not found."}
+			err = exceptions.NotFound{Msg: "Invalid post id. Not found."}
+			return
 		}
-
-		this.SetDI(self)
-
-		return this, nil
-
 	case *Post:
-
-		this := post.(*Post)
-		this.SetDI(self)
-
-		return this, nil
-
+		post = where.(*Post)
 	default:
 		panic("Unkown argument")
 	}
+
+	post.SetDI(feed)
+	return
 }
 
-func (module *FeedModule) LightPost(post interface{}) (*LightPost, error) {
+func (feed *FeedModule) LightPost(post interface{}) (*LightPost, error) {
 
 	switch post.(type) {
 	case bson.ObjectId:
@@ -133,7 +117,7 @@ func (module *FeedModule) LightPost(post interface{}) (*LightPost, error) {
 			return nil, exceptions.NotFound{"Invalid post id. Not found."}
 		}
 
-		post_object := &LightPost{data: scope, di: module}
+		post_object := &LightPost{data: scope, di: feed}
 
 		return post_object, nil
 
@@ -142,7 +126,7 @@ func (module *FeedModule) LightPost(post interface{}) (*LightPost, error) {
 	}
 }
 
-func (module *FeedModule) LightPosts(posts interface{}) ([]LightPostModel, error) {
+func (feed *FeedModule) LightPosts(posts interface{}) ([]LightPostModel, error) {
 
 	switch posts.(type) {
 	case []bson.ObjectId:
@@ -181,7 +165,7 @@ func (module *FeedModule) LightPosts(posts interface{}) ([]LightPostModel, error
 	}
 }
 
-func (f *FeedModule) GetComment(id bson.ObjectId) (*Comment, error) {
+func (feed *FeedModule) GetComment(id bson.ObjectId) (*Comment, error) {
 
 	var c *Comment
 
@@ -192,7 +176,7 @@ func (f *FeedModule) GetComment(id bson.ObjectId) (*Comment, error) {
 		return nil, err
 	}
 
-	post, err := f.Post(c.PostId)
+	post, err := feed.Post(c.PostId)
 
 	if err != nil {
 		return nil, err
@@ -203,7 +187,7 @@ func (f *FeedModule) GetComment(id bson.ObjectId) (*Comment, error) {
 	return c, nil
 }
 
-func (module *FeedModule) FulfillBestAnswer(list []LightPostModel) []LightPostModel {
+func (feed *FeedModule) FulfillBestAnswer(list []LightPostModel) []LightPostModel {
 
 	var ids []bson.ObjectId
 	var comments []PostCommentModel
@@ -254,7 +238,7 @@ func (module *FeedModule) FulfillBestAnswer(list []LightPostModel) []LightPostMo
 	return list
 }
 
-func (module *FeedModule) TrueCommentCount(id bson.ObjectId) int {
+func (feed *FeedModule) TrueCommentCount(id bson.ObjectId) int {
 	var count int
 
 	database := deps.Container.Mgo()
@@ -265,15 +249,4 @@ func (module *FeedModule) TrueCommentCount(id bson.ObjectId) int {
 	}
 
 	return count
-}
-
-func (module *FeedModule) Posts(limit, offset int) List {
-
-	list := List{
-		module: module,
-		limit:  limit,
-		offset: offset,
-	}
-
-	return list
 }
