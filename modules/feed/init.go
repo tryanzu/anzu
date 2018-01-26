@@ -44,7 +44,7 @@ func (feed *FeedModule) SearchPosts(content string) ([]SearchPostModel, int) {
 
 	var (
 		userIds []bson.ObjectId
-		users []user.UserSimple
+		users   []user.UserSimple
 	)
 
 	for _, post := range posts {
@@ -86,7 +86,7 @@ func (feed *FeedModule) Post(where interface{}) (post *Post, err error) {
 		}
 
 		// Use user feed reference to get the user and then create the user gaming instance
-		err = deps.Container.Mgo().C("posts").Find(criteria).One(post)
+		err = deps.Container.Mgo().C("posts").Find(criteria).One(&post)
 		if err != nil {
 			err = exceptions.NotFound{Msg: "Invalid post id. Not found."}
 			return

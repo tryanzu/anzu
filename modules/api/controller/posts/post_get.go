@@ -35,7 +35,7 @@ func (this API) Get(c *gin.Context) {
 	}
 
 	if err != nil {
-		c.JSON(404, gin.H{"message": "Couldnt found post with that slug.", "status": "error"})
+		c.JSON(404, gin.H{"message": "Couldnt found post.", "status": "error"})
 		return
 	}
 
