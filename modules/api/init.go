@@ -224,7 +224,7 @@ func (module *Module) Run() {
 			authorized.POST("/badges/buy/:id", module.Gaming.BuyBadge)
 
 			// Votes routes
-			authorized.POST("/vote/comment/:id", module.VotesFactory.Comment)
+			authorized.POST("/vote/comment/:id", chttp.UserMiddleware(), module.VotesFactory.Comment)
 			authorized.POST("/vote/component/:id", module.Votes.VoteComponent)
 			authorized.POST("/vote/post/:id", module.Votes.VotePost)
 		}

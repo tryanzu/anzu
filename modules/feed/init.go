@@ -165,26 +165,19 @@ func (feed *FeedModule) LightPosts(posts interface{}) ([]LightPostModel, error) 
 	}
 }
 
-func (feed *FeedModule) GetComment(id bson.ObjectId) (*Comment, error) {
+func (feed *FeedModule) GetComment(id bson.ObjectId) (comment *Comment, err error) {
+	err = deps.Container.Mgo().C("comments").FindId(id).One(&comment)
+	if err != nil {
+		return
+	}
 
-	var c *Comment
-
-	database := deps.Container.Mgo()
-	err := database.C("comments").FindId(id).One(&c)
-
+	post, err := feed.Post(comment.PostId)
 	if err != nil {
 		return nil, err
 	}
 
-	post, err := feed.Post(c.PostId)
-
-	if err != nil {
-		return nil, err
-	}
-
-	c.SetDI(post)
-
-	return c, nil
+	comment.SetDI(post)
+	return
 }
 
 func (feed *FeedModule) FulfillBestAnswer(list []LightPostModel) []LightPostModel {

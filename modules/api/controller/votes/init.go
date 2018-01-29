@@ -3,6 +3,7 @@ package votes
 import (
 	"github.com/mitchellh/goamz/s3"
 	"github.com/olebedev/config"
+	"github.com/tryanzu/core/board/votes"
 	"github.com/tryanzu/core/modules/acl"
 	"github.com/tryanzu/core/modules/exceptions"
 	"github.com/tryanzu/core/modules/feed"
@@ -24,4 +25,12 @@ type API struct {
 
 type CommentForm struct {
 	Direction string `json:"direction" binding:"required"`
+}
+
+func (c CommentForm) VoteType() votes.VoteType {
+	if c.Direction == "up" {
+		return 1
+	}
+
+	return -1
 }

@@ -2,58 +2,90 @@ package votes
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/tryanzu/core/board/legacy/model"
+	"github.com/tryanzu/core/board/comments"
+	"github.com/tryanzu/core/board/votes"
 	"github.com/tryanzu/core/core/events"
+	"github.com/tryanzu/core/core/user"
 	"github.com/tryanzu/core/deps"
-	"github.com/tryanzu/core/modules/feed"
-	"github.com/tryanzu/core/modules/user"
 	"gopkg.in/mgo.v2/bson"
 
-	"strconv"
-	"time"
+	"net/http"
 )
 
-func (this API) Comment(c *gin.Context) {
-	database := deps.Container.Mgo()
-	id := c.Params.ByName("id")
+// Comment vote delivery.
+func (api API) Comment(c *gin.Context) {
+	var (
+		id      bson.ObjectId
+		form    CommentForm
+		comment comments.Comment
+		err     error
+	)
 
-	if bson.IsObjectIdHex(id) == false {
-		c.JSON(400, gin.H{"message": "Malformed request, invalid id.", "status": "error"})
+	usr := c.MustGet("user").(user.User)
+	if usr.Gaming.Tribute < 1 {
+		c.JSON(http.StatusPreconditionFailed, gin.H{"message": "Not enough user vote points.", "status": "error"})
 		return
 	}
 
-	user_str := c.MustGet("user_id")
-	user_id := bson.ObjectIdHex(user_str.(string))
+	// Comment id validation.
+	if id = bson.ObjectIdHex(c.Params.ByName("id")); !id.Valid() {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Malformed request, invalid id.", "status": "error"})
+		return
+	}
 
-	var vote CommentForm
+	// Bind form data.
+	if err = c.Bind(&form); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "reason": "Invalid request."})
+		return
+	}
 
-	if c.Bind(&vote) == nil {
-		id := bson.ObjectIdHex(id)
+	if comment, err = comments.FindId(deps.Container, id); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"status": "error", "reason": "Invalid id."})
+		return
+	}
+
+	vote, err := votes.UpsertVote(deps.Container, comment, usr.Id, form.VoteType())
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": err.Error()})
+		return
+	}
+
+	// Events pool signal
+	events.In <- events.VoteComment(vote)
+
+	if vote.Deleted != nil {
+		c.JSON(http.StatusOK, gin.H{"action": "delete"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"action": "create"})
+
+	/*
 		comment, err := this.Feed.GetComment(id)
-
 		if err != nil {
-			c.JSON(400, gin.H{"status": "error", "message": err.Error()})
+			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": err.Error()})
 			return
 		}
 
 		post := comment.GetPost()
 
 		// Get the author of the vote
-		usr, err := this.User.Get(user_id)
-
+		usr, err := this.User.Get(userID)
 		if err != nil {
-			c.JSON(400, gin.H{"status": "error", "message": err.Error()})
+			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": err.Error()})
 			return
 		}
 
-		usr_model := usr.Data()
+		usrModel := usr.Data()
 
-		var alreadyVoted model.Vote
-		var voteValue int
+		var (
+			alreadyVoted model.Vote
+			voteValue int
+		)
 
 		err = database.C("votes").Find(bson.M{
 			"type":        "comment",
-			"user_id":     user_id,
+			"user_id":     userID,
 			"related_id":  post.Id,
 			"nested_type": strconv.Itoa(comment.Position),
 		}).One(&alreadyVoted)
@@ -89,7 +121,6 @@ func (this API) Comment(c *gin.Context) {
 			// Return the gamification points
 			if alreadyVoted.Value == 1 {
 				go func(usr *user.One, comment_owner bson.ObjectId) {
-
 					this.Gaming.Get(usr).Tribute(1)
 
 					author := this.Gaming.Get(comment_owner)
@@ -134,14 +165,14 @@ func (this API) Comment(c *gin.Context) {
 		}
 
 		// Check if has enough tribute or shit to give
-		if (vote.Direction == "up" && usr_model.Gaming.Tribute < 1) || (vote.Direction == "down" && usr_model.Gaming.Shit < 1) {
+		if (form.Direction == "up" && usrModel.Gaming.Tribute < 1) || (form.Direction == "down" && usrModel.Gaming.Shit < 1) {
 			c.JSON(400, gin.H{"message": "Dont have enough gaming points to do this.", "status": "error"})
 			return
 		}
 
 		var mutator string
 
-		if vote.Direction == "up" {
+		if form.Direction == "up" {
 			voteValue = 1
 			mutator = "votes.up"
 
@@ -152,7 +183,7 @@ func (this API) Comment(c *gin.Context) {
 			})
 		}
 
-		if vote.Direction == "down" {
+		if form.Direction == "down" {
 			voteValue = -1
 			mutator = "votes.down"
 			events.In <- events.RawEmit("post", post.Id.Hex(), map[string]interface{}{
@@ -169,7 +200,7 @@ func (this API) Comment(c *gin.Context) {
 		}
 
 		vote := &model.Vote{
-			UserId:     user_id,
+			UserId:     userID,
 			Type:       "comment",
 			NestedType: strconv.Itoa(comment.Position),
 			RelatedId:  post.Id,
@@ -180,10 +211,8 @@ func (this API) Comment(c *gin.Context) {
 		err = database.C("votes").Insert(vote)
 
 		// Remove the spend of tribute or shit when giving the vote to the comment (only if comment's user is not the same as the vote's user)
-		if comment.UserId != user_id {
-
+		if comment.UserId != userID {
 			if voteValue == -1 {
-
 				go func(usr *user.One, comment *feed.Comment) {
 
 					this.Gaming.Get(usr).Shit(-1)
@@ -214,9 +243,5 @@ func (this API) Comment(c *gin.Context) {
 			}
 		}
 
-		c.JSON(200, gin.H{"status": "okay"})
-		return
-	}
-
-	c.JSON(401, gin.H{"error": "Couldnt vote, missing information...", "status": 608})
+		c.JSON(200, gin.H{"status": "okay"})*/
 }

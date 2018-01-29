@@ -178,6 +178,7 @@ func (di *MiddlewareAPI) Authorization() gin.HandlerFunc {
 				// Set the token for further usage
 				c.Set("token", jtw_token)
 				c.Set("user_id", claims["user_id"].(string))
+				c.Set("userID", bson.ObjectIdHex(claims["user_id"].(string)))
 				c.Set("scope", scope)
 			}
 		}

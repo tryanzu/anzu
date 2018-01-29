@@ -118,9 +118,9 @@ type UserStats struct {
 
 type UserGaming struct {
 	Swords  int         `bson:"swords" json:"swords"`
-	Tribute int         `bson:"tribute,omitempty" json:"tribute,omitempty"`
-	Shit    int         `bson:"shit,omitempty" json:"shit,omitempty"`
-	Coins   int         `bson:"coins,omitempty" json:"coins,omitempty"`
+	Tribute int         `bson:"tribute,omitempty" json:"tribute"`
+	Shit    int         `bson:"shit,omitempty" json:"shit"`
+	Coins   int         `bson:"coins,omitempty" json:"coins"`
 	Level   int         `bson:"level" json:"level"`
 	Badges  []UserBadge `bson:"badges,omitempty" json:"badges,omitempty"`
 }

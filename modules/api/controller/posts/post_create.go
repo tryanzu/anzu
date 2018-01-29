@@ -192,19 +192,18 @@ func (this API) Create(c *gin.Context) {
 				}
 
 				err = database.C("posts").Insert(publish)
-
 				if err != nil {
 					panic(err)
 				}
+
+				// Notify events pool.
+				events.In <- events.PostNew(publish.Id)
 
 				for _, asset := range assets {
 
 					// Download the asset on other routine in order to non block the API request
 					go this.savePostImages(asset, publish.Id)
 				}
-
-				// Notify events pool.
-				events.In <- events.PostNew(publish.Id)
 
 				// Finished creating the post
 				c.JSON(200, gin.H{"status": "okay", "code": 200, "post": gin.H{"id": post_id, "slug": slug}})

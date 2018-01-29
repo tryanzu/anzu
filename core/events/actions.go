@@ -3,6 +3,7 @@ package events
 import (
 	"github.com/tryanzu/core/board/legacy/model"
 	notify "github.com/tryanzu/core/board/notifications"
+	"github.com/tryanzu/core/board/votes"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -44,20 +45,11 @@ func UpdateComment(postId, id bson.ObjectId) Event {
 	}
 }
 
-func UpvoteCommentRemove(id bson.ObjectId) Event {
+func VoteComment(vote votes.Vote) Event {
 	return Event{
-		Name: COMMENT_UPVOTE_REMOVE,
+		Name: COMMENT_VOTE,
 		Params: map[string]interface{}{
-			"id": id,
-		},
-	}
-}
-
-func UpvoteComment(id bson.ObjectId) Event {
-	return Event{
-		Name: COMMENT_UPVOTE,
-		Params: map[string]interface{}{
-			"id": id,
+			"vote": vote,
 		},
 	}
 }

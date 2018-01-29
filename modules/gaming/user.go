@@ -1,33 +1,72 @@
 package gaming
 
 import (
+	"time"
+
 	notify "github.com/tryanzu/core/board/notifications"
 	"github.com/tryanzu/core/deps"
 	"github.com/tryanzu/core/modules/user"
 	"gopkg.in/mgo.v2/bson"
-	"time"
 )
 
-// Compute rewards for user making one pos.
+// UserHasVoted rewards.
+func UserHasVoted(d Deps, id bson.ObjectId) error {
+	return IncreaseUserTribute(d, id, -1)
+}
+
+// UserReceivedVote rewards.
+func UserReceivedVote(d Deps, id bson.ObjectId) error {
+	if err := IncreaseUserSwords(d, id, 1); err != nil {
+		return err
+	}
+
+	return IncreaseUserCoins(d, id, 1)
+}
+
+// UserRemovedVote rollback.
+func UserRemovedVote(d Deps, id bson.ObjectId) error {
+	return IncreaseUserTribute(d, id, 1)
+}
+
+// UserRevokedVote rewards.
+func UserRevokedVote(d Deps, id bson.ObjectId) error {
+	if err := IncreaseUserSwords(d, id, -1); err != nil {
+		return err
+	}
+
+	return IncreaseUserCoins(d, id, -1)
+}
+
+// UserHasPublished rewards.
 func UserHasPublished(d Deps, id bson.ObjectId) (err error) {
 	return IncreaseUserSwords(d, id, 1)
 }
 
-// Compute rewards for user making one comment.
+// UserHasCommented rewards.
 func UserHasCommented(d Deps, id bson.ObjectId) error {
 	return IncreaseUserSwords(d, id, 0)
 }
 
-// Increase swords of given user (id).
-func IncreaseUserSwords(d Deps, id bson.ObjectId, swords int) (err error) {
-	if swords > 0 {
-		users := d.Mgo().C("users")
+// IncreaseUserSwords for given id.
+func IncreaseUserSwords(d Deps, id bson.ObjectId, swords int) error {
+	return increaseUserAttr(d, id, "gaming.swords", swords)
+}
 
-		// Perform update using $inc operator.
-		err = users.Update(bson.M{"_id": id}, bson.M{"$inc": bson.M{"gaming.swords": swords}})
-		if err != nil {
-			return
-		}
+// IncreaseUserCoins for given id.
+func IncreaseUserCoins(d Deps, id bson.ObjectId, coins int) error {
+	return increaseUserAttr(d, id, "gaming.coins", coins)
+}
+
+// IncreaseUserTribute for given id.
+func IncreaseUserTribute(d Deps, id bson.ObjectId, tribute int) error {
+	return increaseUserAttr(d, id, "gaming.tribute", tribute)
+}
+
+func increaseUserAttr(d Deps, id bson.ObjectId, field string, n int) (err error) {
+	// Perform update using $inc operator.
+	err = d.Mgo().C("users").Update(bson.M{"_id": id}, bson.M{"$inc": bson.M{field: n}})
+	if err != nil {
+		return
 	}
 
 	err = syncLevelStats(d, id, false)

@@ -50,6 +50,14 @@ func (c Comment) RelatedID() bson.ObjectId {
 	return c.PostId
 }
 
+func (c Comment) VotableType() string {
+	return "comment"
+}
+
+func (c Comment) VotableID() bson.ObjectId {
+	return c.Id
+}
+
 type Replies struct {
 	Id    bson.ObjectId `bson:"_id,omitempty" json:"-"`
 	Count int           `bson:"count" json:"count"`
