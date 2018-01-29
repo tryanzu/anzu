@@ -58,6 +58,36 @@ func (c *Client) readWorker() {
 			c.Raw.Write(socketEvent{
 				Event: "auth:cleaned",
 			}.encode())
+
+		case "listen":
+			channel, exists := e.Params["chan"].(string)
+			if !exists {
+				log.Println("Could not join channel: missing id")
+				continue
+			}
+
+			c.Channels[channel] = c.Raw.Channel(channel)
+			c.Raw.Write(socketEvent{
+				Event: "listen:ready",
+				Params: map[string]interface{}{
+					"chan": channel,
+				},
+			}.encode())
+		case "unlisten":
+			channel, exists := e.Params["chan"].(string)
+			if !exists {
+				log.Println("Could not remove channel: missing id")
+				continue
+			}
+
+			delete(c.Channels, channel)
+
+			c.Raw.Write(socketEvent{
+				Event: "unlisten:ready",
+				Params: map[string]interface{}{
+					"chan": channel,
+				},
+			}.encode())
 		}
 	}
 }
@@ -69,10 +99,8 @@ func (c *Client) send(packed []M) {
 			continue
 		}
 
-		if _, exists := c.Channels[m.Channel]; exists == false {
-			c.Channels[m.Channel] = c.Raw.Channel(m.Channel)
+		if c, exists := c.Channels[m.Channel]; exists {
+			c.Write(m.Content)
 		}
-
-		c.Channels[m.Channel].Write(m.Content)
 	}
 }

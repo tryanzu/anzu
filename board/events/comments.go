@@ -1,6 +1,8 @@
 package events
 
 import (
+	"fmt"
+
 	"github.com/tryanzu/core/board/comments"
 	notify "github.com/tryanzu/core/board/notifications"
 	"github.com/tryanzu/core/board/posts"
@@ -106,6 +108,10 @@ func onPostComment(e pool.Event) error {
 		return err
 	}
 
+	if comment.ReplyType != "post" {
+		return nil
+	}
+
 	post, err := post.FindId(deps.Container, comment.RelatedID())
 	if err != nil {
 		return err
@@ -126,6 +132,13 @@ func onPostComment(e pool.Event) error {
 		"user_id": comment.UserId.Hex(),
 	}}
 
+	notify.Transmit <- notify.Socket{
+		Chan: fmt.Sprintf("post.%s", comment.ReplyTo.Hex()),
+		Params: map[string]interface{}{
+			"action":     "new-comment",
+			"comment_id": comment.Id.Hex(),
+		},
+	}
 	return gaming.UserHasCommented(deps.Container, comment.UserId)
 }
 

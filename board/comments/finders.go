@@ -36,7 +36,8 @@ func Post(id bson.ObjectId, limit, offset int) common.Query {
 			"reply_type": "post",
 			"reply_to":   id,
 			"deleted_at": bson.M{"$exists": false},
-		}).Limit(limit).Skip(offset).Sort("-votes.up", "votes.down", "-created_at")
+		}).Limit(limit).Skip(offset).Sort("-created_at")
+		// .Sort("-votes.up", "votes.down", "-created_at")
 	}
 }
 

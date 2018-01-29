@@ -93,6 +93,7 @@ func prepare() {
 	go func() {
 		for pack := range dispatcher {
 			mark := elapsed("Dispatching")
+			log.Printf("Messages: %+v\n", pack)
 			sockets.Range(func(k, v interface{}) bool {
 				c := v.(*Client)
 				c.send(pack)
