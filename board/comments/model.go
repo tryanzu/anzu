@@ -16,7 +16,7 @@ type Comment struct {
 	PostId    bson.ObjectId `bson:"post_id,omitempty" json:"post_id,omitempty"`
 	Votes     votes.Votes   `bson:"votes" json:"votes"`
 	User      interface{}   `bson:"-" json:"author,omitempty"`
-	Position  int           `bson:"position" json:"position"`
+	Position  int           `bson:"position" json:"-"`
 	Liked     int           `bson:"-" json:"liked,omitempty"`
 	Content   string        `bson:"content" json:"content"`
 	ReplyTo   bson.ObjectId `bson:"reply_to,omitempty" json:"reply_to,omitempty"`

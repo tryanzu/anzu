@@ -21,7 +21,7 @@ type User struct {
 	//Roles         []UserRole             `bson:"roles" json:"roles,omitempty"`
 	Permissions   []string               `bson:"permissions" json:"permissions,omitempty"`
 	Description   string                 `bson:"description" json:"description,omitempty"`
-	Image         string                 `bson:"image" json:"image,omitempty"`
+	Image         string                 `bson:"image" json:"image"`
 	Facebook      interface{}            `bson:"facebook,omitempty" json:"facebook,omitempty"`
 	Notifications interface{}            `bson:"notifications,omitempty" json:"notifications,omitempty"`
 	Profile       map[string]interface{} `bson:"profile,omitempty" json:"profile,omitempty"`

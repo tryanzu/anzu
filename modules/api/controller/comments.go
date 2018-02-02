@@ -16,20 +16,27 @@ import (
 // Comments paginated fetch.
 func Comments(c *gin.Context) {
 	var (
-		pid    string = c.Param("post_id")
-		limit  int    = 10
-		offset int    = 0
+		pid    = c.Param("post_id")
+		limit  = 10
+		offset = 0
+		sort   = c.Query("sort")
+		before *bson.ObjectId
 	)
 
 	if n, err := strconv.Atoi(c.Query("limit")); err == nil && n <= 50 {
 		limit = n
 	}
 
-	if n, err := strconv.Atoi(c.Query("offset")); err == nil && n > 0 {
+	if n, err := strconv.Atoi(c.Query("offset")); err == nil {
 		offset = n
 	}
 
-	list, err := comments.FetchBy(deps.Container, comments.Post(bson.ObjectIdHex(pid), limit, offset))
+	if bid := c.Query("before"); len(bid) > 0 && bson.IsObjectIdHex(bid) {
+		id := bson.ObjectIdHex(bid)
+		before = &id
+	}
+
+	list, err := comments.FetchBy(deps.Container, comments.Post(bson.ObjectIdHex(pid), limit, offset, sort == "reverse", before))
 	if err != nil {
 		c.AbortWithError(500, err)
 		return

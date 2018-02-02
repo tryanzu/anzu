@@ -108,38 +108,47 @@ func onPostComment(e pool.Event) error {
 		return err
 	}
 
-	if comment.ReplyType != "post" {
-		return nil
+	if comment.ReplyType == "comment" {
+
 	}
 
-	post, err := post.FindId(deps.Container, comment.RelatedID())
-	if err != nil {
-		return err
-	}
-
-	if post.UserId != comment.UserId {
-		notify.Database <- notify.Notification{
-			UserId:    post.UserId,
-			Type:      "comment",
-			RelatedId: comment.Id,
-			Users:     []bson.ObjectId{comment.UserId},
+	if comment.ReplyType == "post" {
+		post, err := post.FindId(deps.Container, comment.RelatedID())
+		if err != nil {
+			return err
 		}
+
+		if post.UserId != comment.UserId {
+			notify.Database <- notify.Notification{
+				UserId:    post.UserId,
+				Type:      "comment",
+				RelatedId: comment.Id,
+				Users:     []bson.ObjectId{comment.UserId},
+			}
+		}
+
+		notify.Transmit <- notify.Socket{
+			Chan:   "feed",
+			Action: "action",
+			Params: map[string]interface{}{
+				"fire":    "new-comment",
+				"id":      comment.ReplyTo.Hex(),
+				"user_id": comment.UserId.Hex(),
+			},
+		}
+
+		notify.Transmit <- notify.Socket{
+			Chan: fmt.Sprintf("post.%s", comment.ReplyTo.Hex()),
+			Params: map[string]interface{}{
+				"action":     "new-comment",
+				"comment_id": comment.Id.Hex(),
+			},
+		}
+
+		return gaming.UserHasCommented(deps.Container, comment.UserId)
 	}
 
-	notify.Transmit <- notify.Socket{"feed", "action", map[string]interface{}{
-		"fire":    "new-comment",
-		"id":      comment.ReplyTo.Hex(),
-		"user_id": comment.UserId.Hex(),
-	}}
-
-	notify.Transmit <- notify.Socket{
-		Chan: fmt.Sprintf("post.%s", comment.ReplyTo.Hex()),
-		Params: map[string]interface{}{
-			"action":     "new-comment",
-			"comment_id": comment.Id.Hex(),
-		},
-	}
-	return gaming.UserHasCommented(deps.Container, comment.UserId)
+	return nil
 }
 
 func onCommentUpdate(e pool.Event) error {
