@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/tryanzu/core.svg?branch=release%2Falpha)](https://travis-ci.org/tryanzu/core)
+[![Go Report Card](https://goreportcard.com/badge/github.com/tryanzu/core)](https://goreportcard.com/report/github.com/tryanzu/core)
 
 # Meet Anzu
 
