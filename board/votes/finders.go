@@ -1,6 +1,7 @@
 package votes
 
 import (
+	"github.com/tryanzu/core/core/common"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -11,5 +12,11 @@ func FindVotableByUser(deps Deps, votable Votable, userID bson.ObjectId) (vote V
 		"related_id": votable.VotableID(),
 		"user_id":    userID,
 	}).One(&vote)
+	return
+}
+
+// FindList of votes for given scopes.
+func FindList(deps Deps, scopes ...common.Scope) (list List, err error) {
+	err = deps.Mgo().C("votes").Find(common.ByScope(scopes...)).All(&list)
 	return
 }

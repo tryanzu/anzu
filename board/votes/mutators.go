@@ -54,5 +54,11 @@ func UpsertVote(deps Deps, item Votable, userID bson.ObjectId, kind VoteType) (v
 		return
 	}
 
+	err = coll(deps).UpdateId(vote.ID, bson.M{"$unset": bson.M{"deleted_at": 1}})
+	if err != nil {
+		panic(err)
+	}
+	vote.Deleted = nil
+
 	return
 }

@@ -41,3 +41,14 @@ type Votes struct {
 func coll(deps Deps) *mgo.Collection {
 	return deps.Mgo().C("votes")
 }
+
+// List aggregates a list of votes for certain event.
+type List []Vote
+
+func (ls List) ValuesMap() map[string]int {
+	m := make(map[string]int, len(ls))
+	for _, v := range ls {
+		m[v.RelatedID.Hex()] = v.Value
+	}
+	return m
+}

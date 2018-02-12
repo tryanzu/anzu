@@ -54,7 +54,18 @@ func Comments(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, list)
+	response := gin.H{"comments": list, "votes": make(map[string]interface{}, 0)}
+	if userID, exists := c.Get("userID"); exists {
+		votes, err := list.VotesOf(deps.Container, userID.(bson.ObjectId))
+		if err != nil {
+			c.AbortWithError(500, err)
+			return
+		}
+
+		response["votes"] = votes.ValuesMap()
+	}
+
+	c.JSON(200, response)
 }
 
 // NewComment pushes a new reply.

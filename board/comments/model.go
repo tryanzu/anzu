@@ -100,13 +100,13 @@ func (all Comments) WithReplies(deps Deps, max int) (Comments, error) {
 				list[n].Replies = r
 				break
 			}
-			list[n].Replies = make([]string, 0)
 		}
 	}
 
 	return list, nil
 }
 
+// WithUsers nested data loaded.
 func (all Comments) WithUsers(deps Deps) (Comments, error) {
 	list := make(Comments, len(all))
 	users, err := user.FindList(deps, all.UsersScope())
@@ -126,6 +126,18 @@ func (all Comments) WithUsers(deps Deps) (Comments, error) {
 	}
 
 	return list, nil
+}
+
+func (all Comments) NestedIDList() (list []bson.ObjectId) {
+	for _, c := range all {
+		list = append(list, c.Id)
+		if c.Replies != nil {
+			for _, r := range c.Replies.(Replies).List {
+				list = append(list, r.Id)
+			}
+		}
+	}
+	return
 }
 
 func (all Comments) IDList() []bson.ObjectId {
@@ -176,4 +188,16 @@ func (all Comments) PostsScope() common.Scope {
 	}
 
 	return common.WithinID(list)
+}
+
+// VotesOf userId in comments resultset.
+func (all Comments) VotesOf(deps Deps, userID bson.ObjectId) (list votes.List, err error) {
+	list, err = votes.FindList(deps, func(criteria bson.M) bson.M {
+		criteria["user_id"] = userID
+		criteria["type"] = "comment"
+		criteria["related_id"] = bson.M{"$in": all.NestedIDList()}
+		criteria["deleted_at"] = bson.M{"$exists": false}
+		return criteria
+	})
+	return
 }
