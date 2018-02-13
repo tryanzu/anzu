@@ -69,9 +69,15 @@ type RepliesList []Replies
 type Comments []Comment
 
 func (all Comments) Map() map[string]Comment {
-	m := make(map[string]Comment, len(all))
-	for _, item := range all {
-		m[item.Id.Hex()] = item
+	m := make(map[string]Comment, len(all.NestedIDList()))
+	for _, c := range all {
+		m[c.Id.Hex()] = c
+
+		if c.Replies != nil {
+			for _, r := range c.Replies.(Replies).List {
+				m[r.Id.Hex()] = r
+			}
+		}
 	}
 
 	return m

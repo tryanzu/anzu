@@ -54,7 +54,12 @@ func Comments(c *gin.Context) {
 		return
 	}
 
-	response := gin.H{"comments": list, "votes": make(map[string]interface{}, 0)}
+	empty := make(map[string]interface{}, 0)
+	tables := map[string]interface{}{
+		"votes":    empty,
+		"comments": list.Map(),
+	}
+
 	if userID, exists := c.Get("userID"); exists {
 		votes, err := list.VotesOf(deps.Container, userID.(bson.ObjectId))
 		if err != nil {
@@ -62,10 +67,10 @@ func Comments(c *gin.Context) {
 			return
 		}
 
-		response["votes"] = votes.ValuesMap()
+		tables["votes"] = votes.ValuesMap()
 	}
 
-	c.JSON(200, response)
+	c.JSON(200, gin.H{"status": "okay", "list": list.IDList(), "hashtables": tables})
 }
 
 // NewComment pushes a new reply.
