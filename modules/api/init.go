@@ -234,6 +234,6 @@ func (module *Module) Run(bindTo string) {
 	h.HandleFunc("/glue/", realtime.ServeHTTP())
 	h.HandleFunc("/", router.ServeHTTP)
 
-	err = http.ListenAndServe(":"+bindTo, h)
+	err = http.ListenAndServe(bindTo, h)
 	log.Fatal(err)
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/facebookgo/inject"
 	"github.com/getsentry/raven-go"
 	"github.com/markbates/goth"
@@ -132,7 +133,7 @@ func main() {
         in the specified env port
         `,
 		Run: func(cmd *cobra.Command, args []string) {
-			port := "3200"
+			port := ":3200"
 			if len(args) == 1 {
 				port = args[0]
 			}
