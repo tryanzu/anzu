@@ -48,15 +48,17 @@ func main() {
 	}
 
 	// Resources for the API
-	var api api.Module
-	var cliModule cli.Module
-	var securityModule security.Module
-	var notificationsModule notifications.NotificationsModule
-	var feedModule feed.FeedModule
-	var exceptions exceptions.ExceptionsModule
-	var log *logging.Logger = logging.MustGetLogger("blacker")
-	var format logging.Formatter = logging.MustStringFormatter(
-		`%{color}%{time:15:04:05.000} %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}`,
+	var (
+		api                 api.Module
+		cliModule           cli.Module
+		securityModule      security.Module
+		notificationsModule notifications.NotificationsModule
+		feedModule          feed.FeedModule
+		exceptions          exceptions.ExceptionsModule
+		log                 = logging.MustGetLogger("blacker")
+		format              = logging.MustStringFormatter(
+			`%{color}%{time:15:04:05.000} %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}`,
+		)
 	)
 
 	backend := logging.NewLogBackend(os.Stderr, "", 0)
@@ -130,12 +132,16 @@ func main() {
         in the specified env port
         `,
 		Run: func(cmd *cobra.Command, args []string) {
+			port := "3200"
+			if len(args) == 1 {
+				port = args[0]
+			}
 
 			// Populate dependencies using the already instantiated DI
 			api.Populate(g)
 
 			// Run API module
-			api.Run()
+			api.Run(port)
 		},
 	}
 

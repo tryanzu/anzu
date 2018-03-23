@@ -75,7 +75,7 @@ func (module *Module) Populate(g inject.Graph) {
 	}
 }
 
-func (module *Module) Run() {
+func (module *Module) Run(bindTo string) {
 	var debug bool = true
 	environment, err := module.Dependencies.Config.String("environment")
 	if err != nil {
@@ -230,16 +230,10 @@ func (module *Module) Run() {
 		}
 	}
 
-	// Run over the 3000 port
-	var port = "3000"
-	if runOver := os.Getenv("RUN_OVER"); len(runOver) > 0 {
-		port = runOver
-	}
-
 	h := http.NewServeMux()
 	h.HandleFunc("/glue/", realtime.ServeHTTP())
 	h.HandleFunc("/", router.ServeHTTP)
 
-	err = http.ListenAndServe(":"+port, h)
+	err = http.ListenAndServe(":"+bindTo, h)
 	log.Fatal(err)
 }
