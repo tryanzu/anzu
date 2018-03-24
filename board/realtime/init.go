@@ -8,6 +8,7 @@ import (
 
 	"github.com/desertbit/glue"
 	"github.com/henrylee2cn/goutil"
+	"github.com/tryanzu/core/core/config"
 	"github.com/tryanzu/core/deps"
 )
 
@@ -122,7 +123,7 @@ func onNewSocket(s *glue.Socket) {
 		log.Printf("socket %s closed with remote address: %s", s.ID(), s.RemoteAddr())
 	})
 
-	// Set a function which is triggered during each received message.
+	// fn triggered during each received message.
 	s.OnRead(func(data string) {
 		var event socketEvent
 
@@ -135,8 +136,20 @@ func onNewSocket(s *glue.Socket) {
 		client.Read <- event
 	})
 
+	runtime := config.C.Copy()
+	conf, err := json.Marshal(map[string]interface{}{
+		"event":  "config",
+		"params": runtime["site"],
+	})
+
+	if err != nil {
+		panic(err)
+	}
+
 	// Send a welcome string to the client.
 	s.Write(`{"event": "connected"}`)
+	s.Write(string(conf))
+
 	sockets.Store(s.ID(), client)
 }
 
@@ -144,6 +157,23 @@ func onNewSocket(s *glue.Socket) {
 func ServeHTTP() func(w http.ResponseWriter, r *http.Request) {
 	// Prepare server to handle requests.
 	prepare()
+
+	go func() {
+		for {
+			<-config.C.Reload
+			runtime := config.C.Copy()
+			conf, err := json.Marshal(map[string]interface{}{
+				"event":  "config",
+				"params": runtime["site"],
+			})
+
+			if err != nil {
+				panic(err)
+			}
+
+			Broadcast <- string(conf)
+		}
+	}()
 
 	return server.ServeHTTP
 }

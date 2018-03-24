@@ -14,7 +14,6 @@ import (
 	"github.com/spf13/cobra"
 	_ "github.com/tryanzu/core/board/events"
 	"github.com/tryanzu/core/core/shell"
-	"github.com/tryanzu/core/deps"
 	"github.com/tryanzu/core/modules/acl"
 	"github.com/tryanzu/core/modules/api"
 	"github.com/tryanzu/core/modules/assets"
@@ -28,16 +27,9 @@ import (
 	"github.com/xuyu/goredis"
 
 	"os"
-	"runtime"
 )
 
 func main() {
-
-	// Start by using the power of the machine cores
-	runtime.GOMAXPROCS(runtime.NumCPU())
-
-	// Run dependencies bootstraping sequences.
-	deps.Bootstrap()
 
 	// Graph main object (used to inject dependencies)
 	var g inject.Graph

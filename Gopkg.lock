@@ -56,6 +56,12 @@
   revision = "3f9db97f856818214da2e1057f8ad84803971cff"
 
 [[projects]]
+  name = "github.com/fsnotify/fsnotify"
+  packages = ["."]
+  revision = "c2828203cd70a50dcccfb2761f8b1f8ceef9a8e9"
+  version = "v1.4.7"
+
+[[projects]]
   name = "github.com/garyburd/redigo"
   packages = ["internal","redis"]
   revision = "d1ed5c67e5794de818ea85e6b522fda02623a484"
@@ -138,6 +144,18 @@
   name = "github.com/hjr265/postmark.go"
   packages = ["postmark"]
   revision = "5546b2897115a65a0b2a9f2763f8c4253fc6423a"
+
+[[projects]]
+  name = "github.com/hjson/hjson-go"
+  packages = ["."]
+  revision = "d8adb1bb23adb87a63c2d1f3c0237a0a313b69a6"
+  version = "v3.0.0"
+
+[[projects]]
+  name = "github.com/imdario/mergo"
+  packages = ["."]
+  revision = "163f41321a19dd09362d4c63cc2489db2015f1f4"
+  version = "0.3.2"
 
 [[projects]]
   name = "github.com/inconshreveable/mousetrap"
@@ -352,6 +370,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "e1e258e9c6eef35ac398a57a33d1acc62c5b55b9d8ad99cb8fb4b8b86da98107"
+  inputs-digest = "7724d1a0bde6eeaef872b3969e4f4a53c0ae083a2518bde99fe328c998ece0f8"
   solver-name = "gps-cdcl"
   solver-version = 1

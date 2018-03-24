@@ -112,3 +112,15 @@
 [[constraint]]
   branch = "v2"
   name = "gopkg.in/abiosoft/ishell.v2"
+
+[[constraint]]
+  name = "github.com/fsnotify/fsnotify"
+  version = "1.4.7"
+
+[[constraint]]
+  name = "github.com/hjson/hjson-go"
+  version = "3.0.0"
+
+[[constraint]]
+  name = "github.com/imdario/mergo"
+  version = "0.3.2"
