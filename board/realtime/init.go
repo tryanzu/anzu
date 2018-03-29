@@ -59,9 +59,17 @@ func prepare() {
 	dispatcher = make(chan []M, BufferSize)
 
 	// Bootstrap glue server instance
-	server = glue.NewServer(glue.Options{
+	options := glue.Options{
 		HTTPSocketType: glue.HTTPSocketTypeNone,
-	})
+	}
+
+	if env, err := deps.Container.Config().String("environment"); err == nil && env == "development" {
+		options.CheckOrigin = func(r *http.Request) bool {
+			return true
+		}
+	}
+
+	server = glue.NewServer(options)
 
 	secret, err := deps.Container.Config().String("application.secret")
 	if err != nil {
