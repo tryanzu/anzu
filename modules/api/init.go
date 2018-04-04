@@ -193,6 +193,7 @@ func (module *Module) Run(bindTo string) {
 		authorized := v1.Group("")
 		authorized.Use(module.Middlewares.NeedAuthorization())
 		{
+			authorized.PUT("/config", chttp.UserMiddleware(), controller.UpdateConfig)
 			authorized.GET("/notifications", chttp.UserMiddleware(), controller.Notifications)
 			authorized.POST("/build", module.PostsFactory.Create)
 

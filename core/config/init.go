@@ -4,9 +4,9 @@ import (
 	"io/ioutil"
 	"log"
 
+	"github.com/divideandconquer/go-merge/merge"
 	"github.com/fsnotify/fsnotify"
 	"github.com/hjson/hjson-go"
-	"github.com/imdario/mergo"
 )
 
 var (
@@ -52,16 +52,9 @@ func (c *Config) Merge(file string) {
 	}
 
 	// Clone the current runtime config map.
-	merged := make(map[string]interface{}, len(config))
-	for k, v := range config {
-		merged[k] = v
-	}
-
-	if err := mergo.Merge(&merged, *c.current, mergo.WithOverride); err != nil {
-		panic(err)
-	}
-
-	c.current = &merged
+	merged := merge.Merge(*c.current, config)
+	cst := merged.(map[string]interface{})
+	c.current = &cst
 
 	// Reload signal if anyone is listening...
 	go func() {

@@ -124,3 +124,7 @@
 [[constraint]]
   name = "github.com/imdario/mergo"
   version = "0.3.2"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/divideandconquer/go-merge"

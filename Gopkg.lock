@@ -39,6 +39,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/divideandconquer/go-merge"
+  packages = ["merge"]
+  revision = "bc6b3a394b4e042e2dcfb62cb7bcd043a59adbea"
+
+[[projects]]
+  branch = "master"
   name = "github.com/facebookgo/inject"
   packages = ["."]
   revision = "cc1aa653e50f6a9893bcaef89e673e5b24e1e97b"
@@ -370,6 +376,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "7724d1a0bde6eeaef872b3969e4f4a53c0ae083a2518bde99fe328c998ece0f8"
+  inputs-digest = "a70c35d188de612aedfdb851d72ed5f0fa65605f02e32e5ee5f1afc9a491ce47"
   solver-name = "gps-cdcl"
   solver-version = 1
