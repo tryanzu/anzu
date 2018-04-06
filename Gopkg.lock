@@ -27,7 +27,16 @@
 
 [[projects]]
   name = "github.com/desertbit/glue"
-  packages = [".","backend","backend/closer","backend/global","backend/sockets/ajaxsocket","backend/sockets/websocket","log","utils"]
+  packages = [
+    ".",
+    "backend",
+    "backend/closer",
+    "backend/global",
+    "backend/sockets/ajaxsocket",
+    "backend/sockets/websocket",
+    "log",
+    "utils"
+  ]
   revision = "a9786adb7e2ca6cdecbcf2bbfadd8a8bdbd9c5a7"
   version = "1.9.1"
 
@@ -69,7 +78,10 @@
 
 [[projects]]
   name = "github.com/garyburd/redigo"
-  packages = ["internal","redis"]
+  packages = [
+    "internal",
+    "redis"
+  ]
   revision = "d1ed5c67e5794de818ea85e6b522fda02623a484"
   version = "v1.4.0"
 
@@ -93,7 +105,11 @@
 
 [[projects]]
   name = "github.com/gin-gonic/gin"
-  packages = [".","binding","render"]
+  packages = [
+    ".",
+    "binding",
+    "render"
+  ]
   revision = "d459835d2b077e44f7c9b453505ee29881d5d12d"
   version = "v1.2"
 
@@ -183,7 +199,10 @@
 
 [[projects]]
   name = "github.com/markbates/goth"
-  packages = [".","providers/facebook"]
+  packages = [
+    ".",
+    "providers/facebook"
+  ]
   revision = "fc7c453140c74156d0c6cee3b0bb81fe2c21cce4"
   version = "v1.44.1"
 
@@ -202,7 +221,10 @@
 [[projects]]
   branch = "master"
   name = "github.com/mitchellh/goamz"
-  packages = ["aws","s3"]
+  packages = [
+    "aws",
+    "s3"
+  ]
   revision = "caaaea8b30ee15616494ee68abd5d8ebbbef05cf"
 
 [[projects]]
@@ -231,13 +253,21 @@
 
 [[projects]]
   name = "github.com/smartystreets/assertions"
-  packages = [".","internal/go-render/render","internal/oglematchers"]
+  packages = [
+    ".",
+    "internal/go-render/render",
+    "internal/oglematchers"
+  ]
   revision = "0b37b35ec7434b77e77a4bb29b79677cced992ea"
   version = "1.8.1"
 
 [[projects]]
   name = "github.com/smartystreets/goconvey"
-  packages = ["convey","convey/gotest","convey/reporting"]
+  packages = [
+    "convey",
+    "convey/gotest",
+    "convey/reporting"
+  ]
   revision = "9e8dc3f972df6c8fcc0375ef492c24d0bb204857"
   version = "1.6.3"
 
@@ -316,30 +346,56 @@
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
-  packages = ["context","context/ctxhttp","html","html/atom"]
+  packages = [
+    "context",
+    "context/ctxhttp",
+    "html",
+    "html/atom"
+  ]
   revision = "5ccada7d0a7ba9aeb5d3aca8d3501b4c2a509fec"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/oauth2"
-  packages = [".","internal"]
+  packages = [
+    ".",
+    "internal"
+  ]
   revision = "30785a2c434e431ef7c507b54617d6a951d5f2b4"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
-  packages = ["unix","windows"]
+  packages = [
+    "unix",
+    "windows"
+  ]
   revision = "810d7000345868fc619eb81f46307107118f4ae1"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/text"
-  packages = ["internal/gen","internal/triegen","internal/ucd","transform","unicode/cldr","unicode/norm"]
+  packages = [
+    "internal/gen",
+    "internal/triegen",
+    "internal/ucd",
+    "transform",
+    "unicode/cldr",
+    "unicode/norm"
+  ]
   revision = "e19ae1496984b1c655b8044a65c0300a3c878dd3"
 
 [[projects]]
   name = "google.golang.org/appengine"
-  packages = ["internal","internal/base","internal/datastore","internal/log","internal/remote_api","internal/urlfetch","urlfetch"]
+  packages = [
+    "internal",
+    "internal/base",
+    "internal/datastore",
+    "internal/log",
+    "internal/remote_api",
+    "internal/urlfetch",
+    "urlfetch"
+  ]
   revision = "150dc57a1b433e64154302bdc40b6bb8aefa313a"
   version = "v1.0.0"
 
@@ -358,7 +414,13 @@
 [[projects]]
   branch = "v2"
   name = "gopkg.in/mgo.v2"
-  packages = [".","bson","internal/json","internal/sasl","internal/scram"]
+  packages = [
+    ".",
+    "bson",
+    "internal/json",
+    "internal/sasl",
+    "internal/scram"
+  ]
   revision = "3f83fa5005286a7fe593b055f0d7771a7dce4655"
 
 [[projects]]
@@ -376,6 +438,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "a70c35d188de612aedfdb851d72ed5f0fa65605f02e32e5ee5f1afc9a491ce47"
+  inputs-digest = "5246e6a37cdef040d65663a13a3525442dfb07306cb8ea9b5bcb055473c7a33e"
   solver-name = "gps-cdcl"
   solver-version = 1

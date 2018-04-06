@@ -68,7 +68,6 @@ func CleanupDuplicatedEmails(c *ishell.Context) {
 			c.Printf("%s) %s::%s (%s) \n Created: %s\n Validated: %v\n Swords: %v\n Level: %v\n--------\n",
 				strconv.Itoa(index), usr.Id.Hex(),
 				usr.UserName,
-				usr.UserNameSlug,
 				usr.Created,
 				usr.Validated,
 				usr.Gaming.Swords,

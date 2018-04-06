@@ -2,6 +2,11 @@ package cli
 
 import (
 	"fmt"
+	"log"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/olebedev/config"
 	"github.com/op/go-logging"
 	"github.com/tryanzu/core/board/legacy/model"
@@ -11,11 +16,6 @@ import (
 	"github.com/tryanzu/core/modules/helpers"
 	"github.com/tryanzu/core/modules/user"
 	"gopkg.in/mgo.v2/bson"
-	"log"
-	"regexp"
-	"strconv"
-	"strings"
-	"time"
 )
 
 type Module struct {
@@ -31,7 +31,6 @@ type fn func()
 func (module Module) Run(name string) {
 
 	commands := map[string]fn{
-		"slug-fix":          module.SlugFix,
 		"codes-fix":         module.Codes,
 		"replace-url":       module.ReplaceURL,
 		"first-newsletter":  module.FirstNewsletter,
@@ -139,52 +138,6 @@ func (module Module) ReplaceURL() {
 
 			fmt.Printf("$")
 		}
-	}
-}
-
-func (module Module) SlugFix() {
-
-	var usr user.UserPrivate
-	database := deps.Container.Mgo()
-	valid_name, _ := regexp.Compile(`^[a-zA-Z][a-zA-Z0-9]*[._-]?[a-zA-Z0-9]+$`)
-
-	// Get all users
-	iter := database.C("users").Find(nil).Select(bson.M{"_id": 1, "username": 1, "email": 1, "username_slug": 1}).Iter()
-
-	for iter.Next(&usr) {
-
-		slug := helpers.StrSlug(usr.UserName)
-
-		if !valid_name.MatchString(usr.UserName) {
-
-			// Fallback username to slug
-			err := database.C("users").Update(bson.M{"_id": usr.Id}, bson.M{"$set": bson.M{"username": slug, "username_slug": slug, "name_changes": 0}})
-
-			if err != nil {
-				panic(err)
-			}
-
-			log.Printf("\n%v --> %v\n", usr.UserName, slug)
-			continue
-
-		} else {
-
-			// Fix slug in case they need if
-			if slug != usr.UserNameSlug {
-
-				err := database.C("users").Update(bson.M{"_id": usr.Id}, bson.M{"$set": bson.M{"username_slug": slug}})
-
-				if err != nil {
-					panic(err)
-				}
-
-				fmt.Printf("-")
-				log.Printf("\n%v -slug-> %v\n", usr.UserNameSlug, slug)
-				continue
-			}
-		}
-
-		fmt.Printf(".")
 	}
 }
 

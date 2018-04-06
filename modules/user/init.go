@@ -24,6 +24,10 @@ type Module struct {
 	Logger *logging.Logger              `inject:""`
 }
 
+var (
+	validUsername = regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9]*[._-]?[a-zA-Z0-9]+$`)
+)
+
 // Gets an instance of a user
 func (module *Module) Get(usr interface{}) (*One, error) {
 
@@ -64,33 +68,38 @@ func (module *Module) Get(usr interface{}) (*One, error) {
 	return user, nil
 }
 
-// Signup a user with email and username checks
+// SignUp a user with email and username checks
 func (module *Module) SignUp(email, username, password, referral string) (*One, error) {
-	context := module
 	database := deps.Container.Mgo()
-	slug := helpers.StrSlug(username)
-	valid_name, err := regexp.Compile(`^[a-zA-Z][a-zA-Z0-9]*[._-]?[a-zA-Z0-9]+$`)
-
-	if err != nil {
-		panic(err)
-	}
-
 	hash := helpers.Sha256(password)
 	id := bson.NewObjectId()
 
-	if valid_name.MatchString(username) == false || strings.Count(username, "") < 3 || strings.Count(username, "") > 21 {
-		return nil, exceptions.OutOfBounds{"Invalid username. Must have only alphanumeric characters."}
+	if validUsername.MatchString(username) == false || strings.Count(username, "") < 3 || strings.Count(username, "") > 21 {
+		return nil, exceptions.OutOfBounds{
+			Msg: "Invalid username. Must have only alphanumeric characters.",
+		}
 	}
 
 	if helpers.IsEmail(email) == false {
-		return nil, exceptions.OutOfBounds{"Invalid email. Provide a real one."}
+		return nil, exceptions.OutOfBounds{
+			Msg: "Invalid email. Provide a real one.",
+		}
 	}
 
 	// Check if user already exists using that email
-	unique, err := database.C("users").Find(bson.M{"$or": []bson.M{{"email": email}, {"username_slug": slug}}}).Count()
-
+	unique, err := database.C("users").Find(bson.M{
+		"$or": []bson.M{
+			{"email": email},
+			{"username": bson.RegEx{
+				Pattern: regexp.QuoteMeta(username),
+				Options: "i",
+			}},
+		},
+	}).Count()
 	if unique > 0 || err != nil {
-		return nil, exceptions.OutOfBounds{"User already exists."}
+		return nil, exceptions.OutOfBounds{
+			Msg: "User already exists.",
+		}
 	}
 
 	profile := map[string]interface{}{
@@ -100,14 +109,13 @@ func (module *Module) SignUp(email, username, password, referral string) (*One, 
 
 	usr := &UserPrivate{
 		User: User{
-			Id:           id,
-			UserName:     username,
-			UserNameSlug: slug,
-			Description:  "",
-			Profile:      profile,
-			Created:      time.Now(),
-			Permissions:  make([]string, 0),
-			NameChanges:  1,
+			Id:          id,
+			UserName:    username,
+			Description: "",
+			Profile:     profile,
+			Created:     time.Now(),
+			Permissions: make([]string, 0),
+			NameChanges: 1,
 			Roles: []UserRole{
 				{
 					Name: "user",
@@ -128,7 +136,7 @@ func (module *Module) SignUp(email, username, password, referral string) (*One, 
 		panic(err)
 	}
 
-	user := &One{data: usr, di: context}
+	user := &One{data: usr, di: module}
 
 	return user, nil
 }
@@ -170,14 +178,13 @@ func (module *Module) OauthSignup(provider string, user goth.User) (*One, error)
 
 	usr := &UserPrivate{
 		User: User{
-			Id:           id,
-			UserName:     nickname,
-			UserNameSlug: nickname,
-			Description:  "",
-			Profile:      profile,
-			Created:      time.Now(),
-			Permissions:  make([]string, 0),
-			NameChanges:  0,
+			Id:          id,
+			UserName:    nickname,
+			Description: "",
+			Profile:     profile,
+			Created:     time.Now(),
+			Permissions: make([]string, 0),
+			NameChanges: 0,
 			Roles: []UserRole{
 				{
 					Name: "user",

@@ -7,25 +7,16 @@ import (
 )
 
 type User struct {
-	Id           bson.ObjectId `bson:"_id,omitempty" json:"id"`
-	FirstName    string        `bson:"first_name" json:"first_name"`
-	LastName     string        `bson:"last_name" json:"last_name"`
-	UserName     string        `bson:"username" json:"username"`
-	UserNameSlug string        `bson:"username_slug" json:"username_slug"`
-	NameChanges  int           `bson:"name_changes" json:"name_changes"`
-	Description  string        `bson:"description" json:"description,omitempty"`
-	Image        string        `bson:"image" json:"image,omitempty"`
-	Roles        []UserRole    `bson:"roles" json:"roles,omitempty"`
-	Permissions  []string      `bson:"permissions" json:"permissions,omitempty"`
+	Id          bson.ObjectId `bson:"_id,omitempty" json:"id"`
+	UserName    string        `bson:"username" json:"username"`
+	NameChanges int           `bson:"name_changes" json:"name_changes"`
+	Description string        `bson:"description" json:"description,omitempty"`
+	Image       string        `bson:"image" json:"image,omitempty"`
+	Roles       []UserRole    `bson:"roles" json:"roles,omitempty"`
+	Permissions []string      `bson:"permissions" json:"permissions,omitempty"`
 
 	Profile map[string]interface{} `bson:"profile,omitempty" json:"profile,omitempty"`
 	Gaming  UserGaming             `bson:"gaming,omitempty" json:"gaming,omitempty"`
-
-	Phone       string `bson:"phone,omitempty" json:"phone"`
-	Country     string `bson:"country,omitempty" json:"country"`
-	OriginId    string `bson:"origin_id,omitempty" json:"origin_id"`
-	BattlenetId string `bson:"battlenet_id,omitempty" json:"battlenet_id"`
-	SteamId     string `bson:"steam_id,omitempty" json:"steam_id"`
 
 	Version   string    `bson:"version,omitempty" json:"version,omitempty"`
 	Validated bool      `bson:"validated" json:"validated"`
