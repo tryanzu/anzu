@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/tryanzu/core/core/config"
+	"github.com/tryanzu/core/core/mail"
 	"github.com/tryanzu/core/deps"
 )
 
@@ -12,4 +13,7 @@ func init() {
 
 	// Run dependencies bootstraping sequences.
 	deps.Bootstrap()
+
+	// Boot internal services.
+	mail.Boot()
 }

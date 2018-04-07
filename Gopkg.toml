@@ -128,3 +128,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/divideandconquer/go-merge"
+
+[[constraint]]
+  name = "gopkg.in/gomail.v2"
+  version = "2.0.0"

@@ -3,15 +3,17 @@ package helpers
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"golang.org/x/text/unicode/norm"
 	"math/rand"
 	"reflect"
 	"regexp"
 	"strings"
 	"time"
 	"unicode"
+
+	"golang.org/x/text/unicode/norm"
 )
 
+var letters = []rune("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 var lat = []*unicode.RangeTable{unicode.Letter, unicode.Number}
 var nop = []*unicode.RangeTable{unicode.Mark, unicode.Sk, unicode.Lm}
 var email_exp = regexp.MustCompile(`^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$`)
@@ -91,20 +93,12 @@ func StrSlugRandom(s string) string {
 }
 
 func StrRandom(length int) string {
-
-	var letters = []rune("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-
-	now := time.Now()
-	rand.Seed(now.UnixNano())
-
+	r := rand.New(rand.NewSource(time.Now().UnixNano() + int64(length)))
 	b := make([]rune, length)
 	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))]
+		b[i] = letters[r.Intn(len(letters))]
 	}
-
-	generated := string(b)
-
-	return generated
+	return string(b)
 }
 
 func StrCapRandom(length int) string {

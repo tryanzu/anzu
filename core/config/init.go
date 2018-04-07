@@ -16,16 +16,15 @@ var (
 
 func Bootstrap() {
 	C = new(Config)
-	C.Reload = make(chan bool)
-	C.Merge("./static/resources/config.hjson")
-	C.Merge("./config.hjson")
+	C.Reload = make(chan struct{})
+	C.Boot()
 
 	// Watch config file
 	go C.WatchFile("./config.hjson")
 }
 
 type Config struct {
-	Reload  chan bool
+	Reload  chan struct{}
 	current *map[string]interface{}
 }
 
@@ -33,7 +32,14 @@ func (c *Config) Copy() map[string]interface{} {
 	return *c.current
 }
 
-func (c *Config) Merge(file string) {
+func (c *Config) Boot() {
+	c.current = nil
+	c.Merge("./static/resources/config.hjson", false)
+	c.Merge("./config.hjson", true)
+	log.Println("Config from filesystem loaded.")
+}
+
+func (c *Config) Merge(file string, reload bool) {
 	var config map[string]interface{}
 
 	// Read the file first
@@ -57,12 +63,10 @@ func (c *Config) Merge(file string) {
 	c.current = &cst
 
 	// Reload signal if anyone is listening...
-	go func() {
-		c.Reload <- true
-	}()
-
-	log.Println("configured: ", c.current)
-	log.Printf("address: %p\n", c.current)
+	if reload {
+		close(c.Reload)
+		c.Reload = make(chan struct{})
+	}
 }
 
 func (c *Config) WatchFile(file string) {
@@ -77,10 +81,8 @@ func (c *Config) WatchFile(file string) {
 		for {
 			select {
 			case event := <-watcher.Events:
-				log.Println("event:", event)
 				if event.Op&fsnotify.Write == fsnotify.Write {
-					log.Println("modified file:", event.Name)
-					c.Merge(event.Name)
+					c.Boot()
 				}
 			case err := <-watcher.Errors:
 				log.Println("error:", err)
