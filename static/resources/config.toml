@@ -1,0 +1,15 @@
+# Site configuration.
+# Mostly front-end needed config that will be for public purposes.
+[site]
+name = "Anzu"
+description = "Next-generation community engine, bring the conversation online."
+url = "http://localhost:3200/"
+logoUrl = "/images/anzu.svg"
+
+[[site.nav]]
+name = "Inicio"
+href = "/"
+
+[[site.nav]]
+name = "Preguntas frecuentes"
+href = "/"

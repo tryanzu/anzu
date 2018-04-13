@@ -1,31 +1,26 @@
 package config
 
 import (
+	"bytes"
 	"io/ioutil"
 
-	"github.com/hjson/hjson-go"
-	"github.com/imdario/mergo"
+	"github.com/BurntSushi/toml"
+	"github.com/divideandconquer/go-merge/merge"
 )
 
 func MergeUpdate(config map[string]interface{}) error {
-	merged := make(map[string]interface{}, len(config))
-	for k, v := range config {
-		merged[k] = v
-	}
 
 	// Copy of current runtime config.
-	current := C.Copy()
-	if err := mergo.Merge(&merged, current, mergo.WithOverride); err != nil {
+	current := C.UserCopy()
+	merged := merge.Merge(current, config)
+	buf := new(bytes.Buffer)
+	encoder := toml.NewEncoder(buf)
+
+	if err := encoder.Encode(merged); err != nil {
 		return err
 	}
 
-	formatted, err := hjson.Marshal(merged)
-	if err != nil {
-		return err
-	}
-
-	err = ioutil.WriteFile("./config.hjson", formatted, 0644)
-	if err != nil {
+	if err := ioutil.WriteFile("./config.toml", buf.Bytes(), 0644); err != nil {
 		return err
 	}
 

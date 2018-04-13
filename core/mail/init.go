@@ -41,10 +41,10 @@ func sendWorker(c *config.Config) {
 		open   = false
 	)
 
-	runtime := c.Copy()
-	if mail, exists := runtime["mail"].(map[string]interface{}); exists {
+	mail := c.Copy().Mail
+	if len(mail.Server) > 0 {
 		log.Println("Mail send worker has started...", mail)
-		dialer := gomail.NewPlainDialer(mail["server"].(string), 587, mail["user"].(string), mail["password"].(string))
+		dialer := gomail.NewPlainDialer(mail.Server, 587, mail.User, mail.Password)
 		for {
 			select {
 			case m, alive := <-In:

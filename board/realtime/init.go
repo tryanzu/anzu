@@ -147,7 +147,7 @@ func onNewSocket(s *glue.Socket) {
 	runtime := config.C.Copy()
 	conf, err := json.Marshal(map[string]interface{}{
 		"event":  "config",
-		"params": runtime["site"],
+		"params": runtime.Site,
 	})
 
 	if err != nil {
@@ -172,7 +172,7 @@ func ServeHTTP() func(w http.ResponseWriter, r *http.Request) {
 			runtime := config.C.Copy()
 			conf, err := json.Marshal(map[string]interface{}{
 				"event":  "config",
-				"params": runtime["site"],
+				"params": runtime.Site,
 			})
 
 			if err != nil {
