@@ -4,8 +4,10 @@ import (
 	"errors"
 	"time"
 
+	"github.com/tryanzu/core/core/mail"
+	"github.com/tryanzu/core/core/templates"
 	"github.com/tryanzu/core/modules/helpers"
-	"github.com/tryanzu/core/modules/mail"
+	gomail "gopkg.in/gomail.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -21,20 +23,19 @@ func (u User) ConfirmationEmail(d Deps) (err error) {
 	}
 
 	users := d.Mgo().C("users")
-	compose := mail.Mail{
-		mail.MailBase{
-			Recipient: []mail.MailRecipient{
-				{
-					Name:  u.UserName,
-					Email: u.Email,
-				},
-			},
-			Variables: map[string]interface{}{
-				"confirm_url": "https://buldar.com/signup/confirm/" + u.VerificationCode,
-			},
-		},
-		250222,
+	body, err := templates.ExecuteTemplate("mails/welcome", u)
+	if err != nil {
+		return err
 	}
+
+	m := gomail.NewMessage()
+	m.SetHeader("From", "contacto@spartangeek.com")
+	m.SetHeader("Reply-To", "contacto@spartangeek.com")
+	m.SetHeader("To", u.Email)
+	m.SetHeader("Subject", "Bienvenido a SpartanGeek")
+	m.SetBody("text/html", body.String())
+
+	mail.In <- m
 
 	update := bson.M{"$set": bson.M{"confirm_sent_at": time.Now()}}
 	err = users.Update(bson.M{"_id": u.Id}, update)
@@ -42,11 +43,11 @@ func (u User) ConfirmationEmail(d Deps) (err error) {
 		return
 	}
 
-	d.Mailer().Send(compose)
 	return
 }
 
 func (u User) RecoveryPasswordEmail(d Deps) (err error) {
+	return nil
 	r := RecoveryToken{
 		UserId:  u.Id,
 		Token:   helpers.StrRandom(12),
@@ -60,21 +61,5 @@ func (u User) RecoveryPasswordEmail(d Deps) (err error) {
 		return
 	}
 
-	compose := mail.Mail{
-		mail.MailBase{
-			Recipient: []mail.MailRecipient{
-				{
-					Name:  u.UserName,
-					Email: u.Email,
-				},
-			},
-			Variables: map[string]interface{}{
-				"recover_url": "https://buldar.com/user/lost_password/" + r.Token,
-			},
-		},
-		461461,
-	}
-
-	d.Mailer().Send(compose)
 	return
 }
