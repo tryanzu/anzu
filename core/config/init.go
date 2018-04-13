@@ -4,9 +4,9 @@ import (
 	"io/ioutil"
 	"log"
 
+	"github.com/BurntSushi/toml"
 	"github.com/divideandconquer/go-merge/merge"
 	"github.com/fsnotify/fsnotify"
-	"github.com/hjson/hjson-go"
 )
 
 var (
@@ -20,27 +20,43 @@ func Bootstrap() {
 	C.Boot()
 
 	// Watch config file
-	go C.WatchFile("./config.hjson")
+	go C.WatchFile("./config.toml")
 }
 
 type Config struct {
 	Reload  chan struct{}
-	current *map[string]interface{}
+	current *Anzu
 }
 
-func (c *Config) Copy() map[string]interface{} {
+func (c *Config) Copy() Anzu {
 	return *c.current
+}
+
+func (c *Config) UserCopy() (conf map[string]interface{}) {
+
+	// Read the file first
+	dat, err := ioutil.ReadFile("./config.toml")
+	if err != nil {
+		log.Println("error:", err)
+		return
+	}
+
+	if err := toml.Unmarshal(dat, &conf); err != nil {
+		panic(err)
+	}
+
+	return
 }
 
 func (c *Config) Boot() {
 	c.current = nil
-	c.Merge("./static/resources/config.hjson", false)
-	c.Merge("./config.hjson", true)
+	c.Merge("./static/resources/config.toml", false)
+	c.Merge("./config.toml", true)
 	log.Println("Config from filesystem loaded.")
 }
 
 func (c *Config) Merge(file string, reload bool) {
-	var config map[string]interface{}
+	var config Anzu
 
 	// Read the file first
 	dat, err := ioutil.ReadFile(file)
@@ -49,18 +65,18 @@ func (c *Config) Merge(file string, reload bool) {
 		return
 	}
 
-	if err := hjson.Unmarshal(dat, &config); err != nil {
+	if err := toml.Unmarshal(dat, &config); err != nil {
 		panic(err)
 	}
 
 	if c.current == nil {
-		c.current = new(map[string]interface{})
+		c.current = new(Anzu)
 	}
 
 	// Clone the current runtime config map.
 	merged := merge.Merge(*c.current, config)
-	cst := merged.(map[string]interface{})
-	c.current = &cst
+	cst := merged.(*Anzu)
+	c.current = cst
 
 	// Reload signal if anyone is listening...
 	if reload {
