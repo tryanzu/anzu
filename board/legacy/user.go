@@ -493,21 +493,21 @@ func (di *UserAPI) UserUpdateProfile(c *gin.Context) {
 }
 
 func (di *UserAPI) UserValidateEmail(c *gin.Context) {
-
 	code := c.Param("code")
+	if len(code) == 0 {
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
 
 	// Attempt to get the user by the confirmation code
-	usr, err := di.User.Get(bson.M{"ver_code": code})
-
+	usr, err := di.User.Get(bson.M{"ver_code": code, "validated": false})
 	if err != nil {
-
-		c.JSON(400, gin.H{"status": "error", "message": err.Error()})
+		c.Redirect(http.StatusMovedPermanently, "/")
 		return
 	}
 
 	usr.MarkAsValidated()
-
-	c.JSON(200, gin.H{"status": "okay"})
+	c.Redirect(http.StatusTemporaryRedirect, "/")
 }
 
 func (di *UserAPI) UserRegisterAction(c *gin.Context) {

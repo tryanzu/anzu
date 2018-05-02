@@ -5,7 +5,6 @@ import (
 	posts "github.com/tryanzu/core/board/posts"
 	ev "github.com/tryanzu/core/core/events"
 	"github.com/tryanzu/core/deps"
-	"github.com/tryanzu/core/modules/gaming"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -27,12 +26,7 @@ func postsEvents() {
 				"slug":     post.Slug,
 			}}
 
-			// Ignore hard-coded category.
-			if post.Category.Hex() == "55dc16593f6ba1005d000007" {
-				return nil
-			}
-
-			return gaming.UserHasPublished(deps.Container, post.UserId)
+			return nil
 		},
 	}
 }

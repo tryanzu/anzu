@@ -9,44 +9,6 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-// UserHasVoted rewards.
-func UserHasVoted(d Deps, id bson.ObjectId) error {
-	return IncreaseUserTribute(d, id, -1)
-}
-
-// UserReceivedVote rewards.
-func UserReceivedVote(d Deps, id bson.ObjectId) error {
-	if err := IncreaseUserSwords(d, id, 1); err != nil {
-		return err
-	}
-
-	return IncreaseUserCoins(d, id, 1)
-}
-
-// UserRemovedVote rollback.
-func UserRemovedVote(d Deps, id bson.ObjectId) error {
-	return IncreaseUserTribute(d, id, 1)
-}
-
-// UserRevokedVote rewards.
-func UserRevokedVote(d Deps, id bson.ObjectId) error {
-	if err := IncreaseUserSwords(d, id, -1); err != nil {
-		return err
-	}
-
-	return IncreaseUserCoins(d, id, -1)
-}
-
-// UserHasPublished rewards.
-func UserHasPublished(d Deps, id bson.ObjectId) (err error) {
-	return IncreaseUserSwords(d, id, 1)
-}
-
-// UserHasCommented rewards.
-func UserHasCommented(d Deps, id bson.ObjectId) error {
-	return IncreaseUserSwords(d, id, 0)
-}
-
 // IncreaseUserSwords for given id.
 func IncreaseUserSwords(d Deps, id bson.ObjectId, swords int) error {
 	return increaseUserAttr(d, id, "gaming.swords", swords)

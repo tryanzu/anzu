@@ -7,6 +7,13 @@ import (
 	"time"
 )
 
+type voteDir int
+
+const (
+	UP voteDir = iota
+	DOWN
+)
+
 // Vote represents a reaction to a post || comment
 type Vote struct {
 	ID         bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
@@ -29,6 +36,17 @@ func (v Vote) DbField() string {
 	}
 
 	return "votes.up"
+}
+
+func (v Vote) Direction() voteDir {
+	switch v.Value {
+	case 1:
+		return UP
+	case -1:
+		return DOWN
+	default:
+		panic("Invalid vote direction.")
+	}
 }
 
 // Votes represents the aggregated count of votes

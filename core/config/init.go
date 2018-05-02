@@ -29,6 +29,9 @@ type Config struct {
 }
 
 func (c *Config) Copy() Anzu {
+	if c.current == nil {
+		return Anzu{}
+	}
 	return *c.current
 }
 

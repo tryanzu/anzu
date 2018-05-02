@@ -40,9 +40,10 @@ func commentsEvents() {
 func onCommentVote(e pool.Event) error {
 	vote := e.Params["vote"].(votes.Vote)
 	field := vote.DbField()
+	d := deps.Container
 
 	// Find related comment
-	comment, err := comments.FindId(deps.Container, vote.RelatedID)
+	comment, err := comments.FindId(d, vote.RelatedID)
 	if err != nil {
 		return err
 	}
@@ -53,36 +54,33 @@ func onCommentVote(e pool.Event) error {
 		value = -1
 	}
 
-	err = deps.Container.Mgo().C("comments").UpdateId(vote.RelatedID, bson.M{"$inc": bson.M{field: value}})
+	err = d.Mgo().C("comments").UpdateId(vote.RelatedID, bson.M{"$inc": bson.M{field: value}})
 	if err != nil {
 		return err
 	}
 
-	if vote.UserID != comment.UserId {
-		if vote.Deleted == nil {
-			err = gaming.UserHasVoted(deps.Container, vote.UserID)
-			if err != nil {
-				return err
-			}
-
-			err = gaming.UserReceivedVote(deps.Container, comment.UserId)
-			if err != nil {
-				return err
-			}
-		} else {
-			err = gaming.UserRemovedVote(deps.Container, vote.UserID)
-			if err != nil {
-				return err
-			}
-
-			err = gaming.UserRevokedVote(deps.Container, comment.UserId)
-			if err != nil {
-				return err
-			}
-		}
+	// No gamification for eventual votes from comment's author
+	if vote.UserID == comment.UserId {
+		return nil
 	}
 
-	return nil
+	factor := -1
+	if vote.Deleted != nil {
+		factor = 1
+	}
+	switch vote.Direction() {
+	case votes.DOWN:
+		err = pipeErr(
+			gaming.IncreaseUserSwords(d, vote.UserID, 1*factor),
+			gaming.IncreaseUserSwords(d, comment.UserId, 2*factor),
+		)
+	case votes.UP:
+		err = pipeErr(
+			gaming.IncreaseUserSwords(d, comment.UserId, 5*factor*-1),
+		)
+	}
+
+	return err
 }
 
 func onCommentDelete(e pool.Event) error {
@@ -144,8 +142,6 @@ func onPostComment(e pool.Event) error {
 				"comment_id": comment.Id.Hex(),
 			},
 		}
-
-		return gaming.UserHasCommented(deps.Container, comment.UserId)
 	}
 
 	return nil

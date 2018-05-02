@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"html/template"
 	"strings"
+
+	"github.com/tryanzu/core/core/config"
 )
 
 var GlobalFuncs = template.FuncMap{
@@ -27,8 +29,14 @@ func Execute(name string, data interface{}) (*bytes.Buffer, error) {
 	return buf, err
 }
 
-func ExecuteTemplate(name string, data interface{}) (*bytes.Buffer, error) {
-	buf := new(bytes.Buffer)
-	err := Templates.ExecuteTemplate(buf, name, data)
-	return buf, err
+func ExecuteTemplate(name string, data interface{}) (buf *bytes.Buffer, err error) {
+	buf = new(bytes.Buffer)
+	switch v := data.(type) {
+	case map[string]interface{}:
+		v["config"] = config.C.Copy()
+		err = Templates.ExecuteTemplate(buf, name, v)
+	default:
+		err = Templates.ExecuteTemplate(buf, name, v)
+	}
+	return
 }

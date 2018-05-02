@@ -14,3 +14,12 @@ func register(list []pool.EventHandler) {
 		pool.On <- h
 	}
 }
+
+func pipeErr(err ...error) error {
+	for _, e := range err {
+		if e != nil {
+			return e
+		}
+	}
+	return nil
+}

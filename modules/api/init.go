@@ -145,6 +145,7 @@ func (module *Module) Run(bindTo string) {
 	router.GET("/terminos-y-condiciones", chttp.TitleMiddleware("Terminos y condiciones"), controller.HomePage)
 	router.GET("/p/:slug/:id", controller.PostPage)
 	router.GET("/u/:username/:id", controller.UserPage)
+	router.GET("/validate/:code", module.Users.UserValidateEmail)
 	router.GET("/sitemap.xml", module.Sitemap.GetSitemap)
 
 	v1 := router.Group("/v1")
@@ -182,7 +183,6 @@ func (module *Module) Run(bindTo string) {
 		v1.GET("/auth/lost-password", module.UsersFactory.RequestPasswordRecovery)
 		v1.GET("/auth/recovery-token/:token", module.UsersFactory.ValidatePasswordRecovery)
 		v1.PUT("/auth/recovery-token/:token", module.UsersFactory.UpdatePasswordFromToken)
-		v1.GET("/user/confirm/:code", module.Users.UserValidateEmail)
 
 		// Categories routes
 		v1.GET("/category", module.Categories.CategoriesGet)

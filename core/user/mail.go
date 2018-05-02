@@ -23,7 +23,9 @@ func (u User) ConfirmationEmail(d Deps) (err error) {
 	}
 
 	users := d.Mgo().C("users")
-	body, err := templates.ExecuteTemplate("mails/welcome", u)
+	body, err := templates.ExecuteTemplate("mails/welcome", map[string]interface{}{
+		"user": u,
+	})
 	if err != nil {
 		return err
 	}
