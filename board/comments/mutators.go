@@ -18,8 +18,8 @@ func UpsertComment(deps Deps, c Comment) (comment Comment, err error) {
 	c.Content = html.EscapeString(c.Content)
 	c.Updated = time.Now()
 
-	// Post process comment content.
-	processed, err := content.Postprocess(deps, c)
+	// Pre-process comment content.
+	processed, err := content.Preprocess(deps, c)
 	if err != nil {
 		return
 	}
@@ -34,6 +34,12 @@ func UpsertComment(deps Deps, c Comment) (comment Comment, err error) {
 		err = deps.Mgo().C("posts").UpdateId(c.ReplyTo, bson.M{"$inc": bson.M{"comments.count": 1}})
 	}
 
+	// Pre-process comment content.
+	processed, err = content.Postprocess(deps, c)
+	if err != nil {
+		return
+	}
+	c = processed.(Comment)
 	comment = c
 	return
 }

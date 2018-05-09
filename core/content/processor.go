@@ -2,23 +2,19 @@ package content
 
 import (
 	"log"
-	"strings"
 	"time"
-
-	"github.com/tryanzu/core/core/common"
-	"github.com/tryanzu/core/core/user"
-	"gopkg.in/mgo.v2/bson"
 )
 
 // Content processor definition.
 type Processor func(Deps, Parseable, tags) (Parseable, error)
+type Preprocessor func(Deps, Parseable) (Parseable, error)
 
 // Postprocess a parseable type.
 func Postprocess(deps Deps, c Parseable) (processed Parseable, err error) {
 	starts := time.Now()
 	list := parseTags(c)
 	pipeline := []Processor{
-		replaceMentionTags,
+		postReplaceMentionTags,
 	}
 
 	// Run pipeline over parseable.
@@ -36,40 +32,25 @@ func Postprocess(deps Deps, c Parseable) (processed Parseable, err error) {
 	return
 }
 
-// Replace mention related tags with links to mentioned user.
-func replaceMentionTags(deps Deps, c Parseable, list tags) (processed Parseable, err error) {
+// Preprocess a parseable type.
+func Preprocess(deps Deps, c Parseable) (processed Parseable, err error) {
+	starts := time.Now()
+	pipeline := []Preprocessor{
+		preReplaceMentionTags,
+	}
+
+	// Run pipeline over parseable.
 	processed = c
-	if len(list) == 0 {
-		return
-	}
+	for _, fn := range pipeline {
+		processed, err = fn(deps, processed)
 
-	mentions := list.withTag("mention")
-	usersId := mentions.getIdParams(0)
-	if len(usersId) == 0 {
-		return
-	}
-
-	var users common.UsersStringMap
-	users, err = user.FindNames(deps, usersId...)
-	if err != nil {
-		return
-	}
-
-	content := processed.GetContent()
-
-	for _, tag := range mentions {
-		if id := tag.Params[0]; bson.IsObjectIdHex(id) {
-			name, exists := users[bson.ObjectIdHex(id)]
-			if exists == false {
-				continue
-			}
-
-			link := `<a class="user-mention" data-id="` + id + `" data-username="` + name + `">@` + name + `</a>`
-			content = strings.Replace(content, tag.Original, link, -1)
+		if err != nil {
+			return
 		}
 	}
 
-	processed = processed.UpdateContent(content)
+	elapsed := time.Since(starts)
+	log.Printf("Parsable preprocess took: %v\n", elapsed)
 	return
 }
 
