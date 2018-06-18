@@ -154,7 +154,6 @@ func (module *Module) Run(bindTo string) {
 		// Authentication routes
 		v1.GET("/oauth/:provider", module.Oauth.GetAuthRedirect)
 		v1.GET("/oauth/:provider/callback", module.Oauth.CompleteAuth)
-		v1.POST("/subscribe", module.Users.UserSubscribe)
 
 		// Gamification routes
 		v1.GET("/gamification", module.Gaming.GetRules)

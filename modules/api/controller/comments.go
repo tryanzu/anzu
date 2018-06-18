@@ -2,6 +2,7 @@ package controller
 
 import (
 	"errors"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/tryanzu/core/board/comments"
@@ -9,8 +10,6 @@ import (
 	"github.com/tryanzu/core/core/user"
 	"github.com/tryanzu/core/deps"
 	"gopkg.in/mgo.v2/bson"
-
-	"strconv"
 )
 
 // Comments paginated fetch.

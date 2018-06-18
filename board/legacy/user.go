@@ -10,6 +10,7 @@ import (
 	"github.com/kennygrant/sanitize"
 	"github.com/mitchellh/goamz/s3"
 	"github.com/olebedev/config"
+	"github.com/tryanzu/core/board/comments"
 	"github.com/tryanzu/core/board/legacy/model"
 	"github.com/tryanzu/core/core/events"
 	u "github.com/tryanzu/core/core/user"
@@ -17,7 +18,6 @@ import (
 	"github.com/tryanzu/core/modules/acl"
 	"github.com/tryanzu/core/modules/content"
 	"github.com/tryanzu/core/modules/exceptions"
-	"github.com/tryanzu/core/modules/feed"
 	"github.com/tryanzu/core/modules/gaming"
 	"github.com/tryanzu/core/modules/helpers"
 	"github.com/tryanzu/core/modules/security"
@@ -45,29 +45,6 @@ type UserAPI struct {
 	Gaming        *gaming.Module               `inject:""`
 	Acl           *acl.Module                  `inject:""`
 	Security      *security.Module             `inject:""`
-}
-
-func (di *UserAPI) UserSubscribe(c *gin.Context) {
-
-	// Get the database interface from the DI
-	database := deps.Container.Mgo()
-
-	var register model.UserSubscribeForm
-
-	if c.BindWith(&register, binding.JSON) == nil {
-
-		subscribe := &model.UserSubscribe{
-			Category: register.Category,
-			Email:    register.Email,
-		}
-
-		err := database.C("subscribes").Insert(subscribe)
-
-		if err != nil {
-			panic(err)
-		}
-		c.JSON(200, gin.H{"status": "okay"})
-	}
 }
 
 func (di *UserAPI) UserCategorySubscribe(c *gin.Context) {
@@ -546,117 +523,92 @@ func (di *UserAPI) UserRegisterAction(c *gin.Context) {
 
 func (di *UserAPI) UserGetActivity(c *gin.Context) {
 
-	var activity = make([]model.UserActivity, 0)
+	var (
+		limit    = 10
+		offset   = 0
+		activity = []model.UserActivity{}
+		kind     = c.Param("kind")
+		user_id  = c.Param("id")
+		database = deps.Container.Mgo()
+	)
 
 	// Get the database interface from the DI
-	database := deps.Container.Mgo()
-	content := di.Content
-	user_id := c.Param("id")
-	kind := c.Param("kind")
-	offset := 0
-	limit := 10
-
 	if bson.IsObjectIdHex(user_id) == false {
 		c.JSON(400, gin.H{"status": "error", "message": "Invalid user id."})
 		return
 	}
 
 	usr, err := di.User.Get(bson.ObjectIdHex(user_id))
-
 	if err != nil {
-
 		c.JSON(400, gin.H{"status": "error", "message": err.Error()})
 		return
 	}
 
-	query_offset := c.Query("offset")
-
-	if query_offset != "" {
-
-		query_offset_parse, err := strconv.Atoi(query_offset)
-
-		if err == nil {
-
-			offset = query_offset_parse
-		}
+	if n, err := strconv.Atoi(c.Query("limit")); err == nil && n <= 50 {
+		limit = n
 	}
 
-	query_limit := c.Query("limit")
-
-	if query_limit != "" {
-
-		query_limit_parse, err := strconv.Atoi(query_limit)
-
-		if err == nil {
-
-			limit = query_limit_parse
-		}
+	if n, err := strconv.Atoi(c.Query("offset")); err == nil {
+		offset = n
 	}
 
 	switch kind {
 	case "comments":
-
-		var comments []*feed.Comment
-		var posts []struct {
+		type Post struct {
 			Id    bson.ObjectId `bson:"_id"`
 			Title string        `bson:"title"`
 			Slug  string        `bson:"slug"`
 		}
 
-		posts_map := make(map[string]struct {
-			Id    bson.ObjectId `bson:"_id"`
-			Title string        `bson:"title"`
-			Slug  string        `bson:"slug"`
-		}, 0)
-
-		err := database.C("comments").Find(bson.M{"user_id": usr.Data().Id, "deleted_at": bson.M{"$exists": false}}).Sort("-created_at").Limit(limit).Skip(offset).All(&comments)
-
+		comments, err := comments.FetchBy(deps.Container, comments.User(usr.Data().Id, limit, offset))
 		if err != nil {
 			panic(err)
 		}
 
-		var post_ids []bson.ObjectId
+		var (
+			postIds []bson.ObjectId
+			posts   []Post
+			pmap    map[bson.ObjectId]Post
+		)
 
 		for _, c := range comments {
-			post_ids = append(post_ids, c.PostId)
+			if c.ReplyType == "post" {
+				postIds = append(postIds, c.ReplyTo)
+			}
 		}
 
-		err = database.C("posts").Find(bson.M{"_id": bson.M{"$in": post_ids}}).Select(bson.M{"title": 1, "slug": 1}).All(&posts)
-
+		err = database.C("posts").Find(bson.M{"_id": bson.M{"$in": postIds}}).Select(bson.M{"title": 1, "slug": 1}).All(&posts)
 		if err != nil {
 			panic(err)
 		}
 
+		pmap = make(map[bson.ObjectId]Post, len(posts))
 		for _, p := range posts {
-			posts_map[p.Id.Hex()] = p
+			pmap[p.Id] = p
 		}
 
 		count, err := database.C("comments").Find(bson.M{"user_id": usr.Data().Id, "deleted_at": bson.M{"$exists": false}}).Count()
-
 		if err != nil {
 			panic(err)
 		}
 
 		for _, c := range comments {
-
-			post, exists := posts_map[c.PostId.Hex()]
-
-			if exists {
-
-				content.ParseTags(c)
-				activity = append(activity, model.UserActivity{
-					Id:        post.Id,
-					Title:     post.Title,
-					Slug:      post.Slug,
-					Content:   c.Content,
-					Created:   c.Created,
-					Directive: "commented",
-					Author: map[string]string{
-						"id":   usr.Data().Id.Hex(),
-						"name": usr.Data().UserName,
-					},
-				})
+			post, exists := pmap[c.ReplyTo]
+			if !exists {
+				continue
 			}
+			activity = append(activity, model.UserActivity{
+				Id:        post.Id,
+				Title:     post.Title,
+				Slug:      post.Slug,
+				Content:   c.Content,
+				Created:   c.Created,
+				Directive: "commented",
+				Author: map[string]string{
+					"id":   usr.Data().Id.Hex(),
+					"name": usr.Data().UserName,
+				},
+			})
 		}
 
 		// Sort the full set of posts by the time they happened

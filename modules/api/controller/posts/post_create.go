@@ -106,7 +106,7 @@ func (this API) Create(c *gin.Context) {
 					return
 				}
 
-				post_name := "PC '" + form.Name
+				post_name := "PC '" + form.Title
 				if budget.(string) != "0" {
 					post_name += "' con presupuesto de $" + budget.(string) + " " + budget_currency.(string)
 				} else {
@@ -212,7 +212,7 @@ func (this API) Create(c *gin.Context) {
 
 		case "category-post":
 
-			title := form.Name
+			title := form.Title
 
 			if len([]rune(title)) > 72 {
 				title = helpers.Truncate(title, 72) + "..."
