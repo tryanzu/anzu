@@ -5,3 +5,4 @@ import (
 )
 
 type UsersStringMap map[bson.ObjectId]string
+type AssetsStringMap map[bson.ObjectId]string

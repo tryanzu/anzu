@@ -150,85 +150,83 @@ func (module *Module) Run(bindTo string) {
 
 	v1 := router.Group("/v1")
 	v1.Use(module.Middlewares.Authorization())
-	{
-		// Authentication routes
-		v1.GET("/oauth/:provider", module.Oauth.GetAuthRedirect)
-		v1.GET("/oauth/:provider/callback", module.Oauth.CompleteAuth)
 
-		// Gamification routes
-		v1.GET("/gamification", module.Gaming.GetRules)
-		v1.GET("/stats/ranking", module.Gaming.GetRanking)
+	// Authentication routes
+	v1.GET("/oauth/:provider", module.Oauth.GetAuthRedirect)
+	v1.GET("/oauth/:provider/callback", module.Oauth.CompleteAuth)
 
-		// ACL routes
-		v1.GET("/permissions", module.Acl.GetRules)
+	// Gamification routes
+	v1.GET("/gamification", module.Gaming.GetRules)
+	v1.GET("/stats/ranking", module.Gaming.GetRanking)
 
-		// Post routes
-		v1.GET("/feed", module.Posts.FeedGet)
-		v1.GET("/post", module.Posts.FeedGet)
-		v1.GET("/posts/:id", module.PostsFactory.Get)
-		v1.GET("/posts/:id/comments", module.PostsFactory.GetPostComments)
-		v1.GET("/posts/:id/light", module.Posts.GetLightweight)
-		v1.GET("/comments/:post_id", controller.Comments)
+	// ACL routes
+	v1.GET("/permissions", module.Acl.GetRules)
 
-		// Search routes
-		v1.GET("/search/posts", module.PostsFactory.Search)
+	// Post routes
+	v1.GET("/feed", module.Posts.FeedGet)
+	v1.GET("/post", module.Posts.FeedGet)
+	v1.GET("/posts/:id", module.PostsFactory.Get)
+	v1.GET("/posts/:id/comments", module.PostsFactory.GetPostComments)
+	v1.GET("/posts/:id/light", module.Posts.GetLightweight)
+	v1.GET("/comments/:post_id", controller.Comments)
 
-		// User routes
-		v1.POST("/user", module.Users.UserRegisterAction)
-		v1.GET("/users/:id", module.Users.UserGetOne)
-		v1.GET("/users/:id/:kind", module.Users.UserGetActivity)
-		v1.GET("/user/search", module.Users.UserAutocompleteGet)
-		v1.POST("/auth/get-token", module.Users.UserGetJwtToken)
-		v1.GET("/auth/lost-password", module.UsersFactory.RequestPasswordRecovery)
-		v1.GET("/auth/recovery-token/:token", module.UsersFactory.ValidatePasswordRecovery)
-		v1.PUT("/auth/recovery-token/:token", module.UsersFactory.UpdatePasswordFromToken)
+	// Search routes
+	v1.GET("/search/posts", module.PostsFactory.Search)
 
-		// Categories routes
-		v1.GET("/category", module.Categories.CategoriesGet)
+	// User routes
+	v1.POST("/user", module.Users.UserRegisterAction)
+	v1.GET("/users/:id", module.Users.UserGetOne)
+	v1.GET("/users/:id/:kind", module.Users.UserGetActivity)
+	v1.GET("/user/search", module.Users.UserAutocompleteGet)
+	v1.POST("/auth/get-token", module.Users.UserGetJwtToken)
+	v1.GET("/auth/lost-password", module.UsersFactory.RequestPasswordRecovery)
+	v1.GET("/auth/recovery-token/:token", module.UsersFactory.ValidatePasswordRecovery)
+	v1.PUT("/auth/recovery-token/:token", module.UsersFactory.UpdatePasswordFromToken)
 
-		// Stats routes
-		v1.GET("/stats/board", module.Stats.BoardGet)
+	// Categories routes
+	v1.GET("/category", module.Categories.CategoriesGet)
 
-		authorized := v1.Group("")
-		authorized.Use(module.Middlewares.NeedAuthorization())
-		{
-			authorized.PUT("/config", chttp.UserMiddleware(), controller.UpdateConfig)
-			authorized.GET("/notifications", chttp.UserMiddleware(), controller.Notifications)
-			authorized.POST("/build", module.PostsFactory.Create)
+	// Stats routes
+	v1.GET("/stats/board", module.Stats.BoardGet)
 
-			// Auth routes
-			authorized.GET("/auth/resend-confirmation", module.UsersFactory.ResendConfirmation)
+	authorized := v1.Group("")
+	authorized.Use(module.Middlewares.NeedAuthorization())
 
-			// Comment routes
-			authorized.POST("/comments/:id", chttp.UserMiddleware(), controller.NewComment)
-			authorized.POST("/post/comment/:id", module.CommentsFactory.Add)
-			authorized.PUT("/post/comment/:id", module.CommentsFactory.Update)
-			authorized.DELETE("/post/comment/:id", module.CommentsFactory.Delete)
+	authorized.PUT("/config", chttp.UserMiddleware(), controller.UpdateConfig)
+	authorized.GET("/notifications", chttp.UserMiddleware(), controller.Notifications)
+	authorized.POST("/build", module.PostsFactory.Create)
 
-			// Post routes
-			authorized.POST("/post", module.PostsFactory.Create)
-			authorized.POST("/post/image", module.Posts.PostUploadAttachment)
-			authorized.PUT("/posts/:id", module.PostsFactory.Update)
-			authorized.DELETE("/posts/:id", module.Posts.PostDelete)
-			authorized.POST("/posts/:id/answer/:comment", module.PostsFactory.MarkCommentAsAnswer)
+	// Auth routes
+	authorized.GET("/auth/resend-confirmation", module.UsersFactory.ResendConfirmation)
 
-			// User routes
-			authorized.POST("/user/my/avatar", module.Users.UserUpdateProfileAvatar)
-			authorized.GET("/user/my", module.Users.UserGetByToken)
-			authorized.PUT("/user/my", module.Users.UserUpdateProfile)
-			authorized.PATCH("/me/:field", module.UsersFactory.Patch)
-			authorized.PUT("/category/subscription/:id", module.Users.UserCategorySubscribe)
-			authorized.DELETE("/category/subscription/:id", module.Users.UserCategoryUnsubscribe)
+	// Comment routes
+	authorized.POST("/comments/:id", chttp.UserMiddleware(), controller.NewComment)
+	authorized.POST("/post/comment/:id", module.CommentsFactory.Add)
+	authorized.PUT("/post/comment/:id", module.CommentsFactory.Update)
+	authorized.DELETE("/post/comment/:id", module.CommentsFactory.Delete)
 
-			// Gamification routes
-			authorized.POST("/badges/buy/:id", module.Gaming.BuyBadge)
+	// Post routes
+	authorized.POST("/post", module.PostsFactory.Create)
+	authorized.POST("/post/image", module.Posts.PostUploadAttachment)
+	authorized.PUT("/posts/:id", module.PostsFactory.Update)
+	authorized.DELETE("/posts/:id", module.Posts.PostDelete)
+	authorized.POST("/posts/:id/answer/:comment", module.PostsFactory.MarkCommentAsAnswer)
 
-			// Votes routes
-			authorized.POST("/vote/comment/:id", chttp.UserMiddleware(), module.VotesFactory.Comment)
-			authorized.POST("/vote/component/:id", module.Votes.VoteComponent)
-			authorized.POST("/vote/post/:id", module.Votes.VotePost)
-		}
-	}
+	// User routes
+	authorized.POST("/user/my/avatar", module.Users.UserUpdateProfileAvatar)
+	authorized.GET("/user/my", module.Users.UserGetByToken)
+	authorized.PUT("/user/my", module.Users.UserUpdateProfile)
+	authorized.PATCH("/me/:field", module.UsersFactory.Patch)
+	authorized.PUT("/category/subscription/:id", module.Users.UserCategorySubscribe)
+	authorized.DELETE("/category/subscription/:id", module.Users.UserCategoryUnsubscribe)
+
+	// Gamification routes
+	authorized.POST("/badges/buy/:id", module.Gaming.BuyBadge)
+
+	// Votes routes
+	authorized.POST("/vote/comment/:id", chttp.UserMiddleware(), module.VotesFactory.Comment)
+	authorized.POST("/vote/component/:id", module.Votes.VoteComponent)
+	authorized.POST("/vote/post/:id", module.Votes.VotePost)
 
 	h := http.NewServeMux()
 	h.HandleFunc("/glue/", realtime.ServeHTTP())

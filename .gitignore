@@ -18,3 +18,4 @@ experiments/
 vendor
 /.idea
 /anzu
+cache.db

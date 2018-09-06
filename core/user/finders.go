@@ -2,6 +2,7 @@ package user
 
 import (
 	"errors"
+
 	"github.com/tidwall/buntdb"
 	"github.com/tryanzu/core/core/common"
 	"gopkg.in/mgo.v2/bson"
@@ -68,6 +69,22 @@ func FindNames(deps Deps, list ...bson.ObjectId) (common.UsersStringMap, error) 
 
 	for _, u := range users {
 		hash[u.Id] = u.UserName
+	}
+
+	// Unknown users should be cached like so...
+	if len(missing) != len(users) {
+		err = deps.BuntDB().Update(func(tx *buntdb.Tx) (err error) {
+			for _, id := range missing {
+				if _, exists := hash[id]; exists == false {
+					hash[id] = "Unknown"
+					_, _, err = tx.Set("user:"+id.Hex()+":names", "Unknown", nil)
+					if err != nil {
+						return
+					}
+				}
+			}
+			return
+		})
 	}
 
 	return hash, nil

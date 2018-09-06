@@ -18,7 +18,7 @@ type tag struct {
 type tags []tag
 
 func (list tags) withTag(name string) tags {
-	filtered := list[:0]
+	filtered := tags{}
 	for _, tag := range list {
 		if tag.Name != name {
 			continue

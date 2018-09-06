@@ -15,6 +15,7 @@ func Postprocess(deps Deps, c Parseable) (processed Parseable, err error) {
 	list := parseTags(c)
 	pipeline := []Processor{
 		postReplaceMentionTags,
+		postReplaceAssetTags,
 	}
 
 	// Run pipeline over parseable.
@@ -59,7 +60,6 @@ func parseTags(c Parseable) (list []tag) {
 	// Use regex to find all tags inside the parseable content.
 	found := tagRegex.FindAllString(c.GetContent(), -1)
 	for _, match := range found {
-
 		// Having parsed all tags now destructure the tag params.
 		params := tagParamsRegex.FindAllString(match, -1)
 		count := len(params) - 1
