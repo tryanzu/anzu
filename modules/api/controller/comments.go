@@ -56,7 +56,7 @@ func Comments(c *gin.Context) {
 	empty := make(map[string]interface{}, 0)
 	tables := map[string]interface{}{
 		"votes":    empty,
-		"comments": list.Map(),
+		"comments": list.StrMap(),
 	}
 
 	if userID, exists := c.Get("userID"); exists {

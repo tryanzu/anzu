@@ -43,10 +43,13 @@ func (c Comment) GetParseableMeta() (meta map[string]interface{}) {
 }
 
 func (c Comment) RelatedID() bson.ObjectId {
-	if c.PostId.Valid() == false {
+	return c.ReplyTo
+}
+
+func (c Comment) RelatedPost() bson.ObjectId {
+	if c.ReplyType == "post" {
 		return c.ReplyTo
 	}
-
 	return c.PostId
 }
 
@@ -68,7 +71,22 @@ type RepliesList []Replies
 
 type Comments []Comment
 
-func (all Comments) Map() map[string]Comment {
+func (all Comments) Map() map[bson.ObjectId]Comment {
+	m := make(map[bson.ObjectId]Comment, len(all.NestedIDList()))
+	for _, c := range all {
+		m[c.Id] = c
+
+		if c.Replies != nil {
+			for _, r := range c.Replies.(Replies).List {
+				m[r.Id] = r
+			}
+		}
+	}
+
+	return m
+}
+
+func (all Comments) StrMap() map[string]Comment {
 	m := make(map[string]Comment, len(all.NestedIDList()))
 	for _, c := range all {
 		m[c.Id.Hex()] = c
@@ -158,16 +176,16 @@ func (all Comments) IDList() []bson.ObjectId {
 }
 
 func (all Comments) UsersScope() common.Scope {
-	users := map[bson.ObjectId]bool{}
+	users := map[bson.ObjectId]struct{}{}
 	for _, c := range all {
 		if _, exists := users[c.UserId]; !exists {
-			users[c.UserId] = true
+			users[c.UserId] = struct{}{}
 		}
 	}
 
 	list := make([]bson.ObjectId, len(users))
 	index := 0
-	for k, _ := range users {
+	for k := range users {
 		list[index] = k
 		index++
 	}
@@ -175,25 +193,28 @@ func (all Comments) UsersScope() common.Scope {
 	return common.WithinID(list)
 }
 
-func (all Comments) PostsScope() common.Scope {
-	posts := map[bson.ObjectId]bool{}
+func (all Comments) PostIDs() []bson.ObjectId {
+	posts := map[bson.ObjectId]struct{}{}
 	for _, c := range all {
-		if c.ReplyTo != "post" {
-			continue
+		if c.PostId.Valid() {
+			posts[c.PostId] = struct{}{}
 		}
-		if _, exists := posts[c.ReplyTo]; !exists {
-			posts[c.ReplyTo] = true
+		if _, exists := posts[c.ReplyTo]; c.ReplyTo == "post" && !exists {
+			posts[c.ReplyTo] = struct{}{}
 		}
 	}
 
 	list := make([]bson.ObjectId, len(posts))
 	index := 0
-	for k, _ := range posts {
+	for k := range posts {
 		list[index] = k
 		index++
 	}
+	return list
+}
 
-	return common.WithinID(list)
+func (all Comments) PostsScope() common.Scope {
+	return common.WithinID(all.PostIDs())
 }
 
 // VotesOf userId in comments resultset.

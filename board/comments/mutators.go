@@ -15,6 +15,23 @@ func UpsertComment(deps Deps, c Comment) (comment Comment, err error) {
 		c.Created = time.Now()
 	}
 
+	if c.ReplyType == "comment" {
+		id := c.ReplyTo
+		for {
+			var ref Comment
+			ref, err = FindId(deps, id)
+			if err != nil {
+				return
+			}
+			id = ref.ReplyTo
+			if ref.ReplyType == "post" {
+				c.PostId = ref.ReplyTo
+				break
+			}
+			continue
+		}
+	}
+
 	c.Content = html.EscapeString(c.Content)
 	c.Updated = time.Now()
 

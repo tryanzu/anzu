@@ -47,10 +47,10 @@ type Gaming struct {
 
 type Users []User
 
-func (list Users) Map() map[string]User {
-	m := make(map[string]User, len(list))
+func (list Users) Map() map[bson.ObjectId]User {
+	m := make(map[bson.ObjectId]User, len(list))
 	for _, item := range list {
-		m[item.Id.Hex()] = item
+		m[item.Id] = item
 	}
 
 	return m

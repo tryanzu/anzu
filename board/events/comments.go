@@ -107,7 +107,19 @@ func onPostComment(e pool.Event) error {
 	}
 
 	if comment.ReplyType == "comment" {
+		ref, err := comments.FindId(deps.Container, comment.RelatedID())
+		if err != nil {
+			return err
+		}
 
+		if ref.UserId != comment.UserId {
+			notify.Database <- notify.Notification{
+				UserId:    ref.UserId,
+				Type:      "comment",
+				RelatedId: comment.Id,
+				Users:     []bson.ObjectId{comment.UserId},
+			}
+		}
 	}
 
 	if comment.ReplyType == "post" {

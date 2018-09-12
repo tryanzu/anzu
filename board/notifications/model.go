@@ -43,18 +43,18 @@ func (all Notifications) UsersScope() common.Scope {
 }
 
 func (all Notifications) CommentsScope() common.Scope {
-	comments := map[bson.ObjectId]bool{}
+	comments := map[bson.ObjectId]struct{}{}
 	for _, n := range all {
 		if n.Type != "comment" && n.Type != "mention" {
 			continue
 		}
 
-		comments[n.RelatedId] = true
+		comments[n.RelatedId] = struct{}{}
 	}
 
 	list := make([]bson.ObjectId, len(comments))
 	index := 0
-	for k, _ := range comments {
+	for k := range comments {
 		list[index] = k
 		index++
 	}
@@ -88,20 +88,20 @@ func (all Notifications) Humanize(deps Deps) (list []map[string]interface{}, err
 	for _, n := range all {
 		switch n.Type {
 		case "comment":
-			comment := cmap[n.RelatedId.Hex()]
-			post := pmap[comment.ReplyTo.Hex()]
-			user := umap[comment.UserId.Hex()]
+			comment := cmap[n.RelatedId]
+			post := pmap[comment.RelatedPost()]
+			user := umap[comment.UserId]
 
 			list = append(list, map[string]interface{}{
-				"target":    "/p/" + post.Slug + "/" + post.Id.Hex(), /*+ "#c" + comment.Id.Hex()*/
+				"target":    "/p/" + post.Slug + "/" + post.Id.Hex(),
 				"title":     "Nuevo comentario de @" + user.UserName,
 				"subtitle":  post.Title,
 				"createdAt": n.Created,
 			})
 		case "mention":
-			comment := cmap[n.RelatedId.Hex()]
-			post := pmap[comment.ReplyTo.Hex()]
-			user := umap[comment.UserId.Hex()]
+			comment := cmap[n.RelatedId]
+			post := pmap[comment.ReplyTo]
+			user := umap[comment.UserId]
 
 			list = append(list, map[string]interface{}{
 				"target":    "/p/" + post.Slug + "/" + post.Id.Hex(), /*+ "#c" + comment.Id.Hex()*/

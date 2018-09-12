@@ -1,8 +1,9 @@
 package post
 
 import (
-	"gopkg.in/mgo.v2/bson"
 	"time"
+
+	"gopkg.in/mgo.v2/bson"
 )
 
 type Post struct {
@@ -29,10 +30,10 @@ type Post struct {
 
 type Posts []Post
 
-func (list Posts) Map() map[string]Post {
-	m := make(map[string]Post, len(list))
+func (list Posts) Map() map[bson.ObjectId]Post {
+	m := make(map[bson.ObjectId]Post, len(list))
 	for _, item := range list {
-		m[item.Id.Hex()] = item
+		m[item.Id] = item
 	}
 
 	return m
