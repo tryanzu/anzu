@@ -11,23 +11,33 @@ func FindList(deps Deps, scopes ...common.Scope) (list Assets, err error) {
 	return
 }
 
-func FindURLs(deps Deps, list ...bson.ObjectId) (common.AssetsStringMap, error) {
-	hash := common.AssetsStringMap{}
+func FindHash(deps Deps, hash string) (asset Asset, err error) {
+	err = deps.Mgo().C("remote_assets").Find(bson.M{
+		"hash": hash,
+	}).One(&asset)
+	return
+}
+
+func FindURLs(deps Deps, list ...bson.ObjectId) (common.AssetRefsMap, error) {
+	hash := common.AssetRefsMap{}
 	missing := []bson.ObjectId{}
 
 	// Attempt to fill hashmap using cache layer first.
 	deps.BuntDB().View(func(tx *buntdb.Tx) error {
 		for _, id := range list {
-			v, err := tx.Get("asset:" + id.Hex() + ":url")
-			if err == nil {
-				hash[id] = v
+			var ref common.AssetRef
+			url, err := tx.Get("asset:" + id.Hex() + ":url")
+			if err != nil {
+				// Append to list of missing keys
+				missing = append(missing, id)
 				continue
 			}
-
-			// Append to list of missing keys
-			missing = append(missing, id)
+			ref.URL = url
+			// uo = use original
+			_, err = tx.Get("asset:" + id.Hex() + ":uo")
+			ref.UseOriginal = err == nil
+			hash[id] = ref
 		}
-
 		return nil
 	})
 
@@ -46,11 +56,10 @@ func FindURLs(deps Deps, list ...bson.ObjectId) (common.AssetsStringMap, error) 
 	}
 
 	for _, u := range assets {
-		url := u.Original
-		if len(u.Hosted) > 0 {
-			url = u.Hosted
+		hash[u.ID] = common.AssetRef{
+			URL:         u.URL(),
+			UseOriginal: u.Status == "remote",
 		}
-		hash[u.ID] = url
 	}
 
 	return hash, nil

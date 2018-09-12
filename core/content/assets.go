@@ -1,7 +1,6 @@
 package content
 
 import (
-	"log"
 	"regexp"
 	"strings"
 
@@ -14,6 +13,30 @@ var (
 	assetURL, _ = regexp.Compile(`http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+`)
 )
 
+func preReplaceAssetTags(deps Deps, c Parseable) (processed Parseable, err error) {
+	processed = c
+	content := processed.GetContent()
+	list := assetURL.FindAllString(content, -1)
+	if len(list) == 0 {
+		return
+	}
+	tags := assets.Assets{}
+	for _, url := range list {
+		var asset assets.Asset
+		asset, err = assets.FromURL(deps, url)
+		if err != nil {
+			return
+		}
+		content = asset.Replace(content)
+		tags = append(tags, asset)
+	}
+
+	// Attempt to host remote assets using S3 in another process
+	go tags.HostRemotes(deps, "post")
+	processed = processed.UpdateContent(content)
+	return
+}
+
 func postReplaceAssetTags(deps Deps, c Parseable, list tags) (processed Parseable, err error) {
 	processed = c
 	if len(list) == 0 {
@@ -25,8 +48,7 @@ func postReplaceAssetTags(deps Deps, c Parseable, list tags) (processed Parseabl
 	if len(ids) == 0 {
 		return
 	}
-	log.Printf("%+v\n", list)
-	var urls common.AssetsStringMap
+	var urls common.AssetRefsMap
 	urls, err = assets.FindURLs(deps, ids...)
 	if err != nil {
 		return
@@ -35,12 +57,12 @@ func postReplaceAssetTags(deps Deps, c Parseable, list tags) (processed Parseabl
 	content := processed.GetContent()
 	for _, tag := range assetList {
 		if id := tag.Params[0]; bson.IsObjectIdHex(id) {
-			url, exists := urls[bson.ObjectIdHex(id)]
-			if exists == false {
+			ref, exists := urls[bson.ObjectIdHex(id)]
+			if exists == false || ref.UseOriginal {
 				continue
 			}
 
-			link := `<img class="asset" src="` + url + `" data-id="` + id + `" alt=""/>`
+			link := `<img class="asset" src="` + ref.URL + `" data-id="` + id + `" alt=""/>`
 			content = strings.Replace(content, tag.Original, link, -1)
 		}
 	}

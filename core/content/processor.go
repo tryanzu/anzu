@@ -38,13 +38,13 @@ func Preprocess(deps Deps, c Parseable) (processed Parseable, err error) {
 	starts := time.Now()
 	pipeline := []Preprocessor{
 		preReplaceMentionTags,
+		preReplaceAssetTags,
 	}
 
 	// Run pipeline over parseable.
 	processed = c
 	for _, fn := range pipeline {
 		processed, err = fn(deps, processed)
-
 		if err != nil {
 			return
 		}

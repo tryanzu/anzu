@@ -1,6 +1,7 @@
 package deps
 
 import (
+	"github.com/mitchellh/goamz/s3"
 	"github.com/olebedev/config"
 	"github.com/op/go-logging"
 	"github.com/tidwall/buntdb"
@@ -19,6 +20,7 @@ type Deps struct {
 	MailerProvider          mail.Mailer
 	CacheProvider           *goredis.Redis
 	BuntProvider            *buntdb.DB
+	S3Provider              *s3.Bucket
 }
 
 func (d Deps) Config() *config.Config {
@@ -44,6 +46,10 @@ func (d Deps) MgoSession() *mgo.Session {
 
 func (d Deps) BuntDB() *buntdb.DB {
 	return d.BuntProvider
+}
+
+func (d Deps) S3() *s3.Bucket {
+	return d.S3Provider
 }
 
 func (d Deps) Mailer() mail.Mailer {
