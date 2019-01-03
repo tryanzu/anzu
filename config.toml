@@ -1,0 +1,5 @@
+[site]
+name = "Anzu"
+description = "Next-generation community engine, bring the conversation online."
+url = "https://tryanzu.com/"
+logoUrl = "/images/anzu.svg"

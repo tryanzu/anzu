@@ -41,7 +41,7 @@ func Comments(c *gin.Context) {
 		return
 	}
 
-	list, err = list.WithReplies(deps.Container, 3)
+	list, err = list.WithReplies(deps.Container, 5)
 	if err != nil {
 		c.AbortWithError(500, err)
 		return

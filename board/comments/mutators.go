@@ -48,7 +48,18 @@ func UpsertComment(deps Deps, c Comment) (comment Comment, err error) {
 	}
 
 	if c.ReplyType == "post" {
-		err = deps.Mgo().C("posts").UpdateId(c.ReplyTo, bson.M{"$inc": bson.M{"comments.count": 1}})
+		err = deps.Mgo().C("posts").UpdateId(c.ReplyTo, bson.M{
+			"$inc":      bson.M{"comments.count": 1},
+			"$addToSet": bson.M{"users": c.UserId},
+		})
+	} else {
+		err = deps.Mgo().C("posts").UpdateId(c.PostId, bson.M{
+			"$addToSet": bson.M{"users": c.UserId},
+		})
+	}
+
+	if err != nil {
+		return
 	}
 
 	// Pre-process comment content.

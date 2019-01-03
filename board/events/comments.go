@@ -68,15 +68,15 @@ func onCommentVote(e pool.Event) error {
 	if vote.Deleted != nil {
 		factor = 1
 	}
-	switch vote.Direction() {
-	case votes.DOWN:
+	switch vote.Value {
+	case "concise", "useful":
 		err = pipeErr(
 			gaming.IncreaseUserSwords(d, vote.UserID, 1*factor),
 			gaming.IncreaseUserSwords(d, comment.UserId, 2*factor),
 		)
-	case votes.UP:
+	case "offtopic", "wordy":
 		err = pipeErr(
-			gaming.IncreaseUserSwords(d, comment.UserId, 5*factor*-1),
+			gaming.IncreaseUserSwords(d, comment.UserId, 1*factor*-1),
 		)
 	}
 

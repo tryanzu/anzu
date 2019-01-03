@@ -139,6 +139,7 @@ func onNewSocket(s *glue.Socket) {
 		if err != nil {
 			log.Println("Could not unmarshal read event from client: ", data)
 			log.Println("Error: ", err)
+			return
 		}
 
 		client.Read <- event

@@ -13,7 +13,6 @@ import (
 	"github.com/tryanzu/core/modules/api/controller/oauth"
 	"github.com/tryanzu/core/modules/api/controller/posts"
 	"github.com/tryanzu/core/modules/api/controller/users"
-	"github.com/tryanzu/core/modules/api/controller/votes"
 
 	"fmt"
 	"html/template"
@@ -26,7 +25,6 @@ type Module struct {
 	Dependencies    ModuleDI
 	Posts           handle.PostAPI
 	Votes           handle.VoteAPI
-	VotesFactory    votes.API
 	Oauth           oauth.API
 	Users           handle.UserAPI
 	Categories      handle.CategoryAPI
@@ -51,7 +49,6 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.PostsFactory},
 		&inject.Object{Value: &module.UsersFactory},
 		&inject.Object{Value: &module.Votes},
-		&inject.Object{Value: &module.VotesFactory},
 		&inject.Object{Value: &module.Users},
 		&inject.Object{Value: &module.Categories},
 		&inject.Object{Value: &module.CommentsFactory},
@@ -135,6 +132,7 @@ func (module *Module) Run(bindTo string) {
 	router.Static("/css", "./static/frontend/public/css")
 	router.Static("/images", "./static/frontend/public/images")
 	router.Static("/app", "./static/frontend/public/app")
+	router.Static("/dist", "./static/frontend/public/dist")
 
 	router.GET("/", controller.HomePage)
 	router.GET("/publicar", chttp.TitleMiddleware("Nueva publicación"), controller.HomePage)
@@ -224,9 +222,9 @@ func (module *Module) Run(bindTo string) {
 	authorized.POST("/badges/buy/:id", module.Gaming.BuyBadge)
 
 	// Votes routes
-	authorized.POST("/vote/comment/:id", chttp.UserMiddleware(), module.VotesFactory.Comment)
 	authorized.POST("/vote/component/:id", module.Votes.VoteComponent)
 	authorized.POST("/vote/post/:id", module.Votes.VotePost)
+	authorized.POST("/react/:type/:id", chttp.UserMiddleware(), controller.UpsertReaction)
 
 	h := http.NewServeMux()
 	h.HandleFunc("/glue/", realtime.ServeHTTP())

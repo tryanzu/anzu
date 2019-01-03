@@ -109,6 +109,16 @@ func (all Comments) WithReplies(deps Deps, max int) (Comments, error) {
 	}
 
 	for n, r := range replies {
+		var processed content.Parseable
+		for cindex, c := range replies[n].List {
+			processed, err = content.Postprocess(deps, c)
+			if err != nil {
+				return Comments{}, err
+			}
+
+			replies[n].List[cindex] = processed.(Comment)
+		}
+
 		replies[n].List, err = r.List.WithUsers(deps)
 
 		if err != nil {
@@ -170,6 +180,11 @@ func (all Comments) IDList() []bson.ObjectId {
 	for _, c := range all {
 		list[index] = c.Id
 		index++
+	}
+
+	for i := len(list)/2 - 1; i >= 0; i-- {
+		opp := len(list) - 1 - i
+		list[i], list[opp] = list[opp], list[i]
 	}
 
 	return list

@@ -71,6 +71,7 @@ func (this API) Get(c *gin.Context) {
 		}(post, user_str_id.(string), signed_in)
 	}
 
+	post.LoadUsersHashtables()
 	data := post.Data()
 	true_count := this.Feed.TrueCommentCount(data.Id)
 	data.Comments.Total = true_count

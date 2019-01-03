@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	mentions, _       = regexp.Compile(`(?i)\B\@([\w\-]+)(#[0-9]+)*`)
+	mentions, _       = regexp.Compile(`(?i)\B\@\(([\w\-]+)\)(#[0-9]+)*`)
 	commentMention, _ = regexp.Compile(`(?i)\B\@([\w\-]+)#[0-9]+`)
 )
 
@@ -37,7 +37,7 @@ func preReplaceMentionTags(deps Deps, c Parseable) (processed Parseable, err err
 			username = parts[1]
 			cidx = parts[2][1:]
 		} else {
-			username = usr[1:]
+			username = usr[2 : len(usr)-1]
 		}
 
 		if _, done := possible[username]; done {

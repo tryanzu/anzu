@@ -54,7 +54,6 @@ func (di *MiddlewareAPI) CORS() gin.HandlerFunc {
 func (di *MiddlewareAPI) TrustIP() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		trusted := di.Security.TrustIP(c.ClientIP())
-
 		if !trusted {
 			c.AbortWithStatus(403)
 			return

@@ -1,19 +1,34 @@
 package votes
 
 import (
+	"errors"
 	"time"
 
 	"gopkg.in/mgo.v2/bson"
 )
 
 // VoteType should be an integer in the form of up or down.
-type VoteType int
+type VoteType string
+
+func isValidVoteType(str string) bool {
+	for _, t := range []string{"useful", "offtopic", "wordy", "concise"} {
+		if t == str {
+			return true
+		}
+	}
+	return false
+}
 
 // UpsertVote creates or removes a vote for given votable item<->user
-func UpsertVote(deps Deps, item Votable, userID bson.ObjectId, kind VoteType) (vote Vote, err error) {
+func UpsertVote(deps Deps, item Votable, userID bson.ObjectId, kind string) (vote Vote, err error) {
+	if isValidVoteType(kind) == false {
+		return Vote{}, errors.New("invalid vote type")
+	}
+
 	criteria := bson.M{
 		"type":       item.VotableType(),
 		"related_id": item.VotableID(),
+		"value":      kind,
 		"user_id":    userID,
 	}
 
@@ -30,7 +45,6 @@ func UpsertVote(deps Deps, item Votable, userID bson.ObjectId, kind VoteType) (v
 			"created_at": time.Now(),
 		},
 	})
-
 	if err != nil {
 		return
 	}
@@ -50,15 +64,12 @@ func UpsertVote(deps Deps, item Votable, userID bson.ObjectId, kind VoteType) (v
 		if err != nil {
 			panic(err)
 		}
-
 		return
 	}
-
 	err = coll(deps).UpdateId(vote.ID, bson.M{"$unset": bson.M{"deleted_at": 1}})
 	if err != nil {
 		panic(err)
 	}
 	vote.Deleted = nil
-
 	return
 }

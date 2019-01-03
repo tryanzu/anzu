@@ -41,12 +41,31 @@ type Post struct {
 	Deleted           time.Time        `bson:"deleted_at,omitempty" json:"deleted_at,omitempty"`
 
 	// Runtime generated pointers
-	di *FeedModule
+	UsersHashtable map[string]interface{} `bson:"-" json:"usersHashtable"`
+	di             *FeedModule
 }
 
 // Set Dependency Injection pointer
 func (self *Post) SetDI(di *FeedModule) {
 	self.di = di
+}
+
+func (self *Post) LoadUsersHashtables() {
+	var users []user.UserSimple
+	ids := self.Users
+	ids = append(ids, self.UserId)
+	err := deps.Container.Mgo().C("users").Find(bson.M{"_id": bson.M{"$in": ids}}).All(&users)
+	if err != nil {
+		panic(err)
+	}
+
+	ht := make(map[string]interface{}, len(users))
+	for _, u := range users {
+		ht[u.UserName] = u
+	}
+
+	self.UsersHashtable = ht
+	return
 }
 
 // Comments loading for post
@@ -161,13 +180,9 @@ func (self *Post) PushComment(c string, user_id bson.ObjectId) *Comment {
 	pos := self.GetCommentCount()
 
 	comment := &Comment{
-		Id:     bson.NewObjectId(),
-		PostId: self.Id,
-		UserId: user_id,
-		Votes: Votes{
-			Up:   0,
-			Down: 0,
-		},
+		Id:       bson.NewObjectId(),
+		PostId:   self.Id,
+		UserId:   user_id,
 		Content:  c,
 		Position: pos,
 		Created:  time.Now(),
@@ -182,13 +197,11 @@ func (self *Post) PushComment(c string, user_id bson.ObjectId) *Comment {
 	// Publish comment
 	database := deps.Container.Mgo()
 	err := database.C("comments").Insert(comment)
-
 	if err != nil {
 		panic(err)
 	}
 
 	err = database.C("posts").Update(bson.M{"_id": self.Id}, bson.M{"$set": bson.M{"updated_at": time.Now()}, "$inc": bson.M{"comments.count": 1}})
-
 	if err != nil {
 		panic(err)
 	}

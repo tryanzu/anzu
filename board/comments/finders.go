@@ -32,11 +32,6 @@ func FetchBy(deps Deps, query common.Query) (list Comments, err error) {
 
 func Post(id bson.ObjectId, limit, offset int, reverse bool, before *bson.ObjectId) common.Query {
 	return func(col *mgo.Collection) *mgo.Query {
-		sort := "created_at"
-		if reverse {
-			sort = "-created_at"
-		}
-
 		criteria := bson.M{
 			"reply_type": "post",
 			"reply_to":   id,
@@ -48,7 +43,7 @@ func Post(id bson.ObjectId, limit, offset int, reverse bool, before *bson.Object
 			offset = 0
 		}
 
-		return col.Find(criteria).Limit(limit).Skip(offset).Sort(sort)
+		return col.Find(criteria).Limit(limit).Skip(offset).Sort("-created_at")
 		// .Sort("-votes.up", "votes.down", "-created_at")
 	}
 }

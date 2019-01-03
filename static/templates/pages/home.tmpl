@@ -33,7 +33,9 @@
     <link type="text/css" rel="stylesheet" href="/assets/dist/core.css">
 </head>
 <body class="flex">
-    <main class="flex flex-auto" id="anzu">
+    <main class="flex flex-auto" id="react-anzu">
+    </main>
+    <main class="dn" id="anzu">
     </main>
 
     <!-- Anzu board components -->
@@ -44,12 +46,13 @@
         }
     </script>
     <script type="text/javascript" src="/assets/dist/tribute.min.js"></script>
+    <script type="text/javascript" src="/assets/dist/others.js"></script>
     <script type="text/javascript" src="/assets/dist/core.js"></script>
 
     <script type="text/javascript">
         document.addEventListener('DOMContentLoaded', function() {
             var mount = require('src/mount.js');
-            mount.AnzuApp(document.getElementById('anzu'));
+            mount.anzu(document.getElementById('react-anzu'));
         })
     </script>
 </body>

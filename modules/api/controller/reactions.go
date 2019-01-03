@@ -1,4 +1,4 @@
-package votes
+package controller
 
 import (
 	"github.com/gin-gonic/gin"
@@ -12,11 +12,15 @@ import (
 	"net/http"
 )
 
-// Comment vote delivery.
-func (api API) Comment(c *gin.Context) {
+type upsertReactionBody struct {
+	Type string `json:"type" binding:"required"`
+}
+
+// UpsertReaction realted to a reactable.
+func UpsertReaction(c *gin.Context) {
 	var (
 		id      bson.ObjectId
-		form    CommentForm
+		body    upsertReactionBody
 		comment comments.Comment
 		err     error
 	)
@@ -27,14 +31,14 @@ func (api API) Comment(c *gin.Context) {
 		return
 	}
 
-	// Comment id validation.
+	// ID validation.
 	if id = bson.ObjectIdHex(c.Params.ByName("id")); !id.Valid() {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Malformed request, invalid id.", "status": "error"})
 		return
 	}
 
-	// Bind form data.
-	if err = c.Bind(&form); err != nil {
+	// Bind body data.
+	if err = c.Bind(&body); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "reason": "Invalid request."})
 		return
 	}
@@ -44,7 +48,7 @@ func (api API) Comment(c *gin.Context) {
 		return
 	}
 
-	vote, err := votes.UpsertVote(deps.Container, comment, usr.Id, form.VoteType())
+	vote, err := votes.UpsertVote(deps.Container, comment, usr.Id, body.Type)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": err.Error()})
 		return
