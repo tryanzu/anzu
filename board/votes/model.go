@@ -50,10 +50,11 @@ func coll(deps Deps) *mgo.Collection {
 // List aggregates a list of votes for certain event.
 type List []Vote
 
-func (ls List) ValuesMap() map[string]string {
-	m := make(map[string]string, len(ls))
+// ValuesMap is a map of votes with values.
+func (ls List) ValuesMap() map[string][]string {
+	m := make(map[string][]string, len(ls))
 	for _, v := range ls {
-		m[v.RelatedID.Hex()] = v.Value
+		m[v.RelatedID.Hex()] = append(m[v.RelatedID.Hex()], v.Value)
 	}
 	return m
 }

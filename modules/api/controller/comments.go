@@ -138,13 +138,13 @@ func UpdateComment(c *gin.Context) {
 	}
 
 	if err := c.BindJSON(&form); err != nil {
-		c.AbortWithError(500, errors.New("Invalid reply body."))
+		c.AbortWithError(500, errors.New("invalid reply body"))
 		return
 	}
 
 	comment, err := comments.FindId(deps.Container, cid)
 	if err != nil {
-		c.AbortWithError(404, errors.New("Unknown comment to update."))
+		c.AbortWithError(404, errors.New("unknown comment to update"))
 		return
 	}
 
@@ -207,9 +207,9 @@ func DeleteComment(c *gin.Context) {
 }
 
 func signs(c *gin.Context) events.UserSign {
-	usr := c.MustGet("user").(user.User)
+	usr := c.MustGet("userID").(bson.ObjectId)
 	sign := events.UserSign{
-		UserID: usr.Id,
+		UserID: usr,
 	}
 	if r := c.Query("reason"); len(r) > 0 {
 		sign.Reason = r
