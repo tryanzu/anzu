@@ -1,4 +1,4 @@
-package post
+package activity
 
 import (
 	"github.com/tidwall/buntdb"

@@ -2,6 +2,7 @@ package posts
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/tryanzu/core/core/events"
 	"github.com/tryanzu/core/modules/feed"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -14,7 +15,6 @@ func (this API) Get(c *gin.Context) {
 	)
 
 	id := c.Params.ByName("id")
-
 	if bson.IsObjectIdHex(id) {
 		kind = "id"
 	}
@@ -43,38 +43,28 @@ func (this API) Get(c *gin.Context) {
 	post.LoadComments(10, -10)
 	post.LoadUsers()
 
-	_, signed_in := c.Get("token")
+	if sid, exists := c.Get("userID"); exists {
+		uid := sid.(bson.ObjectId)
+		post.LoadVotes(uid)
 
-	if signed_in {
-
-		user_str_id := c.MustGet("user_id")
-		user_id := bson.ObjectIdHex(user_str_id.(string))
-
-		post.LoadVotes(user_id)
-
-		go func(post *feed.Post, user_id string, signed_in bool) {
-
-			defer this.Errors.Recover()
-
-			if signed_in {
-
-				by := bson.ObjectIdHex(user_id)
-
-				post.Viewed(by)
-			}
-
-			post.UpdateRate()
-
-			// Trigger gamification events (if needed)
-			this.Gaming.Post(post).Review()
-
-		}(post, user_str_id.(string), signed_in)
+		// Notify about view.
+		events.In <- events.PostView(signs(c), post.Id)
 	}
 
 	post.LoadUsersHashtables()
 	data := post.Data()
-	true_count := this.Feed.TrueCommentCount(data.Id)
-	data.Comments.Total = true_count
+	data.Comments.Total = this.Feed.TrueCommentCount(data.Id)
 
 	c.JSON(200, data)
+}
+
+func signs(c *gin.Context) events.UserSign {
+	usr := c.MustGet("userID").(bson.ObjectId)
+	sign := events.UserSign{
+		UserID: usr,
+	}
+	if r := c.Query("reason"); len(r) > 0 {
+		sign.Reason = r
+	}
+	return sign
 }

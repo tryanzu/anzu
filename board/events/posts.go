@@ -18,15 +18,32 @@ func postsEvents() {
 				return err
 			}
 
-			notify.Transmit <- notify.Socket{"feed", "action", map[string]interface{}{
-				"fire":     "new-post",
-				"category": post.Category.Hex(),
-				"user_id":  post.UserId.Hex(),
-				"id":       post.Id.Hex(),
-				"slug":     post.Slug,
-			}}
+			notify.Transmit <- notify.Socket{
+				Chan:   "feed",
+				Action: "action",
+				Params: map[string]interface{}{
+					"fire":     "new-post",
+					"category": post.Category.Hex(),
+					"user_id":  post.UserId.Hex(),
+					"id":       post.Id.Hex(),
+					"slug":     post.Slug,
+				},
+			}
 
 			return nil
+		},
+	}
+
+	ev.On <- ev.EventHandler{
+		On: ev.POST_VIEW,
+		Handler: func(e ev.Event) error {
+			post, err := posts.FindId(deps.Container, e.Params["id"].(bson.ObjectId))
+			if err != nil {
+				return err
+			}
+
+			err = posts.TrackView(deps.Container, post.Id, e.Sign.UserID)
+			return err
 		},
 	}
 }

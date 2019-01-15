@@ -62,7 +62,7 @@ func postReplaceAssetTags(deps Deps, c Parseable, list tags) (processed Parseabl
 				continue
 			}
 
-			link := `<img class="asset" src="` + ref.URL + `" data-id="` + id + `" alt=""/>`
+			link := `![-](` + ref.URL + `)`
 			content = strings.Replace(content, tag.Original, link, -1)
 		}
 	}

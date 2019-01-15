@@ -2,6 +2,7 @@ package http
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/tryanzu/core/core/events"
 	"github.com/tryanzu/core/core/user"
 	"github.com/tryanzu/core/deps"
 	"gopkg.in/mgo.v2/bson"
@@ -67,7 +68,14 @@ func UserMiddleware() gin.HandlerFunc {
 			c.AbortWithError(412, err)
 			return
 		}
+		sign := events.UserSign{
+			UserID: oid,
+		}
+		if r := c.Query("reason"); len(r) > 0 {
+			sign.Reason = r
+		}
 
+		c.Set("sign", sign)
 		c.Set("user", usr)
 		c.Next()
 	}

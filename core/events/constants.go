@@ -3,6 +3,7 @@ package events
 const (
 	POSTS_NEW       = "posts:new"
 	POSTS_COMMENT   = "posts:comment"
+	POST_VIEW       = "posts:view"
 	RECENT_ACTIVITY = "activity:recent"
 
 	COMMENT_DELETE          = "comments:delete"

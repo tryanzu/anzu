@@ -28,7 +28,6 @@ type Post struct {
 	UserId            bson.ObjectId    `bson:"user_id,omitempty" json:"user_id,omitempty"`
 	Users             []bson.ObjectId  `bson:"users,omitempty" json:"users,omitempty"`
 	Votes             Votes            `bson:"votes" json:"votes"`
-	Components        Components       `bson:"components,omitempty" json:"components,omitempty"`
 	RelatedComponents []bson.ObjectId  `bson:"related_components,omitempty" json:"related_components,omitempty"`
 	Following         bool             `bson:"following,omitempty" json:"following,omitempty"`
 	Pinned            bool             `bson:"pinned,omitempty" json:"pinned,omitempty"`

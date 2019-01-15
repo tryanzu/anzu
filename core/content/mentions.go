@@ -111,7 +111,7 @@ func postReplaceMentionTags(deps Deps, c Parseable, list tags) (processed Parsea
 				continue
 			}
 
-			link := `<a class="user-mention" data-id="` + id + `" data-username="` + name + `">@` + name + `</a>`
+			link := `[@` + name + `](/u/` + name + `/` + id + `)`
 			content = strings.Replace(content, tag.Original, link, -1)
 		}
 	}

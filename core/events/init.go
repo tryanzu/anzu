@@ -1,11 +1,17 @@
 package events
 
-import "log"
+import (
+	"log"
+
+	"gopkg.in/mgo.v2/bson"
+)
 
 type Handler func(Event) error
 
-// The input channel will receive
+// Input channel for incoming events.
 var In chan Event
+
+// On "event" channel. Register event handlers using channels.
 var On chan EventHandler
 
 // Map of handlers that will react to events.
@@ -18,7 +24,13 @@ type EventHandler struct {
 
 type Event struct {
 	Name   string
+	Sign   *UserSign
 	Params map[string]interface{}
+}
+
+type UserSign struct {
+	Reason string
+	UserID bson.ObjectId
 }
 
 func execHandlers(list []Handler, event Event) {
@@ -49,7 +61,7 @@ func sink(in chan Event, on chan EventHandler) {
 	}
 }
 
-// Initialize channel of input events, consumer & map of handlers.
+// init channel for input events, consumers & map of handlers.
 func init() {
 	In = make(chan Event, 10)
 	On = make(chan EventHandler)

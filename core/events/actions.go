@@ -16,6 +16,16 @@ func PostNew(id bson.ObjectId) Event {
 	}
 }
 
+func PostView(sign UserSign, id bson.ObjectId) Event {
+	return Event{
+		Name: POST_VIEW,
+		Sign: &sign,
+		Params: map[string]interface{}{
+			"id": id,
+		},
+	}
+}
+
 func PostComment(id bson.ObjectId) Event {
 	return Event{
 		Name: POSTS_COMMENT,
@@ -25,9 +35,10 @@ func PostComment(id bson.ObjectId) Event {
 	}
 }
 
-func DeleteComment(postId, id bson.ObjectId) Event {
+func DeleteComment(sign UserSign, postId, id bson.ObjectId) Event {
 	return Event{
 		Name: COMMENT_DELETE,
+		Sign: &sign,
 		Params: map[string]interface{}{
 			"id":      id,
 			"post_id": postId,
@@ -35,9 +46,10 @@ func DeleteComment(postId, id bson.ObjectId) Event {
 	}
 }
 
-func UpdateComment(postId, id bson.ObjectId) Event {
+func UpdateComment(sign UserSign, postId, id bson.ObjectId) Event {
 	return Event{
 		Name: COMMENT_UPDATE,
+		Sign: &sign,
 		Params: map[string]interface{}{
 			"id":      id,
 			"post_id": postId,

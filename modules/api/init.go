@@ -9,7 +9,6 @@ import (
 	"github.com/tryanzu/core/board/realtime"
 	chttp "github.com/tryanzu/core/core/http"
 	"github.com/tryanzu/core/modules/api/controller"
-	"github.com/tryanzu/core/modules/api/controller/comments"
 	"github.com/tryanzu/core/modules/api/controller/oauth"
 	"github.com/tryanzu/core/modules/api/controller/posts"
 	"github.com/tryanzu/core/modules/api/controller/users"
@@ -22,20 +21,19 @@ import (
 )
 
 type Module struct {
-	Dependencies    ModuleDI
-	Posts           handle.PostAPI
-	Votes           handle.VoteAPI
-	Oauth           oauth.API
-	Users           handle.UserAPI
-	Categories      handle.CategoryAPI
-	CommentsFactory comments.API
-	Stats           handle.StatAPI
-	Middlewares     handle.MiddlewareAPI
-	Sitemap         handle.SitemapAPI
-	Acl             handle.AclAPI
-	Gaming          handle.GamingAPI
-	PostsFactory    posts.API
-	UsersFactory    users.API
+	Dependencies ModuleDI
+	Posts        handle.PostAPI
+	Votes        handle.VoteAPI
+	Oauth        oauth.API
+	Users        handle.UserAPI
+	Categories   handle.CategoryAPI
+	Stats        handle.StatAPI
+	Middlewares  handle.MiddlewareAPI
+	Sitemap      handle.SitemapAPI
+	Acl          handle.AclAPI
+	Gaming       handle.GamingAPI
+	PostsFactory posts.API
+	UsersFactory users.API
 }
 
 type ModuleDI struct {
@@ -51,7 +49,6 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.Votes},
 		&inject.Object{Value: &module.Users},
 		&inject.Object{Value: &module.Categories},
-		&inject.Object{Value: &module.CommentsFactory},
 		&inject.Object{Value: &module.Stats},
 		&inject.Object{Value: &module.Middlewares},
 		&inject.Object{Value: &module.Acl},
@@ -73,7 +70,7 @@ func (module *Module) Populate(g inject.Graph) {
 }
 
 func (module *Module) Run(bindTo string) {
-	var debug bool = true
+	debug := true
 	environment, err := module.Dependencies.Config.String("environment")
 	if err != nil {
 		panic(err)
@@ -119,7 +116,7 @@ func (module *Module) Run(bindTo string) {
 	router.Use(module.Middlewares.ErrorTracking(debug))
 	router.Use(module.Middlewares.CORS())
 	router.Use(module.Middlewares.MongoRefresher())
-	router.Use(module.Middlewares.TrustIP())
+	//router.Use(module.Middlewares.TrustIP())
 	router.Use(chttp.SiteMiddleware())
 	router.Use(chttp.MaxAllowed(5))
 
@@ -199,9 +196,8 @@ func (module *Module) Run(bindTo string) {
 
 	// Comment routes
 	authorized.POST("/comments/:id", chttp.UserMiddleware(), controller.NewComment)
-	authorized.POST("/post/comment/:id", module.CommentsFactory.Add)
-	authorized.PUT("/post/comment/:id", module.CommentsFactory.Update)
-	authorized.DELETE("/post/comment/:id", module.CommentsFactory.Delete)
+	authorized.PUT("/comments/:id", chttp.UserMiddleware(), controller.UpdateComment)
+	authorized.DELETE("/comments/:id", chttp.UserMiddleware(), controller.DeleteComment)
 
 	// Post routes
 	authorized.POST("/post", module.PostsFactory.Create)

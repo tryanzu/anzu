@@ -24,6 +24,7 @@ type Comment struct {
 	Chosen    bool          `bson:"chosen,omitempty" json:"chosen,omitempty"`
 	Created   time.Time     `bson:"created_at" json:"created_at"`
 	Updated   time.Time     `bson:"updated_at" json:"updated_at"`
+	Deleted   *time.Time    `bson:"deleted_at,omitempty" json:"-"`
 
 	// Runtime generated fields.
 	Replies interface{} `bson:"-" json:"replies,omitempty"`

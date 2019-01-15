@@ -87,15 +87,27 @@ func onCommentDelete(e pool.Event) error {
 	cid := e.Params["id"].(bson.ObjectId)
 	pid := e.Params["post_id"].(bson.ObjectId)
 
-	notify.Transmit <- notify.Socket{"feed", "action", map[string]interface{}{
-		"fire": "delete-comment",
-		"id":   pid.Hex(),
-	}}
+	notify.Transmit <- notify.Socket{
+		Chan:   "feed",
+		Action: "action",
+		Params: map[string]interface{}{
+			"fire": "delete-comment",
+			"id":   pid.Hex(),
+		},
+	}
 
-	notify.Transmit <- notify.Socket{"post", pid.Hex(), map[string]interface{}{
-		"fire": "delete-comment",
-		"id":   cid.Hex(),
-	}}
+	notify.Transmit <- notify.Socket{
+		Chan:   "post",
+		Action: pid.Hex(),
+		Params: map[string]interface{}{
+			"fire": "delete-comment",
+			"id":   cid.Hex(),
+		},
+	}
+
+	if e.Sign != nil {
+		audit("comment", cid, "delete", *e.Sign)
+	}
 
 	return nil
 }
@@ -162,11 +174,18 @@ func onPostComment(e pool.Event) error {
 func onCommentUpdate(e pool.Event) error {
 	cid := e.Params["id"].(bson.ObjectId)
 	pid := e.Params["post_id"].(bson.ObjectId)
+	notify.Transmit <- notify.Socket{
+		Chan:   "post",
+		Action: pid.Hex(),
+		Params: map[string]interface{}{
+			"fire": "comment-updated",
+			"id":   cid.Hex(),
+		},
+	}
 
-	notify.Transmit <- notify.Socket{"post", pid.Hex(), map[string]interface{}{
-		"fire": "comment-updated",
-		"id":   cid.Hex(),
-	}}
+	if e.Sign != nil {
+		audit("comment", cid, "update", *e.Sign)
+	}
 
 	return nil
 }
