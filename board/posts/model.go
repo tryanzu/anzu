@@ -30,6 +30,14 @@ type Post struct {
 
 type Posts []Post
 
+func (list Posts) IDs() []bson.ObjectId {
+	m := make([]bson.ObjectId, len(list))
+	for k, item := range list {
+		m[k] = item.Id
+	}
+	return m
+}
+
 func (list Posts) Map() map[bson.ObjectId]Post {
 	m := make(map[bson.ObjectId]Post, len(list))
 	for _, item := range list {

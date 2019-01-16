@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"html"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"path/filepath"
@@ -17,6 +18,7 @@ import (
 	"github.com/mitchellh/goamz/s3"
 	"github.com/olebedev/config"
 	"github.com/tryanzu/core/board/legacy/model"
+	posts "github.com/tryanzu/core/board/posts"
 	"github.com/tryanzu/core/core/events"
 	"github.com/tryanzu/core/deps"
 	"github.com/tryanzu/core/modules/acl"
@@ -53,7 +55,6 @@ func (di PostAPI) FeedGet(c *gin.Context) {
 		offset   = 0
 		limit    = 10
 		database = deps.Container.Mgo()
-		redis    = di.CacheService
 	)
 
 	if n, err := strconv.Atoi(c.Query("offset")); err == nil && n > 0 {
@@ -100,59 +101,7 @@ func (di PostAPI) FeedGet(c *gin.Context) {
 		user_order = true
 	}
 
-	_, filter_by_category := search["category"]
-
-	// Get the list of categories a user is following when the request is authenticated
-	if signed_in && !filter_by_category && !user_order {
-
-		var user_categories []bson.ObjectId
-
-		user_categories_list, err := redis.SMembers("user:categories:" + user_id.(string))
-
-		if err != nil {
-			panic(err)
-		}
-
-		if len(user_categories_list) == 0 {
-
-			var user model.User
-
-			err := database.C("users").Find(bson.M{"_id": bson.ObjectIdHex(user_id.(string))}).One(&user)
-
-			if err != nil {
-				panic(err)
-			}
-
-			if len(user.Categories) > 0 {
-
-				var category_members []string
-
-				for _, category_id := range user.Categories {
-
-					user_categories = append(user_categories, category_id)
-					category_members = append(category_members, category_id.Hex())
-				}
-
-				// Create the set inside redis and move on
-				redis.SAdd("user:categories:"+user_id.(string), category_members...)
-			}
-
-		} else {
-
-			for _, category_id := range user_categories_list {
-
-				if bson.IsObjectIdHex(category_id) {
-
-					user_categories = append(user_categories, bson.ObjectIdHex(category_id))
-				}
-			}
-		}
-
-		if len(user_categories) > 0 {
-			search["category"] = bson.M{"$in": user_categories}
-		}
-
-	} else if fltr_categories != "" {
+	if fltr_categories != "" {
 
 		var user_categories []bson.ObjectId
 
@@ -173,26 +122,13 @@ func (di PostAPI) FeedGet(c *gin.Context) {
 	}
 
 	if relevant != "" {
-
-		// Calculate the offset using the limit
-		list_start := offset
-		list_end := offset + limit
-
-		relevant_date := relevant
-
-		relevant_list, err := redis.ZRevRange("feed:relevant:"+relevant_date, list_start, list_end, false)
-
-		if err == nil && len(relevant_list) > 0 {
-
+		list, err := posts.FindRateList(deps.Container, relevant, offset, limit)
+		if err != nil {
+			log.Printf("[err] %v\n", err)
+		}
+		if err == nil && len(list) > 0 {
 			var temp_feed []model.FeedPost
-			var relevant_ids []bson.ObjectId
-
-			for _, relevant_id := range relevant_list {
-
-				relevant_ids = append(relevant_ids, bson.ObjectIdHex(relevant_id))
-			}
-
-			err := database.C("posts").Find(bson.M{"_id": bson.M{"$in": relevant_ids}}).Select(bson.M{"comments.set": 0, "content": 0, "components": 0}).All(&temp_feed)
+			err := database.C("posts").Find(bson.M{"_id": bson.M{"$in": list}}).Select(bson.M{"comments.set": 0, "content": 0, "components": 0}).All(&temp_feed)
 
 			if err != nil {
 				panic(err)
@@ -201,12 +137,9 @@ func (di PostAPI) FeedGet(c *gin.Context) {
 			feed = []model.FeedPost{}
 
 			// Using the temp feed we will have to manually order them by the natural order given by the relevant list
-			for _, relevant_id := range relevant_ids {
-
+			for _, id := range list {
 				for _, post := range temp_feed {
-
-					if post.Id == relevant_id {
-
+					if post.Id == id {
 						feed = append(feed, post)
 						break
 					}
@@ -266,15 +199,11 @@ func (di PostAPI) FeedGet(c *gin.Context) {
 	}
 
 	if signed_in {
-		events.In <- events.TrackActivity(model.Activity{
-			UserId: bson.ObjectIdHex(user_id.(string)),
-			Event:  "feed",
-			List:   list,
-		})
+		events.In <- events.PostsReached(signs(c), list)
 	}
 
 	// Update the feed rates for the most important stuff
-	go di.Feed.UpdateFeedRates(feed)
+	//go di.Feed.UpdateFeedRates(feed)
 
 	// Get the users needed by the feed
 	err := database.C("users").Find(bson.M{"_id": bson.M{"$in": authors}}).All(&users)
@@ -329,6 +258,17 @@ func (di PostAPI) FeedGet(c *gin.Context) {
 
 		c.JSON(200, gin.H{"feed": []string{}, "offset": offset, "limit": limit})
 	}
+}
+
+func signs(c *gin.Context) events.UserSign {
+	usr := c.MustGet("userID").(bson.ObjectId)
+	sign := events.UserSign{
+		UserID: usr,
+	}
+	if r := c.Query("reason"); len(r) > 0 {
+		sign.Reason = r
+	}
+	return sign
 }
 
 func (di PostAPI) GetLightweight(c *gin.Context) {

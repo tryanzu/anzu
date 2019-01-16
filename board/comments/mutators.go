@@ -69,11 +69,13 @@ func UpsertComment(deps Deps, c Comment) (comment Comment, err error) {
 		if c.ReplyType == "post" {
 			err = deps.Mgo().C("posts").UpdateId(c.ReplyTo, bson.M{
 				"$inc":      bson.M{"comments.count": 1},
+				"$set":      bson.M{"updated_at": time.Now()},
 				"$addToSet": bson.M{"users": c.UserId},
 			})
 		} else {
 			err = deps.Mgo().C("posts").UpdateId(c.PostId, bson.M{
 				"$addToSet": bson.M{"users": c.UserId},
+				"$set":      bson.M{"updated_at": time.Now()},
 			})
 		}
 	}

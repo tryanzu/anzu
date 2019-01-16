@@ -2,6 +2,7 @@ package events
 
 import (
 	"log"
+	"time"
 
 	"gopkg.in/mgo.v2/bson"
 )
@@ -34,13 +35,17 @@ type UserSign struct {
 }
 
 func execHandlers(list []Handler, event Event) {
+	starts := time.Now()
 	var err error
 	for h := range list {
+		log.Printf("%v\n", list[h])
 		err = list[h](event)
 		if err != nil {
 			panic(err)
 		}
 	}
+	elapsed := time.Since(starts)
+	log.Printf("%s::execHandlers(%v) took: %v\n", event.Name, len(list), elapsed)
 }
 
 func sink(in chan Event, on chan EventHandler) {

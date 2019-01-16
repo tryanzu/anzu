@@ -26,6 +26,16 @@ func PostView(sign UserSign, id bson.ObjectId) Event {
 	}
 }
 
+func PostsReached(sign UserSign, list []bson.ObjectId) Event {
+	return Event{
+		Name: POSTS_REACHED,
+		Sign: &sign,
+		Params: map[string]interface{}{
+			"list": list,
+		},
+	}
+}
+
 func PostComment(id bson.ObjectId) Event {
 	return Event{
 		Name: POSTS_COMMENT,

@@ -46,4 +46,13 @@ func postsEvents() {
 			return err
 		},
 	}
+
+	ev.On <- ev.EventHandler{
+		On: ev.POSTS_REACHED,
+		Handler: func(e ev.Event) error {
+			list := e.Params["list"].([]bson.ObjectId)
+			err := posts.TrackReachedList(deps.Container, list, e.Sign.UserID)
+			return err
+		},
+	}
 }

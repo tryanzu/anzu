@@ -4,6 +4,7 @@ const (
 	POSTS_NEW       = "posts:new"
 	POSTS_COMMENT   = "posts:comment"
 	POST_VIEW       = "posts:view"
+	POSTS_REACHED   = "posts:reached"
 	RECENT_ACTIVITY = "activity:recent"
 
 	COMMENT_DELETE          = "comments:delete"
