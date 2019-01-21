@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/facebookgo/inject"
 	"github.com/getsentry/raven-go"
@@ -25,8 +26,6 @@ import (
 	"github.com/tryanzu/core/modules/security"
 	"github.com/tryanzu/core/modules/user"
 	"github.com/xuyu/goredis"
-
-	"os"
 )
 
 func main() {

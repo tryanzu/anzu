@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/tryanzu/core/core/common"
+	"github.com/tryanzu/core/core/events"
 	"github.com/tryanzu/core/core/user"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -57,15 +58,15 @@ func preReplaceMentionTags(deps Deps, c Parseable) (processed Parseable, err err
 		Username string        `bson:"username"`
 	}
 
-	err = deps.Mgo().C("users").Find(bson.M{
-		"username": bson.M{
-			"$in": users,
-		},
-	}).Select(bson.M{"username": 1}).All(&targets)
-
+	err = deps.Mgo().C("users").Find(bson.M{"username": bson.M{"$in": users}}).Select(bson.M{"username": 1}).All(&targets)
 	if err != nil || len(targets) == 0 {
 		return
 	}
+
+	meta := processed.GetParseableMeta()
+	relatedID := meta["id"].(bson.ObjectId)
+	userID := meta["user_id"].(bson.ObjectId)
+	usersID := []bson.ObjectId{userID}
 
 	var refs []Mention
 	for _, usr := range targets {
@@ -73,10 +74,12 @@ func preReplaceMentionTags(deps Deps, c Parseable) (processed Parseable, err err
 		if exists == false {
 			continue
 		}
-
 		mention.UserID = usr.ID
 		refs = append(refs, mention)
 		content = mention.Replace(content)
+
+		// Track mention
+		events.In <- events.TrackMention(usr.ID, relatedID, usersID)
 	}
 
 	processed = processed.UpdateContent(content)
@@ -103,7 +106,6 @@ func postReplaceMentionTags(deps Deps, c Parseable, list tags) (processed Parsea
 	}
 
 	content := processed.GetContent()
-
 	for _, tag := range mentions {
 		if id := tag.Params[0]; bson.IsObjectIdHex(id) {
 			name, exists := users[bson.ObjectIdHex(id)]

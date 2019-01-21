@@ -65,17 +65,21 @@ func (di PostAPI) FeedGet(c *gin.Context) {
 		limit = n
 	}
 
+	if s := c.Query("search"); len(s) > 0 {
+		search["$text"] = bson.M{"$search": s}
+	}
+
 	if id := c.Query("category"); bson.IsObjectIdHex(id) {
 		search["category"] = bson.ObjectIdHex(id)
 	}
 
 	if slug := c.Query("category"); len(slug) > 0 && bson.IsObjectIdHex(slug) == false {
 		var category struct {
-			Id bson.ObjectId `bson:"_id,omitempty"`
+			ID bson.ObjectId `bson:"_id,omitempty"`
 		}
 
 		if err := database.C("categories").Find(bson.M{"slug": slug}).Select(bson.M{"_id": 1}).One(&category); err == nil {
-			search["category"] = category.Id
+			search["category"] = category.ID
 		}
 	}
 
@@ -127,8 +131,8 @@ func (di PostAPI) FeedGet(c *gin.Context) {
 			log.Printf("[err] %v\n", err)
 		}
 		if err == nil && len(list) > 0 {
-			var temp_feed []model.FeedPost
-			err := database.C("posts").Find(bson.M{"_id": bson.M{"$in": list}}).Select(bson.M{"comments.set": 0, "content": 0, "components": 0}).All(&temp_feed)
+			var temp []model.FeedPost
+			err := database.C("posts").Find(bson.M{"_id": bson.M{"$in": list}}).Select(bson.M{"comments.set": 0, "content": 0, "components": 0}).All(&temp)
 
 			if err != nil {
 				panic(err)
@@ -138,7 +142,7 @@ func (di PostAPI) FeedGet(c *gin.Context) {
 
 			// Using the temp feed we will have to manually order them by the natural order given by the relevant list
 			for _, id := range list {
-				for _, post := range temp_feed {
+				for _, post := range temp {
 					if post.Id == id {
 						feed = append(feed, post)
 						break

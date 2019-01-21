@@ -39,8 +39,12 @@ func (c Comment) UpdateContent(content string) content.Parseable {
 	return c
 }
 
-func (c Comment) GetParseableMeta() (meta map[string]interface{}) {
-	return
+func (c Comment) GetParseableMeta() map[string]interface{} {
+	meta := make(map[string]interface{})
+	meta["id"] = c.Id
+	meta["related"] = "comment"
+	meta["user_id"] = c.UserId
+	return meta
 }
 
 func (c Comment) RelatedID() bson.ObjectId {
@@ -215,7 +219,7 @@ func (all Comments) PostIDs() []bson.ObjectId {
 		if c.PostId.Valid() {
 			posts[c.PostId] = struct{}{}
 		}
-		if _, exists := posts[c.ReplyTo]; c.ReplyTo == "post" && !exists {
+		if _, exists := posts[c.ReplyTo]; c.ReplyType == "post" && !exists {
 			posts[c.ReplyTo] = struct{}{}
 		}
 	}

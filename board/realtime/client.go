@@ -98,6 +98,19 @@ func (c *Client) send(packed []M) {
 			c.Raw.Write(m.Content)
 			continue
 		}
+		if m.Channel[0:4] == "user" {
+			if c.User == nil {
+				continue
+			}
+			id := bson.ObjectIdHex(m.Channel[5:])
+			if id.Valid() == false {
+				log.Println("Invalid userId in packed messages sending. Chan:", m.Channel)
+				continue
+			}
+			if id == c.User.Id {
+				c.Raw.Write(m.Content)
+			}
+		}
 
 		if c, exists := c.Channels[m.Channel]; exists {
 			c.Write(m.Content)

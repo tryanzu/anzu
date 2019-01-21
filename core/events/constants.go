@@ -15,5 +15,7 @@ const (
 	COMMENT_DOWNVOTE        = "comments:downvote"
 	COMMENT_DOWNVOTE_REMOVE = "comments:downvote.remove"
 
+	NEW_MENTION = "new:mentions"
+
 	RAW_EMIT = "transmit:emit"
 )

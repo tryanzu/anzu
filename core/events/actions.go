@@ -2,7 +2,6 @@ package events
 
 import (
 	"github.com/tryanzu/core/board/legacy/model"
-	notify "github.com/tryanzu/core/board/notifications"
 	"github.com/tryanzu/core/board/votes"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -80,7 +79,20 @@ func RawEmit(channel, event string, params map[string]interface{}) Event {
 	return Event{
 		Name: RAW_EMIT,
 		Params: map[string]interface{}{
-			"socket": notify.Socket{channel, event, params},
+			"channel": channel,
+			"event":   event,
+			"params":  params,
+		},
+	}
+}
+
+func TrackMention(userID, relatedID bson.ObjectId, usersID []bson.ObjectId) Event {
+	return Event{
+		Name: NEW_MENTION,
+		Params: map[string]interface{}{
+			"user_id":    userID,
+			"related_id": relatedID,
+			"users":      usersID,
 		},
 	}
 }
