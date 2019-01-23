@@ -61,6 +61,7 @@ func (di *MiddlewareAPI) TrustIP() gin.HandlerFunc {
 		c.Next()
 	}
 }
+
 func (di *MiddlewareAPI) ValidateBsonID(name string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param(name)
@@ -85,30 +86,26 @@ func (di *MiddlewareAPI) MongoRefresher() gin.HandlerFunc {
 
 func (di *MiddlewareAPI) Authorization() gin.HandlerFunc {
 	return func(c *gin.Context) {
-
-		// Session ID
-		var session_id string
+		var sid string
 
 		bucket := sessions.Default(c)
 		session := bucket.Get("session_id")
 
 		if session == nil {
 			uuid := uuid.NewV4()
-			session_id = uuid.String()
-			bucket.Set("session_id", session_id)
+			sid = uuid.String()
+			bucket.Set("session_id", sid)
 			bucket.Save()
 		} else {
-			session_id = session.(string)
+			sid = session.(string)
 		}
 
 		// Use same session id anywhere
-		c.Set("session_id", session_id)
+		c.Set("session_id", sid)
 
 		// Check whether the token is present
 		token := c.Request.Header.Get("Authorization")
-
 		if token != "" {
-
 			// Check for the JWT inside the header
 			if token[0:6] == "Bearer" {
 				jtw_token := token[7:len(token)]
@@ -167,7 +164,12 @@ func (di *MiddlewareAPI) Authorization() gin.HandlerFunc {
 
 				scope := []string{}
 				claims := signed.Claims.(jwt.MapClaims)
-
+				if address, exists := claims["address"].(string); exists {
+					if address != c.ClientIP() {
+						c.AbortWithStatusJSON(401, gin.H{"status": "error", "message": "Token compromised, will be notified"})
+						return
+					}
+				}
 				if scopes, exists := claims["scope"]; exists {
 					for _, role := range scopes.([]interface{}) {
 						scope = append(scope, role.(string))

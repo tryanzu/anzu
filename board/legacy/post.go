@@ -94,7 +94,7 @@ func (di PostAPI) FeedGet(c *gin.Context) {
 	relevant := c.Query("relevant")
 	fltr_categories := c.Query("categories")
 	from_author := c.Query("user_id")
-	user_id, signed_in := c.Get("user_id")
+	_, signed_in := c.Get("user_id")
 	user_order := false
 	count := 0
 
@@ -160,14 +160,7 @@ func (di PostAPI) FeedGet(c *gin.Context) {
 	} else {
 
 		// Get all but deleted
-		if signed_in {
-			search["$or"] = []bson.M{
-				{"deleted_at": bson.M{"$exists": false}},
-				{"user_id": bson.ObjectIdHex(user_id.(string))},
-			}
-		} else {
-			search["deleted_at"] = bson.M{"$exists": false}
-		}
+		search["deleted_at"] = bson.M{"$exists": false}
 
 		// Prepare the database to fetch the feed
 		posts_collection := database.C("posts")
@@ -358,34 +351,38 @@ func (di PostAPI) PostDelete(c *gin.Context) {
 
 	// Get the post using the id
 	id := c.Params.ByName("id")
-
 	if bson.IsObjectIdHex(id) == false {
-
-		c.JSON(400, gin.H{"message": "Invalid request, no valid params.", "status": "error"})
+		c.JSON(400, gin.H{
+			"message": "Invalid request, no valid params.",
+			"status":  "error",
+		})
 		return
 	}
 
 	// Get the post using the slug
 	user_id := c.MustGet("user_id")
-	user_bson_id := bson.ObjectIdHex(user_id.(string))
+	uid := bson.ObjectIdHex(user_id.(string))
 	bson_id := bson.ObjectIdHex(id)
 	post, err := di.Feed.Post(bson_id)
 
 	if err != nil {
-
-		c.JSON(404, gin.H{"message": "Couldnt find the post", "status": "error"})
+		c.JSON(404, gin.H{
+			"message": "Couldnt find the post",
+			"status":  "error",
+		})
 		return
 	}
 
-	user := di.Acl.User(user_bson_id)
-
+	user := di.Acl.User(uid)
 	if user.CanDeletePost(post) == false {
-
 		c.JSON(400, gin.H{"message": "Can't delete others posts.", "status": "error"})
 		return
 	}
 
-	err = database.C("posts").Update(bson.M{"_id": post.Id}, bson.M{"$set": bson.M{"deleted": true, "deleted_at": time.Now()}, "$unset": bson.M{"pinned": ""}})
+	err = database.C("posts").Update(bson.M{"_id": post.Id}, bson.M{
+		"$set":   bson.M{"deleted": true, "deleted_at": time.Now()},
+		"$unset": bson.M{"pinned": ""},
+	})
 
 	if err != nil {
 		panic(err)

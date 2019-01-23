@@ -263,7 +263,7 @@ func (di UserAPI) UserGetJwtToken(c *gin.Context) {
 	}
 
 	// Generate JWT with the information about the user
-	token := di.generateUserToken(usr.Data().Id, usr.Data().Roles, remember)
+	token := di.generateUserToken(c, usr.Data().Id, usr.Data().Roles, remember)
 
 	// Authenticate requesting permissions
 	permission := c.Query("permission")
@@ -515,7 +515,7 @@ func (di *UserAPI) UserRegisterAction(c *gin.Context) {
 	}
 
 	// Generate token if auth is going to perform
-	token := di.generateUserToken(usr.Data().Id, usr.Data().Roles, 72)
+	token := di.generateUserToken(c, usr.Data().Id, usr.Data().Roles, 72)
 
 	// Finished creating the post
 	c.JSON(200, gin.H{"status": "okay", "code": 200, "token": token})
@@ -647,24 +647,25 @@ func (di *UserAPI) UserAutocompleteGet(c *gin.Context) {
 }
 
 type UserToken struct {
-	UserID string   `json:"user_id"`
-	Scopes []string `json:"scope"`
+	Address string   `json:"address"`
+	UserID  string   `json:"user_id"`
+	Scopes  []string `json:"scope"`
 	jwt.StandardClaims
 }
 
-func (di *UserAPI) generateUserToken(id bson.ObjectId, roles []user.UserRole, expiration int) string {
-
-	scope := []string{}
-	for _, role := range roles {
-		scope = append(scope, role.Name)
+func (di *UserAPI) generateUserToken(c *gin.Context, id bson.ObjectId, roles []user.UserRole, expiration int) string {
+	scope := make([]string, len(roles))
+	for k, role := range roles {
+		scope[k] = role.Name
 	}
 
 	claims := UserToken{
+		c.ClientIP(),
 		id.Hex(),
 		scope,
 		jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(time.Hour * time.Duration(expiration)).Unix(),
-			Issuer:    "spartangeek",
+			Issuer:    "anzu",
 		},
 	}
 
