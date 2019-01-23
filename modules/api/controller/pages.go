@@ -3,6 +3,7 @@ package controller
 import (
 	"github.com/gin-gonic/gin"
 	posts "github.com/tryanzu/core/board/posts"
+	"github.com/tryanzu/core/core/config"
 	"github.com/tryanzu/core/core/user"
 	"github.com/tryanzu/core/deps"
 	"github.com/tryanzu/core/modules/helpers"
@@ -12,6 +13,7 @@ import (
 // HomePage is the site's entry point.
 func HomePage(c *gin.Context) {
 	c.HTML(200, "pages/home.tmpl", gin.H{
+		"config":      c.MustGet("config").(config.Anzu),
 		"title":       c.MustGet("siteName").(string),
 		"description": c.MustGet("siteDescription").(string),
 		"image":       c.MustGet("siteUrl").(string) + "/images/default-post.jpg",

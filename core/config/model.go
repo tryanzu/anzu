@@ -6,11 +6,12 @@ type Anzu struct {
 }
 
 type anzuSite struct {
-	Name        string     `json:"name"`
-	Description string     `json:"description"`
-	Url         string     `json:"url"`
-	LogoUrl     string     `json:"logoUrl"`
-	Nav         []siteLink `json:"nav"`
+	Name        string       `json:"name"`
+	Description string       `json:"description"`
+	Url         string       `json:"url"`
+	LogoUrl     string       `json:"logoUrl"`
+	Nav         []siteLink   `json:"nav"`
+	Services    siteServices `json:"services"`
 }
 
 type siteLink struct {
@@ -23,4 +24,8 @@ type anzuMail struct {
 	User     string
 	Password string
 	Port     int
+}
+
+type siteServices struct {
+	Analytics string
 }

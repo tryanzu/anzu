@@ -1,7 +1,10 @@
 package http
 
 import (
+	"log"
+
 	"github.com/gin-gonic/gin"
+	"github.com/tryanzu/core/core/config"
 	"github.com/tryanzu/core/core/events"
 	"github.com/tryanzu/core/core/user"
 	"github.com/tryanzu/core/deps"
@@ -10,26 +13,24 @@ import (
 
 // Load site config into middlewares pipe context.
 func SiteMiddleware() gin.HandlerFunc {
+	legacy := deps.Container.Config()
+	siteName, err := legacy.String("site.name")
+	if err != nil {
+		log.Panicf("site.name not found in config")
+	}
+
+	description, err := legacy.String("site.description")
+	if err != nil {
+		log.Panicf("site.description not found in config")
+	}
+
+	url, err := legacy.String("site.url")
+	if err != nil {
+		log.Panicf("site.url not found in config")
+	}
+
 	return func(c *gin.Context) {
-		config := deps.Container.Config()
-		siteName, err := config.String("site.name")
-		if err != nil {
-			c.AbortWithError(500, err)
-			return
-		}
-
-		description, err := config.String("site.description")
-		if err != nil {
-			c.AbortWithError(500, err)
-			return
-		}
-
-		url, err := config.String("site.url")
-		if err != nil {
-			c.AbortWithError(500, err)
-			return
-		}
-
+		c.Set("config", config.C.Copy())
 		c.Set("siteName", siteName)
 		c.Set("siteDescription", description)
 		c.Set("siteUrl", url)

@@ -127,8 +127,11 @@ func onNewSocket(s *glue.Socket) {
 
 	// Set a function which is triggered as soon as the socket is closed.
 	s.OnClose(func() {
+		client.Channels = nil
+		client.Raw = nil
+		close(client.Read)
 		sockets.Delete(s.ID())
-		log.Printf("socket %s closed with remote address: %s", s.ID(), s.RemoteAddr())
+		log.Printf("[GLUE] Socket %s closed with remote address: %s", s.ID(), s.RemoteAddr())
 	})
 
 	// fn triggered during each received message.
@@ -175,7 +178,6 @@ func ServeHTTP() func(w http.ResponseWriter, r *http.Request) {
 				"event":  "config",
 				"params": runtime.Site,
 			})
-
 			if err != nil {
 				panic(err)
 			}
