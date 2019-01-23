@@ -99,7 +99,7 @@ func (module PostmarkMailer) prepareRecipients(m Mailable) []*mail.Address {
 func (module PostmarkMailer) prepareMessage(m Mailable) (*postmark.Message, error) {
 	message := &postmark.Message{}
 	message.From = m.From()
-	if message.From.Address == "" && message.From.Address == "" {
+	if message.From.Address == "" {
 		message.From = &mail.Address{
 			Name:    module.config.FromName,
 			Address: module.config.From,

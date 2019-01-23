@@ -17,7 +17,7 @@ var GlobalFuncs = template.FuncMap{
 	},
 }
 
-var Templates = template.Must(template.New("").Funcs(GlobalFuncs).ParseGlob("./static/templates/**/*.html"))
+var Templates = template.Must(template.New("").Funcs(GlobalFuncs).ParseGlob("../../static/templates/**/*.html"))
 
 func Execute(name string, data interface{}) (*bytes.Buffer, error) {
 	buf := new(bytes.Buffer)
