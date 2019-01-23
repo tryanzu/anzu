@@ -43,7 +43,7 @@ func sendWorker(c *config.Config) {
 
 	mail := c.Copy().Mail
 	if len(mail.Server) > 0 {
-		log.Println("Mail send worker has started...", mail)
+		log.Println("[BOOT] Mail send worker has started...", mail)
 		dialer := gomail.NewPlainDialer(mail.Server, 587, mail.User, mail.Password)
 		for {
 			select {
@@ -74,14 +74,14 @@ func sendWorker(c *config.Config) {
 		}
 	}
 
-	log.Println("Mail worker is not configured, discarding emails...")
+	log.Println("[BOOT] Mail worker is not configured, discarding emails...")
 	for {
 		m, alive := <-In
 		if !alive {
-			log.Println("Mail bad worker has stopped...")
+			log.Println("[BOOT] Mail bad worker has stopped...")
 			return
 		}
 
-		log.Println("Discarding mail message", m)
+		log.Println("[BOOT] Discarding mail message", m)
 	}
 }

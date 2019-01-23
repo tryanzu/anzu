@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/tryanzu/core/core/config"
 	"github.com/tryanzu/core/core/mail"
+	"github.com/tryanzu/core/core/templates"
 	"github.com/tryanzu/core/deps"
 )
 
@@ -16,4 +17,5 @@ func init() {
 
 	// Boot internal services.
 	mail.Boot()
+	templates.Boot()
 }

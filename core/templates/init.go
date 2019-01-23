@@ -3,6 +3,7 @@ package templates
 import (
 	"bytes"
 	"html/template"
+	"log"
 	"strings"
 
 	"github.com/tryanzu/core/core/config"
@@ -17,7 +18,20 @@ var GlobalFuncs = template.FuncMap{
 	},
 }
 
-var Templates = template.Must(template.New("").Funcs(GlobalFuncs).ParseGlob("../../static/templates/**/*.html"))
+var Templates *template.Template
+
+func Boot() {
+	go func() {
+		for {
+			c := config.C.Copy()
+			Templates = template.Must(template.New("").Funcs(GlobalFuncs).ParseGlob(c.Homedir + "static/templates/**/*.html"))
+			log.Println("[BOOT] core/templates configured.")
+
+			// Wait for config changes...
+			<-config.C.Reload
+		}
+	}()
+}
 
 func Execute(name string, data interface{}) (*bytes.Buffer, error) {
 	buf := new(bytes.Buffer)

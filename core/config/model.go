@@ -1,8 +1,9 @@
 package config
 
 type Anzu struct {
-	Site anzuSite
-	Mail anzuMail
+	Site    anzuSite
+	Homedir string
+	Mail    anzuMail
 }
 
 type anzuSite struct {
