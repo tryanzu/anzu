@@ -11,6 +11,7 @@ const (
 	COMMENT_UPDATE          = "comments:update"
 	COMMENT_UPVOTE          = "comments:upvote"
 	COMMENT_VOTE            = "comments:vote"
+	VOTE                    = "vote"
 	COMMENT_UPVOTE_REMOVE   = "comments:upvote.remove"
 	COMMENT_DOWNVOTE        = "comments:downvote"
 	COMMENT_DOWNVOTE_REMOVE = "comments:downvote.remove"

@@ -28,6 +28,15 @@ type Post struct {
 	Deleted           time.Time       `bson:"deleted_at,omitempty" json:"deleted_at,omitempty"`
 }
 
+func (Post) VotableType() string {
+	return "post"
+}
+
+func (p Post) VotableID() bson.ObjectId {
+	return p.Id
+}
+
+// Posts list.
 type Posts []Post
 
 func (list Posts) IDs() []bson.ObjectId {

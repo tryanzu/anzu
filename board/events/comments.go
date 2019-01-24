@@ -29,38 +29,55 @@ func commentsEvents() {
 			Handler: onCommentUpdate,
 		},
 		{
-			On:      pool.COMMENT_VOTE,
-			Handler: onCommentVote,
+			On:      pool.VOTE,
+			Handler: onVote,
 		},
 	}
 
 	register(handlers)
 }
 
-func onCommentVote(e pool.Event) error {
+func onVote(e pool.Event) error {
+	var (
+		err    error
+		userID bson.ObjectId
+	)
 	vote := e.Params["vote"].(votes.Vote)
 	field := vote.DbField()
-	d := deps.Container
-
-	// Find related comment
-	comment, err := comments.FindId(d, vote.RelatedID)
-	if err != nil {
-		return err
-	}
 
 	// Increment value by given state.
 	value := 1
 	if vote.Deleted != nil {
 		value = -1
 	}
+	switch vote.Type {
+	case "comment":
+		err = deps.Container.Mgo().C("comments").UpdateId(vote.RelatedID, bson.M{"$inc": bson.M{field: value}})
+		if err != nil {
+			return err
+		}
 
-	err = d.Mgo().C("comments").UpdateId(vote.RelatedID, bson.M{"$inc": bson.M{field: value}})
-	if err != nil {
-		return err
+		// Find related comment
+		comment, err := comments.FindId(deps.Container, vote.RelatedID)
+		if err != nil {
+			return err
+		}
+		userID = comment.UserId
+	case "post":
+		err = deps.Container.Mgo().C("posts").UpdateId(vote.RelatedID, bson.M{"$inc": bson.M{field: value}})
+		if err != nil {
+			return err
+		}
+
+		post, err := post.FindId(deps.Container, vote.RelatedID)
+		if err != nil {
+			return err
+		}
+		userID = post.UserId
 	}
 
 	// No gamification for eventual votes from comment's author
-	if vote.UserID == comment.UserId {
+	if vote.UserID == userID {
 		return nil
 	}
 
@@ -71,12 +88,12 @@ func onCommentVote(e pool.Event) error {
 	switch vote.Value {
 	case "concise", "useful":
 		err = pipeErr(
-			gaming.IncreaseUserSwords(d, vote.UserID, 1*factor),
-			gaming.IncreaseUserSwords(d, comment.UserId, 2*factor),
+			gaming.IncreaseUserSwords(deps.Container, vote.UserID, 1*factor),
+			gaming.IncreaseUserSwords(deps.Container, userID, 2*factor),
 		)
 	case "offtopic", "wordy":
 		err = pipeErr(
-			gaming.IncreaseUserSwords(d, comment.UserId, 1*factor*-1),
+			gaming.IncreaseUserSwords(deps.Container, userID, 1*factor*-1),
 		)
 	}
 

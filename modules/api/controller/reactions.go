@@ -3,6 +3,7 @@ package controller
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/tryanzu/core/board/comments"
+	"github.com/tryanzu/core/board/posts"
 	"github.com/tryanzu/core/board/votes"
 	"github.com/tryanzu/core/core/events"
 	"github.com/tryanzu/core/core/user"
@@ -21,7 +22,7 @@ func UpsertReaction(c *gin.Context) {
 	var (
 		id      bson.ObjectId
 		body    upsertReactionBody
-		comment comments.Comment
+		votable votes.Votable
 		err     error
 	)
 
@@ -43,12 +44,26 @@ func UpsertReaction(c *gin.Context) {
 		return
 	}
 
-	if comment, err = comments.FindId(deps.Container, id); err != nil {
+	switch c.Params.ByName("type") {
+	case "post":
+		if post, err := post.FindId(deps.Container, id); err == nil {
+			votable = post
+		}
+	case "comment":
+		if comment, err := comments.FindId(deps.Container, id); err == nil {
+			votable = comment
+		}
+	default:
+		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "reason": "Invalid type."})
+		return
+	}
+
+	if votable == nil {
 		c.JSON(http.StatusNotFound, gin.H{"status": "error", "reason": "Invalid id."})
 		return
 	}
 
-	vote, err := votes.UpsertVote(deps.Container, comment, usr.Id, body.Type)
+	vote, err := votes.UpsertVote(deps.Container, votable, usr.Id, body.Type)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": err.Error()})
 		return

@@ -2,6 +2,7 @@ package feed
 
 import (
 	"github.com/tryanzu/core/board/legacy/model"
+	"github.com/tryanzu/core/board/votes"
 	"github.com/tryanzu/core/deps"
 	"github.com/tryanzu/core/modules/exceptions"
 	"github.com/tryanzu/core/modules/helpers"
@@ -27,14 +28,14 @@ type Post struct {
 	Author            *user.UserSimple `bson:"-" json:"author,omitempty"`
 	UserId            bson.ObjectId    `bson:"user_id,omitempty" json:"user_id,omitempty"`
 	Users             []bson.ObjectId  `bson:"users,omitempty" json:"users,omitempty"`
-	Votes             Votes            `bson:"votes" json:"votes"`
+	Votes             votes.Votes      `bson:"votes" json:"votes"`
 	RelatedComponents []bson.ObjectId  `bson:"related_components,omitempty" json:"related_components,omitempty"`
 	Following         bool             `bson:"following,omitempty" json:"following,omitempty"`
 	Pinned            bool             `bson:"pinned,omitempty" json:"pinned,omitempty"`
 	Lock              bool             `bson:"lock" json:"lock"`
 	IsQuestion        bool             `bson:"is_question" json:"is_question"`
 	Solved            bool             `bson:"solved,omitempty" json:"solved,omitempty"`
-	Liked             int              `bson:"liked,omitempty" json:"liked,omitempty"`
+	Voted             []string         `bson:"-" json:"voted"`
 	Created           time.Time        `bson:"created_at" json:"created_at"`
 	Updated           time.Time        `bson:"updated_at" json:"updated_at"`
 	Deleted           time.Time        `bson:"deleted_at,omitempty" json:"deleted_at,omitempty"`
@@ -309,49 +310,14 @@ func (self *Post) LoadUsers() {
 
 // Load voting status for certain user
 func (self *Post) LoadVotes(user_id bson.ObjectId) {
-
-	database := deps.Container.Mgo()
-
-	// Only when there's loaded comments on the post
-	if len(self.Comments.Set) > 0 {
-
-		//var ls []bson.ObjectId
-		var comments []Vote
-
-		/*for _, c := range self.Comments.Set {
-
-			ls = append(ls, c.Id)
-		}*/
-
-		// Get votes given to post's comments
-		err := database.C("votes").Find(bson.M{"type": "comment", "related_id": self.Id, "user_id": user_id}).All(&comments)
-
-		if err != nil {
-			panic(err)
-		}
-
-		if len(comments) > 0 {
-
-			for index, c := range self.Comments.Set {
-
-				p := strconv.Itoa(c.Position)
-
-				// Iterate over comment's votes to determine status
-				for _, v := range comments {
-
-					if v.NestedType == p {
-						self.Comments.Set[index].Liked = v.Value
-					}
-				}
-			}
-		}
+	var list []votes.Vote
+	err := deps.Container.Mgo().C("votes").Find(bson.M{"type": "post", "related_id": self.Id, "user_id": user_id}).All(&list)
+	if err != nil {
+		panic(err)
 	}
-
-	var post Vote
-	err := database.C("votes").Find(bson.M{"type": "post", "related_id": self.Id, "user_id": user_id}).One(&post)
-
-	if err == nil {
-		self.Liked = post.Value
+	self.Voted = make([]string, 0)
+	for _, v := range list {
+		self.Voted = append(self.Voted, v.Value)
 	}
 }
 
