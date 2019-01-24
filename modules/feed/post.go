@@ -311,7 +311,12 @@ func (self *Post) LoadUsers() {
 // Load voting status for certain user
 func (self *Post) LoadVotes(user_id bson.ObjectId) {
 	var list []votes.Vote
-	err := deps.Container.Mgo().C("votes").Find(bson.M{"type": "post", "related_id": self.Id, "user_id": user_id}).All(&list)
+	err := deps.Container.Mgo().C("votes").Find(bson.M{
+		"type":       "post",
+		"related_id": self.Id,
+		"user_id":    user_id,
+		"deleted_at": bson.M{"$exists": false},
+	}).All(&list)
 	if err != nil {
 		panic(err)
 	}
