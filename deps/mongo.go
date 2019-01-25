@@ -20,9 +20,23 @@ func IgniteMongoDB(container Deps) (Deps, error) {
 		return container, err
 	}
 
-	database := session.DB(dbName)
+	db := session.DB(dbName)
 
 	// Ensure indexes
+	db.C("users").EnsureIndex(
+		mgo.Index{
+			Key:        []string{"email"},
+			Unique:     true,
+			Background: true,
+		},
+	)
+	db.C("users").EnsureIndex(
+		mgo.Index{
+			Key:        []string{"username"},
+			Unique:     true,
+			Background: true,
+		},
+	)
 	search := mgo.Index{
 		Key: []string{"$text:title", "$text:content"},
 		Weights: map[string]int{
@@ -32,13 +46,13 @@ func IgniteMongoDB(container Deps) (Deps, error) {
 		DefaultLanguage: "spanish",
 		Background:      true, // See notes.
 	}
-	database.C("posts").EnsureIndex(search)
+	db.C("posts").EnsureIndex(search)
 
 	// See https://godoc.org/gopkg.in/mgo.v2#Session.SetMode
 	//session.SetMode(mgo.Monotonic, true)
 
 	container.DatabaseSessionProvider = session
-	container.DatabaseProvider = database
+	container.DatabaseProvider = db
 
 	return container, nil
 }

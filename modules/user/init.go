@@ -70,10 +70,7 @@ func (module *Module) Get(usr interface{}) (*One, error) {
 
 // SignUp a user with email and username checks
 func (module *Module) SignUp(email, username, password, referral string) (*One, error) {
-	database := deps.Container.Mgo()
-	hash := helpers.Sha256(password)
 	id := bson.NewObjectId()
-
 	if validUsername.MatchString(username) == false || strings.Count(username, "") < 3 || strings.Count(username, "") > 21 {
 		return nil, exceptions.OutOfBounds{
 			Msg: "Invalid username. Must have only alphanumeric characters.",
@@ -87,7 +84,7 @@ func (module *Module) SignUp(email, username, password, referral string) (*One, 
 	}
 
 	// Check if user already exists using that email
-	unique, err := database.C("users").Find(bson.M{
+	unique, err := deps.Container.Mgo().C("users").Find(bson.M{
 		"$or": []bson.M{
 			{"email": email},
 			{"username": bson.RegEx{
@@ -100,6 +97,11 @@ func (module *Module) SignUp(email, username, password, referral string) (*One, 
 		return nil, exceptions.OutOfBounds{
 			Msg: "User already exists.",
 		}
+	}
+
+	hashed, err := helpers.HashPassword(password)
+	if err != nil {
+		return nil, err
 	}
 
 	profile := map[string]interface{}{
@@ -126,15 +128,14 @@ func (module *Module) SignUp(email, username, password, referral string) (*One, 
 			},
 			Validated: false,
 		},
-		Password:         hash,
+		Password:         hashed,
 		Email:            email,
 		ReferralCode:     helpers.StrRandom(6),
 		VerificationCode: helpers.StrRandom(12),
 		Updated:          time.Now(),
 	}
 
-	err = database.C("users").Insert(usr)
-
+	err = deps.Container.Mgo().C("users").Insert(usr)
 	if err != nil {
 		panic(err)
 	}
@@ -166,12 +167,11 @@ func (m *Module) computeNickname(nicknames ...string) (string, error) {
 
 // Sign up user from oauth provider
 func (module *Module) OauthSignup(provider string, user goth.User) (*One, error) {
-	db := deps.Container.Mgo()
 	id := bson.NewObjectId()
 
 	profile := map[string]interface{}{
-		"country": "México",
-		"bio":     "Just another spartan geek",
+		"country": "",
+		"bio":     "",
 	}
 
 	nickname, err := module.computeNickname(user.NickName, user.Name, "User"+helpers.StrRandom(8))
@@ -202,12 +202,12 @@ func (module *Module) OauthSignup(provider string, user goth.User) (*One, error)
 		Updated:          time.Now(),
 	}
 
-	err = db.C("users").Insert(usr)
+	err = deps.Container.Mgo().C("users").Insert(usr)
 	if err != nil {
 		panic(err)
 	}
 
-	err = db.C("users").Update(bson.M{"_id": id}, bson.M{"$set": bson.M{provider: user.RawData}})
+	err = deps.Container.Mgo().C("users").Update(bson.M{"_id": id}, bson.M{"$set": bson.M{provider: user.RawData}})
 	if err != nil {
 		panic(err)
 	}

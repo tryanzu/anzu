@@ -10,6 +10,7 @@ import (
 	"time"
 	"unicode"
 
+	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/text/unicode/norm"
 )
 
@@ -136,13 +137,20 @@ func StrNumRandom(length int) string {
 }
 
 func Sha256(s string) string {
-
-	password_encrypted := []byte(s)
+	encrypted := []byte(s)
 	sha256 := sha256.New()
-	sha256.Write(password_encrypted)
-	md := sha256.Sum(nil)
+	sha256.Write(encrypted)
+	return hex.EncodeToString(sha256.Sum(nil))
+}
 
-	return hex.EncodeToString(md)
+func HashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	return string(bytes), err
+}
+
+func CheckPasswordHash(password, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
 }
 
 func IsEmail(s string) bool {

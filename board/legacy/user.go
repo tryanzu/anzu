@@ -1,9 +1,6 @@
 package handle
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
-
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -23,7 +20,8 @@ import (
 	"github.com/tryanzu/core/modules/security"
 	"github.com/tryanzu/core/modules/user"
 	"github.com/xuyu/goredis"
-	//"gopkg.in/h2non/bimg.v0"
+	"gopkg.in/mgo.v2/bson"
+
 	"io/ioutil"
 	"net/http"
 	"path/filepath"
@@ -31,8 +29,6 @@ import (
 	"sort"
 	"strconv"
 	"time"
-
-	"gopkg.in/mgo.v2/bson"
 )
 
 type UserAPI struct {
@@ -237,14 +233,8 @@ func (di UserAPI) UserGetJwtToken(c *gin.Context) {
 	// Development mode
 	env := di.ConfigService.UString("environment", "development")
 	if env != "development" {
-
-		// Check whether the password match the user password or not
-		sha256 := sha256.New()
-		sha256.Write([]byte(password))
-		md := sha256.Sum(nil)
-		hash := hex.EncodeToString(md)
-
-		if usr.Data().Password != hash {
+		hash := helpers.Sha256(password)
+		if usr.Data().Password != hash && helpers.CheckPasswordHash(password, usr.Data().Password) {
 			c.JSON(400, gin.H{"status": "error", "message": "Credentials are not correct", "code": 400})
 			return
 		}
@@ -360,113 +350,111 @@ func (di *UserAPI) UserUpdateProfileAvatar(c *gin.Context) {
 }
 
 func (di *UserAPI) UserUpdateProfile(c *gin.Context) {
-	var user model.User
-	var form map[string]string
-
-	db := deps.Container.Mgo()
-	id := c.MustGet("user_id").(string)
-	user_id := bson.ObjectIdHex(id)
-	err := db.C("users").FindId(user_id).One(&user)
+	var (
+		user model.User
+		form map[string]string
+	)
+	uid := c.MustGet("userID").(bson.ObjectId)
+	err := deps.Container.Mgo().C("users").FindId(uid).One(&user)
 	if err != nil {
 		panic(err)
 	}
 
-	if c.BindWith(&form, binding.JSON) == nil {
-		set := bson.M{}
-
-		if username, exists := form["username"]; exists && user.NameChanges < 1 {
-			valid_username, _ := regexp.Compile(`^[0-9a-zA-Z\-]{0,32}$`)
-
-			if valid_username.MatchString(username) {
-				username_slug := sanitize.Path(sanitize.Accents(username))
-
-				// Check whether user exists
-				count, _ := db.C("users").Find(bson.M{"username_slug": username_slug}).Count()
-
-				if count == 0 {
-					set["username"] = username
-					set["username_slug"] = username_slug
-					set["name_changes"] = user.NameChanges + 1
-				}
-			}
-		}
-
-		if description, exists := form["description"]; exists {
-			if len([]rune(description)) > 60 {
-				description = helpers.Truncate(description, 57) + "..."
-			}
-
-			set["description"] = description
-		}
-
-		if email, exists := form["email"]; exists && user.Email != email {
-			if !helpers.IsEmail(email) {
-				c.JSON(400, gin.H{"status": "error", "message": "Invalid email address.", "details": "invalid-email", "fields": []string{"email"}})
-				return
-			}
-
-			_, err := di.User.Get(bson.M{"$or": []bson.M{
-				{"email": email},
-				{"facebook.email": email},
-			}})
-
-			if err == nil {
-				c.JSON(400, gin.H{"status": "error", "message": "Email already in use.", "details": "repeated-email", "fields": []string{"email"}})
-				return
-			}
-
-			set["email"] = email
-			set["ver_code"] = helpers.StrRandom(12)
-			set["validated"] = false
-		}
-
-		if phone, exists := form["phone"]; exists {
-			set["phone"] = phone
-		}
-
-		if bt, exists := form["battlenet_id"]; exists {
-			set["battlenet_id"] = bt
-		}
-
-		if steam, exists := form["steam_id"]; exists {
-			set["steam_id"] = steam
-		}
-
-		if origin, exists := form["origin_id"]; exists {
-			set["origin_id"] = origin
-		}
-
-		if country, exists := form["country"]; exists && len([]rune(country)) <= 3 {
-			set["country"] = country
-		}
-
-		if password, exists := form["password"]; exists {
-
-			if len([]rune(password)) < 4 {
-				c.JSON(400, gin.H{"status": "error", "message": "Can't allow password update, too short."})
-				return
-			}
-
-			set["password"] = helpers.Sha256(password)
-		}
-
-		set["updated_at"] = time.Now()
-
-		// Update the user profile with some godness
-		db.C("users").Update(bson.M{"_id": user.Id}, bson.M{"$set": set})
-
-		if _, emailChanged := set["email"]; emailChanged {
-			usr, err := u.FindId(deps.Container, user.Id)
-			if err == nil {
-				usr.ConfirmationEmail(deps.Container)
-			}
-		}
-
-		c.JSON(200, gin.H{"status": "okay"})
+	if c.BindWith(&form, binding.JSON) != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Invalid auth request."})
 		return
 	}
 
-	c.JSON(400, gin.H{"status": "error", "message": "Invalid auth request."})
+	set := bson.M{}
+	if username, exists := form["username"]; exists && user.NameChanges < 1 {
+		validator, _ := regexp.Compile(`^[0-9a-zA-Z\-]{0,32}$`)
+
+		if validator.MatchString(username) {
+			username_slug := sanitize.Path(sanitize.Accents(username))
+
+			// Check whether user exists
+			count, _ := deps.Container.Mgo().C("users").Find(bson.M{"username_slug": username_slug}).Count()
+			if count == 0 {
+				set["username"] = username
+				set["username_slug"] = username_slug
+				set["name_changes"] = user.NameChanges + 1
+			}
+		}
+	}
+
+	if description, exists := form["description"]; exists {
+		if len([]rune(description)) > 60 {
+			description = helpers.Truncate(description, 57) + "..."
+		}
+
+		set["description"] = description
+	}
+
+	if email, exists := form["email"]; exists && user.Email != email {
+		if !helpers.IsEmail(email) {
+			c.JSON(400, gin.H{"status": "error", "message": "Invalid email address.", "details": "invalid-email", "fields": []string{"email"}})
+			return
+		}
+
+		_, err := di.User.Get(bson.M{"$or": []bson.M{
+			{"email": email},
+			{"facebook.email": email},
+		}})
+
+		if err == nil {
+			c.JSON(400, gin.H{"status": "error", "message": "Email already in use.", "details": "repeated-email", "fields": []string{"email"}})
+			return
+		}
+
+		set["email"] = email
+		set["ver_code"] = helpers.StrRandom(12)
+		set["validated"] = false
+	}
+
+	if phone, exists := form["phone"]; exists && len([]rune(phone)) < 32 {
+		set["phone"] = phone
+	}
+
+	if bt, exists := form["battlenet_id"]; exists && len([]rune(bt)) < 32 {
+		set["battlenet_id"] = bt
+	}
+
+	if steam, exists := form["steam_id"]; exists && len([]rune(steam)) < 32 {
+		set["steam_id"] = steam
+	}
+
+	if origin, exists := form["origin_id"]; exists && len([]rune(origin)) < 32 {
+		set["origin_id"] = origin
+	}
+
+	if country, exists := form["country"]; exists && len([]rune(country)) <= 3 {
+		set["country"] = country
+	}
+
+	if password, exists := form["password"]; exists {
+		if len([]rune(password)) < 4 {
+			c.JSON(400, gin.H{"status": "error", "message": "Can't allow password update, too short."})
+			return
+		}
+
+		if hashed, err := helpers.HashPassword(password); err == nil {
+			set["password"] = hashed
+		}
+	}
+
+	set["updated_at"] = time.Now()
+
+	// Update the user profile with some godness
+	deps.Container.Mgo().C("users").Update(bson.M{"_id": user.Id}, bson.M{"$set": set})
+
+	if _, emailChanged := set["email"]; emailChanged {
+		usr, err := u.FindId(deps.Container, user.Id)
+		if err == nil {
+			usr.ConfirmationEmail(deps.Container)
+		}
+	}
+
+	c.JSON(200, gin.H{"status": "okay"})
 }
 
 func (di *UserAPI) UserValidateEmail(c *gin.Context) {
