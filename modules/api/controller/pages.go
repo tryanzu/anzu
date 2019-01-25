@@ -30,6 +30,7 @@ func UserPage(c *gin.Context) {
 	}
 
 	c.HTML(200, "pages/home.tmpl", gin.H{
+		"config":      c.MustGet("config").(config.Anzu),
 		"title":       usr.UserName + " - Perfil de usuario",
 		"description": "Explora las aportaciones y el perfil de " + usr.UserName + " en Buldar",
 		"image":       c.MustGet("siteUrl").(string) + "/images/default-post.jpg",
@@ -51,6 +52,7 @@ func PostPage(c *gin.Context) {
 	}
 
 	c.HTML(200, "pages/home.tmpl", gin.H{
+		"config":      c.MustGet("config").(config.Anzu),
 		"title":       post.Title,
 		"description": helpers.Truncate(post.Content, 160),
 		"image":       c.MustGet("siteUrl").(string) + "/images/default-post.jpg",

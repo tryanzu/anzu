@@ -165,9 +165,6 @@ func (module *Module) Run(bindTo string) {
 	v1.GET("/posts/:id/light", module.Posts.GetLightweight)
 	v1.GET("/comments/:post_id", controller.Comments)
 
-	// Search routes
-	v1.GET("/search/posts", module.PostsFactory.Search)
-
 	// User routes
 	v1.POST("/user", module.Users.UserRegisterAction)
 	v1.GET("/users/:id", module.Users.UserGetOne)

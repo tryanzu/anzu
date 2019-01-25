@@ -299,9 +299,7 @@ func (self *Post) LoadUsers() {
 		}
 
 		for index, c := range self.Comments.Set {
-
 			if usr, exists := usersMap[c.UserId]; exists {
-
 				self.Comments.Set[index].User = usr
 			}
 		}
