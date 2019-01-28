@@ -615,8 +615,14 @@ func (di *UserAPI) UserGetActivity(c *gin.Context) {
 }
 
 func (di *UserAPI) UserAutocompleteGet(c *gin.Context) {
-
+	uid := c.MustGet("userID").(bson.ObjectId)
+	user := di.Acl.User(uid)
+	if user.Can("dev-tools") == false {
+		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Not enough permissions."})
+		return
+	}
 	// Get the database interface from the DI
+	
 	database := deps.Container.Mgo()
 
 	var users []gin.H
