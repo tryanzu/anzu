@@ -226,7 +226,7 @@ func (di UserAPI) UserGetJwtToken(c *gin.Context) {
 	usr, err := di.User.Get(bson.M{"email": email, "deleted_at": bson.M{"$exists": false}})
 
 	if err != nil {
-		c.JSON(400, gin.H{"status": "error", "message": "Couldnt get user."})
+		c.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "Couldn't find an account with those credentials."})
 		return
 	}
 
@@ -235,14 +235,14 @@ func (di UserAPI) UserGetJwtToken(c *gin.Context) {
 	if env != "development" {
 		hash := helpers.Sha256(password)
 		if usr.Data().Password != hash && helpers.CheckPasswordHash(password, usr.Data().Password) {
-			c.JSON(400, gin.H{"status": "error", "message": "Credentials are not correct", "code": 400})
+			c.JSON(400, gin.H{"status": "error", "message": "Account credentials are not correct.", "code": 400})
 			return
 		}
 	}
 
 	trusted := di.Security.TrustUserIP(c.ClientIP(), usr)
 	if !trusted {
-		c.JSON(403, gin.H{"status": "error", "message": "Not trusted."})
+		c.JSON(403, gin.H{"status": "error", "message": "You're not trusted anymore to sign in. Contact site owner."})
 		return
 	}
 
