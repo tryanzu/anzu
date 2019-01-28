@@ -301,8 +301,10 @@ func (di *UserAPI) UserUpdateProfileAvatar(c *gin.Context) {
 		extension = filepath.Ext(header.Filename)
 		name = bson.NewObjectId().Hex()
 
-		if extension == "" {
-			extension = ".jpg"
+		allowExt := map[string]bool{".gif": true, ".png": true, ".jpg": true, ".jpeg": true}
+		if !allowExt[extension] {
+			c.JSON(406, gin.H{"status": "error", "message": "File extensions in the blacklist..."})
+			return
 		}
 
 		path := "users/" + name + extension
