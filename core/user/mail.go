@@ -4,6 +4,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/tryanzu/core/core/config"
 	"github.com/tryanzu/core/core/mail"
 	"github.com/tryanzu/core/core/templates"
 	"github.com/tryanzu/core/modules/helpers"
@@ -12,17 +13,14 @@ import (
 )
 
 func (u User) ConfirmationEmail(d Deps) (err error) {
-
 	// Check last confirmation email sent.
 	if u.ConfirmSent != nil {
 		deadline := u.ConfirmSent.Add(time.Duration(time.Minute * 5))
 		if deadline.After(time.Now()) {
-			err = errors.New("Rate exceeded temporarily")
+			err = errors.New("Confirmation email rate exceeded. Wait for another 5 minutes to try again")
 			return
 		}
 	}
-
-	users := d.Mgo().C("users")
 	body, err := templates.ExecuteTemplate("mails/welcome", map[string]interface{}{
 		"user": u,
 	})
@@ -30,17 +28,25 @@ func (u User) ConfirmationEmail(d Deps) (err error) {
 		return err
 	}
 
+	c := config.C.Copy()
 	m := gomail.NewMessage()
-	m.SetHeader("From", "contacto@spartangeek.com")
-	m.SetHeader("Reply-To", "contacto@spartangeek.com")
+	from := c.Mail.From
+	if len(from) == 0 {
+		from = "no-reply@tryanzu.com"
+	}
+
+	m.SetHeader("From", from)
+	m.SetHeader("Reply-To", from)
 	m.SetHeader("To", u.Email)
-	m.SetHeader("Subject", "Bienvenido a SpartanGeek")
+	m.SetHeader("Subject", "Bienvenido a "+c.Site.Name)
 	m.SetBody("text/html", body.String())
 
+	// Send email message.
 	mail.In <- m
 
+	// Update sent at date.
 	update := bson.M{"$set": bson.M{"confirm_sent_at": time.Now()}}
-	err = users.Update(bson.M{"_id": u.Id}, update)
+	err = d.Mgo().C("users").Update(bson.M{"_id": u.Id}, update)
 	if err != nil {
 		return
 	}

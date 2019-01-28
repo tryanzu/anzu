@@ -1,639 +1,314 @@
 {{ define "mails/welcome" }}
-<!DOCTYPE html "-//w3c//dtd xhtml 1.0 transitional //en" "http://www.w3.org/tr/xhtml1/dtd/xhtml1-transitional.dtd">
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
-    <head>
-        <!--[if gte mso 9]>
-        <xml>
-            <o:OfficeDocumentSettings>
-                <o:AllowPNG/>
-                <o:PixelsPerInch>96</o:PixelsPerInch>
-            </o:OfficeDocumentSettings>
-        </xml>
-        <![endif]-->
-        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-        <meta name="viewport" content="width=device-width">
-        <meta http-equiv="X-UA-Compatible" content="IE=9; IE=8; IE=7; IE=EDGE">
-    </head>
-    <body style="width: 100% !important;min-width: 100%;-webkit-text-size-adjust: 100%;-ms-text-size-adjust: 100% !important;margin: 0;padding: 0;background-color: #FFFFFF">
-        <style id="media-query">
-            /*  Media Queries */
-            @media only screen and (max-width: 500px) {
-            .prova {
-            width: 500px; }
-            table[class="body"] img {
-            width: 100% !important;
-            height: auto !important; }
-            table[class="body"] center {
-            min-width: 0 !important; }
-            table[class="body"] .container {
-            width: 95% !important; }
-            table[class="body"] .row {
-            width: 100% !important;
-            display: block !important; }
-            table[class="body"] .wrapper {
-            display: block !important;
-            padding-right: 0 !important; }
-            table[class="body"] .columns, table[class="body"] .column {
-            table-layout: fixed !important;
-            float: none !important;
-            width: 100% !important;
-            padding-right: 0px !important;
-            padding-left: 0px !important;
-            display: block !important; }
-            table[class="body"] .wrapper.first .columns, table[class="body"] .wrapper.first .column {
-            display: table !important; }
-            table[class="body"] table.columns td, table[class="body"] table.column td {
-            width: 100% !important; }
-            table[class="body"] table.columns td.expander {
-            width: 1px !important; }
-            table[class="body"] .right-text-pad, table[class="body"] .text-pad-right {
-            padding-left: 10px !important; }
-            table[class="body"] .left-text-pad, table[class="body"] .text-pad-left {
-            padding-right: 10px !important; }
-            table[class="body"] .hide-for-small, table[class="body"] .show-for-desktop {
-            display: none !important; }
-            table[class="body"] .show-for-small, table[class="body"] .hide-for-desktop {
-            display: inherit !important; }
-            table[class="icon-table"] {
-            width: 100% !important; }
-            table[class="icon-table"] table {
-            display: block !important;
-            width: 100% !important; }
-            table[class="icon-table"] table td {
-            padding-bottom: 10px !important; }
-            .mixed-two-up .col {
-            width: 100% !important; } }
-            @media screen and (max-width: 500px) {
-            div[class="col"] {
-            width: 100% !important;
-            }
-            }
-            @media screen and (min-width: 501px) {
-            table[class="block-grid"] {
-            width: 500px !important;
-            }
-            }
-        </style>
-        <table class="body" style="border-spacing: 0;border-collapse: collapse;vertical-align: top;height: 100%;width: 100%;table-layout: fixed" cellpadding="0" cellspacing="0" width="100%" border="0">
-            <tbody>
-                <tr style="vertical-align: top">
-                    <td class="center" style="word-break: break-word;-webkit-hyphens: auto;-moz-hyphens: auto;hyphens: auto;border-collapse: collapse !important;vertical-align: top;text-align: center;background-color: #FFFFFF" align="center" valign="top">
-                        <!--[if (gte mso 9)|(IE)]>
-                        <table width='500' class="ieCell" align="center" cellpadding="0" cellspacing="0" border="0">
-                            <tr>
-                                <td>
-                                    <![endif]-->
-                                    <table style="border-spacing: 0;border-collapse: collapse;vertical-align: top;background-color: #131d3a" cellpadding="0" cellspacing="0" align="center" width="100%" border="0">
-                                        <tbody>
-                                            <tr style="vertical-align: top">
-                                                <td style="word-break: break-word;-webkit-hyphens: auto;-moz-hyphens: auto;hyphens: auto;border-collapse: collapse !important;vertical-align: top" width="100%">
-                                                    <table class="container" style="border-spacing: 0;border-collapse: collapse;vertical-align: top;max-width: 500px;margin: 0 auto;text-align: inherit" cellpadding="0" cellspacing="0" align="center" width="100%" border="0">
-                                                        <tbody>
-                                                            <tr style="vertical-align: top">
-                                                                <td style="word-break: break-word;-webkit-hyphens: auto;-moz-hyphens: auto;hyphens: auto;border-collapse: collapse !important;vertical-align: top" width="100%">
-                                                                    <table class="block-grid" style="border-spacing: 0;border-collapse: collapse;vertical-align: top;width: 100%;max-width: 500px;color: #000000;background-color: transparent" cellpadding="0" cellspacing="0" width="100%" bgcolor="transparent">
-                                                                        <tbody>
-                                                                            <tr style="vertical-align: top">
-                                                                                <td style="word-break: break-word;-webkit-hyphens: auto;-moz-hyphens: auto;hyphens: auto;border-collapse: collapse !important;vertical-align: top;text-align: center;font-size: 0">
-                                                                                    <!--[if (gte mso 9)|(IE)]>
-                                                                                    <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
-                                                                                        <tr>
-                                                                                            <td valign="top">
-                                                                                                <![endif]-->
-                                                                                                <div class="col num12" style="display: inline-block;vertical-align: top;width: 100%">
-                                                                                                    <table style="border-spacing: 0;border-collapse: collapse;vertical-align: top" cellpadding="0" cellspacing="0" align="center" width="100%" border="0">
-                                                                                                        <tbody>
-                                                                                                            <tr style="vertical-align: top">
-                                                                                                                <td style="word-break: break-word;-webkit-hyphens: auto;-moz-hyphens: auto;hyphens: auto;border-collapse: collapse !important;vertical-align: top;background-color: transparent;padding-top: 20px;padding-right: 0px;padding-bottom: 5px;padding-left: 0px;border-top: 0px solid transparent;border-right: 0px solid transparent;border-bottom: 0px solid transparent;border-left: 0px solid transparent">
-                                                                                                                    <table style="border-spacing: 0;border-collapse: collapse;vertical-align: top" cellpadding="0" cellspacing="0" width="100%" border="0" align="center">
-                                                                                                                        <tbody>
-                                                                                                                            <tr style="vertical-align: top">
-                                                                                                                                <td style="word-break: break-word;-webkit-hyphens: auto;-moz-hyphens: auto;hyphens: auto;border-collapse: collapse !important;vertical-align: top;width: 100%;padding-top: 0px;padding-right: 0px;padding-bottom: 0px;padding-left: 0px;text-align: center" align="center">
-                                                                                                                                    <div style="max-width: 100%;" align="center">
-                                                                                                                                        <a href="http://spartangeek.com" target="_blank">
-                                                                                                                                        <img class="center" style="outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;width: 100%;clear: both;display: block;border: none;height: auto;line-height: 100%;margin: 0 auto;float: none;max-width: 40px" border="0" width="100%" align="center" src="https://buldar.com/images/seal.svg" alt="Image" title="Image">
-                                                                                                                                        </a>
-                                                                                                                                    </div>
-                                                                                                                                </td>
-                                                                                                                            </tr>
-                                                                                                                        </tbody>
-                                                                                                                    </table>
-                                                                                                                </td>
-                                                                                                            </tr>
-                                                                                                        </tbody>
-                                                                                                    </table>
-                                                                                                </div>
-                                                                                                <!--[if (gte mso 9)|(IE)]>
-                                                                                            </td>
-                                                                                            <td>
-                                                                                                <![endif]-->
-                                                                                                <!--[if (gte mso 9)|(IE)]>
-                                                                                            </td>
-                                                                                        </tr>
-                                                                                    </table>
-                                                                                    <![endif]-->
-                                                                                </td>
-                                                                            </tr>
-                                                                        </tbody>
-                                                                    </table>
-                                                                </td>
-                                                            </tr>
-                                                        </tbody>
-                                                    </table>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                    <!--[if (gte mso 9)|(IE)]>
-                                </td>
-                            </tr>
-                        </table>
-                        <![endif]-->
-                        <!--[if (gte mso 9)|(IE)]>
-                        <table width='500' class="ieCell" align="center" cellpadding="0" cellspacing="0" border="0">
-                            <tr>
-                                <td>
-                                    <![endif]-->
-                                    <table style="border-spacing: 0;border-collapse: collapse;vertical-align: top;background-color: #131d3a" cellpadding="0" cellspacing="0" align="center" width="100%" border="0">
-                                        <tbody>
-                                            <tr style="vertical-align: top">
-                                                <td style="word-break: break-word;-webkit-hyphens: auto;-moz-hyphens: auto;hyphens: auto;border-collapse: collapse !important;vertical-align: top" width="100%">
-                                                    <table class="container" style="border-spacing: 0;border-collapse: collapse;vertical-align: top;max-width: 500px;margin: 0 auto;text-align: inherit" cellpadding="0" cellspacing="0" align="center" width="100%" border="0">
-                                                        <tbody>
-                                                            <tr style="vertical-align: top">
-                                                                <td style="word-break: break-word;-webkit-hyphens: auto;-moz-hyphens: auto;hyphens: auto;border-collapse: collapse !important;vertical-align: top" width="100%">
-                                                                    <table class="block-grid" style="border-spacing: 0;border-collapse: collapse;vertical-align: top;width: 100%;max-width: 500px;color: #000000;background-color: transparent" cellpadding="0" cellspacing="0" width="100%" bgcolor="transparent">
-                                                                        <tbody>
-                                                                            <tr style="vertical-align: top">
-                                                                                <td style="word-break: break-word;-webkit-hyphens: auto;-moz-hyphens: auto;hyphens: auto;border-collapse: collapse !important;vertical-align: top;text-align: center;font-size: 0">
-                                                                                    <!--[if (gte mso 9)|(IE)]>
-                                                                                    <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
-                                                                                        <tr>
-                                                                                            <td valign="top">
-                                                                                                <![endif]-->
-                                                                                                <div class="col num12" style="display: inline-block;vertical-align: top;width: 100%">
-                                                                                                    <table style="border-spacing: 0;border-collapse: collapse;vertical-align: top" cellpadding="0" cellspacing="0" align="center" width="100%" border="0">
-                                                                                                        <tbody>
-                                                                                                            <tr style="vertical-align: top">
-                                                                                                                <td style="word-break: break-word;-webkit-hyphens: auto;-moz-hyphens: auto;hyphens: auto;border-collapse: collapse !important;vertical-align: top;background-color: transparent;padding-top: 0px;padding-right: 0px;padding-bottom: 0px;padding-left: 0px;border-top: 0px solid transparent;border-right: 0px solid transparent;border-bottom: 0px solid transparent;border-left: 0px solid transparent">
-                                                                                                                    <table style="border-spacing: 0;border-collapse: collapse;vertical-align: top" cellpadding="0" cellspacing="0" width="100%">
-                                                                                                                        <tbody>
-                                                                                                                            <tr style="vertical-align: top">
-                                                                                                                                <td style="word-break: break-word;-webkit-hyphens: auto;-moz-hyphens: auto;hyphens: auto;border-collapse: collapse !important;vertical-align: top;padding-top: 20px;padding-right: 0px;padding-bottom: 15px;padding-left: 0px">
-                                                                                                                                    <div style="color:#ffffff;line-height:120%;font-family:Arial, 'Helvetica Neue', Helvetica, sans-serif;">
-                                                                                                                                        <div style="line-height:14px;text-align:center;font-size:12px;color:#ffffff;font-family:Arial, 'Helvetica Neue', Helvetica, sans-serif;"><span style="font-size:28px; line-height:34px; font-family:Arial, 'Helvetica Neue', Helvetica, sans-serifpx;">&#161;Bienvenido a Buldar!</span></div>
-                                                                                                                                    </div>
-                                                                                                                                </td>
-                                                                                                                            </tr>
-                                                                                                                        </tbody>
-                                                                                                                    </table>
-                                                                                                                    <table style="border-spacing: 0;border-collapse: collapse;vertical-align: top" cellpadding="0" cellspacing="0" width="100%">
-                                                                                                                        <tbody>
-                                                                                                                            <tr style="vertical-align: top">
-                                                                                                                                <td style="word-break: break-word;-webkit-hyphens: auto;-moz-hyphens: auto;hyphens: auto;border-collapse: collapse !important;vertical-align: top;padding-top: 10px;padding-right: 10px;padding-bottom: 10px;padding-left: 10px">
-                                                                                                                                    <div style="color:#FFFFFF;line-height:120%;font-family:Arial, 'Helvetica Neue', Helvetica, sans-serif;">
-                                                                                                                                        <div style="font-size:14px;line-height:17px;text-align:center;color:#FFFFFF;font-family:Arial, 'Helvetica Neue', Helvetica, sans-serif;"><span style="font-family:Arial, 'Helvetica Neue', Helvetica, sans-serifpx; font-size:14px; line-height:17px;">Te damos la bienvenida a la comunidad de Buldar.&nbsp;</span><span style="font-family: inherit; font-size: 14px; line-height: 16px;" data-mce-style="font-family: inherit; font-size: 14px;">Aspiramos a ser la comunidad de tecnolog&#237;a m&#225;s grande de habla hispana en el mundo</span></div>
-                                                                                                                                        <div style="font-size:14px;line-height:17px;text-align:center;color:#FFFFFF;font-family:Arial, 'Helvetica Neue', Helvetica, sans-serif;"><span style="font-family:Arial, 'Helvetica Neue', Helvetica, sans-serifpx; font-size:14px; line-height:17px;"><br data-mce-bogus="1"></span></div>
-                                                                                                                                        <div style="font-size:14px;line-height:17px;text-align:center;color:#FFFFFF;font-family:Arial, 'Helvetica Neue', Helvetica, sans-serif;"><span style="font-family:Arial, 'Helvetica Neue', Helvetica, sans-serifpx; font-size:14px; line-height:17px;">Confirma tu registro dando click en el siguiente bot&#243;n.</span></div>
-                                                                                                                                    </div>
-                                                                                                                                </td>
-                                                                                                                            </tr>
-                                                                                                                        </tbody>
-                                                                                                                    </table>
-                                                                                                                    <table style="border-spacing: 0;border-collapse: collapse;vertical-align: top" width="100%" border="0" cellspacing="0" cellpadding="0">
-                                                                                                                        <tbody>
-                                                                                                                            <tr style="vertical-align: top">
-                                                                                                                                <td class="center" style="word-break: break-word;-webkit-hyphens: auto;-moz-hyphens: auto;hyphens: auto;border-collapse: collapse !important;vertical-align: top;text-align: center;padding-top: 10px;padding-right: 10px;padding-bottom: 10px;padding-left: 10px" align="center">
-                                                                                                                                    <table style="border-spacing: 0;border-collapse: collapse;vertical-align: top" width="100%" border="0" cellspacing="0" cellpadding="0">
-                                                                                                                                        <tbody>
-                                                                                                                                            <tr style="vertical-align: top">
-                                                                                                                                                <td class="button-container" style="word-break: break-word;-webkit-hyphens: auto;-moz-hyphens: auto;hyphens: auto;border-collapse: collapse !important;vertical-align: top" align="center">
-                                                                                                                                                    <table style="border-spacing: 0;border-collapse: collapse;vertical-align: top" width="100%" border="0" cellspacing="0" cellpadding="0" align="center">
-                                                                                                                                                        <tbody>
-                                                                                                                                                            <tr style="vertical-align: top">
-                                                                                                                                                                <td class="button" style="word-break: break-word;-webkit-hyphens: auto;-moz-hyphens: auto;hyphens: auto;border-collapse: collapse !important;vertical-align: top;text-align: center;height: 32px" width="100%" valign="middle">
-                                                                                                                                                                    <!--[if mso]>
-                                                                                                                                                                    <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="" 
-                                                                                                                                                                        style="
-                                                                                                                                                                        height:52px;
-                                                                                                                                                                        v-text-anchor:middle;
-                                                                                                                                                                        width:149px;" 
-                                                                                                                                                                        arcsize="8%" 
-                                                                                                                                                                        strokecolor="" 
-                                                                                                                                                                        fillcolor="#205392" >
-                                                                                                                                                                        <w:anchorlock/>
-                                                                                                                                                                        <center 
-                                                                                                                                                                            style="color:#ffffff;
-                                                                                                                                                                            font-family:Arial, &#39;Helvetica Neue&#39;, Helvetica, sans-serif;
-                                                                                                                                                                            font-size:16px">
-                                                                                                                                                                            <div style="font-family:inherit;font-size:16px;line-height:32px;color:#ffffff;text-align:left;"><span style="font-size: 12px; line-height: 24px;" data-mce-style="font-size: 12px;"><strong><span style="line-height: 24px; font-size: 12px;">CONFIRMAR REGISTRO</span></strong></span></div>
-                                                                                                                                                                        </center>
-                                                                                                                                                                    </v:roundrect>
-                                                                                                                                                                    <![endif]-->
-                                                                                                                                                                    <a href="{{ .config.Site.Url }}/validate/{{ .user.VerificationCode }}" style="display: inline-block;text-decoration: none;-webkit-text-size-adjust: none;text-align: center;background-color: #4180f1;                        -webkit-border-radius: 4px;                         -moz-border-radius: 4px;                         border-radius: 4px;                         vertical-align: middle;                         padding-top: 5px;                         padding-right: 20px;                        padding-bottom: 5px;                        padding-left: 20px;                                               font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif;-webkit-border-radius: 4px;-moz-border-radius: 4px;border-radius: 4px;border-top: 0px solid transparent;border-right: 0px solid transparent;border-bottom: 0px solid transparent;border-left: 0px solid transparent;color: #ffffff;max-width: 149px;width: 100%;mso-hide: all" target="_blank">
-                                                                                                                                                                        <div style="text-align: center !important;font-family: inherit;font-size: 16px;line-height: 32px;color: #ffffff"><span style="font-size: 12px; line-height: 24px;" data-mce-style="font-size: 12px;"><strong><span style="line-height: 24px; font-size: 12px;">CONFIRMAR REGISTRO</span></strong></span></div>
-                                                                                                                                                                    </a>
-                                                                                                                                                                </td>
-                                                                                                                                                            </tr>
-                                                                                                                                                        </tbody>
-                                                                                                                                                    </table>
-                                                                                                                                                </td>
-                                                                                                                                            </tr>
-                                                                                                                                        </tbody>
-                                                                                                                                    </table>
-                                                                                                                                </td>
-                                                                                                                            </tr>
-                                                                                                                        </tbody>
-                                                                                                                    </table>
-                                                                                                                    <table style="border-spacing: 0;border-collapse: collapse;vertical-align: top" align="center" width="100%" border="0" cellspacing="0">
-                                                                                                                        <tbody>
-                                                                                                                            <tr style="vertical-align: top">
-                                                                                                                                <td style="word-break: break-word;-webkit-hyphens: auto;-moz-hyphens: auto;hyphens: auto;border-collapse: collapse !important;vertical-align: top;padding-top: 10px;padding-right: 10px;padding-bottom: 10px;padding-left: 10px" align="center">
-                                                                                                                                    <div>
-                                                                                                                                        <table style="border-spacing: 0;border-collapse: collapse;vertical-align: top;border-top: 10px solid transparent;width: 100%" align="center" border="0" cellspacing="0">
-                                                                                                                                            <tbody>
-                                                                                                                                                <tr style="vertical-align: top">
-                                                                                                                                                    <td style="word-break: break-word;-webkit-hyphens: auto;-moz-hyphens: auto;hyphens: auto;border-collapse: collapse !important;vertical-align: top" align="center">
-                                                                                                                                                        &nbsp;
-                                                                                                                                                    </td>
-                                                                                                                                                </tr>
-                                                                                                                                            </tbody>
-                                                                                                                                        </table>
-                                                                                                                                    </div>
-                                                                                                                                </td>
-                                                                                                                            </tr>
-                                                                                                                        </tbody>
-                                                                                                                    </table>
-                                                                                                                </td>
-                                                                                                            </tr>
-                                                                                                        </tbody>
-                                                                                                    </table>
-                                                                                                </div>
-                                                                                                <!--[if (gte mso 9)|(IE)]>
-                                                                                            </td>
-                                                                                            <td>
-                                                                                                <![endif]-->
-                                                                                                <!--[if (gte mso 9)|(IE)]>
-                                                                                            </td>
-                                                                                        </tr>
-                                                                                    </table>
-                                                                                    <![endif]-->
-                                                                                </td>
-                                                                            </tr>
-                                                                        </tbody>
-                                                                    </table>
-                                                                </td>
-                                                            </tr>
-                                                        </tbody>
-                                                    </table>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                    <!--[if (gte mso 9)|(IE)]>
-                                </td>
-                            </tr>
-                        </table>
-                        <![endif]-->
-                        <!--[if (gte mso 9)|(IE)]>
-                        <table width='500' class="ieCell" align="center" cellpadding="0" cellspacing="0" border="0">
-                            <tr>
-                                <td>
-                                    <![endif]-->
-                                    <table style="border-spacing: 0;border-collapse: collapse;vertical-align: top;background-color: transparent" cellpadding="0" cellspacing="0" align="center" width="100%" border="0">
-                                        <tbody>
-                                            <tr style="vertical-align: top">
-                                                <td style="word-break: break-word;-webkit-hyphens: auto;-moz-hyphens: auto;hyphens: auto;border-collapse: collapse !important;vertical-align: top" width="100%">
-                                                    <table class="container" style="border-spacing: 0;border-collapse: collapse;vertical-align: top;max-width: 500px;margin: 0 auto;text-align: inherit" cellpadding="0" cellspacing="0" align="center" width="100%" border="0">
-                                                        <tbody>
-                                                            <tr style="vertical-align: top">
-                                                                <td style="word-break: break-word;-webkit-hyphens: auto;-moz-hyphens: auto;hyphens: auto;border-collapse: collapse !important;vertical-align: top" width="100%">
-                                                                    <table class="block-grid mixed-two-up" style="border-spacing: 0;border-collapse: collapse;vertical-align: top;width: 100%;max-width: 500px;color: #333;background-color: transparent" cellpadding="0" cellspacing="0" width="100%" bgcolor="transparent">
-                                                                        <tbody>
-                                                                            <tr style="vertical-align: top">
-                                                                                <td style="word-break: break-word;-webkit-hyphens: auto;-moz-hyphens: auto;hyphens: auto;border-collapse: collapse !important;vertical-align: top;text-align: center;font-size: 0">
-                                                                                    <!--[if (gte mso 9)|(IE)]>
-                                                                                    <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
-                                                                                        <tr>
-                                                                                            <td valign="top">
-                                                                                                <![endif]-->
-                                                                                                <div class="col num4" style="display: inline-block;vertical-align: top;width: 167px;text-align: center">
-                                                                                                    <table style="border-spacing: 0;border-collapse: collapse;vertical-align: top" cellpadding="0" cellspacing="0" align="center" width="100%" border="0">
-                                                                                                        <tbody>
-                                                                                                            <tr style="vertical-align: top">
-                                                                                                                <td style="word-break: break-word;-webkit-hyphens: auto;-moz-hyphens: auto;hyphens: auto;border-collapse: collapse !important;vertical-align: top;background-color: transparent;padding-top: 30px;padding-right: 0px;padding-bottom: 15px;padding-left: 10px;border-top: 0px solid transparent;border-right: 0px solid transparent;border-bottom: 0px solid transparent;border-left: 0px solid transparent">
-                                                                                                                    <table style="border-spacing: 0;border-collapse: collapse;vertical-align: top" cellpadding="0" cellspacing="0" width="100%" border="0" align="center">
-                                                                                                                        <tbody>
-                                                                                                                            <tr style="vertical-align: top">
-                                                                                                                                <td style="word-break: break-word;-webkit-hyphens: auto;-moz-hyphens: auto;hyphens: auto;border-collapse: collapse !important;vertical-align: top;width: 100%;padding-top: 0px;padding-right: 0px;padding-bottom: 0px;padding-left: 0px;text-align: center" align="center">
-                                                                                                                                    <div style="max-width: 100%;" align="center">
-                                                                                                                                        <a>
-                                                                                                                                        <img class="center" style="outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;width: 100%;clear: both;display: block;border: none;height: auto;line-height: 100%;margin: 0 auto;float: none;max-width: 50px" border="0" width="100%" align="center" src="http://assets.spartangeek.com/xbox_copyrighted.png" alt="Image" title="Image">
-                                                                                                                                        </a>
-                                                                                                                                    </div>
-                                                                                                                                </td>
-                                                                                                                            </tr>
-                                                                                                                        </tbody>
-                                                                                                                    </table>
-                                                                                                                </td>
-                                                                                                            </tr>
-                                                                                                        </tbody>
-                                                                                                    </table>
-                                                                                                </div>
-                                                                                                <!--[if (gte mso 9)|(IE)]>
-                                                                                            </td>
-                                                                                            <td>
-                                                                                                <![endif]-->
-                                                                                                <div class="col num8" style="display: inline-block;vertical-align: top;width: 333px;text-align: center">
-                                                                                                    <table style="border-spacing: 0;border-collapse: collapse;vertical-align: top" cellpadding="0" cellspacing="0" align="center" width="100%" border="0">
-                                                                                                        <tbody>
-                                                                                                            <tr style="vertical-align: top">
-                                                                                                                <td style="word-break: break-word;-webkit-hyphens: auto;-moz-hyphens: auto;hyphens: auto;border-collapse: collapse !important;vertical-align: top;background-color: transparent;padding-top: 5px;padding-right: 0px;padding-bottom: 5px;padding-left: 0px;border-top: 0px solid transparent;border-right: 0px solid transparent;border-bottom: 0px solid transparent;border-left: 0px solid transparent">
-                                                                                                                    <table style="border-spacing: 0;border-collapse: collapse;vertical-align: top" cellpadding="0" cellspacing="0" width="100%">
-                                                                                                                        <tbody>
-                                                                                                                            <tr style="vertical-align: top">
-                                                                                                                                <td style="word-break: break-word;-webkit-hyphens: auto;-moz-hyphens: auto;hyphens: auto;border-collapse: collapse !important;vertical-align: top;padding-top: 5px;padding-right: 10px;padding-bottom: 0px;padding-left: 10px">
-                                                                                                                                    <div style="color:#4078C0;line-height:120%;font-family:Arial, 'Helvetica Neue', Helvetica, sans-serif;">
-                                                                                                                                        <div style="font-size:14px;line-height:17px;color:#4078C0;font-family:Arial, 'Helvetica Neue', Helvetica, sans-serif;text-align:left;"><span style="font-size:16px; line-height:19px;">Una red social de apasionados a la tecnolog&#237;a</span></div>
-                                                                                                                                    </div>
-                                                                                                                                </td>
-                                                                                                                            </tr>
-                                                                                                                        </tbody>
-                                                                                                                    </table>
-                                                                                                                    <table style="border-spacing: 0;border-collapse: collapse;vertical-align: top" cellpadding="0" cellspacing="0" width="100%">
-                                                                                                                        <tbody>
-                                                                                                                            <tr style="vertical-align: top">
-                                                                                                                                <td style="word-break: break-word;-webkit-hyphens: auto;-moz-hyphens: auto;hyphens: auto;border-collapse: collapse !important;vertical-align: top;padding-top: 0px;padding-right: 10px;padding-bottom: 30px;padding-left: 10px">
-                                                                                                                                    <div style="color:#555555;line-height:120%;font-family:Arial, 'Helvetica Neue', Helvetica, sans-serif;">
-                                                                                                                                        <div style="font-size:18px;line-height:22px;color:#555555;font-family:Arial, 'Helvetica Neue', Helvetica, sans-serif;text-align:left;"><span style="font-size:12px; line-height:22px;">Olv&#237;date de ver m&#225;s fotos de bautizos y bodas. Haz amistad con miles de personas con tus mismos intereses, re&#250;nete a jugar videojuegos o simplemente comparte tus mejores memes.</span><br></div>
-                                                                                                                                    </div>
-                                                                                                                                </td>
-                                                                                                                            </tr>
-                                                                                                                        </tbody>
-                                                                                                                    </table>
-                                                                                                                </td>
-                                                                                                            </tr>
-                                                                                                        </tbody>
-                                                                                                    </table>
-                                                                                                </div>
-                                                                                                <!--[if (gte mso 9)|(IE)]>
-                                                                                            </td>
-                                                                                            <td>
-                                                                                                <![endif]-->
-                                                                                                <!--[if (gte mso 9)|(IE)]>
-                                                                                            </td>
-                                                                                        </tr>
-                                                                                    </table>
-                                                                                    <![endif]-->
-                                                                                </td>
-                                                                            </tr>
-                                                                        </tbody>
-                                                                    </table>
-                                                                </td>
-                                                            </tr>
-                                                        </tbody>
-                                                    </table>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                    <!--[if (gte mso 9)|(IE)]>
-                                </td>
-                            </tr>
-                        </table>
-                        <![endif]-->
-                        <!--[if (gte mso 9)|(IE)]>
-                        <table width='500' class="ieCell" align="center" cellpadding="0" cellspacing="0" border="0">
-                            <tr>
-                                <td>
-                                    <![endif]-->
-                                    <table style="border-spacing: 0;border-collapse: collapse;vertical-align: top;background-color: transparent" cellpadding="0" cellspacing="0" align="center" width="100%" border="0">
-                                        <tbody>
-                                            <tr style="vertical-align: top">
-                                                <td style="word-break: break-word;-webkit-hyphens: auto;-moz-hyphens: auto;hyphens: auto;border-collapse: collapse !important;vertical-align: top" width="100%">
-                                                    <table class="container" style="border-spacing: 0;border-collapse: collapse;vertical-align: top;max-width: 500px;margin: 0 auto;text-align: inherit" cellpadding="0" cellspacing="0" align="center" width="100%" border="0">
-                                                        <tbody>
-                                                            <tr style="vertical-align: top">
-                                                                <td style="word-break: break-word;-webkit-hyphens: auto;-moz-hyphens: auto;hyphens: auto;border-collapse: collapse !important;vertical-align: top" width="100%">
-                                                                    <table class="block-grid mixed-two-up" style="border-spacing: 0;border-collapse: collapse;vertical-align: top;width: 100%;max-width: 500px;color: #333;background-color: transparent" cellpadding="0" cellspacing="0" width="100%" bgcolor="transparent">
-                                                                        <tbody>
-                                                                            <tr style="vertical-align: top">
-                                                                                <td style="word-break: break-word;-webkit-hyphens: auto;-moz-hyphens: auto;hyphens: auto;border-collapse: collapse !important;vertical-align: top;text-align: center;font-size: 0">
-                                                                                    <!--[if (gte mso 9)|(IE)]>
-                                                                                    <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
-                                                                                        <tr>
-                                                                                            <td valign="top">
-                                                                                                <![endif]-->
-                                                                                                <div class="col num4" style="display: inline-block;vertical-align: top;width: 167px;text-align: center">
-                                                                                                    <table style="border-spacing: 0;border-collapse: collapse;vertical-align: top" cellpadding="0" cellspacing="0" align="center" width="100%" border="0">
-                                                                                                        <tbody>
-                                                                                                            <tr style="vertical-align: top">
-                                                                                                                <td style="word-break: break-word;-webkit-hyphens: auto;-moz-hyphens: auto;hyphens: auto;border-collapse: collapse !important;vertical-align: top;background-color: transparent;padding-top: 30px;padding-right: 0px;padding-bottom: 15px;padding-left: 10px;border-top: 0px solid transparent;border-right: 0px solid transparent;border-bottom: 0px solid transparent;border-left: 0px solid transparent">
-                                                                                                                    <table style="border-spacing: 0;border-collapse: collapse;vertical-align: top" cellpadding="0" cellspacing="0" width="100%" border="0" align="center">
-                                                                                                                        <tbody>
-                                                                                                                            <tr style="vertical-align: top">
-                                                                                                                                <td style="word-break: break-word;-webkit-hyphens: auto;-moz-hyphens: auto;hyphens: auto;border-collapse: collapse !important;vertical-align: top;width: 100%;padding-top: 0px;padding-right: 0px;padding-bottom: 0px;padding-left: 0px;text-align: center" align="center">
-                                                                                                                                    <div style="max-width: 100%;" align="center">
-                                                                                                                                        <a>
-                                                                                                                                        <img class="center" style="outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;width: 100%;clear: both;display: block;border: none;height: auto;line-height: 100%;margin: 0 auto;float: none;max-width: 50px" border="0" width="100%" align="center" src="http://assets.spartangeek.com/news.png" alt="Image" title="Image">
-                                                                                                                                        </a>
-                                                                                                                                    </div>
-                                                                                                                                </td>
-                                                                                                                            </tr>
-                                                                                                                        </tbody>
-                                                                                                                    </table>
-                                                                                                                </td>
-                                                                                                            </tr>
-                                                                                                        </tbody>
-                                                                                                    </table>
-                                                                                                </div>
-                                                                                                <!--[if (gte mso 9)|(IE)]>
-                                                                                            </td>
-                                                                                            <td>
-                                                                                                <![endif]-->
-                                                                                                <div class="col num8" style="display: inline-block;vertical-align: top;width: 333px;text-align: center">
-                                                                                                    <table style="border-spacing: 0;border-collapse: collapse;vertical-align: top" cellpadding="0" cellspacing="0" align="center" width="100%" border="0">
-                                                                                                        <tbody>
-                                                                                                            <tr style="vertical-align: top">
-                                                                                                                <td style="word-break: break-word;-webkit-hyphens: auto;-moz-hyphens: auto;hyphens: auto;border-collapse: collapse !important;vertical-align: top;background-color: transparent;padding-top: 5px;padding-right: 0px;padding-bottom: 5px;padding-left: 0px;border-top: 0px solid transparent;border-right: 0px solid transparent;border-bottom: 0px solid transparent;border-left: 0px solid transparent">
-                                                                                                                    <table style="border-spacing: 0;border-collapse: collapse;vertical-align: top" cellpadding="0" cellspacing="0" width="100%">
-                                                                                                                        <tbody>
-                                                                                                                            <tr style="vertical-align: top">
-                                                                                                                                <td style="word-break: break-word;-webkit-hyphens: auto;-moz-hyphens: auto;hyphens: auto;border-collapse: collapse !important;vertical-align: top;padding-top: 0px;padding-right: 10px;padding-bottom: 0px;padding-left: 10px">
-                                                                                                                                    <div style="color:#4078C0;line-height:120%;font-family:Arial, 'Helvetica Neue', Helvetica, sans-serif;">
-                                                                                                                                        <div style="font-size:14px;line-height:17px;color:#4078C0;font-family:Arial, 'Helvetica Neue', Helvetica, sans-serif;text-align:left;"><span style="font-size:16px; line-height:19px;">Tu nueva fuente de noticias y actualidad</span></div>
-                                                                                                                                    </div>
-                                                                                                                                </td>
-                                                                                                                            </tr>
-                                                                                                                        </tbody>
-                                                                                                                    </table>
-                                                                                                                    <table style="border-spacing: 0;border-collapse: collapse;vertical-align: top" cellpadding="0" cellspacing="0" width="100%">
-                                                                                                                        <tbody>
-                                                                                                                            <tr style="vertical-align: top">
-                                                                                                                                <td style="word-break: break-word;-webkit-hyphens: auto;-moz-hyphens: auto;hyphens: auto;border-collapse: collapse !important;vertical-align: top;padding-top: 0px;padding-right: 10px;padding-bottom: 30px;padding-left: 10px">
-                                                                                                                                    <div style="color:#555555;line-height:120%;font-family:Arial, 'Helvetica Neue', Helvetica, sans-serif;">
-                                                                                                                                        <div style="font-size:18px;line-height:22px;color:#555555;font-family:Arial, 'Helvetica Neue', Helvetica, sans-serif;text-align:left;"><span style="font-size:12px; line-height:22px;">Nuestra misi&#243;n es compartir informaci&#243;n de manera imparcial, sin favoritismos y con completa independencia. Si buscas informar o informarte, &#233;sta es tu comunidad.</span> </div>
-                                                                                                                                    </div>
-                                                                                                                                </td>
-                                                                                                                            </tr>
-                                                                                                                        </tbody>
-                                                                                                                    </table>
-                                                                                                                </td>
-                                                                                                            </tr>
-                                                                                                        </tbody>
-                                                                                                    </table>
-                                                                                                </div>
-                                                                                                <!--[if (gte mso 9)|(IE)]>
-                                                                                            </td>
-                                                                                            <td>
-                                                                                                <![endif]-->
-                                                                                                <!--[if (gte mso 9)|(IE)]>
-                                                                                            </td>
-                                                                                        </tr>
-                                                                                    </table>
-                                                                                    <![endif]-->
-                                                                                </td>
-                                                                            </tr>
-                                                                        </tbody>
-                                                                    </table>
-                                                                </td>
-                                                            </tr>
-                                                        </tbody>
-                                                    </table>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                    <!--[if (gte mso 9)|(IE)]>
-                                </td>
-                            </tr>
-                        </table>
-                        <![endif]-->
-                        <!--[if (gte mso 9)|(IE)]>
-                        <table width='500' class="ieCell" align="center" cellpadding="0" cellspacing="0" border="0">
-                            <tr>
-                                <td>
-                                    <![endif]-->
-                                    <table style="border-spacing: 0;border-collapse: collapse;vertical-align: top;background-color: #F0F2F4" cellpadding="0" cellspacing="0" align="center" width="100%" border="0">
-                                        <tbody>
-                                            <tr style="vertical-align: top">
-                                                <td style="word-break: break-word;-webkit-hyphens: auto;-moz-hyphens: auto;hyphens: auto;border-collapse: collapse !important;vertical-align: top" width="100%">
-                                                    <table class="container" style="border-spacing: 0;border-collapse: collapse;vertical-align: top;max-width: 500px;margin: 0 auto;text-align: inherit" cellpadding="0" cellspacing="0" align="center" width="100%" border="0">
-                                                        <tbody>
-                                                            <tr style="vertical-align: top">
-                                                                <td style="word-break: break-word;-webkit-hyphens: auto;-moz-hyphens: auto;hyphens: auto;border-collapse: collapse !important;vertical-align: top" width="100%">
-                                                                    <table class="block-grid" style="border-spacing: 0;border-collapse: collapse;vertical-align: top;width: 100%;max-width: 500px;color: #333;background-color: transparent" cellpadding="0" cellspacing="0" width="100%" bgcolor="transparent">
-                                                                        <tbody>
-                                                                            <tr style="vertical-align: top">
-                                                                                <td style="word-break: break-word;-webkit-hyphens: auto;-moz-hyphens: auto;hyphens: auto;border-collapse: collapse !important;vertical-align: top;text-align: center;font-size: 0">
-                                                                                    <!--[if (gte mso 9)|(IE)]>
-                                                                                    <table width="100%" align="center" cellpadding="0" cellspacing="0" border="0">
-                                                                                        <tr>
-                                                                                            <td valign="top">
-                                                                                                <![endif]-->
-                                                                                                <div class="col num12" style="display: inline-block;vertical-align: top;width: 100%">
-                                                                                                    <table style="border-spacing: 0;border-collapse: collapse;vertical-align: top" cellpadding="0" cellspacing="0" align="center" width="100%" border="0">
-                                                                                                        <tbody>
-                                                                                                            <tr style="vertical-align: top">
-                                                                                                                <td style="word-break: break-word;-webkit-hyphens: auto;-moz-hyphens: auto;hyphens: auto;border-collapse: collapse !important;vertical-align: top;background-color: transparent;padding-top: 30px;padding-right: 0px;padding-bottom: 30px;padding-left: 0px;border-top: 0px solid transparent;border-right: 0px solid transparent;border-bottom: 0px solid transparent;border-left: 0px solid transparent">
-                                                                                                                    <table style="border-spacing: 0;border-collapse: collapse;vertical-align: top" border="0" cellspacing="0" cellpadding="0" width="100%">
-                                                                                                                        <tbody>
-                                                                                                                            <tr style="vertical-align: top">
-                                                                                                                                <td style="word-break: break-word;-webkit-hyphens: auto;-moz-hyphens: auto;hyphens: auto;border-collapse: collapse !important;vertical-align: top;text-align: center;padding-top: 10px;padding-right: 10px;padding-bottom: 10px;padding-left: 10px" align="center">
-                                                                                                                                    <table class="icon-table" style="border-spacing: 0;border-collapse: collapse;vertical-align: top" border="0" cellspacing="0" cellpadding="0" width="0" align="center">
-                                                                                                                                        <tbody>
-                                                                                                                                            <tr style="vertical-align: top">
-                                                                                                                                                <td style="word-break: break-word;-webkit-hyphens: auto;-moz-hyphens: auto;hyphens: auto;border-collapse: collapse !important;vertical-align: top">
-                                                                                                                                                    <table style="border-spacing: 0;border-collapse: collapse;vertical-align: top;padding: 0 5px 0 0" align="left" border="0" cellspacing="0" cellpadding="0" width="0">
-                                                                                                                                                        <tbody>
-                                                                                                                                                            <tr style="vertical-align: top">
-                                                                                                                                                                <td style="word-break: break-word;-webkit-hyphens: auto;-moz-hyphens: auto;hyphens: auto;border-collapse: collapse !important;vertical-align: top">
-                                                                                                                                                                    <a href="https://www.facebook.com/SpartanGeek" title="Facebook" target="_blank">
-                                                                                                                                                                    <img style="outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;width: 100%;clear: both;display: block;border: none;height: auto;line-height: 100%;max-width: 32px !important" src="http://assets.spartangeek.com/facebook.png" alt="Facebook" title="Facebook" width="100%">
-                                                                                                                                                                    </a>
-                                                                                                                                                                </td>
-                                                                                                                                                                <td style="word-break: break-word;-webkit-hyphens: auto;-moz-hyphens: auto;hyphens: auto;border-collapse: collapse !important;vertical-align: top"> &nbsp;</td>
-                                                                                                                                                            </tr>
-                                                                                                                                                        </tbody>
-                                                                                                                                                    </table>
-                                                                                                                                                    <table style="border-spacing: 0;border-collapse: collapse;vertical-align: top;padding: 0 5px 0 0" align="left" border="0" cellspacing="0" cellpadding="0" width="0">
-                                                                                                                                                        <tbody>
-                                                                                                                                                            <tr style="vertical-align: top">
-                                                                                                                                                                <td style="word-break: break-word;-webkit-hyphens: auto;-moz-hyphens: auto;hyphens: auto;border-collapse: collapse !important;vertical-align: top">
-                                                                                                                                                                    <a href="http://www.youtube.com/user/SpartanGeekTV" title="YouTube" target="_blank">
-                                                                                                                                                                    <img style="outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;width: 100%;clear: both;display: block;border: none;height: auto;line-height: 100%;max-width: 32px !important" src="http://assets.spartangeek.com/youtube.png" alt="YouTube" title="YouTube" width="100%">
-                                                                                                                                                                    </a>
-                                                                                                                                                                </td>
-                                                                                                                                                                <td style="word-break: break-word;-webkit-hyphens: auto;-moz-hyphens: auto;hyphens: auto;border-collapse: collapse !important;vertical-align: top"> &nbsp;</td>
-                                                                                                                                                            </tr>
-                                                                                                                                                        </tbody>
-                                                                                                                                                    </table>
-                                                                                                                                                    <table style="border-spacing: 0;border-collapse: collapse;vertical-align: top;padding: 0 5px 0 0" align="left" border="0" cellspacing="0" cellpadding="0" width="0">
-                                                                                                                                                        <tbody>
-                                                                                                                                                            <tr style="vertical-align: top">
-                                                                                                                                                                <td style="word-break: break-word;-webkit-hyphens: auto;-moz-hyphens: auto;hyphens: auto;border-collapse: collapse !important;vertical-align: top">
-                                                                                                                                                                    <a href="http://twitter.com/SpartanGeekTV" title="Twitter" target="_blank">
-                                                                                                                                                                    <img style="outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;width: 100%;clear: both;display: block;border: none;height: auto;line-height: 100%;max-width: 32px !important" src="http://assets.spartangeek.com/twitter.png" alt="Twitter" title="Twitter" width="100%">
-                                                                                                                                                                    </a>
-                                                                                                                                                                </td>
-                                                                                                                                                                <td style="word-break: break-word;-webkit-hyphens: auto;-moz-hyphens: auto;hyphens: auto;border-collapse: collapse !important;vertical-align: top"> &nbsp;</td>
-                                                                                                                                                            </tr>
-                                                                                                                                                        </tbody>
-                                                                                                                                                    </table>
-                                                                                                                                                </td>
-                                                                                                                                            </tr>
-                                                                                                                                        </tbody>
-                                                                                                                                    </table>
-                                                                                                                                </td>
-                                                                                                                            </tr>
-                                                                                                                        </tbody>
-                                                                                                                    </table>
-                                                                                                                    <table style="border-spacing: 0;border-collapse: collapse;vertical-align: top" cellpadding="0" cellspacing="0" width="100%">
-                                                                                                                        <tbody>
-                                                                                                                            <tr style="vertical-align: top">
-                                                                                                                                <td style="word-break: break-word;-webkit-hyphens: auto;-moz-hyphens: auto;hyphens: auto;border-collapse: collapse !important;vertical-align: top;padding-top: 15px;padding-right: 10px;padding-bottom: 10px;padding-left: 10px">
-                                                                                                                                    <div style="color:#959595;line-height:150%;font-family:Arial, 'Helvetica Neue', Helvetica, sans-serif;">
-                                                                                                                                        <div style="font-size:12px;line-height:18px;text-align:center;color:#959595;font-family:Arial, 'Helvetica Neue', Helvetica, sans-serif;"><strong>&#169; SpartanGeek 2015, Algunos derechos reservados.&nbsp;</strong><br></div>
-                                                                                                                                    </div>
-                                                                                                                                </td>
-                                                                                                                            </tr>
-                                                                                                                        </tbody>
-                                                                                                                    </table>
-                                                                                                                </td>
-                                                                                                            </tr>
-                                                                                                        </tbody>
-                                                                                                    </table>
-                                                                                                </div>
-                                                                                                <!--[if (gte mso 9)|(IE)]>
-                                                                                            </td>
-                                                                                            <td>
-                                                                                                <![endif]-->
-                                                                                                <!--[if (gte mso 9)|(IE)]>
-                                                                                            </td>
-                                                                                        </tr>
-                                                                                    </table>
-                                                                                    <![endif]-->
-                                                                                </td>
-                                                                            </tr>
-                                                                        </tbody>
-                                                                    </table>
-                                                                </td>
-                                                            </tr>
-                                                        </tbody>
-                                                    </table>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                    <!--[if (gte mso 9)|(IE)]>
-                                </td>
-                            </tr>
-                        </table>
-                        <![endif]-->
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </body>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html style="width:100%;font-family:arial, 'helvetica neue', helvetica, sans-serif;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;padding:0;Margin:0;">
+ <head> 
+  <meta charset="UTF-8"> 
+  <meta content="width=device-width, initial-scale=1" name="viewport"> 
+  <meta name="x-apple-disable-message-reformatting"> 
+  <meta http-equiv="X-UA-Compatible" content="IE=edge"> 
+  <meta content="telephone=no" name="format-detection"> 
+  <title>Welcome</title> 
+  <!--[if (mso 16)]>
+    <style type="text/css">
+    a {text-decoration: none;}
+    </style>
+    <![endif]--> 
+  <!--[if gte mso 9]><style>sup { font-size: 100% !important; }</style><![endif]--> 
+  <style type="text/css">
+@media only screen and (max-width:600px) {p, ul li, ol li, a { font-size:14px!important; line-height:150%!important } h1 { font-size:40px!important; text-align:center; line-height:120%!important } h2 { font-size:26px!important; text-align:center; line-height:120%!important } h3 { font-size:20px!important; text-align:center; line-height:120%!important } h1 a { font-size:40px!important; text-align:center } h2 a { font-size:26px!important; text-align:center } h3 a { font-size:20px!important; text-align:center } .es-menu td a { font-size:14px!important } .es-header-body p, .es-header-body ul li, .es-header-body ol li, .es-header-body a { font-size:14px!important } .es-footer-body p, .es-footer-body ul li, .es-footer-body ol li, .es-footer-body a { font-size:12px!important } .es-infoblock p, .es-infoblock ul li, .es-infoblock ol li, .es-infoblock a { font-size:11px!important } *[class="gmail-fix"] { display:none!important } .es-m-txt-c, .es-m-txt-c h1, .es-m-txt-c h2, .es-m-txt-c h3 { text-align:center!important } .es-m-txt-r, .es-m-txt-r h1, .es-m-txt-r h2, .es-m-txt-r h3 { text-align:right!important } .es-m-txt-l, .es-m-txt-l h1, .es-m-txt-l h2, .es-m-txt-l h3 { text-align:left!important } .es-m-txt-r img, .es-m-txt-c img, .es-m-txt-l img { display:inline!important } .es-button-border { display:inline-block!important } a.es-button { font-size:18px!important; display:inline-block!important } .es-btn-fw { border-width:10px 0px!important; text-align:center!important } .es-adaptive table, .es-btn-fw, .es-btn-fw-brdr, .es-left, .es-right { width:100%!important } .es-content table, .es-header table, .es-footer table, .es-content, .es-footer, .es-header { width:100%!important; max-width:600px!important } .es-adapt-td { display:block!important; width:100%!important } .adapt-img { width:100%!important; height:auto!important } .es-m-p0 { padding:0px!important } .es-m-p0r { padding-right:0px!important } .es-m-p0l { padding-left:0px!important } .es-m-p0t { padding-top:0px!important } .es-m-p0b { padding-bottom:0!important } .es-m-p20b { padding-bottom:20px!important } .es-mobile-hidden, .es-hidden { display:none!important } .es-desk-hidden { display:table-row!important; width:auto!important; overflow:visible!important; float:none!important; max-height:inherit!important; line-height:inherit!important } .es-desk-menu-hidden { display:table-cell!important } table.es-table-not-adapt, .esd-block-html table { width:auto!important } table.es-social { display:inline-block!important } table.es-social td { display:inline-block!important } }
+#outlook a {
+    padding:0;
+}
+.ExternalClass {
+    width:100%;
+}
+.ExternalClass,
+.ExternalClass p,
+.ExternalClass span,
+.ExternalClass font,
+.ExternalClass td,
+.ExternalClass div {
+    line-height:100%;
+}
+.es-button {
+    mso-style-priority:100!important;
+    text-decoration:none!important;
+}
+a[x-apple-data-detectors] {
+    color:inherit!important;
+    text-decoration:none!important;
+    font-size:inherit!important;
+    font-family:inherit!important;
+    font-weight:inherit!important;
+    line-height:inherit!important;
+}
+.es-desk-hidden {
+    display:none;
+    float:left;
+    overflow:hidden;
+    width:0;
+    max-height:0;
+    line-height:0;
+    mso-hide:all;
+}
+</style> 
+ </head> 
+ <body style="width:100%;font-family:arial, 'helvetica neue', helvetica, sans-serif;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;padding:0;Margin:0;"> 
+  <div class="es-wrapper-color" style="background-color:#F7F7F7;"> 
+   <!--[if gte mso 9]>
+            <v:background xmlns:v="urn:schemas-microsoft-com:vml" fill="t">
+                <v:fill type="tile" color="#f7f7f7"></v:fill>
+            </v:background>
+        <![endif]--> 
+   <table class="es-wrapper" width="100%" cellspacing="0" cellpadding="0" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;padding:0;Margin:0;width:100%;height:100%;background-repeat:repeat;background-position:center top;"> 
+     <tr style="border-collapse:collapse;"> 
+      <td valign="top" style="padding:0;Margin:0;"> 
+       <table class="es-content" cellspacing="0" cellpadding="0" align="center" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;table-layout:fixed !important;width:100%;"> 
+         <tr style="border-collapse:collapse;"> 
+          <td class="es-adaptive" align="center" style="padding:0;Margin:0;"> 
+           <table class="es-content-body" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;background-color:transparent;" width="600" cellspacing="0" cellpadding="0" bgcolor="#ffffff" align="center"> 
+             <tr style="border-collapse:collapse;"> 
+              <td align="left" style="padding:10px;Margin:0;"> 
+               <table width="100%" cellspacing="0" cellpadding="0" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;"> 
+                 <tr style="border-collapse:collapse;"> 
+                  <td width="580" valign="top" align="center" style="padding:0;Margin:0;"> 
+                   <table width="100%" cellspacing="0" cellpadding="0" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;"> 
+                     <tr style="border-collapse:collapse;"> 
+                      <td class="es-infoblock" align="center" style="padding:0;Margin:0;line-height:13px;font-size:11px;color:#999999;"> <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:11px;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:13px;color:#999999;">You are getting this email because you or someone signed up the {{ .config.Site.Name }} community. <a href="{{ .config.Site.Url }}?viewInBrowser" target="_blank" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;font-size:11px;text-decoration:underline;color:#3D5CA3;">View in browser</a><br></p> </td> 
+                     </tr> 
+                   </table> </td> 
+                 </tr> 
+               </table> </td> 
+             </tr> 
+           </table> </td> 
+         </tr> 
+       </table> 
+       <table class="es-header" cellspacing="0" cellpadding="0" align="center" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;table-layout:fixed !important;width:100%;background-color:transparent;background-repeat:repeat;background-position:center top;"> 
+         <tr style="border-collapse:collapse;"> 
+          <td class="es-adaptive" align="center" style="padding:0;Margin:0;"> 
+           <table class="es-header-body" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;background-color:#3D5CA3;" width="600" cellspacing="0" cellpadding="0" bgcolor="#3d5ca3" align="center"> 
+             <tr style="border-collapse:collapse;"> 
+              <td style="Margin:0;padding-top:20px;padding-bottom:20px;padding-left:20px;padding-right:20px;background-color:#FFFFFF;" bgcolor="#ffffff" align="left"> 
+               <!--[if mso]><table width="560" cellpadding="0" 
+                        cellspacing="0"><tr><td width="270" valign="top"><![endif]--> 
+               <table class="es-left" cellspacing="0" cellpadding="0" align="left" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;float:left;"> 
+                 <tr style="border-collapse:collapse;"> 
+                  <td class="es-m-p20b" width="270" align="left" style="padding:0;Margin:0;"> 
+                   <table width="100%" cellspacing="0" cellpadding="0" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;"> 
+                     <tr style="border-collapse:collapse;"> 
+                      <td class="es-m-p0l es-m-txt-c" align="left" style="padding:0;Margin:0;"> <img src="https://nmoyl.stripocdn.email/content/guids/CABINET_16d55f7356c3ec6828fc95871bb81b75/images/59981548710807523.png" alt="" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;" width="183"></td> 
+                     </tr> 
+                   </table> </td> 
+                 </tr> 
+               </table> 
+               <!--[if mso]></td><td width="20"></td><td width="270" valign="top"><![endif]--> 
+               <table class="es-right" cellspacing="0" cellpadding="0" align="right" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;float:right;"> 
+                 <tr style="border-collapse:collapse;"> 
+                  <td width="270" align="left" style="padding:0;Margin:0;"> 
+                   <table width="100%" cellspacing="0" cellpadding="0" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;"> 
+                     <tr style="border-collapse:collapse;"> 
+                      <td class="es-m-txt-c" align="right" style="padding:0;Margin:0;padding-top:10px;"> <span class="es-button-border" style="border-style:solid;border-color:#3D5AFE;background:#FFFFFF none repeat scroll 0% 0%;border-width:2px;display:inline-block;border-radius:4px;width:auto;"> <a href="{{ .config.Site.Url }}/validate/{{ .user.VerificationCode }}" class="es-button" target="_blank" style="mso-style-priority:100 !important;text-decoration:none !important;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;font-size:16px;color:#3D5AFE;border-style:solid;border-color:#FFFFFF;border-width:10px 15px 10px 15px;display:inline-block;background:#FFFFFF;border-radius:4px;font-weight:normal;font-style:normal;line-height:19px;width:auto;text-align:center;">Confirm account</a> </span> </td> 
+                     </tr> 
+                   </table> </td> 
+                 </tr> 
+               </table> 
+               <!--[if mso]></td></tr></table><![endif]--> </td> 
+             </tr> 
+           </table> </td> 
+         </tr> 
+       </table> 
+       <table class="es-content" cellspacing="0" cellpadding="0" align="center" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;table-layout:fixed !important;width:100%;"> 
+         <tr style="border-collapse:collapse;"> 
+          <td align="center" style="padding:0;Margin:0;"> 
+           <table class="es-content-body" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;background-color:#FAFAFA;" width="600" cellspacing="0" cellpadding="0" bgcolor="#fafafa" align="center"> 
+             <tr style="border-collapse:collapse;"> 
+              <td style="Margin:0;padding-top:20px;padding-left:20px;padding-right:20px;padding-bottom:40px;background-repeat:no-repeat;" align="left"> 
+               <table width="100%" cellspacing="0" cellpadding="0" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;"> 
+                 <tr style="border-collapse:collapse;"> 
+                  <td width="560" valign="top" align="center" style="padding:0;Margin:0;"> 
+                   <table width="100%" cellspacing="0" cellpadding="0" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;"> 
+                     <tr style="border-collapse:collapse;"> 
+                      <td align="center" style="padding:0;Margin:0;padding-bottom:10px;padding-top:20px;"> <h1 style="Margin:0;line-height:60px;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;font-size:50px;font-style:normal;font-weight:normal;color:#333333;">Welcome!</h1> </td> 
+                     </tr> 
+                     <tr style="border-collapse:collapse;"> 
+                      <td align="center" style="padding:0;Margin:0;padding-top:10px;padding-bottom:10px;"> <h4 style="Margin:0;line-height:120%;mso-line-height-rule:exactly;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;">We're happy to have you joining the conversation.<br></h4> </td> 
+                     </tr> 
+                     <tr style="border-collapse:collapse;"> 
+                      <td align="center" style="padding:0;Margin:0;padding-bottom:20px;"> <span style="font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;">You just have to confirm your email address to get started. Click the button above and get access to the conversation.</span><br> </td> 
+                     </tr> 
+                   </table> </td> 
+                 </tr> 
+               </table> </td> 
+             </tr> 
+           </table> </td> 
+         </tr> 
+       </table> 
+       <table class="es-content" cellspacing="0" cellpadding="0" align="center" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;table-layout:fixed !important;width:100%;"> 
+         <tr style="border-collapse:collapse;"> 
+          <td align="center" style="padding:0;Margin:0;"> 
+           <table class="es-content-body" width="600" cellspacing="0" cellpadding="0" bgcolor="#ffffff" align="center" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;background-color:#FFFFFF;"> 
+             <tr style="border-collapse:collapse;"> 
+              <td style="Margin:0;padding-bottom:5px;padding-left:20px;padding-right:20px;padding-top:30px;background-color:#FFFFFF;background-repeat:no-repeat;" bgcolor="#ffffff" align="left"> 
+               <table width="100%" cellspacing="0" cellpadding="0" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;"> 
+                 <tr style="border-collapse:collapse;"> 
+                  <td width="560" valign="top" align="center" style="padding:0;Margin:0;"> 
+                   <table width="100%" cellspacing="0" cellpadding="0" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;"> 
+                     <tr style="border-collapse:collapse;"> 
+                      <td align="center" style="padding:0;Margin:0;"> <h3 style="Margin:0;line-height:24px;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;font-size:20px;font-style:normal;font-weight:normal;color:#3D5AFE;">Here's how to get s<span style="font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;"></span>tarted:<br></h3> </td> 
+                     </tr> 
+                   </table> </td> 
+                 </tr> 
+               </table> </td> 
+             </tr> 
+             <tr style="border-collapse:collapse;"> 
+              <td align="left" style="padding:0;Margin:0;padding-top:20px;padding-left:20px;padding-right:20px;"> 
+               <!--[if mso]><table width="560" cellpadding="0" cellspacing="0"><tr><td width="265" valign="top"><![endif]--> 
+               <table class="es-left" cellspacing="0" cellpadding="0" align="left" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;float:left;"> 
+                 <tr style="border-collapse:collapse;"> 
+                  <td class="es-m-p20b" width="255" align="left" style="padding:0;Margin:0;"> 
+                   <table width="100%" cellspacing="0" cellpadding="0" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;"> 
+                     <tr style="border-collapse:collapse;"> 
+                      <td align="center" style="padding:0;Margin:0;padding-bottom:5px;padding-top:15px;"> <img src="https://nmoyl.stripocdn.email/content/guids/CABINET_172236130180b7a4d5e1d9987369ca61/images/40281527675753663.png" alt="Fill out a profile" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;" title="Fill out a profile" width="39"></td> 
+                     </tr> 
+                     <tr style="border-collapse:collapse;"> 
+                      <td align="center" style="padding:0;Margin:0;padding-top:5px;padding-bottom:5px;"> <h4 style="Margin:0;line-height:120%;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;color:#333333;">Fill out your profile<br></h4> </td> 
+                     </tr> 
+                     <tr style="border-collapse:collapse;"> 
+                      <td align="center" style="padding:0;Margin:0;"> <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:14px;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;color:#333333;">Let other people in the community get to know you better by filling up your profile (avatar, skills, location, etc.)<br></p> </td> 
+                     </tr> 
+                     <tr style="border-collapse:collapse;"> 
+                      <td align="center" style="padding:0;Margin:0;padding-top:5px;"> <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:14px;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;color:#333333;"><a href="{{ .config.Site.Url }}" target="_blank" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;font-size:14px;text-decoration:underline;color:#3D5CA3;">Read more »</a></p> </td> 
+                     </tr> 
+                   </table> </td> 
+                  <td class="es-hidden" width="10" style="padding:0;Margin:0;"></td> 
+                 </tr> 
+               </table> 
+               <!--[if mso]></td><td width="30" valign="top"><![endif]--> 
+               <table class="es-left" cellspacing="0" cellpadding="0" align="left" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;float:left;"> 
+                 <tr class="es-hidden" style="border-collapse:collapse;"> 
+                  <td class="es-m-p20b" width="30" align="left" style="padding:0;Margin:0;"> 
+                   <table width="100%" cellspacing="0" cellpadding="0" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;"> 
+                     <tr style="border-collapse:collapse;"> 
+                      <td align="center" style="padding:0;Margin:0;"> <img src="https://nmoyl.stripocdn.email/content/guids/CABINET_172236130180b7a4d5e1d9987369ca61/images/47561527672335572.png" alt="" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;" width="30"></td> 
+                     </tr> 
+                   </table> </td> 
+                 </tr> 
+               </table> 
+               <!--[if mso]></td><td width="10"></td><td width="255" valign="top"><![endif]--> 
+               <table class="es-right" cellspacing="0" cellpadding="0" align="right" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;float:right;"> 
+                 <tr style="border-collapse:collapse;"> 
+                  <td class="es-m-p20b" width="255" align="left" style="padding:0;Margin:0;"> 
+                   <table width="100%" cellspacing="0" cellpadding="0" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;"> 
+                     <tr style="border-collapse:collapse;"> 
+                      <td align="center" style="padding:0;Margin:0;padding-bottom:5px;padding-top:15px;"> <img src="https://nmoyl.stripocdn.email/content/guids/CABINET_172236130180b7a4d5e1d9987369ca61/images/53701527675683912.png" alt="Use planning tool" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;" title="Use planning tool" width="39"></td> 
+                     </tr> 
+                     <tr style="border-collapse:collapse;"> 
+                      <td align="center" style="padding:0;Margin:0;padding-top:5px;padding-bottom:5px;"> <h4 style="Margin:0;line-height:120%;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;color:#333333;">Explore some content<br></h4> </td> 
+                     </tr> 
+                     <tr style="border-collapse:collapse;"> 
+                      <td align="center" style="padding:0;Margin:0;"> <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:14px;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;color:#333333;">Discover what's up with the community today, you will probably find interesting stuff you can contribute to.</p> </td> 
+                     </tr> 
+                     <tr style="border-collapse:collapse;"> 
+                      <td align="center" style="padding:0;Margin:0;padding-top:5px;"> <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:14px;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;color:#333333;"><a href="{{ .config.Site.Url }}" target="_blank" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;font-size:14px;text-decoration:underline;color:#3D5CA3;">Read more »</a></p> </td> 
+                     </tr> 
+                   </table> </td> 
+                 </tr> 
+               </table> 
+               <!--[if mso]></td></tr></table><![endif]--> </td> 
+             </tr> 
+             <tr style="border-collapse:collapse;"> 
+              <td align="left" style="padding:0;Margin:0;padding-left:20px;padding-right:20px;"> 
+               <table width="100%" cellspacing="0" cellpadding="0" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;"> 
+                 <tr style="border-collapse:collapse;"> 
+                  <td width="560" valign="top" align="center" style="padding:0;Margin:0;"> 
+                   <table width="100%" cellspacing="0" cellpadding="0" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;"> 
+                     <tr style="border-collapse:collapse;"> 
+                      <td align="center" style="padding:0;Margin:0;"> 
+                       <table width="100%" height="100%" cellspacing="0" cellpadding="0" border="0" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;"> 
+                         <tr style="border-collapse:collapse;"> 
+                          <td style="padding:0;Margin:0px 0px 0px 0px;border-bottom:1px solid #CCCCCC;background:none;height:1px;width:100%;margin:0px;"></td> 
+                         </tr> 
+                       </table> </td> 
+                     </tr> 
+                   </table> </td> 
+                 </tr> 
+               </table> </td> 
+             </tr> 
+             <tr style="border-collapse:collapse;"> 
+              <td align="left" style="padding:0;Margin:0;padding-bottom:20px;padding-left:20px;padding-right:20px;"> 
+               <!--[if mso]><table width="560" cellpadding="0" cellspacing="0"><tr><td width="265" valign="top"><![endif]--> 
+               <table class="es-left" cellspacing="0" cellpadding="0" align="left" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;float:left;"> 
+                 <tr style="border-collapse:collapse;"> 
+                  <td class="es-m-p20b" width="255" align="left" style="padding:0;Margin:0;"> 
+                   <table width="100%" cellspacing="0" cellpadding="0" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;"> 
+                     <tr style="border-collapse:collapse;"> 
+                      <td align="center" style="padding:0;Margin:0;padding-bottom:5px;padding-top:25px;"> <img src="https://nmoyl.stripocdn.email/content/guids/CABINET_172236130180b7a4d5e1d9987369ca61/images/93981527675754800.png" alt="Change settings" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;" title="Change settings" width="39"></td> 
+                     </tr> 
+                     <tr style="border-collapse:collapse;"> 
+                      <td align="center" style="padding:0;Margin:0;padding-top:5px;padding-bottom:5px;"> <h4 style="Margin:0;line-height:120%;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;color:#333333;">Change your settings</h4> </td> 
+                     </tr> 
+                     <tr style="border-collapse:collapse;"> 
+                      <td align="center" style="padding:0;Margin:0;"> <span style="font-size:14px;line-height:21px;">You wont receive any other email than this (notifications, mentions, new content) unless you want to. Opt in your account settings.</span> </td> 
+                     </tr> 
+                     <tr style="border-collapse:collapse;"> 
+                      <td align="center" style="padding:0;Margin:0;padding-top:5px;"> <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:14px;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;color:#333333;"><a href="{{ .config.Site.Url }}" target="_blank" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;font-size:14px;text-decoration:underline;color:#3D5CA3;">Read more »</a><br></p> </td> 
+                     </tr> 
+                   </table> </td> 
+                  <td class="es-hidden" width="10" style="padding:0;Margin:0;"></td> 
+                 </tr> 
+               </table> 
+               <!--[if mso]></td><td width="30" valign="top"><![endif]--> 
+               <table class="es-left" cellspacing="0" cellpadding="0" align="left" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;float:left;"> 
+                 <tr class="es-hidden" style="border-collapse:collapse;"> 
+                  <td class="es-m-p20b" width="30" align="left" style="padding:0;Margin:0;"> 
+                   <table width="100%" cellspacing="0" cellpadding="0" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;"> 
+                     <tr style="border-collapse:collapse;"> 
+                      <td align="center" style="padding:0;Margin:0;"> <img src="https://nmoyl.stripocdn.email/content/guids/CABINET_172236130180b7a4d5e1d9987369ca61/images/47561527672335572.png" alt="" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;" width="30"></td> 
+                     </tr> 
+                   </table> </td> 
+                 </tr> 
+               </table> 
+               <!--[if mso]></td><td width="10"></td><td width="255" valign="top"><![endif]--> 
+               <table class="es-right" cellspacing="0" cellpadding="0" align="right" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;float:right;"> 
+                 <tr style="border-collapse:collapse;"> 
+                  <td width="255" align="left" style="padding:0;Margin:0;"> 
+                   <table width="100%" cellspacing="0" cellpadding="0" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;"> 
+                     <tr style="border-collapse:collapse;"> 
+                      <td align="center" style="padding:0;Margin:0;padding-bottom:5px;padding-top:25px;"> <img src="https://nmoyl.stripocdn.email/content/guids/CABINET_172236130180b7a4d5e1d9987369ca61/images/33081527675753787.png" alt="Invite friends" style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;" title="Invite friends" width="39"></td> 
+                     </tr> 
+                     <tr style="border-collapse:collapse;"> 
+                      <td align="center" style="padding:0;Margin:0;padding-top:5px;padding-bottom:5px;"> <h4 style="Margin:0;line-height:120%;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;color:#333333;">Invite your friends</h4> </td> 
+                     </tr> 
+                     <tr style="border-collapse:collapse;"> 
+                      <td align="center" style="padding:0;Margin:0;"> <span style="font-size:14px;line-height:21px;">The community is an open space for debate &amp; problems solving. Invite anyone you like and contribute to an open knowledge network.</span> </td> 
+                     </tr> 
+                     <tr style="border-collapse:collapse;"> 
+                      <td align="center" style="padding:0;Margin:0;padding-top:5px;"> <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:14px;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;color:#333333;"><a href="{{ .config.Site.Url }}" target="_blank" style="-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;font-size:14px;text-decoration:underline;color:#3D5CA3;">Read more »</a></p> </td> 
+                     </tr> 
+                   </table> </td> 
+                 </tr> 
+               </table> 
+               <!--[if mso]></td></tr></table><![endif]--> </td> 
+             </tr> 
+             <tr style="border-collapse:collapse;"> 
+              <td align="left" style="Margin:0;padding-top:10px;padding-left:20px;padding-right:20px;padding-bottom:30px;"> 
+               <table width="100%" cellspacing="0" cellpadding="0" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;"> 
+                 <tr style="border-collapse:collapse;"> 
+                  <td width="560" valign="top" align="center" style="padding:0;Margin:0;"> 
+                   <table width="100%" cellspacing="0" cellpadding="0" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;"> 
+                     <tr style="border-collapse:collapse;"> 
+                      <td align="center" style="padding:0;Margin:0;"> <span class="es-button-border" style="border-style:solid;border-color:#3D5AFE;background:#FFFFFF none repeat scroll 0% 0%;border-width:2px;display:inline-block;border-radius:4px;width:auto;"> <a href="{{ .config.Site.Url }}/validate/{{ .user.VerificationCode }}" class="es-button" target="_blank" style="mso-style-priority:100 !important;text-decoration:none !important;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;font-size:16px;color:#3D5AFE;border-style:solid;border-color:#FFFFFF;border-width:10px 15px 10px 15px;display:inline-block;background:#FFFFFF;border-radius:4px;font-weight:normal;font-style:normal;line-height:19px;width:auto;text-align:center;">Confirm my account</a> </span> </td> 
+                     </tr> 
+                   </table> </td> 
+                 </tr> 
+               </table> </td> 
+             </tr> 
+           </table> </td> 
+         </tr> 
+       </table> </td> 
+     </tr> 
+   </table> 
+  </div>  
+ </body>
 </html>
 {{ end }}

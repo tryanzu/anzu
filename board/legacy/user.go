@@ -467,7 +467,7 @@ func (di *UserAPI) UserValidateEmail(c *gin.Context) {
 	// Attempt to get the user by the confirmation code
 	usr, err := di.User.Get(bson.M{"ver_code": code, "validated": false})
 	if err != nil {
-		c.Redirect(http.StatusMovedPermanently, "/")
+		c.Redirect(http.StatusTemporaryRedirect, "/")
 		return
 	}
 
@@ -477,7 +477,6 @@ func (di *UserAPI) UserValidateEmail(c *gin.Context) {
 
 func (di *UserAPI) UserRegisterAction(c *gin.Context) {
 	var form model.UserRegisterForm
-
 	if c.BindJSON(&form) != nil {
 		c.JSON(400, gin.H{"status": "error", "message": "Missing information to process the request", "code": 400})
 		return

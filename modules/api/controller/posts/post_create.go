@@ -52,7 +52,7 @@ func (this API) Create(c *gin.Context) {
 
 	usr := this.Acl.User(uid)
 	if usr.CanWrite(category) == false || usr.HasValidated() == false {
-		c.JSON(403, gin.H{"status": "error", "message": "Not enough permissions."})
+		c.JSON(403, gin.H{"status": "error", "message": "Not enough permissions to post in this category."})
 		return
 	}
 
