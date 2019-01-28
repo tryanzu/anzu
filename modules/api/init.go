@@ -169,7 +169,6 @@ func (module *Module) Run(bindTo string) {
 	v1.POST("/user", module.Users.UserRegisterAction)
 	v1.GET("/users/:id", module.Users.UserGetOne)
 	v1.GET("/users/:id/:kind", module.Users.UserGetActivity)
-	v1.GET("/user/search", module.Users.UserAutocompleteGet)
 	v1.POST("/auth/get-token", module.Users.UserGetJwtToken)
 	v1.GET("/auth/lost-password", module.UsersFactory.RequestPasswordRecovery)
 	v1.GET("/auth/recovery-token/:token", module.UsersFactory.ValidatePasswordRecovery)
@@ -204,6 +203,8 @@ func (module *Module) Run(bindTo string) {
 	authorized.POST("/posts/:id/answer/:comment", module.PostsFactory.MarkCommentAsAnswer)
 
 	// User routes
+	authorized.GET("/user/search", module.Users.UserAutocompleteGet)
+
 	authorized.POST("/user/my/avatar", module.Users.UserUpdateProfileAvatar)
 	authorized.GET("/user/my", module.Users.UserGetByToken)
 	authorized.PUT("/user/my", module.Users.UserUpdateProfile)
