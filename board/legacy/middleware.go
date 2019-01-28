@@ -92,7 +92,15 @@ func (di *MiddlewareAPI) Authorization() gin.HandlerFunc {
 		session := bucket.Get("session_id")
 
 		if session == nil {
+			// multiple-value uuid.NewV4() in single-value context
 			uuid := uuid.NewV4()
+			/*
+			uuid, err := uuid.NewV4()
+			if err != nil {
+			fmt.Printf("Something went wrong: %s", err)
+			return
+			}
+			*/
 			sid = uuid.String()
 			bucket.Set("session_id", sid)
 			bucket.Save()
