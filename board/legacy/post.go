@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"html"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -266,30 +265,6 @@ func signs(c *gin.Context) events.UserSign {
 		sign.Reason = r
 	}
 	return sign
-}
-
-func (di PostAPI) GetLightweight(c *gin.Context) {
-
-	// Get the post ID
-	id := c.Params.ByName("id")
-
-	if bson.IsObjectIdHex(id) == false {
-		c.JSON(400, gin.H{"status": "error", "message": "Invalid user id."})
-		return
-	}
-
-	post_id := bson.ObjectIdHex(id)
-	post, err := di.Feed.Post(post_id)
-
-	if err != nil {
-		c.JSON(400, gin.H{"status": "error", "message": err.Error()})
-		return
-	}
-
-	data := post.Data()
-	data.Content = html.UnescapeString(data.Content)
-
-	c.JSON(200, data)
 }
 
 func (di PostAPI) PostUploadAttachment(c *gin.Context) {
