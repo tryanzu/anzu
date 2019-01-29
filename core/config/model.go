@@ -25,6 +25,8 @@ type anzuMail struct {
 	User     string
 	Password string
 	Port     int
+	From     string
+	ReplyTo  string
 }
 
 type siteServices struct {
