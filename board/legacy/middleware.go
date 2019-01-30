@@ -41,7 +41,7 @@ func (di *MiddlewareAPI) CORS() gin.HandlerFunc {
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, X-Requested-With, Auth-Token, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 		c.Writer.Header().Set("Access-Control-Max-Age", "3600")
-		c.Writer.Header().Set("Server", "Anzu")
+		c.Writer.Header().Set("x-powered-by", "Anzu")
 		c.Writer.Header().Set("X-XSS-Protection", "1; mode=block")
 
 		if c.Request.Method == "OPTIONS" {
@@ -95,14 +95,14 @@ func (di *MiddlewareAPI) Authorization() gin.HandlerFunc {
 
 		if session == nil {
 			// multiple-value uuid.NewV4() in single-value context
-			uuid := uuid.NewV4()
-			/*
+			// uuid := uuid.NewV4()
+
 			uuid, err := uuid.NewV4()
 			if err != nil {
-			fmt.Printf("Something went wrong: %s", err)
+				panic(err)
 			return
 			}
-			*/
+
 			sid = uuid.String()
 			bucket.Set("session_id", sid)
 			bucket.Save()

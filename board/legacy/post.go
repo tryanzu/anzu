@@ -47,6 +47,8 @@ var avaliable_components = []string{
 	"cpu", "motherboard", "ram", "cabinet", "screen", "storage", "cooler", "power", "videocard",
 }
 
+var allowExt = map[string]bool{".gif": true, ".png": true, ".jpg": true, ".jpeg": true}
+
 func (di PostAPI) FeedGet(c *gin.Context) {
 	var (
 		feed     []model.FeedPost
@@ -295,7 +297,7 @@ func (di PostAPI) PostUploadAttachment(c *gin.Context) {
 
 		extension = filepath.Ext(header.Filename)
 		name = bson.NewObjectId().Hex()
-		allowExt := map[string]bool{".gif": true, ".png": true, ".jpg": true, ".jpeg": true}
+
 		if !allowExt[extension] {
 			c.JSON(406, gin.H{"status": "error", "message": "File extensions in the blacklist..."})
 			return
@@ -432,14 +434,13 @@ func (di PostAPI) downloadAssetFromUrl(from string, post_id bson.ObjectId) error
 		extension = filepath.Ext(u.Path)
 		name = bson.NewObjectId().Hex()
 
-		if extension != "" {
 
-			name = name + extension
-		} else {
-
-			// If no extension is provided on the url then add a dummy one
-			name = name + ".jpg"
+		if !allowExt[extension]{
+			return errors.New(fmt.Sprint("File extensions in the blacklist...", from, "-", err))
+			return nil
 		}
+
+		name = name + extension
 
 		path := "posts/" + name
 		err = di.S3Bucket.Put(path, data, dataType, s3.ACL("public-read"))

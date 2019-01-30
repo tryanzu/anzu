@@ -6,6 +6,7 @@ import (
 	"github.com/tryanzu/core/deps"
 	"github.com/xuyu/goredis"
 
+
 	"time"
 )
 
@@ -21,18 +22,24 @@ func (di *SitemapAPI) GetSitemap(c *gin.Context) {
 
 	// Get the database interface from the DI
 	database := deps.Container.Mgo()
-	iter := database.C("posts").Find(nil).Iter()
+	count := 1000
+	iter := database.C("posts").Find(nil).Sort("-$natural").Limit(count).Iter()
 
+	legacy := deps.Container.Config()
+	siteurl, err := legacy.String("site.url")
+	if err != nil {
+			c.JSON(500, gin.H{"status": "error", "message": "site.url not found in config"})
+			return
+		}
 	for iter.Next(&post) {
-
 		// Generate the post url
-		location = "https://www.spartangeek.com/p/" + post.Slug + "/" + post.Id.Hex() + "/"
+		location = siteurl+"/p/" + post.Slug + "/" + post.Id.Hex() + "/"
 
 		// Add to the sitemap url
 		urls = append(urls, model.SitemapUrl{Location: location, Updated: post.Updated.Format("2006-01-02T15:04:05.999999-07:00"), Priority: "0.6"})
 	}
 
-	urls = append(urls, model.SitemapUrl{Location: "http://www.spartangeek.com", Updated: time.Now().Format("2006-01-02T15:04:05.999999-07:00"), Priority: "1.0"})
+	urls = append(urls, model.SitemapUrl{Location: siteurl, Updated: time.Now().Format("2006-01-02T15:04:05.999999-07:00"), Priority: "1.0"})
 
 	sitemap := model.SitemapSet{
 		Urls:        urls,
@@ -40,6 +47,5 @@ func (di *SitemapAPI) GetSitemap(c *gin.Context) {
 		XSI:         "http://www.w3.org/2001/XMLSchema-instance",
 		XSILocation: "http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd",
 	}
-
 	c.XML(200, sitemap)
 }

@@ -19,3 +19,4 @@ vendor
 /.idea
 /anzu
 cache.db
+develop -service check.sh
