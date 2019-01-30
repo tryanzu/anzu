@@ -3,7 +3,6 @@ package user
 import (
 	"time"
 
-	"github.com/tidwall/buntdb"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -56,9 +55,9 @@ func (list Users) Map() map[bson.ObjectId]User {
 	return m
 }
 
-func (list Users) UpdateBuntCache(tx *buntdb.Tx) (err error) {
+func (list Users) UpdateCache(d deps) (err error) {
 	for _, u := range list {
-		_, _, err = tx.Set("user:"+u.Id.Hex()+":names", u.UserName, nil)
+		err = d.LedisDB().Set([]byte("user:"+u.Id.Hex()+":names"), []byte(u.UserName))
 		if err != nil {
 			return
 		}

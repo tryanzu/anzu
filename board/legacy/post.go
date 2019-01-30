@@ -131,7 +131,7 @@ func (di PostAPI) FeedGet(c *gin.Context) {
 		}
 		if err == nil && len(list) > 0 {
 			var temp []model.FeedPost
-			err := database.C("posts").Find(bson.M{"_id": bson.M{"$in": list}}).Select(bson.M{"comments.set": 0, "content": 0, "components": 0}).All(&temp)
+			err := database.C("posts").Find(bson.M{"_id": bson.M{"$in": list}, "deleted_at": bson.M{"$exists": false}}).Select(bson.M{"comments.set": 0, "content": 0, "components": 0}).All(&temp)
 
 			if err != nil {
 				panic(err)
@@ -320,10 +320,6 @@ func (di PostAPI) PostUploadAttachment(c *gin.Context) {
 }
 
 func (di PostAPI) PostDelete(c *gin.Context) {
-
-	// Get the database interface from the DI
-	database := deps.Container.Mgo()
-
 	// Get the post using the id
 	id := c.Params.ByName("id")
 	if bson.IsObjectIdHex(id) == false {
@@ -354,19 +350,15 @@ func (di PostAPI) PostDelete(c *gin.Context) {
 		return
 	}
 
-	err = database.C("posts").Update(bson.M{"_id": post.Id}, bson.M{
+	err = deps.Container.Mgo().C("posts").Update(bson.M{"_id": post.Id}, bson.M{
 		"$set":   bson.M{"deleted": true, "deleted_at": time.Now()},
 		"$unset": bson.M{"pinned": ""},
 	})
-
 	if err != nil {
 		panic(err)
 	}
 
-	events.In <- events.RawEmit("feed", "action", map[string]interface{}{
-		"fire": "delete-post",
-		"id":   post.Id.Hex(),
-	})
+	events.In <- events.DeletePost(signs(c), post.Id)
 
 	c.JSON(200, gin.H{"status": "okay"})
 }

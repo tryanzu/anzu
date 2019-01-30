@@ -12,7 +12,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-func (u User) ConfirmationEmail(d Deps) (err error) {
+func (u User) ConfirmationEmail(d deps) (err error) {
 	// Check last confirmation email sent.
 	if u.ConfirmSent != nil {
 		deadline := u.ConfirmSent.Add(time.Duration(time.Minute * 5))
@@ -54,7 +54,7 @@ func (u User) ConfirmationEmail(d Deps) (err error) {
 	return
 }
 
-func (u User) RecoveryPasswordEmail(d Deps) (err error) {
+func (u User) RecoveryPasswordEmail(d deps) (err error) {
 	return nil
 	r := RecoveryToken{
 		UserId:  u.Id,

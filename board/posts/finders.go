@@ -2,9 +2,8 @@ package post
 
 import (
 	"errors"
-	"strings"
+	"math"
 
-	"github.com/tidwall/buntdb"
 	"github.com/tryanzu/core/core/common"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -24,24 +23,13 @@ func FindList(deps deps, scopes ...common.Scope) (list Posts, err error) {
 
 func FindRateList(d deps, date string, offset, limit int) ([]bson.ObjectId, error) {
 	list := []bson.ObjectId{}
-	d.BuntDB().CreateIndex("posts:"+date, "posts:"+date+":*", buntdb.IndexFloat)
-	err := d.BuntDB().View(func(tx *buntdb.Tx) error {
-		cursor := 0
-		return tx.Ascend("posts:"+date, func(k, v string) bool {
-			if cursor < offset {
-				cursor++
-				return true
-			}
-			s := strings.Split(k, ":")
-			// Invalid key
-			if len(s) < 2 || bson.IsObjectIdHex(s[2]) == false {
-				return true
-			}
-			id := bson.ObjectIdHex(s[2])
-			list = append(list, id)
-			cursor++
-			return cursor <= offset+limit
-		})
-	})
+	scores, err := d.LedisDB().ZRangeByScore([]byte("posts:"+date), 0, math.MaxInt64, offset, limit)
+	if err != nil {
+		return list, err
+	}
+	for _, n := range scores {
+		id := bson.ObjectIdHex(string(n.Member))
+		list = append(list, id)
+	}
 	return list, err
 }

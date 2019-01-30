@@ -1,56 +1,52 @@
 package assets
 
 import (
-	"github.com/tidwall/buntdb"
 	"github.com/tryanzu/core/core/common"
 	"gopkg.in/mgo.v2/bson"
 )
 
-func FindList(deps Deps, scopes ...common.Scope) (list Assets, err error) {
-	err = deps.Mgo().C("remote_assets").Find(common.ByScope(scopes...)).All(&list)
+func FindList(d Deps, scopes ...common.Scope) (list Assets, err error) {
+	err = d.Mgo().C("remote_assets").Find(common.ByScope(scopes...)).All(&list)
 	return
 }
 
-func FindHash(deps Deps, hash string) (asset Asset, err error) {
-	err = deps.Mgo().C("remote_assets").Find(bson.M{
+func FindHash(d Deps, hash string) (asset Asset, err error) {
+	err = d.Mgo().C("remote_assets").Find(bson.M{
 		"hash": hash,
 	}).One(&asset)
 	return
 }
 
-func FindURLs(deps Deps, list ...bson.ObjectId) (common.AssetRefsMap, error) {
+func FindURLs(d Deps, list ...bson.ObjectId) (common.AssetRefsMap, error) {
 	hash := common.AssetRefsMap{}
 	missing := []bson.ObjectId{}
 
 	// Attempt to fill hashmap using cache layer first.
-	deps.BuntDB().View(func(tx *buntdb.Tx) error {
-		for _, id := range list {
-			var ref common.AssetRef
-			url, err := tx.Get("asset:" + id.Hex() + ":url")
-			if err != nil {
-				// Append to list of missing keys
-				missing = append(missing, id)
-				continue
-			}
-			ref.URL = url
-			// uo = use original
-			_, err = tx.Get("asset:" + id.Hex() + ":uo")
-			ref.UseOriginal = err == nil
-			hash[id] = ref
+	for _, id := range list {
+		var ref common.AssetRef
+		url, err := d.LedisDB().Get([]byte("asset:" + id.Hex() + ":url"))
+		if err != nil || len(url) == 0 {
+			// Append to list of missing keys
+			missing = append(missing, id)
+			continue
 		}
-		return nil
-	})
+		ref.URL = string(url)
+		// uo = use original
+		uo, err := d.LedisDB().Exists([]byte("asset:" + id.Hex() + ":uo"))
+		ref.UseOriginal = err == nil && uo > 0
+		hash[id] = ref
+	}
 
 	if len(missing) == 0 {
 		return hash, nil
 	}
 
-	assets, err := FindList(deps, common.WithinID(missing))
+	assets, err := FindList(d, common.WithinID(missing))
 	if err != nil {
 		return hash, err
 	}
 
-	err = deps.BuntDB().Update(assets.UpdateBuntCache)
+	err = assets.UpdateCache(d)
 	if err != nil {
 		return hash, err
 	}

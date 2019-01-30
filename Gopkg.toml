@@ -95,10 +95,6 @@
 
 [[constraint]]
   branch = "master"
-  name = "github.com/tidwall/buntdb"
-
-[[constraint]]
-  branch = "master"
   name = "github.com/xuyu/goredis"
 
 [[constraint]]
@@ -140,3 +136,7 @@
 [[constraint]]
   branch = "master"
   name = "golang.org/x/crypto"
+
+[[constraint]]
+  name = "github.com/siddontang/ledisdb"
+  version = "0.6.0"

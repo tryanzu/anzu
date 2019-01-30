@@ -15,7 +15,7 @@ var (
 	commentMention, _ = regexp.Compile(`(?i)\B\@([\w\-]+)#[0-9]+`)
 )
 
-func preReplaceMentionTags(deps Deps, c Parseable) (processed Parseable, err error) {
+func preReplaceMentionTags(d deps, c Parseable) (processed Parseable, err error) {
 	processed = c
 	content := processed.GetContent()
 	list := mentions.FindAllString(content, -1)
@@ -58,7 +58,7 @@ func preReplaceMentionTags(deps Deps, c Parseable) (processed Parseable, err err
 		Username string        `bson:"username"`
 	}
 
-	err = deps.Mgo().C("users").Find(bson.M{"username": bson.M{"$in": users}}).Select(bson.M{"username": 1}).All(&targets)
+	err = d.Mgo().C("users").Find(bson.M{"username": bson.M{"$in": users}}).Select(bson.M{"username": 1}).All(&targets)
 	if err != nil || len(targets) == 0 {
 		return
 	}
@@ -87,7 +87,7 @@ func preReplaceMentionTags(deps Deps, c Parseable) (processed Parseable, err err
 }
 
 // Replace mention related tags with links to mentioned user.
-func postReplaceMentionTags(deps Deps, c Parseable, list tags) (processed Parseable, err error) {
+func postReplaceMentionTags(d deps, c Parseable, list tags) (processed Parseable, err error) {
 	processed = c
 	if len(list) == 0 {
 		return
@@ -100,7 +100,7 @@ func postReplaceMentionTags(deps Deps, c Parseable, list tags) (processed Parsea
 	}
 
 	var users common.UsersStringMap
-	users, err = user.FindNames(deps, usersID...)
+	users, err = user.FindNames(d, usersID...)
 	if err != nil {
 		return
 	}
