@@ -44,6 +44,16 @@ func PostComment(id bson.ObjectId) Event {
 	}
 }
 
+func DeletePost(sign UserSign, id bson.ObjectId) Event {
+	return Event{
+		Name: POST_DELETED,
+		Sign: &sign,
+		Params: map[string]interface{}{
+			"id": id,
+		},
+	}
+}
+
 func DeleteComment(sign UserSign, postId, id bson.ObjectId) Event {
 	return Event{
 		Name: COMMENT_DELETE,

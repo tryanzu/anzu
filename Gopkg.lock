@@ -32,6 +32,16 @@
   version = "2017.11.05"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/cupcake/rdb"
+  packages = [
+    ".",
+    "crc64",
+    "nopdecoder"
+  ]
+  revision = "43ba34106c765f2111c0dc7b74cdf8ee437411e0"
+
+[[projects]]
   name = "github.com/desertbit/glue"
   packages = [
     ".",
@@ -57,6 +67,12 @@
   name = "github.com/divideandconquer/go-merge"
   packages = ["merge"]
   revision = "bc6b3a394b4e042e2dcfb62cb7bcd043a59adbea"
+
+[[projects]]
+  name = "github.com/edsrzf/mmap-go"
+  packages = ["."]
+  revision = "188cc3b666ba704534fa4f96e9e61f21f1e1ba7c"
+  version = "v1.0.0"
 
 [[projects]]
   branch = "master"
@@ -130,6 +146,12 @@
   name = "github.com/golang/protobuf"
   packages = ["proto"]
   revision = "1e59b77b52bf8e4b449a57e6f79f21226d571845"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/golang/snappy"
+  packages = ["."]
+  revision = "2e65f85255dbc3072edf28d6b5b8efc472979f5a"
 
 [[projects]]
   branch = "master"
@@ -234,6 +256,12 @@
   version = "v1"
 
 [[projects]]
+  name = "github.com/pelletier/go-toml"
+  packages = ["."]
+  revision = "c01d1270ff3e442a8a57cddc1c92dc1138598194"
+  version = "v1.2.0"
+
+[[projects]]
   name = "github.com/pkg/errors"
   packages = ["."]
   revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
@@ -244,6 +272,41 @@
   packages = ["."]
   revision = "f58768cc1a7a7e77a3bd49e98cdd21419399b6a3"
   version = "v1.2.0"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/siddontang/go"
+  packages = [
+    "filelock",
+    "hack",
+    "ioutil2",
+    "log",
+    "num",
+    "snappy",
+    "sync2"
+  ]
+  revision = "bdc77568d726a8702315ec4eafda030b6abc4f43"
+
+[[projects]]
+  name = "github.com/siddontang/ledisdb"
+  packages = [
+    "config",
+    "ledis",
+    "rpl",
+    "store",
+    "store/driver",
+    "store/goleveldb",
+    "store/leveldb",
+    "store/rocksdb"
+  ]
+  revision = "56900470a899883f691bcdf6bea4ac547f2a9a6f"
+  version = "v0.6"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/siddontang/rdb"
+  packages = ["."]
+  revision = "fc89ed2e418d27e3ea76e708e54276d2b44ae9cf"
 
 [[projects]]
   name = "github.com/smartystreets/assertions"
@@ -278,40 +341,22 @@
   version = "v1.0.0"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/tidwall/btree"
-  packages = ["."]
-  revision = "9876f1454cf0993a53d74c27196993e345f50dd1"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/tidwall/buntdb"
-  packages = ["."]
-  revision = "b67b1b8c1658cb01502801c14e33c61e6c4cbb95"
-
-[[projects]]
-  name = "github.com/tidwall/gjson"
-  packages = ["."]
-  revision = "e62d62a3e1e9f324346170bbc04333341f803dfb"
-  version = "v1.0.5"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/tidwall/grect"
-  packages = ["."]
-  revision = "ba9a043346eba55344e40d66a5e74cfda3a9d293"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/tidwall/match"
-  packages = ["."]
-  revision = "1731857f09b1f38450e2c12409748407822dc6be"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/tidwall/rtree"
-  packages = ["."]
-  revision = "d4a8a3d30d5729f85edfba1745241f3a621d0359"
+  name = "github.com/syndtr/goleveldb"
+  packages = [
+    "leveldb",
+    "leveldb/cache",
+    "leveldb/comparer",
+    "leveldb/errors",
+    "leveldb/filter",
+    "leveldb/iterator",
+    "leveldb/journal",
+    "leveldb/memdb",
+    "leveldb/opt",
+    "leveldb/storage",
+    "leveldb/table",
+    "leveldb/util"
+  ]
+  revision = "cfa635847112c5dc4782e128fa7e0d05fdbfb394"
 
 [[projects]]
   branch = "master"
@@ -448,6 +493,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "e8f6dcc6b3b7e001fcfcd5019553bb9e5e94b428e3492f81e994002271046ce9"
+  inputs-digest = "6199228f1b3ca186f4e9d6cf1df02e02be43f0370d3412d247ee8f9f4366c4bd"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -1,11 +1,11 @@
 package post
 
 import (
-	"github.com/tidwall/buntdb"
+	"github.com/siddontang/ledisdb/ledis"
 	"gopkg.in/mgo.v2"
 )
 
 type deps interface {
 	Mgo() *mgo.Database
-	BuntDB() *buntdb.DB
+	LedisDB() *ledis.DB
 }

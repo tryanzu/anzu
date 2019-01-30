@@ -1,13 +1,13 @@
 package votes
 
 import (
-	"github.com/tidwall/buntdb"
+	"github.com/siddontang/ledisdb/ledis"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
 type Deps interface {
-	BuntDB() *buntdb.DB
+	LedisDB() *ledis.DB
 	Mgo() *mgo.Database
 }
 

@@ -13,8 +13,6 @@ import (
 
 	"github.com/getsentry/raven-go"
 	"github.com/mitchellh/goamz/s3"
-
-	"github.com/tidwall/buntdb"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -149,7 +147,7 @@ func (list Assets) HostRemotes(deps Deps, related string) {
 	}
 }
 
-func (list Assets) UpdateBuntCache(tx *buntdb.Tx) (err error) {
+func (list Assets) UpdateCache(d Deps) (err error) {
 	for _, u := range list {
 		if u.Status == "awaiting" {
 			continue
@@ -158,13 +156,13 @@ func (list Assets) UpdateBuntCache(tx *buntdb.Tx) (err error) {
 		if len(u.Hosted) > 0 {
 			url = u.Hosted
 		}
-		_, _, err = tx.Set("asset:"+u.ID.Hex()+":url", url, nil)
+		err = d.LedisDB().Set([]byte("asset:"+u.ID.Hex()+":url"), []byte(url))
 		if err != nil {
 			return
 		}
 
 		if u.Status == "remote" {
-			_, _, err = tx.Set("asset:"+u.ID.Hex()+":uo", "", nil)
+			err = d.LedisDB().Set([]byte("asset:"+u.ID.Hex()+":uo"), []byte(""))
 			if err != nil {
 				return
 			}

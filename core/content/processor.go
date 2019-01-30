@@ -6,11 +6,11 @@ import (
 )
 
 // Content processor definition.
-type Processor func(Deps, Parseable, tags) (Parseable, error)
-type Preprocessor func(Deps, Parseable) (Parseable, error)
+type Processor func(deps, Parseable, tags) (Parseable, error)
+type Preprocessor func(deps, Parseable) (Parseable, error)
 
 // Postprocess a parseable type.
-func Postprocess(deps Deps, c Parseable) (processed Parseable, err error) {
+func Postprocess(d deps, c Parseable) (processed Parseable, err error) {
 	starts := time.Now()
 	list := parseTags(c)
 	pipeline := []Processor{
@@ -21,7 +21,7 @@ func Postprocess(deps Deps, c Parseable) (processed Parseable, err error) {
 	// Run pipeline over parseable.
 	processed = c
 	for _, fn := range pipeline {
-		processed, err = fn(deps, processed, list)
+		processed, err = fn(d, processed, list)
 
 		if err != nil {
 			return
@@ -34,7 +34,7 @@ func Postprocess(deps Deps, c Parseable) (processed Parseable, err error) {
 }
 
 // Preprocess a parseable type.
-func Preprocess(deps Deps, c Parseable) (processed Parseable, err error) {
+func Preprocess(d deps, c Parseable) (processed Parseable, err error) {
 	starts := time.Now()
 	pipeline := []Preprocessor{
 		preReplaceMentionTags,
@@ -44,7 +44,7 @@ func Preprocess(deps Deps, c Parseable) (processed Parseable, err error) {
 	// Run pipeline over parseable.
 	processed = c
 	for _, fn := range pipeline {
-		processed, err = fn(deps, processed)
+		processed, err = fn(d, processed)
 		if err != nil {
 			return
 		}

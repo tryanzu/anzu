@@ -5,6 +5,7 @@ const (
 	POSTS_COMMENT   = "posts:comment"
 	POST_VIEW       = "posts:view"
 	POSTS_REACHED   = "posts:reached"
+	POST_DELETED    = "posts:deleted"
 	RECENT_ACTIVITY = "activity:recent"
 
 	COMMENT_DELETE          = "comments:delete"

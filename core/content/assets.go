@@ -13,7 +13,7 @@ var (
 	assetURL, _ = regexp.Compile(`http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+`)
 )
 
-func preReplaceAssetTags(deps Deps, c Parseable) (processed Parseable, err error) {
+func preReplaceAssetTags(d deps, c Parseable) (processed Parseable, err error) {
 	processed = c
 	content := processed.GetContent()
 	list := assetURL.FindAllString(content, -1)
@@ -23,7 +23,7 @@ func preReplaceAssetTags(deps Deps, c Parseable) (processed Parseable, err error
 	tags := assets.Assets{}
 	for _, url := range list {
 		var asset assets.Asset
-		asset, err = assets.FromURL(deps, url)
+		asset, err = assets.FromURL(d, url)
 		if err != nil {
 			return
 		}
@@ -32,12 +32,12 @@ func preReplaceAssetTags(deps Deps, c Parseable) (processed Parseable, err error
 	}
 
 	// Attempt to host remote assets using S3 in another process
-	go tags.HostRemotes(deps, "post")
+	go tags.HostRemotes(d, "post")
 	processed = processed.UpdateContent(content)
 	return
 }
 
-func postReplaceAssetTags(deps Deps, c Parseable, list tags) (processed Parseable, err error) {
+func postReplaceAssetTags(d deps, c Parseable, list tags) (processed Parseable, err error) {
 	processed = c
 	if len(list) == 0 {
 		return
@@ -49,7 +49,7 @@ func postReplaceAssetTags(deps Deps, c Parseable, list tags) (processed Parseabl
 		return
 	}
 	var urls common.AssetRefsMap
-	urls, err = assets.FindURLs(deps, ids...)
+	urls, err = assets.FindURLs(d, ids...)
 	if err != nil {
 		return
 	}

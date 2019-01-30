@@ -17,11 +17,11 @@ func Bootstrap() {
 	ignitors := []Ignitor{
 		IgniteLogger,
 		IgniteConfig,
-		IgniteBuntDB,
 		IgniteMongoDB,
 		IgniteCache,
 		IgniteMailer,
 		IgniteS3,
+		IgniteLedisDB,
 	}
 
 	var err error

@@ -1,10 +1,9 @@
 package post
 
 import (
-	"fmt"
 	"strconv"
 
-	"github.com/tidwall/buntdb"
+	"github.com/siddontang/ledisdb/ledis"
 	"github.com/tryanzu/core/board/activity"
 	"github.com/tryanzu/core/core/common"
 	"gopkg.in/mgo.v2/bson"
@@ -17,10 +16,10 @@ func TrackView(d deps, id, user bson.ObjectId) (err error) {
 		Event:     "post",
 		UserID:    user,
 	})
-	err = d.BuntDB().Update(syncCountCache(d, "posts:views:"+id.Hex(), bson.M{
+	err = syncCountCache(d, "posts:views:"+id.Hex(), bson.M{
 		"related_id": id,
 		"event":      "post",
-	}))
+	})
 	return SyncRates(d, []bson.ObjectId{id})
 }
 
@@ -31,10 +30,10 @@ func TrackReachedList(d deps, list []bson.ObjectId, user bson.ObjectId) (err err
 		UserID: user,
 	})
 	for _, r := range list {
-		err = d.BuntDB().Update(syncCountCache(d, "posts:reached:"+r.Hex(), bson.M{
+		err = syncCountCache(d, "posts:reached:"+r.Hex(), bson.M{
 			"list":  r,
 			"event": "feed",
-		}))
+		})
 		if err != nil {
 			return
 		}
@@ -47,51 +46,47 @@ func SyncRates(d deps, list []bson.ObjectId) error {
 	if err != nil {
 		return err
 	}
-	err = d.BuntDB().Update(func(tx *buntdb.Tx) error {
-		dates := map[string]struct{}{}
-		for _, post := range posts {
-			var (
-				views   int
-				reached int
-			)
-			id := post.Id.Hex()
-			if n, err := tx.Get("posts:views:" + id); err == nil {
-				views, _ = strconv.Atoi(n)
-			}
-			if n, err := tx.Get("posts:reached:" + id); err == nil {
-				reached, _ = strconv.Atoi(n)
-			}
-			viewR := 100.0 / float64(reached) * float64(views)
-			date := post.Updated.Format("2006-01-02")
-			_, _, err = tx.Set("posts:"+date+":"+id, fmt.Sprintf("%.6f", viewR), nil)
-			if err != nil {
-				return err
-			}
-			dates[date] = struct{}{}
+	dates := map[string]struct{}{}
+	db := d.LedisDB()
+	for _, post := range posts {
+		var (
+			views   int
+			reached int
+		)
+		id := post.Id.Hex()
+		if n, err := db.Get([]byte("posts:views:" + id)); err == nil {
+			views, _ = strconv.Atoi(string(n))
 		}
-		for d := range dates {
-			tx.CreateIndex("posts:"+d, "posts:"+d+":*", buntdb.IndexFloat)
+		if n, err := db.Get([]byte("posts:reached:" + id)); err == nil {
+			reached, _ = strconv.Atoi(string(n))
 		}
-		return nil
-	})
+		viewR := 100.0 / float64(reached) * float64(views)
+		date := post.Updated.Format("2006-01-02")
+		_, err = db.ZAdd([]byte("posts:"+date), ledis.ScorePair{
+			Score:  int64(viewR * 1000000),
+			Member: []byte(id),
+		})
+		if err != nil {
+			return err
+		}
+		dates[date] = struct{}{}
+	}
+
 	return err
 }
 
-func syncCountCache(d deps, key string, query bson.M) func(*buntdb.Tx) error {
-	return func(tx *buntdb.Tx) error {
-		// Sync post views cache
-		v, err := tx.Get(key)
-		if err == nil {
-			inc, err := strconv.Atoi(v)
-			if err != nil {
-				panic(err)
-			}
-			inc = inc + 1
-			_, _, err = tx.Set(key, strconv.Itoa(inc), nil)
-			return err
+func syncCountCache(d deps, key string, query bson.M) error {
+	// Sync post views cache
+	v, err := d.LedisDB().Get([]byte(key))
+	if err == nil && len(v) > 0 {
+		inc, err := strconv.Atoi(string(v))
+		if err != nil {
+			panic(err)
 		}
-		n := activity.Count(d, query)
-		_, _, err = tx.Set(key, strconv.Itoa(n), nil)
-		return nil
+		inc = inc + 1
+		err = d.LedisDB().Set([]byte(key), []byte(strconv.Itoa(inc)))
+		return err
 	}
+	n := activity.Count(d, query)
+	return d.LedisDB().Set([]byte(key), []byte(strconv.Itoa(n)))
 }

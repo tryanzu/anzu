@@ -48,6 +48,29 @@ func postsEvents() {
 	}
 
 	ev.On <- ev.EventHandler{
+		On: ev.POST_DELETED,
+		Handler: func(e ev.Event) error {
+			pid := e.Params["id"].(bson.ObjectId)
+
+			// Notify transmitter
+			notify.Transmit <- notify.Socket{
+				Chan:   "feed",
+				Action: "action",
+				Params: map[string]interface{}{
+					"fire": "delete-post",
+					"id":   pid.Hex(),
+				},
+			}
+
+			if e.Sign != nil {
+				audit("post", pid, "delete", *e.Sign)
+			}
+
+			return nil
+		},
+	}
+
+	ev.On <- ev.EventHandler{
 		On: ev.POSTS_REACHED,
 		Handler: func(e ev.Event) error {
 			list := e.Params["list"].([]bson.ObjectId)
