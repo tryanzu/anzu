@@ -21,10 +21,8 @@ func (di *SitemapAPI) GetSitemap(c *gin.Context) {
 	var location string
 
 	// Get the database interface from the DI
-	database := deps.Container.Mgo()
 	count := 1000
-	iter := database.C("posts").Find(nil).Sort("-$natural").Limit(count).Iter()
-
+	iter := deps.Container.Mgo().C("posts").Find(nil).Sort("-$natural").Limit(count).Iter()
 	legacy := deps.Container.Config()
 	siteurl, err := legacy.String("site.url")
 	if err != nil {
