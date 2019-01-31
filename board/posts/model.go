@@ -13,6 +13,7 @@ type Post struct {
 	Type              string          `bson:"type" json:"type"`
 	Content           string          `bson:"content" json:"content"`
 	Categories        []string        `bson:"categories" json:"categories"`
+	Comments          comments        `bson:"comments"`
 	Category          bson.ObjectId   `bson:"category" json:"category"`
 	UserId            bson.ObjectId   `bson:"user_id,omitempty" json:"user_id,omitempty"`
 	Users             []bson.ObjectId `bson:"users,omitempty" json:"users,omitempty"`
@@ -26,6 +27,10 @@ type Post struct {
 	Created           time.Time       `bson:"created_at" json:"created_at"`
 	Updated           time.Time       `bson:"updated_at" json:"updated_at"`
 	Deleted           time.Time       `bson:"deleted_at,omitempty" json:"deleted_at,omitempty"`
+}
+
+type comments struct {
+	Count int `bson:"count"`
 }
 
 func (Post) VotableType() string {
