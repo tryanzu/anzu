@@ -2,6 +2,7 @@ package post
 
 import (
 	"errors"
+	"log"
 	"math"
 
 	"github.com/tryanzu/core/core/common"
@@ -23,7 +24,7 @@ func FindList(deps deps, scopes ...common.Scope) (list Posts, err error) {
 
 func FindRateList(d deps, date string, offset, limit int) ([]bson.ObjectId, error) {
 	list := []bson.ObjectId{}
-	scores, err := d.LedisDB().ZRangeByScore([]byte("posts:"+date), 0, math.MaxInt64, offset, limit)
+	scores, err := d.LedisDB().ZRangeByScoreGeneric([]byte("posts:"+date), 0, math.MaxInt64, offset, limit, true)
 	if err != nil {
 		return list, err
 	}
@@ -31,5 +32,6 @@ func FindRateList(d deps, date string, offset, limit int) ([]bson.ObjectId, erro
 		id := bson.ObjectIdHex(string(n.Member))
 		list = append(list, id)
 	}
+	log.Printf("Ratings at %s: %+v\n", date, scores)
 	return list, err
 }
