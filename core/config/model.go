@@ -7,12 +7,13 @@ type Anzu struct {
 }
 
 type anzuSite struct {
-	Name        string       `json:"name"`
-	Description string       `json:"description"`
-	Url         string       `json:"url"`
-	LogoUrl     string       `json:"logoUrl"`
-	Nav         []siteLink   `json:"nav"`
-	Services    siteServices `json:"services"`
+	Name        string         `json:"name"`
+	Description string         `json:"description"`
+	Url         string         `json:"url"`
+	LogoUrl     string         `json:"logoUrl"`
+	Nav         []siteLink     `json:"nav"`
+	Services    siteServices   `json:"services"`
+	Quickstart  siteQuickstart `json:"quickstart"`
 }
 
 type siteLink struct {
@@ -31,4 +32,16 @@ type anzuMail struct {
 
 type siteServices struct {
 	Analytics string
+}
+
+type siteQuickstart struct {
+	Headline    string           `json:"headline"`
+	Description string           `json:"description"`
+	Links       []quickstartLink `json:"links"`
+}
+
+type quickstartLink struct {
+	Name        string `json:"name"`
+	Href        string `json:"href"`
+	Description string `json:"description"`
 }
