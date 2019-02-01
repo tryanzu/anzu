@@ -35,7 +35,7 @@
     <!-- Global site tag (gtag.js) - Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id={{.config.Site.Services.Analytics}}"></script>
     <script>
-      window.dataLayer = window.dataLayer || [];
+      window.dataLayer = window.dataLayer || [];    
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
       gtag('config', '{{.config.Site.Services.Analytics}}');
@@ -51,6 +51,7 @@
         window.Anzu = {
             layer: '{{ "site.url" | config }}/v1/',
             globalIO: '{{ "site.url" | config }}',
+            site: {{ .config.Site }}
         }
     </script>
     <script type="text/javascript" src="/assets/dist/others.js"></script>
