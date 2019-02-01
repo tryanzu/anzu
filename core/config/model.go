@@ -31,7 +31,7 @@ type anzuMail struct {
 }
 
 type siteServices struct {
-	Analytics string
+	Analytics string `json:"-"`
 }
 
 type siteQuickstart struct {
