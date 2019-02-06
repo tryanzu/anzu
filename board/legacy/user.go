@@ -223,8 +223,10 @@ func (di UserAPI) UserGetJwtToken(c *gin.Context) {
 
 	// Get the email or the username or the id and its password
 	email, password := qs.Get("email"), qs.Get("password")
-	usr, err := di.User.Get(bson.M{"email": email, "deleted_at": bson.M{"$exists": false}})
-
+	usr, err := di.User.Get(bson.M{
+		"email":      email,
+		"deleted_at": bson.M{"$exists": false},
+	})
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "Couldn't find an account with those credentials."})
 		return
@@ -234,7 +236,7 @@ func (di UserAPI) UserGetJwtToken(c *gin.Context) {
 	env := di.ConfigService.UString("environment", "development")
 	if env != "development" {
 		hash := helpers.Sha256(password)
-		if usr.Data().Password != hash && helpers.CheckPasswordHash(password, usr.Data().Password) {
+		if usr.Data().Password != hash && helpers.CheckPasswordHash(password, usr.Data().Password) == false {
 			c.JSON(400, gin.H{"status": "error", "message": "Account credentials are not correct.", "code": 400})
 			return
 		}

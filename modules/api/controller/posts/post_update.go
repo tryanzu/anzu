@@ -70,7 +70,7 @@ func (this API) Update(c *gin.Context) {
 	}
 
 	if form.Lock == true && form.Lock != post.Lock && user.CanLockPost(post) == false {
-		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Not enough permissions to lock."})
+		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Not enough permissions to block comments in this post"})
 		return
 	}
 
