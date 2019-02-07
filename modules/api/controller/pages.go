@@ -12,9 +12,14 @@ import (
 
 // HomePage is the site's entry point.
 func HomePage(c *gin.Context) {
+	conf := c.MustGet("config").(config.Anzu)
+	title := conf.Site.Name
+	if len(conf.Site.TitleMotto) > 0 {
+		title += " - " + conf.Site.TitleMotto
+	}
 	c.HTML(200, "pages/home.tmpl", gin.H{
-		"config":      c.MustGet("config").(config.Anzu),
-		"title":       c.MustGet("siteName").(string),
+		"config":      conf,
+		"title":       title,
 		"description": c.MustGet("siteDescription").(string),
 		"image":       c.MustGet("siteUrl").(string) + "/images/default-post.jpg",
 	})

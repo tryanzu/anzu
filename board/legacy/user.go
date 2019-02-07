@@ -622,11 +622,8 @@ func (di *UserAPI) UserAutocompleteGet(c *gin.Context) {
 
 	qs := c.Request.URL.Query()
 	name := qs.Get("search")
-
 	if name != "" {
-
 		err := database.C("users").Find(bson.M{"username": bson.RegEx{"^" + name, "i"}}).Select(bson.M{"_id": 1, "username": 1, "email": 1}).All(&users)
-
 		if err != nil {
 			panic(err)
 		}
@@ -635,7 +632,7 @@ func (di *UserAPI) UserAutocompleteGet(c *gin.Context) {
 	}
 }
 
-type UserToken struct {
+type userToken struct {
 	Address string   `json:"address"`
 	UserID  string   `json:"user_id"`
 	Scopes  []string `json:"scope"`
@@ -647,8 +644,10 @@ func (di *UserAPI) generateUserToken(c *gin.Context, id bson.ObjectId, roles []u
 	for k, role := range roles {
 		scope[k] = role.Name
 	}
-
-	claims := UserToken{
+	if expiration <= 0 {
+		expiration = 24
+	}
+	claims := userToken{
 		c.ClientIP(),
 		id.Hex(),
 		scope,
@@ -666,10 +665,10 @@ func (di *UserAPI) generateUserToken(c *gin.Context, id bson.ObjectId, roles []u
 		panic(err)
 	}
 
-	tokenString, err := token.SignedString([]byte(secret))
+	tkn, err := token.SignedString([]byte(secret))
 	if err != nil {
 		panic(err)
 	}
 
-	return tokenString
+	return tkn
 }

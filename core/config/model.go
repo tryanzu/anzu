@@ -1,13 +1,20 @@
 package config
 
+// Anzu config params struct.
 type Anzu struct {
-	Site    anzuSite
-	Homedir string
-	Mail    anzuMail
+	Site     anzuSite
+	Homedir  string
+	Security anzuSecurity
+	Mail     anzuMail
+}
+
+type anzuSecurity struct {
+	StrictIPCheck bool `json:"strictIPCheck"`
 }
 
 type anzuSite struct {
 	Name        string         `json:"name"`
+	TitleMotto  string         `json:"titleMotto"`
 	Description string         `json:"description"`
 	Url         string         `json:"url"`
 	LogoUrl     string         `json:"logoUrl"`
