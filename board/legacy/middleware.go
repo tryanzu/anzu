@@ -8,6 +8,7 @@ import (
 	"github.com/olebedev/config"
 	"github.com/op/go-logging"
 	"github.com/satori/go.uuid"
+	cnf "github.com/tryanzu/core/core/config"
 	"github.com/tryanzu/core/deps"
 	"github.com/tryanzu/core/modules/acl"
 	"github.com/tryanzu/core/modules/security"
@@ -89,9 +90,9 @@ func (di *MiddlewareAPI) MongoRefresher() gin.HandlerFunc {
 func (di *MiddlewareAPI) Authorization() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var sid string
-
 		bucket := sessions.Default(c)
 		session := bucket.Get("session_id")
+		conf := c.MustGet("config").(cnf.Anzu)
 
 		if session == nil {
 			// multiple-value uuid.NewV4() in single-value context
@@ -118,14 +119,13 @@ func (di *MiddlewareAPI) Authorization() gin.HandlerFunc {
 		if token != "" {
 			// Check for the JWT inside the header
 			if token[0:6] == "Bearer" {
-				jtw_token := token[7:len(token)]
+				tkn := token[7:len(token)]
 				secret, err := di.ConfigService.String("application.secret")
-
 				if err != nil {
 					panic(err)
 				}
 
-				signed, err := jwt.Parse(jtw_token, func(passed_token *jwt.Token) (interface{}, error) {
+				signed, err := jwt.Parse(tkn, func(passed_token *jwt.Token) (interface{}, error) {
 					// since we only use the one private key to sign the tokens,
 					// we also only use its public counter part to verify
 					return []byte(secret), nil
@@ -174,7 +174,7 @@ func (di *MiddlewareAPI) Authorization() gin.HandlerFunc {
 
 				scope := []string{}
 				claims := signed.Claims.(jwt.MapClaims)
-				if address, exists := claims["address"].(string); exists {
+				if address, exists := claims["address"].(string); exists && conf.Security.StrictIPCheck == true {
 					if address != c.ClientIP() {
 						c.AbortWithStatusJSON(401, gin.H{"status": "error", "message": "Token compromised, will be notified"})
 						return
@@ -187,7 +187,7 @@ func (di *MiddlewareAPI) Authorization() gin.HandlerFunc {
 				}
 
 				// Set the token for further usage
-				c.Set("token", jtw_token)
+				c.Set("token", tkn)
 				c.Set("user_id", claims["user_id"].(string))
 				c.Set("userID", bson.ObjectIdHex(claims["user_id"].(string)))
 				c.Set("scope", scope)

@@ -148,7 +148,7 @@ func SyncRates(d deps, kind string, list []bson.ObjectId) error {
 		if n, err := db.Get([]byte("posts:reached:" + id)); err == nil {
 			reached, _ = strconv.Atoi(string(n))
 		}
-		if reached == 0 {
+		if reached == 0 || relReached == 0 || relViews == 0 {
 			continue
 		}
 		// Conversion rates calculation.

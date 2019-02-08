@@ -223,8 +223,10 @@ func (di UserAPI) UserGetJwtToken(c *gin.Context) {
 
 	// Get the email or the username or the id and its password
 	email, password := qs.Get("email"), qs.Get("password")
-	usr, err := di.User.Get(bson.M{"email": email, "deleted_at": bson.M{"$exists": false}})
-
+	usr, err := di.User.Get(bson.M{
+		"email":      email,
+		"deleted_at": bson.M{"$exists": false},
+	})
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "Couldn't find an account with those credentials."})
 		return
@@ -234,7 +236,7 @@ func (di UserAPI) UserGetJwtToken(c *gin.Context) {
 	env := di.ConfigService.UString("environment", "development")
 	if env != "development" {
 		hash := helpers.Sha256(password)
-		if usr.Data().Password != hash && helpers.CheckPasswordHash(password, usr.Data().Password) {
+		if usr.Data().Password != hash && helpers.CheckPasswordHash(password, usr.Data().Password) == false {
 			c.JSON(400, gin.H{"status": "error", "message": "Account credentials are not correct.", "code": 400})
 			return
 		}
@@ -628,11 +630,8 @@ func (di *UserAPI) UserAutocompleteGet(c *gin.Context) {
 
 	qs := c.Request.URL.Query()
 	name := qs.Get("search")
-
 	if name != "" {
-
 		err := database.C("users").Find(bson.M{"username": bson.RegEx{"^" + name, "i"}}).Select(bson.M{"_id": 1, "username": 1, "email": 1}).All(&users)
-
 		if err != nil {
 			panic(err)
 		}
@@ -641,7 +640,7 @@ func (di *UserAPI) UserAutocompleteGet(c *gin.Context) {
 	}
 }
 
-type UserToken struct {
+type userToken struct {
 	Address string   `json:"address"`
 	UserID  string   `json:"user_id"`
 	Scopes  []string `json:"scope"`
@@ -653,8 +652,10 @@ func (di *UserAPI) generateUserToken(c *gin.Context, id bson.ObjectId, roles []u
 	for k, role := range roles {
 		scope[k] = role.Name
 	}
-
-	claims := UserToken{
+	if expiration <= 0 {
+		expiration = 24
+	}
+	claims := userToken{
 		c.ClientIP(),
 		id.Hex(),
 		scope,
@@ -672,10 +673,10 @@ func (di *UserAPI) generateUserToken(c *gin.Context, id bson.ObjectId, roles []u
 		panic(err)
 	}
 
-	tokenString, err := token.SignedString([]byte(secret))
+	tkn, err := token.SignedString([]byte(secret))
 	if err != nil {
 		panic(err)
 	}
 
-	return tokenString
+	return tkn
 }

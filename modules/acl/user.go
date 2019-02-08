@@ -79,7 +79,6 @@ func (user *User) CanSolvePost(post *feed.Post) bool {
 
 // Check if user can lock post
 func (user *User) CanLockPost(post *feed.Post) bool {
-
 	return user.isActionGranted(post.UserId, post.Category, "block-own-post-comments", "block-board-post-comments", "block-category-post-comments")
 }
 
@@ -102,7 +101,7 @@ func (user *User) CanDeleteComment(comment *feed.Comment, post *feed.Post) bool 
 }
 
 // Check if user can do action, super_action or category_action
-func (user *User) isActionGranted(entity_owner bson.ObjectId, category bson.ObjectId, action, super_action, category_action string) bool {
+func (user *User) isActionGranted(entity_owner, category bson.ObjectId, action, super_action, category_action string) bool {
 
 	// Post author check
 	if entity_owner == user.data.Id {
