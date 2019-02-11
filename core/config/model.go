@@ -18,6 +18,7 @@ type anzuSite struct {
 	Description string         `json:"description"`
 	Url         string         `json:"url"`
 	LogoUrl     string         `json:"logoUrl"`
+	Theme       string         `json:"theme"`
 	Nav         []siteLink     `json:"nav"`
 	Services    siteServices   `json:"services"`
 	Quickstart  siteQuickstart `json:"quickstart"`
