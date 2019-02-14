@@ -135,9 +135,6 @@ func (module *Module) Run(bindTo string) {
 	router.GET("/publicar", chttp.TitleMiddleware("Nueva publicación"), controller.HomePage)
 	router.GET("/chat", chttp.TitleMiddleware("Chat oficial"), controller.HomePage)
 	router.GET("/c/:slug", chttp.TitleMiddleware("Categoria"), controller.HomePage)
-	router.GET("/reglamento", chttp.TitleMiddleware("Reglamento y código de conducta"), controller.HomePage)
-	router.GET("/about", chttp.TitleMiddleware("Acerca de"), controller.HomePage)
-	router.GET("/terminos-y-condiciones", chttp.TitleMiddleware("Terminos y condiciones"), controller.HomePage)
 	router.GET("/p/:slug/:id", controller.PostPage)
 	router.GET("/u/:username/:id", controller.UserPage)
 	router.GET("/validate/:code", module.Users.UserValidateEmail)
@@ -207,8 +204,6 @@ func (module *Module) Run(bindTo string) {
 	authorized.GET("/user/my", module.Users.UserGetByToken)
 	authorized.PUT("/user/my", module.Users.UserUpdateProfile)
 	authorized.PATCH("/me/:field", module.UsersFactory.Patch)
-	authorized.PUT("/category/subscription/:id", module.Users.UserCategorySubscribe)
-	authorized.DELETE("/category/subscription/:id", module.Users.UserCategoryUnsubscribe)
 
 	// Gamification routes
 	authorized.POST("/badges/buy/:id", module.Gaming.BuyBadge)

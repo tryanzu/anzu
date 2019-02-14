@@ -370,7 +370,11 @@ func (di *UserAPI) UserUpdateProfile(c *gin.Context) {
 	}
 
 	set := bson.M{}
-	if username, exists := form["username"]; exists && user.NameChanges < 1 {
+	if username, exists := form["username"]; exists {
+		if user.NameChanges > 1 {
+			c.JSON(400, gin.H{"status": "error", "message": "Cannot change username more than 2 times."})
+			return
+		}
 		validator, _ := regexp.Compile(`^[0-9a-zA-Z\-]{0,32}$`)
 
 		if validator.MatchString(username) {
@@ -437,7 +441,7 @@ func (di *UserAPI) UserUpdateProfile(c *gin.Context) {
 
 	if password, exists := form["password"]; exists {
 		if len([]rune(password)) < 4 {
-			c.JSON(400, gin.H{"status": "error", "message": "Can't allow password update, too short."})
+			c.JSON(400, gin.H{"status": "error", "message": "Invalid password, too short."})
 			return
 		}
 
@@ -449,16 +453,19 @@ func (di *UserAPI) UserUpdateProfile(c *gin.Context) {
 	set["updated_at"] = time.Now()
 
 	// Update the user profile with some godness
-	deps.Container.Mgo().C("users").Update(bson.M{"_id": user.Id}, bson.M{"$set": set})
-
+	err = deps.Container.Mgo().C("users").UpdateId(user.Id, bson.M{"$set": set})
+	if err != nil {
+		panic(err)
+	}
+	usr, err := u.FindId(deps.Container, user.Id)
+	if err != nil {
+		panic(err)
+	}
 	if _, emailChanged := set["email"]; emailChanged {
-		usr, err := u.FindId(deps.Container, user.Id)
-		if err == nil {
-			usr.ConfirmationEmail(deps.Container)
-		}
+		usr.ConfirmationEmail(deps.Container)
 	}
 
-	c.JSON(200, gin.H{"status": "okay"})
+	c.JSON(200, gin.H{"status": "okay", "user": usr})
 }
 
 func (di *UserAPI) UserValidateEmail(c *gin.Context) {

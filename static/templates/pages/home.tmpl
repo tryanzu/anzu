@@ -24,13 +24,10 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/assets/dist/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="96x96" href="/assets/dist/favicon-96x96.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/assets/dist/favicon-16x16.png">
-    <link rel="manifest" href="/manifest.json">
-    <meta name="msapplication-TileColor" content="#ffffff">
-    <meta name="msapplication-TileImage" content="/assets/dist/ms-icon-144x144.png">
     <meta content="#131d3a" name="theme-color" />
     <meta name="theme-color" content="#ffffff">
-
-    <link type="text/css" rel="stylesheet" href="/assets/dist/core.css">
+    
+    <link type="text/css" rel="stylesheet" href="/assets/dist/{{ .config.Site.Theme }}.min.css">
     {{ if .config.Site.Services.Analytics }}
     <!-- Global site tag (gtag.js) - Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id={{.config.Site.Services.Analytics}}"></script>
