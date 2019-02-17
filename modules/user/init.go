@@ -2,11 +2,11 @@ package user
 
 import (
 	"github.com/markbates/goth"
-	"github.com/op/go-logging"
+	logging "github.com/op/go-logging"
 	"github.com/tryanzu/core/deps"
 	"github.com/tryanzu/core/modules/exceptions"
 	"github.com/tryanzu/core/modules/helpers"
-	"gopkg.in/mgo.v2"
+	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 
 	"errors"
@@ -25,7 +25,7 @@ type Module struct {
 }
 
 var (
-	validUsername = regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9]*[._-]?[a-zA-Z0-9]+$`)
+	validUsername = regexp.MustCompile(`^[a-zA-Z]+([_.-]?[a-zA-Z0-9])*$`)
 )
 
 // Gets an instance of a user

@@ -1,7 +1,9 @@
 package handle
 
 import (
-	"github.com/dgrijalva/jwt-go"
+	"strings"
+
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/kennygrant/sanitize"
@@ -375,18 +377,21 @@ func (di *UserAPI) UserUpdateProfile(c *gin.Context) {
 			c.JSON(400, gin.H{"status": "error", "message": "Cannot change username more than 2 times."})
 			return
 		}
-		validator, _ := regexp.Compile(`^[0-9a-zA-Z\-]{0,32}$`)
+		validator := regexp.MustCompile(`^[a-zA-Z]+([_.-]?[a-zA-Z0-9])*$`)
 
-		if validator.MatchString(username) {
-			username_slug := sanitize.Path(sanitize.Accents(username))
+		if validator.MatchString(username) == false || strings.Count(username, "") < 3 || strings.Count(username, "") > 21 {
+			c.JSON(400, gin.H{"status": "error", "message": "Invalid username. Must have only alphanumeric characters."})
+			return
+		}
 
-			// Check whether user exists
-			count, _ := deps.Container.Mgo().C("users").Find(bson.M{"username_slug": username_slug}).Count()
-			if count == 0 {
-				set["username"] = username
-				set["username_slug"] = username_slug
-				set["name_changes"] = user.NameChanges + 1
-			}
+		usernameSlug := sanitize.Path(sanitize.Accents(username))
+
+		// Check whether user exists
+		count, _ := deps.Container.Mgo().C("users").Find(bson.M{"username_slug": usernameSlug}).Count()
+		if count == 0 {
+			set["username"] = username
+			set["username_slug"] = usernameSlug
+			set["name_changes"] = user.NameChanges + 1
 		}
 	}
 
