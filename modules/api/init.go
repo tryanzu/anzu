@@ -23,11 +23,9 @@ import (
 type Module struct {
 	Dependencies ModuleDI
 	Posts        handle.PostAPI
-	Votes        handle.VoteAPI
 	Oauth        oauth.API
 	Users        handle.UserAPI
 	Categories   handle.CategoryAPI
-	Stats        handle.StatAPI
 	Middlewares  handle.MiddlewareAPI
 	Sitemap      handle.SitemapAPI
 	Acl          handle.AclAPI
@@ -46,10 +44,8 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.Posts},
 		&inject.Object{Value: &module.PostsFactory},
 		&inject.Object{Value: &module.UsersFactory},
-		&inject.Object{Value: &module.Votes},
 		&inject.Object{Value: &module.Users},
 		&inject.Object{Value: &module.Categories},
-		&inject.Object{Value: &module.Stats},
 		&inject.Object{Value: &module.Middlewares},
 		&inject.Object{Value: &module.Acl},
 		&inject.Object{Value: &module.Sitemap},
@@ -116,9 +112,13 @@ func (module *Module) Run(bindTo string) {
 	router.Use(module.Middlewares.ErrorTracking(debug))
 	router.Use(module.Middlewares.CORS())
 	router.Use(module.Middlewares.MongoRefresher())
-	//router.Use(module.Middlewares.TrustIP())
 	router.Use(chttp.SiteMiddleware())
-	router.Use(chttp.MaxAllowed(5))
+
+	// Production only middlewares
+	if debug == false {
+		router.Use(module.Middlewares.TrustIP())
+		router.Use(chttp.MaxAllowed(5))
+	}
 
 	/**
 	 * Routes section.
@@ -149,7 +149,6 @@ func (module *Module) Run(bindTo string) {
 
 	// Gamification routes
 	v1.GET("/gamification", module.Gaming.GetRules)
-	v1.GET("/stats/ranking", module.Gaming.GetRanking)
 
 	// ACL routes
 	v1.GET("/permissions", module.Acl.GetRules)
@@ -173,15 +172,11 @@ func (module *Module) Run(bindTo string) {
 	// Categories routes
 	v1.GET("/category", module.Categories.CategoriesGet)
 
-	// Stats routes
-	v1.GET("/stats/board", module.Stats.BoardGet)
-
 	authorized := v1.Group("")
 	authorized.Use(module.Middlewares.NeedAuthorization())
 
 	authorized.PUT("/config", chttp.UserMiddleware(), controller.UpdateConfig)
 	authorized.GET("/notifications", chttp.UserMiddleware(), controller.Notifications)
-	authorized.POST("/build", module.PostsFactory.Create)
 
 	// Auth routes
 	authorized.GET("/auth/resend-confirmation", module.UsersFactory.ResendConfirmation)
@@ -204,12 +199,7 @@ func (module *Module) Run(bindTo string) {
 	authorized.PUT("/user/my", module.Users.UserUpdateProfile)
 	authorized.PATCH("/me/:field", module.UsersFactory.Patch)
 
-	// Gamification routes
-	authorized.POST("/badges/buy/:id", module.Gaming.BuyBadge)
-
 	// Votes routes
-	authorized.POST("/vote/component/:id", module.Votes.VoteComponent)
-	authorized.POST("/vote/post/:id", module.Votes.VotePost)
 	authorized.POST("/react/:type/:id", chttp.UserMiddleware(), controller.UpsertReaction)
 
 	h := http.NewServeMux()
