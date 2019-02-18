@@ -1,6 +1,7 @@
 package events
 
 import (
+	"github.com/tryanzu/core/board/comments"
 	notify "github.com/tryanzu/core/board/notifications"
 	posts "github.com/tryanzu/core/board/posts"
 	ev "github.com/tryanzu/core/core/events"
@@ -66,7 +67,8 @@ func postsEvents() {
 				audit("post", pid, "delete", *e.Sign)
 			}
 
-			return nil
+			err := comments.DeletePostComments(deps.Container, pid)
+			return err
 		},
 	}
 

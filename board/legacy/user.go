@@ -133,31 +133,24 @@ func (di *UserAPI) UserCategoryUnsubscribe(c *gin.Context) {
 }
 
 func (di *UserAPI) UserGetOne(c *gin.Context) {
-
 	user_id := c.Param("id")
-
 	if bson.IsObjectIdHex(user_id) == false {
-
 		c.JSON(400, gin.H{"status": "error", "message": "Invalid user id."})
 		return
 	}
 
-	user_bson_id := bson.ObjectIdHex(user_id)
-
 	// Get the user using its id
-	usr, err := di.User.Get(user_bson_id)
-
+	id := bson.ObjectIdHex(user_id)
+	usr, err := di.User.Get(id)
 	if err != nil {
 		c.JSON(400, gin.H{"status": "error", "message": err.Error()})
 		return
 	}
 
 	// Save the activity
-	user_logged_id, signed_in := c.Get("user_id")
-
-	if signed_in {
+	if uid, auth := c.Get("user_id"); auth {
 		events.In <- events.TrackActivity(model.Activity{
-			UserId:    bson.ObjectIdHex(user_logged_id.(string)),
+			UserId:    bson.ObjectIdHex(uid.(string)),
 			Event:     "user",
 			RelatedId: usr.Data().Id,
 		})
