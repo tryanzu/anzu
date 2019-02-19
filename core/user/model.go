@@ -46,6 +46,11 @@ type Gaming struct {
 
 type Users []User
 
+type UsersSet struct {
+	List  Users `json:"list"`
+	Count int   `json:"count"`
+}
+
 func (list Users) Map() map[bson.ObjectId]User {
 	m := make(map[bson.ObjectId]User, len(list))
 	for _, item := range list {

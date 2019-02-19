@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/tryanzu/core/core/common"
+	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -30,6 +31,41 @@ func FindEmail(d deps, email string) (user User, err error) {
 func FindList(d deps, scopes ...common.Scope) (users Users, err error) {
 	err = d.Mgo().C("users").Find(common.ByScope(scopes...)).All(&users)
 	return
+}
+
+func FetchBy(d deps, query common.Query) (UsersSet, error) {
+	c, err := query(d.Mgo().C("users")).Limit(0).Count()
+	if err != nil {
+		return UsersSet{}, err
+	}
+
+	list := Users{}
+	err = query(d.Mgo().C("users")).All(&list)
+	if err != nil {
+		return UsersSet{}, err
+	}
+	return UsersSet{
+		Count: c,
+		List:  list,
+	}, nil
+}
+
+func Page(limit int, reverse bool, before *bson.ObjectId, after *bson.ObjectId) common.Query {
+	return func(col *mgo.Collection) *mgo.Query {
+		criteria := bson.M{
+			"deleted_at": bson.M{"$exists": false},
+		}
+
+		if before != nil {
+			criteria["_id"] = bson.M{"$lt": before}
+		}
+
+		if after != nil {
+			criteria["_id"] = bson.M{"$gt": after}
+		}
+
+		return col.Find(criteria).Limit(limit).Skip(0).Sort("-$natural")
+	}
 }
 
 func FindNames(d deps, list ...bson.ObjectId) (common.UsersStringMap, error) {

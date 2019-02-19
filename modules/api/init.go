@@ -194,6 +194,7 @@ func (module *Module) Run(bindTo string) {
 	authorized.POST("/posts/:id/answer/:comment", module.PostsFactory.MarkCommentAsAnswer)
 
 	// User routes
+	authorized.GET("/users", chttp.UserMiddleware(), controller.Users)
 	authorized.POST("/user/my/avatar", module.Users.UserUpdateProfileAvatar)
 	authorized.GET("/user/my", module.Users.UserGetByToken)
 	authorized.PUT("/user/my", module.Users.UserUpdateProfile)
