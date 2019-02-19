@@ -94,7 +94,7 @@ func onVote(e pool.Event) error {
 		)
 	case "offtopic", "wordy":
 		err = pipeErr(
-			gaming.IncreaseUserSwords(deps.Container, userID, 1*factor*-1),
+			gaming.IncreaseUserSwords(deps.Container, userID, 1*factor/2*-1),
 		)
 	}
 

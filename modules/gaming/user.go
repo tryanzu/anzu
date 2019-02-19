@@ -31,6 +31,12 @@ func increaseUserAttr(d Deps, id bson.ObjectId, field string, n int) (err error)
 		return
 	}
 
+	// Fix reputation attr when is less than ($lt) 0
+	err = d.Mgo().C("users").Update(bson.M{"_id": id, field: bson.M{"$lt": 0}}, bson.M{"$set": bson.M{field: 0}})
+	if err != nil {
+		return
+	}
+
 	err = syncLevelStats(d, id, false)
 	return
 }
