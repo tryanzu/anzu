@@ -76,7 +76,7 @@ func UpdateComment(sign UserSign, postId, id bson.ObjectId) Event {
 	}
 }
 
-func VoteComment(vote votes.Vote) Event {
+func Vote(vote votes.Vote) Event {
 	return Event{
 		Name: VOTE,
 		Params: map[string]interface{}{

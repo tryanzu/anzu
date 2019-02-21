@@ -70,7 +70,7 @@ func UpsertReaction(c *gin.Context) {
 	}
 
 	// Events pool signal
-	events.In <- events.VoteComment(vote)
+	events.In <- events.Vote(vote)
 
 	if vote.Deleted != nil {
 		c.JSON(http.StatusOK, gin.H{"action": "delete"})

@@ -50,6 +50,10 @@ func onVote(e pool.Event) error {
 	if vote.Deleted != nil {
 		value = -1
 	}
+	factor := 1
+	if vote.Deleted != nil {
+		factor = -1
+	}
 	switch vote.Type {
 	case "comment":
 		err = deps.Container.Mgo().C("comments").UpdateId(vote.RelatedID, bson.M{"$inc": bson.M{field: value}})
@@ -63,6 +67,7 @@ func onVote(e pool.Event) error {
 			return err
 		}
 		userID = comment.UserId
+		factor = factor * 4
 	case "post":
 		err = deps.Container.Mgo().C("posts").UpdateId(vote.RelatedID, bson.M{"$inc": bson.M{field: value}})
 		if err != nil {
@@ -74,26 +79,22 @@ func onVote(e pool.Event) error {
 			return err
 		}
 		userID = post.UserId
+		factor = factor * 2
 	}
 
 	// No gamification for eventual votes from comment's author
 	if vote.UserID == userID {
 		return nil
 	}
-
-	factor := -1
-	if vote.Deleted != nil {
-		factor = 1
-	}
 	switch vote.Value {
 	case "concise", "useful":
 		err = pipeErr(
-			gaming.IncreaseUserSwords(deps.Container, vote.UserID, 1*factor),
+			//gaming.IncreaseUserSwords(deps.Container, vote.UserID, 1*factor),
 			gaming.IncreaseUserSwords(deps.Container, userID, 2*factor),
 		)
 	case "offtopic", "wordy":
 		err = pipeErr(
-			gaming.IncreaseUserSwords(deps.Container, userID, 1*factor*-1),
+			gaming.IncreaseUserSwords(deps.Container, userID, 1*factor/2*-1),
 		)
 	}
 

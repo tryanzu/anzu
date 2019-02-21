@@ -26,6 +26,17 @@ func Delete(deps Deps, c Comment) error {
 	return nil
 }
 
+func DeletePostComments(deps Deps, postID bson.ObjectId) error {
+	_, err := deps.Mgo().C("comments").UpdateAll(
+		bson.M{"$or": []bson.M{
+			{"post_id": postID},
+			{"reply_to": postID},
+		}}, bson.M{
+			"$set": bson.M{"deleted_at": time.Now()},
+		})
+	return err
+}
+
 // UpsertComment performs validations before upserting data struct
 func UpsertComment(deps Deps, c Comment) (comment Comment, err error) {
 	if c.Id.Valid() == false {
