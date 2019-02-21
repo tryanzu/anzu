@@ -64,7 +64,7 @@ func Page(limit int, reverse bool, before *bson.ObjectId, after *bson.ObjectId) 
 			criteria["_id"] = bson.M{"$gt": after}
 		}
 
-		return col.Find(criteria).Limit(limit).Skip(0).Sort("-$natural")
+		return col.Find(criteria).Limit(limit).Skip(0).Sort("-created_at")
 	}
 }
 
