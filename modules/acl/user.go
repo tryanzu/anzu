@@ -61,7 +61,6 @@ func (user *User) CanRead(category model.Category) bool {
 }
 
 func (user *User) Can(permission string) bool {
-
 	return user.isGranted(permission)
 }
 

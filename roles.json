@@ -30,7 +30,7 @@
 	},
 
 	"administrator": {
-		"permissions": ["board-config", "sensitive-data"],
+		"permissions": ["board-config", "sensitive-data", "users:admin"],
 		"parents": ["super-moderator"]
 	},
 

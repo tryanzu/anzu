@@ -2,12 +2,14 @@ package http
 
 import (
 	"log"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/tryanzu/core/core/config"
 	"github.com/tryanzu/core/core/events"
 	"github.com/tryanzu/core/core/user"
 	"github.com/tryanzu/core/deps"
+	"github.com/tryanzu/core/modules/acl"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -53,6 +55,16 @@ func MaxAllowed(n int) gin.HandlerFunc {
 func TitleMiddleware(title string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Set("siteName", title)
+		c.Next()
+	}
+}
+
+func Can(permission string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if acl.LoadedACL.User(c.MustGet("userID").(bson.ObjectId)).Can(permission) == false {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"status": "error", "message": "Not allowed to perform this operation"})
+			return
+		}
 		c.Next()
 	}
 }

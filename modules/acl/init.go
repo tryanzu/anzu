@@ -2,12 +2,15 @@ package acl
 
 import (
 	"encoding/json"
+	"io/ioutil"
+
 	"github.com/mikespook/gorbac"
 	"github.com/tryanzu/core/board/legacy/model"
 	"github.com/tryanzu/core/deps"
 	"gopkg.in/mgo.v2/bson"
-	"io/ioutil"
 )
+
+var LoadedACL *Module
 
 type Module struct {
 	Map         *gorbac.RBAC
@@ -85,5 +88,6 @@ func Boot(file string) *Module {
 		}
 	}
 
+	LoadedACL = module
 	return module
 }
