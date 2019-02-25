@@ -38,33 +38,6 @@ type ModuleDI struct {
 	Config *config.Config `inject:""`
 }
 
-func (module *Module) Populate(g inject.Graph) {
-	err := g.Provide(
-		&inject.Object{Value: &module.Dependencies},
-		&inject.Object{Value: &module.Posts},
-		&inject.Object{Value: &module.PostsFactory},
-		&inject.Object{Value: &module.UsersFactory},
-		&inject.Object{Value: &module.Users},
-		&inject.Object{Value: &module.Categories},
-		&inject.Object{Value: &module.Middlewares},
-		&inject.Object{Value: &module.Acl},
-		&inject.Object{Value: &module.Sitemap},
-		&inject.Object{Value: &module.Gaming},
-		&inject.Object{Value: &module.Oauth},
-	)
-
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-
-	// Populate the DI with the instances
-	if err := g.Populate(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-}
-
 func (module *Module) Run(bindTo string) {
 	debug := true
 	environment, err := module.Dependencies.Config.String("environment")
@@ -174,7 +147,7 @@ func (module *Module) Run(bindTo string) {
 	authorized := v1.Group("")
 	authorized.Use(module.Middlewares.NeedAuthorization())
 
-	authorized.PUT("/config", chttp.UserMiddleware(), controller.UpdateConfig)
+	authorized.PUT("/config", chttp.UserMiddleware(), chttp.Can("board-config"), controller.UpdateConfig)
 	authorized.GET("/notifications", chttp.UserMiddleware(), controller.Notifications)
 
 	// Auth routes
@@ -193,9 +166,13 @@ func (module *Module) Run(bindTo string) {
 	authorized.POST("/posts/:id/answer/:comment", module.PostsFactory.MarkCommentAsAnswer)
 
 	// User routes
+<<<<<<< HEAD
 
 	authorized.GET("/user/search", module.Users.UserAutocompleteGet)
 	authorized.GET("/users", chttp.UserMiddleware(), controller.Users)
+=======
+	authorized.GET("/users", chttp.UserMiddleware(), chttp.Can("users:admin"), controller.Users)
+>>>>>>> upstream/release/alpha
 	authorized.POST("/user/my/avatar", module.Users.UserUpdateProfileAvatar)
 	authorized.GET("/user/my", module.Users.UserGetByToken)
 	authorized.PUT("/user/my", module.Users.UserUpdateProfile)
@@ -210,4 +187,31 @@ func (module *Module) Run(bindTo string) {
 
 	err = http.ListenAndServe(bindTo, h)
 	log.Fatal(err)
+}
+
+func (module *Module) Populate(g inject.Graph) {
+	err := g.Provide(
+		&inject.Object{Value: &module.Dependencies},
+		&inject.Object{Value: &module.Posts},
+		&inject.Object{Value: &module.PostsFactory},
+		&inject.Object{Value: &module.UsersFactory},
+		&inject.Object{Value: &module.Users},
+		&inject.Object{Value: &module.Categories},
+		&inject.Object{Value: &module.Middlewares},
+		&inject.Object{Value: &module.Acl},
+		&inject.Object{Value: &module.Sitemap},
+		&inject.Object{Value: &module.Gaming},
+		&inject.Object{Value: &module.Oauth},
+	)
+
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	// Populate the DI with the instances
+	if err := g.Populate(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 }

@@ -17,7 +17,6 @@ func Users(c *gin.Context) {
 		before *bson.ObjectId
 		after  *bson.ObjectId
 	)
-
 	if n, err := strconv.Atoi(c.Query("limit")); err == nil && n <= 50 {
 		limit = n
 	}

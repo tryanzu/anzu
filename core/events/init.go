@@ -35,6 +35,19 @@ type UserSign struct {
 }
 
 func execHandlers(list []Handler, event Event) {
+	defer func() {
+		switch rval := recover().(type) {
+		case nil:
+			return
+		case error:
+			// Show the error
+			log.Printf("[ERR] [events]: %+v\n", rval)
+
+		default:
+			// Show the error
+			log.Printf("[ERR] [events]: %+v\n", rval)
+		}
+	}()
 	starts := time.Now()
 	var err error
 	for h := range list {
