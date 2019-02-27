@@ -33,16 +33,13 @@ func (this API) Get(c *gin.Context) {
 	} else {
 		post, err = this.Feed.Post(bson.M{"slug": id})
 	}
-
 	if err != nil {
 		c.JSON(404, gin.H{"message": "Couldnt found post.", "status": "error"})
 		return
 	}
 
 	// Needed data loading to show post
-	post.LoadComments(10, -10)
 	post.LoadUsers()
-
 	if sid, exists := c.Get("userID"); exists {
 		uid := sid.(bson.ObjectId)
 		post.LoadVotes(uid)
