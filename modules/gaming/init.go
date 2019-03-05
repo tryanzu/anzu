@@ -2,31 +2,29 @@ package gaming
 
 import (
 	"encoding/json"
+	"io/ioutil"
+	"log"
+	"sync"
+	"time"
+
 	"github.com/goinggo/work"
 	"github.com/olebedev/config"
 	"github.com/tryanzu/core/deps"
 	"github.com/tryanzu/core/modules/exceptions"
 	"github.com/tryanzu/core/modules/feed"
 	"github.com/tryanzu/core/modules/user"
-	"github.com/xuyu/goredis"
 	"gopkg.in/mgo.v2/bson"
-	"io/ioutil"
-	"log"
-	"sync"
-	"time"
 )
 
 func Boot(file string) *Module {
-
 	module := &Module{}
-	rules_data, err := ioutil.ReadFile(file)
-
+	data, err := ioutil.ReadFile(file)
 	if err != nil {
 		panic(err)
 	}
 
 	// Unmarshal file with gaming rules
-	if err := json.Unmarshal(rules_data, &module.Rules); err != nil {
+	if err := json.Unmarshal(data, &module.Rules); err != nil {
 		panic(err)
 	}
 
@@ -40,7 +38,6 @@ func logFunc(message string) {
 type Module struct {
 	User   *user.Module                 `inject:""`
 	Feed   *feed.FeedModule             `inject:""`
-	Redis  *goredis.Redis               `inject:""`
 	Config *config.Config               `inject:""`
 	Errors *exceptions.ExceptionsModule `inject:""`
 	Rules  Rules

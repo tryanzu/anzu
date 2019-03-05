@@ -55,7 +55,3 @@ func (d Deps) S3() *s3.Bucket {
 func (d Deps) Mailer() mail.Mailer {
 	return d.MailerProvider
 }
-
-func (d Deps) Cache() *goredis.Redis {
-	return d.CacheProvider
-}
