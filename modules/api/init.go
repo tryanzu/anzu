@@ -159,6 +159,10 @@ func (module *Module) Run(bindTo string) {
 	authorized.PUT("/comments/:id", chttp.UserMiddleware(), controller.UpdateComment)
 	authorized.DELETE("/comments/:id", chttp.UserMiddleware(), controller.DeleteComment)
 
+	// Flag routes
+	authorized.POST("/flags", chttp.UserMiddleware(), controller.NewFlag)
+	authorized.GET("/flags/:related/:id", chttp.UserMiddleware(), controller.Flag)
+
 	// Post routes
 	authorized.POST("/post", module.PostsFactory.Create)
 	authorized.POST("/post/image", module.Posts.PostUploadAttachment)

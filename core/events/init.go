@@ -4,6 +4,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/tryanzu/core/deps"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -29,6 +30,15 @@ type Event struct {
 	Params map[string]interface{}
 }
 
+type eventLog struct {
+	ID       bson.ObjectId          `bson:"_id,omitempty"`
+	Name     string                 `bson:"name"`
+	Sign     *UserSign              `bson:"sign,omitempty"`
+	Params   map[string]interface{} `bson:"params,omitempty"`
+	Created  time.Time              `bson:"created_at,omitempty"`
+	Finished *time.Time             `bson:"finished_at,omitempty"`
+}
+
 type UserSign struct {
 	Reason string
 	UserID bson.ObjectId
@@ -49,25 +59,41 @@ func execHandlers(list []Handler, event Event) {
 		}
 	}()
 	starts := time.Now()
-	var err error
+	ref := eventLog{
+		ID:      bson.NewObjectId(),
+		Name:    event.Name,
+		Sign:    event.Sign,
+		Params:  event.Params,
+		Created: time.Now(),
+	}
+	err := deps.Container.Mgo().C("events").Insert(&ref)
+	if err != nil {
+		panic(err)
+	}
 	for h := range list {
-		log.Printf("%v\n", list[h])
 		err = list[h](event)
 		if err != nil {
 			panic(err)
 		}
 	}
-	elapsed := time.Since(starts)
-	log.Printf("%s::execHandlers(%v) took: %v\n", event.Name, len(list), elapsed)
+	finished := time.Now()
+	elapsed := finished.Sub(starts)
+	err = deps.Container.Mgo().C("events").UpdateId(ref.ID, bson.M{"$set": bson.M{
+		"finished_at": finished,
+		"elapsed":     elapsed,
+		"handlers":    len(list),
+	}})
+	return
 }
 
 func sink(in chan Event, on chan EventHandler) {
 	for {
 		select {
 		case event := <-in: // For incoming events spawn a goroutine running handlers.
-			log.Printf("Incoming event: %+v", event)
 			if ls, exists := Handlers[event.Name]; exists {
 				go execHandlers(ls, event)
+			} else {
+				go execHandlers([]Handler{}, event)
 			}
 		case h := <-on: // Register new handlers.
 			if _, exists := Handlers[h.On]; !exists {

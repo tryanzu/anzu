@@ -8,6 +8,7 @@ func init() {
 	commentsEvents()
 	postsEvents()
 	mentionEvents()
+	flagHandlers()
 }
 
 func register(list []pool.EventHandler) {

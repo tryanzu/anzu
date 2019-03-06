@@ -17,6 +17,7 @@ const (
 	COMMENT_DOWNVOTE        = "comments:downvote"
 	COMMENT_DOWNVOTE_REMOVE = "comments:downvote.remove"
 
+	NEW_FLAG    = "flag:new"
 	NEW_MENTION = "new:mentions"
 
 	RAW_EMIT = "transmit:emit"

@@ -44,6 +44,15 @@ func PostComment(id bson.ObjectId) Event {
 	}
 }
 
+func NewFlag(id bson.ObjectId) Event {
+	return Event{
+		Name: NEW_FLAG,
+		Params: map[string]interface{}{
+			"id": id,
+		},
+	}
+}
+
 func DeletePost(sign UserSign, id bson.ObjectId) Event {
 	return Event{
 		Name: POST_DELETED,

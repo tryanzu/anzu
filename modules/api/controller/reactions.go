@@ -28,13 +28,13 @@ func UpsertReaction(c *gin.Context) {
 
 	usr := c.MustGet("user").(user.User)
 	if usr.Gaming.Swords < 15 {
-		c.JSON(http.StatusPreconditionFailed, gin.H{"message": "Not enough user reputation.", "status": "error"})
+		jsonErr(c, http.StatusPreconditionFailed, "Not enough user reputation.")
 		return
 	}
 
 	// ID validation.
 	if id = bson.ObjectIdHex(c.Params.ByName("id")); !id.Valid() {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Malformed request, invalid id.", "status": "error"})
+		jsonErr(c, http.StatusBadRequest, "malformed request, invalid id")
 		return
 	}
 
@@ -54,12 +54,12 @@ func UpsertReaction(c *gin.Context) {
 			votable = comment
 		}
 	default:
-		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "reason": "Invalid type."})
+		jsonErr(c, http.StatusBadRequest, "invalid type")
 		return
 	}
 
 	if votable == nil {
-		c.JSON(http.StatusNotFound, gin.H{"status": "error", "reason": "Invalid id."})
+		jsonErr(c, http.StatusNotFound, "invalid id")
 		return
 	}
 
