@@ -58,7 +58,7 @@ func postReplaceAssetTags(d deps, c Parseable, list tags) (processed Parseable, 
 	for _, tag := range assetList {
 		if id := tag.Params[0]; bson.IsObjectIdHex(id) {
 			ref, exists := urls[bson.ObjectIdHex(id)]
-			if exists == false || ref.UseOriginal {
+			if exists == false {
 				continue
 			}
 
