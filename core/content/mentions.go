@@ -38,7 +38,7 @@ func preReplaceMentionTags(d deps, c Parseable) (processed Parseable, err error)
 			username = parts[1]
 			cidx = parts[2][1:]
 		} else {
-			username = usr[2 : len(usr)-1]
+			username = usr[1:]
 		}
 
 		if _, done := possible[username]; done {
