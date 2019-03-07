@@ -565,7 +565,7 @@ func (di *UserAPI) UserGetActivity(c *gin.Context) {
 			pmap    map[bson.ObjectId]Post
 		)
 
-		for _, c := range comments {
+		for _, c := range comments.List {
 			if c.ReplyType == "post" {
 				postIds = append(postIds, c.ReplyTo)
 			} else {
@@ -588,7 +588,7 @@ func (di *UserAPI) UserGetActivity(c *gin.Context) {
 			panic(err)
 		}
 
-		for _, c := range comments {
+		for _, c := range comments.List {
 			post, exists := pmap[c.PostId]
 			if !exists {
 				continue

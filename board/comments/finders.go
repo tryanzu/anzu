@@ -11,23 +11,32 @@ import (
 
 var CommentNotFound = errors.New("Comment has not been found by given criteria.")
 
-func FetchBy(deps Deps, query common.Query) (list Comments, err error) {
+func FetchBy(deps Deps, query common.Query) (CommentsSet, error) {
+	c, err := query(deps.Mgo().C("comments")).Limit(0).Count()
+	if err != nil {
+		return CommentsSet{}, err
+	}
+
+	var list Comments
 	err = query(deps.Mgo().C("comments")).All(&list)
 	if err != nil {
-		return
+		return CommentsSet{}, err
 	}
 
 	var processed content.Parseable
 	for n, c := range list {
 		processed, err = content.Postprocess(deps, c)
 		if err != nil {
-			return
+			return CommentsSet{}, err
 		}
 
 		list[n] = processed.(Comment)
 	}
 
-	return
+	return CommentsSet{
+		List:  list,
+		Count: c,
+	}, nil
 }
 
 func Post(id bson.ObjectId, limit, offset int, reverse bool, before *bson.ObjectId, after *bson.ObjectId) common.Query {

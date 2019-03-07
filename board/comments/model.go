@@ -74,6 +74,11 @@ type Replies struct {
 
 type RepliesList []Replies
 
+type CommentsSet struct {
+	List  Comments `json:"list"`
+	Count int      `json:"count"`
+}
+
 type Comments []Comment
 
 func (all Comments) Map() map[bson.ObjectId]Comment {

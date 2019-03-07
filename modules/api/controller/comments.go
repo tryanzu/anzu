@@ -41,7 +41,7 @@ func Comments(c *gin.Context) {
 		after = &id
 	}
 
-	list, err := comments.FetchBy(
+	set, err := comments.FetchBy(
 		deps.Container,
 		comments.Post(bson.ObjectIdHex(pid), limit, offset, sort == "reverse", before, after),
 	)
@@ -50,6 +50,7 @@ func Comments(c *gin.Context) {
 		return
 	}
 
+	list := set.List
 	list, err = list.WithReplies(deps.Container, 5)
 	if err != nil {
 		c.AbortWithError(500, err)
@@ -62,9 +63,8 @@ func Comments(c *gin.Context) {
 		return
 	}
 
-	empty := make(map[string]interface{}, 0)
 	tables := map[string]interface{}{
-		"votes":    empty,
+		"votes":    map[string]interface{}{},
 		"comments": list.StrMap(),
 	}
 
@@ -78,7 +78,7 @@ func Comments(c *gin.Context) {
 		tables["votes"] = votes.ValuesMap()
 	}
 
-	c.JSON(200, gin.H{"status": "okay", "list": list.IDList(), "hashtables": tables})
+	c.JSON(200, gin.H{"status": "okay", "count": set.Count, "list": list.IDList(), "hashtables": tables})
 }
 
 // NewComment pushes a new reply.
