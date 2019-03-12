@@ -63,7 +63,7 @@ func UpsertReaction(c *gin.Context) {
 		return
 	}
 
-	vote, err := votes.UpsertVote(deps.Container, votable, usr.Id, body.Type)
+	vote, status, err := votes.UpsertVote(deps.Container, votable, usr.Id, body.Type)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": err.Error()})
 		return
@@ -73,9 +73,9 @@ func UpsertReaction(c *gin.Context) {
 	events.In <- events.Vote(vote)
 
 	if vote.Deleted != nil {
-		c.JSON(http.StatusOK, gin.H{"action": "delete"})
+		c.JSON(http.StatusOK, status)
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"action": "create"})
+	c.JSON(http.StatusOK, status)
 }
