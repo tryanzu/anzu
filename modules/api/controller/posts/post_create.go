@@ -16,13 +16,15 @@ import (
 	"time"
 )
 
+var (
+	assetURL, _ = regexp.Compile(`^http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+`)
+)
+
 func (this API) Create(c *gin.Context) {
 	var form model.PostForm
-	database := deps.Container.Mgo()
 
 	// Check for user token
-	user_id, _ := c.Get("user_id")
-	uid := bson.ObjectIdHex(user_id.(string))
+	uid := bson.ObjectIdHex(c.MustGet("user_id").(string))
 
 	// Get the form otherwise tell it has been an error
 	if c.BindWith(&form, binding.JSON) != nil {
@@ -41,7 +43,7 @@ func (this API) Create(c *gin.Context) {
 	}
 
 	var category model.Category
-	err := database.C("categories").Find(bson.M{
+	err := deps.Container.Mgo().C("categories").Find(bson.M{
 		"parent": bson.M{"$exists": true},
 		"_id":    bson.ObjectIdHex(form.Category),
 	}).One(&category)
@@ -78,12 +80,9 @@ func (this API) Create(c *gin.Context) {
 	}
 
 	content := html.EscapeString(form.Content)
-	urls, _ := regexp.Compile(`http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+`)
-	post_id := bson.NewObjectId()
 
 	var assets []string
-
-	assets = urls.FindAllString(content, -1)
+	assets = assetURL.FindAllString(content, -1)
 
 	// Empty participants list - only author included
 	users := []bson.ObjectId{uid}
@@ -93,12 +92,12 @@ func (this API) Create(c *gin.Context) {
 	}
 
 	slug := helpers.StrSlug(title)
-	if c, _ := database.C("posts").Find(bson.M{"slug": slug}).Count(); c > 0 {
+	if c, _ := deps.Container.Mgo().C("posts").Find(bson.M{"slug": slug}).Count(); c > 0 {
 		slug = helpers.StrSlugRandom(title)
 	}
 
-	publish := &model.Post{
-		Id:         post_id,
+	publish := model.Post{
+		Id:         bson.NewObjectId(),
 		Title:      title,
 		Content:    content,
 		Type:       "category-post",
@@ -125,7 +124,7 @@ func (this API) Create(c *gin.Context) {
 		publish.Deleted = time.Now()
 	}
 
-	err = database.C("posts").Insert(publish)
+	err = deps.Container.Mgo().C("posts").Insert(&publish)
 	if err != nil {
 		panic(err)
 	}
@@ -140,5 +139,5 @@ func (this API) Create(c *gin.Context) {
 	}
 
 	// Finished creating the post
-	c.JSON(200, gin.H{"status": "okay", "code": 200, "post": gin.H{"id": post_id, "slug": slug}})
+	c.JSON(200, gin.H{"status": "okay", "code": 200, "post": gin.H{"id": publish.Id, "slug": slug}})
 }

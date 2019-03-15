@@ -11,6 +11,11 @@ import (
 
 var CommentNotFound = errors.New("Comment has not been found by given criteria.")
 
+func FetchCount(d Deps, query common.Query) (c int, err error) {
+	c, err = query(d.Mgo().C("comments")).Limit(0).Count()
+	return
+}
+
 func FetchBy(deps Deps, query common.Query) (CommentsSet, error) {
 	c, err := query(deps.Mgo().C("comments")).Limit(0).Count()
 	if err != nil {

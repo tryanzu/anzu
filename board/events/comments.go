@@ -5,7 +5,7 @@ import (
 
 	"github.com/tryanzu/core/board/comments"
 	notify "github.com/tryanzu/core/board/notifications"
-	"github.com/tryanzu/core/board/posts"
+	post "github.com/tryanzu/core/board/posts"
 	"github.com/tryanzu/core/board/votes"
 	pool "github.com/tryanzu/core/core/events"
 	"github.com/tryanzu/core/deps"
@@ -167,11 +167,17 @@ func onPostComment(e pool.Event) error {
 			}
 		}
 
+		c, err := comments.FetchCount(deps.Container, comments.Post(post.Id, 0, 0, false, nil, nil))
+		if err != nil {
+			panic(err)
+		}
+
 		notify.Transmit <- notify.Socket{
 			Chan:   "feed",
 			Action: "action",
 			Params: map[string]interface{}{
 				"fire":    "new-comment",
+				"count":   c,
 				"id":      comment.ReplyTo.Hex(),
 				"user_id": comment.UserId.Hex(),
 			},
@@ -181,6 +187,7 @@ func onPostComment(e pool.Event) error {
 			Chan: fmt.Sprintf("post.%s", comment.ReplyTo.Hex()),
 			Params: map[string]interface{}{
 				"action":     "new-comment",
+				"count":      c,
 				"comment_id": comment.Id.Hex(),
 			},
 		}
