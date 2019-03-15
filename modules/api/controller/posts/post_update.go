@@ -10,7 +10,6 @@ import (
 
 	"html"
 	"net/http"
-	"regexp"
 	"time"
 )
 
@@ -96,11 +95,10 @@ func (this API) Update(c *gin.Context) {
 	}
 
 	content := html.EscapeString(form.Content)
-	urls, _ := regexp.Compile(`http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+`)
 
 	var assets []string
-	assets = urls.FindAllString(content, -1)
-	update_directive := bson.M{
+	assets = assetURL.FindAllString(content, -1)
+	query := bson.M{
 		"$set": bson.M{
 			"content":    content,
 			"slug":       slug,
@@ -112,9 +110,9 @@ func (this API) Update(c *gin.Context) {
 	unset := bson.M{}
 	if form.Pinned == true {
 		// Update the set directive by creating a copy of it and using type assertion
-		set := update_directive["$set"].(bson.M)
+		set := query["$set"].(bson.M)
 		set["pinned"] = form.Pinned
-		update_directive["$set"] = set
+		query["$set"] = set
 		if post.Pinned == false {
 			events.In <- events.RawEmit("feed", "action", map[string]interface{}{
 				"fire": "pinned",
@@ -132,9 +130,9 @@ func (this API) Update(c *gin.Context) {
 	}
 
 	if form.Lock == true {
-		set := update_directive["$set"].(bson.M)
+		set := query["$set"].(bson.M)
 		set["lock"] = form.Lock
-		update_directive["$set"] = set
+		query["$set"] = set
 		if post.Lock == false {
 			events.In <- events.RawEmit("post", post.Id.Hex(), map[string]interface{}{
 				"fire": "locked",
@@ -150,16 +148,16 @@ func (this API) Update(c *gin.Context) {
 	}
 
 	if len(unset) > 0 {
-		update_directive["$unset"] = unset
+		query["$unset"] = unset
 	}
 
 	if form.IsQuestion != post.IsQuestion {
-		set_directive := update_directive["$set"].(bson.M)
+		set_directive := query["$set"].(bson.M)
 		set_directive["is_question"] = form.IsQuestion
-		update_directive["$set"] = set_directive
+		query["$set"] = set_directive
 	}
 
-	err = deps.Container.Mgo().C("posts").Update(bson.M{"_id": post.Id}, update_directive)
+	err = deps.Container.Mgo().C("posts").Update(bson.M{"_id": post.Id}, query)
 	if err != nil {
 		panic(err)
 	}
