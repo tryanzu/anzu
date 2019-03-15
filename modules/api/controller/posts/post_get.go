@@ -2,7 +2,9 @@ package posts
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/tryanzu/core/core/content"
 	"github.com/tryanzu/core/core/events"
+	"github.com/tryanzu/core/deps"
 	"github.com/tryanzu/core/modules/feed"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -48,6 +50,7 @@ func (this API) Get(c *gin.Context) {
 		events.In <- events.PostView(signs(c), post.Id)
 	}
 
+	content.Postprocess(deps.Container, post)
 	post.LoadUsersHashtables()
 	data := post.Data()
 	data.Comments.Total = this.Feed.TrueCommentCount(data.Id)

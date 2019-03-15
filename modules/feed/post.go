@@ -3,6 +3,7 @@ package feed
 import (
 	"github.com/tryanzu/core/board/legacy/model"
 	"github.com/tryanzu/core/board/votes"
+	"github.com/tryanzu/core/core/content"
 	"github.com/tryanzu/core/deps"
 	"github.com/tryanzu/core/modules/exceptions"
 	"github.com/tryanzu/core/modules/helpers"
@@ -405,4 +406,21 @@ func (self *Post) Comment(index int) (*Comment, error) {
 // Alias of TrueCommentCount
 func (self *Post) GetCommentCount() int {
 	return self.di.TrueCommentCount(self.Id)
+}
+
+func (p *Post) GetContent() string {
+	return p.Content
+}
+
+func (p *Post) UpdateContent(content string) content.Parseable {
+	p.Content = content
+	return p
+}
+
+func (p *Post) GetParseableMeta() map[string]interface{} {
+	meta := make(map[string]interface{})
+	meta["id"] = p.Id
+	meta["related"] = "comment"
+	meta["user_id"] = p.UserId
+	return meta
 }

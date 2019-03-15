@@ -3,8 +3,10 @@ package posts
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/tryanzu/core/board/legacy/model"
+	"github.com/tryanzu/core/core/content"
 	"github.com/tryanzu/core/core/events"
 	"github.com/tryanzu/core/deps"
+	"github.com/tryanzu/core/modules/feed"
 	"github.com/tryanzu/core/modules/helpers"
 	"gopkg.in/mgo.v2/bson"
 
@@ -35,8 +37,8 @@ func (this API) Update(c *gin.Context) {
 
 	// Get the post using the slug
 	uid := c.MustGet("userID").(bson.ObjectId)
-	bson_id := bson.ObjectIdHex(id)
-	post, err := this.Feed.Post(bson_id)
+	bid := bson.ObjectIdHex(id)
+	post, err := this.Feed.Post(bid)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"message": "Couldnt find the post", "status": "error"})
 		return
@@ -48,10 +50,7 @@ func (this API) Update(c *gin.Context) {
 	}
 
 	var category model.Category
-	err = deps.Container.Mgo().C("categories").Find(bson.M{
-		"parent": bson.M{"$exists": true},
-		"_id":    bson.ObjectIdHex(form.Category),
-	}).One(&category)
+	err = deps.Container.Mgo().C("categories").Find(bson.M{"parent": bson.M{"$exists": true}, "_id": bson.ObjectIdHex(form.Category)}).One(&category)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Invalid category"})
 		return
@@ -81,8 +80,7 @@ func (this API) Update(c *gin.Context) {
 	slug := post.Slug
 	if form.Title != post.Title {
 		slug := helpers.StrSlug(form.Title)
-		slug_exists, _ := deps.Container.Mgo().C("posts").Find(bson.M{"slug": slug}).Count()
-		if slug_exists > 0 {
+		if duplicated, _ := deps.Container.Mgo().C("posts").Find(bson.M{"slug": slug}).Count(); duplicated > 0 {
 			slug = helpers.StrSlugRandom(form.Title)
 		}
 
@@ -94,13 +92,17 @@ func (this API) Update(c *gin.Context) {
 		})
 	}
 
-	content := html.EscapeString(form.Content)
+	post.Content = html.EscapeString(form.Content)
+	// Pre-process comment content.
+	processed, err := content.Preprocess(deps.Container, post)
+	if err != nil {
+		return
+	}
 
-	var assets []string
-	assets = assetURL.FindAllString(content, -1)
+	post = processed.(*feed.Post)
 	query := bson.M{
 		"$set": bson.M{
-			"content":    content,
+			"content":    post.Content,
 			"slug":       slug,
 			"title":      form.Title,
 			"category":   bson.ObjectIdHex(form.Category),
@@ -160,11 +162,6 @@ func (this API) Update(c *gin.Context) {
 	err = deps.Container.Mgo().C("posts").Update(bson.M{"_id": post.Id}, query)
 	if err != nil {
 		panic(err)
-	}
-
-	// Download the asset on other routine in order to non block the API request
-	for _, asset := range assets {
-		go this.savePostImages(asset, post.Id)
 	}
 
 	events.In <- events.RawEmit("post", post.Id.Hex(), map[string]interface{}{
