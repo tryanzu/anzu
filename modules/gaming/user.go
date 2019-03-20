@@ -78,8 +78,17 @@ func syncLevelStats(d Deps, id bson.ObjectId, forceSync bool) (err error) {
 				"level":   r.Level,
 				"tribute": r.Tribute,
 				"shit":    r.Shit,
+				"swords":  swords,
 			}}
+			break
 		}
+
+		notify.Transmit <- notify.Socket{"user " + id.Hex(), "gaming", map[string]interface{}{
+			"level":   usr.G.Level,
+			"tribute": usr.G.Tribute,
+			"shit":    usr.G.Shit,
+			"swords":  usr.G.Swords,
+		}}
 
 		break
 	}
