@@ -61,9 +61,7 @@ func postReplaceAssetTags(d deps, c Parseable, list tags) (processed Parseable, 
 			if exists == false {
 				continue
 			}
-
-			link := `![-](` + ref.URL + `)`
-			content = strings.Replace(content, tag.Original, link, -1)
+			content = strings.Replace(content, tag.Original, ref.URL, -1)
 		}
 	}
 
