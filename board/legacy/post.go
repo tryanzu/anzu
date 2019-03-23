@@ -91,36 +91,25 @@ func (di PostAPI) FeedGet(c *gin.Context) {
 	}
 
 	relevant := c.Query("relevant")
-	fltr_categories := c.Query("categories")
-	from_author := c.Query("user_id")
-	_, signed_in := c.Get("user_id")
 	user_order := false
 	count := 0
 
-	if from_author != "" && bson.IsObjectIdHex(from_author) {
-
-		search["user_id"] = bson.ObjectIdHex(from_author)
-
+	if author := c.Query("user_id"); len(author) > 0 && bson.IsObjectIdHex(author) {
+		search["user_id"] = bson.ObjectIdHex(author)
 		user_order = true
 	}
 
-	if fltr_categories != "" {
-
-		var user_categories []bson.ObjectId
-
-		provided_categories := strings.Split(fltr_categories, ",")
-
-		for _, category_id := range provided_categories {
-
-			if bson.IsObjectIdHex(category_id) {
-
-				user_categories = append(user_categories, bson.ObjectIdHex(category_id))
+	if categories := c.Query("categories"); len(categories) > 0 {
+		var within []bson.ObjectId
+		list := strings.Split(categories, ",")
+		for _, cid := range list {
+			if bson.IsObjectIdHex(cid) {
+				within = append(within, bson.ObjectIdHex(cid))
 			}
 		}
 
-		if len(user_categories) > 0 {
-
-			search["category"] = bson.M{"$in": user_categories}
+		if len(within) > 0 {
+			search["category"] = bson.M{"$in": within}
 		}
 	}
 
@@ -162,24 +151,21 @@ func (di PostAPI) FeedGet(c *gin.Context) {
 		search["deleted_at"] = bson.M{"$exists": false}
 
 		// Prepare the database to fetch the feed
-		posts_collection := database.C("posts")
-		get_feed := posts_collection.Find(search).Select(bson.M{"comments.set": 0, "content": 0, "components": 0})
+		query := database.C("posts").Find(search).Select(bson.M{"comments.set": 0, "content": 0, "components": 0})
 
 		// Add the sort depending on the context
 		if user_order {
-			count, _ = get_feed.Count()
-			get_feed = get_feed.Sort("-created_at")
+			count, _ = query.Count()
+			query = query.Sort("-created_at")
 		} else {
-
-			get_feed = get_feed.Sort("-pinned", "-created_at")
+			query = query.Sort("-pinned", "-created_at")
 		}
 
 		// Add the limits of the resultset
-		get_feed = get_feed.Limit(limit).Skip(offset)
+		query = query.Limit(limit).Skip(offset)
 
 		// Get the results from the feed algo
-		err := get_feed.All(&feed)
-
+		err := query.All(&feed)
 		if err != nil {
 			panic(err)
 		}
@@ -194,16 +180,12 @@ func (di PostAPI) FeedGet(c *gin.Context) {
 		authors = append(authors, post.UserId)
 	}
 
-	if signed_in {
+	if _, signed := c.Get("user_id"); signed {
 		events.In <- events.PostsReached(signs(c), list)
 	}
 
-	// Update the feed rates for the most important stuff
-	//go di.Feed.UpdateFeedRates(feed)
-
 	// Get the users needed by the feed
 	err := database.C("users").Find(bson.M{"_id": bson.M{"$in": authors}}).All(&users)
-
 	if err != nil {
 		panic(err)
 	}
@@ -243,15 +225,12 @@ func (di PostAPI) FeedGet(c *gin.Context) {
 		}
 
 		if count > 0 {
-
 			c.JSON(200, gin.H{"feed": feed, "offset": offset, "limit": limit, "count": count})
 		} else {
-
 			c.JSON(200, gin.H{"feed": feed, "offset": offset, "limit": limit})
 		}
 
 	} else {
-
 		c.JSON(200, gin.H{"feed": []string{}, "offset": offset, "limit": limit})
 	}
 }
