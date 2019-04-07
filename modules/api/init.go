@@ -156,7 +156,7 @@ func (module *Module) Run(bindTo string) {
 
 	// Comment routes
 	authorized.POST("/comments/:id", chttp.UserMiddleware(), controller.NewComment)
-	authorized.PUT("/comments/:id", chttp.UserMiddleware(), controller.UpdateComment)
+	authorized.PUT("/comments/:id", chttp.UserMiddleware(), chttp.Can("edit-own-comments"), controller.UpdateComment)
 	authorized.DELETE("/comments/:id", chttp.UserMiddleware(), controller.DeleteComment)
 
 	// Flag routes
