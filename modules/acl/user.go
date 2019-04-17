@@ -87,16 +87,14 @@ func (user *User) CanDeletePost(post *feed.Post) bool {
 	return user.isActionGranted(post.UserId, post.Category, "edit-own-posts", "edit-board-posts", "edit-category-posts")
 }
 
-// Check if user can update comment
-func (user *User) CanUpdateComment(comment *feed.Comment, post *feed.Post) bool {
-
-	return user.isActionGranted(comment.UserId, post.Category, "edit-own-comments", "edit-board-comments", "edit-category-comments")
+// CanUpdateComment helper.
+func (user *User) CanUpdateComment(ownerID, categoryID bson.ObjectId) bool {
+	return user.isActionGranted(ownerID, categoryID, "edit-own-comments", "edit-board-comments", "edit-category-comments")
 }
 
 // Check if user can delete comment
-func (user *User) CanDeleteComment(comment *feed.Comment, post *feed.Post) bool {
-
-	return user.isActionGranted(comment.UserId, post.Category, "delete-own-comments", "delete-board-comments", "delete-category-comments")
+func (user *User) CanDeleteComment(ownerID, categoryID bson.ObjectId) bool {
+	return user.isActionGranted(ownerID, categoryID, "delete-own-comments", "delete-board-comments", "delete-category-comments")
 }
 
 // Check if user can do action, super_action or category_action

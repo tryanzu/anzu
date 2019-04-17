@@ -61,10 +61,12 @@ func TitleMiddleware(title string) gin.HandlerFunc {
 
 func Can(permission string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if acl.LoadedACL.User(c.MustGet("userID").(bson.ObjectId)).Can(permission) == false {
+		users := acl.LoadedACL.User(c.MustGet("userID").(bson.ObjectId))
+		if users.Can(permission) == false {
 			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"status": "error", "message": "Not allowed to perform this operation"})
 			return
 		}
+		c.Set("acl", users)
 		c.Next()
 	}
 }

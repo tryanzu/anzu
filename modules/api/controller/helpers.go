@@ -2,6 +2,7 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/tryanzu/core/modules/acl"
 	"gopkg.in/go-playground/validator.v8"
 )
 
@@ -24,4 +25,8 @@ func jsonBindErr(c *gin.Context, status int, message string, bindErr error) {
 		"message": message,
 		"details": bindErr.(validator.ValidationErrors),
 	})
+}
+
+func perms(c *gin.Context) *acl.User {
+	return c.MustGet("acl").(*acl.User)
 }

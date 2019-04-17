@@ -85,7 +85,11 @@ func FindList(deps Deps, scopes ...common.Scope) (list Comments, err error) {
 
 func FindReplies(deps Deps, list Comments, max int) (lists []Replies, err error) {
 	err = deps.Mgo().C("comments").Pipe([]bson.M{
-		{"$match": bson.M{"reply_type": "comment", "reply_to": bson.M{"$in": list.IDList()}}},
+		{"$match": bson.M{
+			"reply_type": "comment",
+			"reply_to":   bson.M{"$in": list.IDList()},
+			"deleted_at": bson.M{"$exists": false},
+		}},
 		{"$sort": bson.M{"-created_at": 1}},
 		{"$group": bson.M{"_id": "$reply_to", "count": bson.M{"$sum": 1}, "list": bson.M{"$push": "$$ROOT"}}},
 		{"$project": bson.M{"count": 1, "list": bson.M{"$slice": []interface{}{"$list", 0, max}}}},
