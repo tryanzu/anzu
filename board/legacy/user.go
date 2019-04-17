@@ -228,8 +228,7 @@ func (di UserAPI) UserGetJwtToken(c *gin.Context) {
 	}
 
 	// Development mode
-	env := di.ConfigService.UString("environment", "development")
-	if env != "development" {
+	if env := di.ConfigService.UString("environment", "development"); env != "development" {
 		hash := helpers.Sha256(password)
 		if usr.Data().Password != hash && helpers.CheckPasswordHash(password, usr.Data().Password) == false {
 			c.JSON(400, gin.H{"status": "error", "message": "Account credentials are not correct.", "code": 400})

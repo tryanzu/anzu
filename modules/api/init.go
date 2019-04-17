@@ -1,6 +1,10 @@
 package api
 
 import (
+	"context"
+	"os/signal"
+	"time"
+
 	"github.com/facebookgo/inject"
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
@@ -27,7 +31,6 @@ type Module struct {
 	Users        handle.UserAPI
 	Categories   handle.CategoryAPI
 	Middlewares  handle.MiddlewareAPI
-	Sitemap      handle.SitemapAPI
 	Acl          handle.AclAPI
 	Gaming       handle.GamingAPI
 	PostsFactory posts.API
@@ -111,7 +114,6 @@ func (module *Module) Run(bindTo string) {
 	router.GET("/p/:slug/:id", controller.PostPage)
 	router.GET("/u/:username/:id", controller.UserPage)
 	router.GET("/validate/:code", module.Users.UserValidateEmail)
-	router.GET("/sitemap.xml", module.Sitemap.GetSitemap)
 
 	v1 := router.Group("/v1")
 	v1.Use(module.Middlewares.Authorization())
@@ -184,8 +186,29 @@ func (module *Module) Run(bindTo string) {
 	h.HandleFunc("/glue/", realtime.ServeHTTP())
 	h.HandleFunc("/", router.ServeHTTP)
 
-	err = http.ListenAndServe(bindTo, h)
-	log.Fatal(err)
+	// Start the http server as an isolated goroutine.
+	srv := &http.Server{
+		Addr:    bindTo,
+		Handler: h,
+	}
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Listen: %s\n", err)
+		}
+	}()
+	// Wait for interrupt signal to gracefully shutdown the server with
+	// a timeout of 5 seconds.
+	quit := make(chan os.Signal)
+	signal.Notify(quit, os.Interrupt)
+	<-quit
+	log.Println("Shutdown Server ...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatal("Server Shutdown:", err)
+	}
+	log.Println("Server exiting")
 }
 
 func (module *Module) Populate(g inject.Graph) {
@@ -198,7 +221,6 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.Categories},
 		&inject.Object{Value: &module.Middlewares},
 		&inject.Object{Value: &module.Acl},
-		&inject.Object{Value: &module.Sitemap},
 		&inject.Object{Value: &module.Gaming},
 		&inject.Object{Value: &module.Oauth},
 	)
