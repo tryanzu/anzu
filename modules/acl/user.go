@@ -16,8 +16,8 @@ func (user *User) HasValidated() bool {
 	return user.data.Validated
 }
 
-func (user *User) CanWrite(category model.Category) bool {
-	if allowed, _ := helpers.InArray("*", category.Permissions.Write); allowed {
+func (user *User) CanWrite(writable []string) bool {
+	if allowed, _ := helpers.InArray("*", writable); allowed {
 		return true
 	}
 
@@ -27,12 +27,12 @@ func (user *User) CanWrite(category model.Category) bool {
 	for _, role := range roles {
 
 		// Basic check of the existence of the role inside the category
-		if allowed, _ := helpers.InArray(role.Name, category.Permissions.Write); allowed {
+		if allowed, _ := helpers.InArray(role.Name, writable); allowed {
 			return true
 		}
 
 		// Deep check within parents
-		for _, allowed := range category.Permissions.Write {
+		for _, allowed := range writable {
 			if user.checkRolesRecursive(role.Name, allowed) {
 				return true
 			}

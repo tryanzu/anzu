@@ -29,7 +29,6 @@ type Module struct {
 	Posts        handle.PostAPI
 	Oauth        oauth.API
 	Users        handle.UserAPI
-	Categories   handle.CategoryAPI
 	Middlewares  handle.MiddlewareAPI
 	Acl          handle.AclAPI
 	Gaming       handle.GamingAPI
@@ -60,16 +59,7 @@ func (module *Module) Run(bindTo string) {
 		panic(err)
 	}
 
-	redis_server, err := module.Dependencies.Config.String("cache.redis")
-	if err != nil {
-		panic(err)
-	}
-
-	store, err := sessions.NewRedisStore(10, "tcp", redis_server, "", []byte(secret))
-	if err != nil {
-		panic(err)
-	}
-
+	store := sessions.NewCookieStore([]byte(secret))
 	templates, err := module.Dependencies.Config.String("application.templates")
 	if err != nil {
 		panic(err)
@@ -109,7 +99,6 @@ func (module *Module) Run(bindTo string) {
 
 	router.GET("/", controller.HomePage)
 	router.GET("/publicar", chttp.TitleMiddleware("Nueva publicación"), controller.HomePage)
-	router.GET("/chat", chttp.TitleMiddleware("Chat oficial"), controller.HomePage)
 	router.GET("/c/:slug", chttp.TitleMiddleware("Categoria"), controller.HomePage)
 	router.GET("/p/:slug/:id", controller.PostPage)
 	router.GET("/u/:username/:id", controller.UserPage)
@@ -145,7 +134,7 @@ func (module *Module) Run(bindTo string) {
 	v1.PUT("/auth/recovery-token/:token", module.UsersFactory.UpdatePasswordFromToken)
 
 	// Categories routes
-	v1.GET("/category", module.Categories.CategoriesGet)
+	v1.GET("/category", controller.Categories)
 
 	authorized := v1.Group("")
 	authorized.Use(module.Middlewares.NeedAuthorization())
@@ -158,7 +147,7 @@ func (module *Module) Run(bindTo string) {
 
 	// Comment routes
 	authorized.POST("/comments/:id", chttp.UserMiddleware(), controller.NewComment)
-	authorized.PUT("/comments/:id", chttp.UserMiddleware(), chttp.Can("edit-own-comments"), controller.UpdateComment)
+	authorized.PUT("/comments/:id", chttp.UserMiddleware(), controller.UpdateComment)
 	authorized.DELETE("/comments/:id", chttp.UserMiddleware(), controller.DeleteComment)
 
 	// Flag routes
@@ -170,7 +159,6 @@ func (module *Module) Run(bindTo string) {
 	authorized.POST("/post/image", module.Posts.PostUploadAttachment)
 	authorized.PUT("/posts/:id", module.PostsFactory.Update)
 	authorized.DELETE("/posts/:id", module.Posts.PostDelete)
-	authorized.POST("/posts/:id/answer/:comment", module.PostsFactory.MarkCommentAsAnswer)
 
 	// User routes
 	authorized.GET("/users", chttp.UserMiddleware(), chttp.Can("users:admin"), controller.Users)
@@ -218,7 +206,6 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.PostsFactory},
 		&inject.Object{Value: &module.UsersFactory},
 		&inject.Object{Value: &module.Users},
-		&inject.Object{Value: &module.Categories},
 		&inject.Object{Value: &module.Middlewares},
 		&inject.Object{Value: &module.Acl},
 		&inject.Object{Value: &module.Gaming},

@@ -38,15 +38,6 @@ type PostAPI struct {
 	Acl           *acl.Module                  `inject:""`
 }
 
-/**
- * Avaliable components
- *
- * List of valid components along a recommendation post
- */
-var avaliable_components = []string{
-	"cpu", "motherboard", "ram", "cabinet", "screen", "storage", "cooler", "power", "videocard",
-}
-
 func (di PostAPI) FeedGet(c *gin.Context) {
 	var (
 		feed     []model.FeedPost

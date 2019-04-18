@@ -15,6 +15,7 @@ func init() {
 	// Run config service bootstraping sequences.
 	config.Bootstrap()
 
+	// Start profiling if enabled
 	if c := config.C.Copy(); c.Profiler.Enabled == true {
 		if err := profiler.Start(profiler.Config{
 			Service:        "anzu",

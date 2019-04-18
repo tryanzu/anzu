@@ -1,6 +1,8 @@
 package deps
 
 import (
+	"os"
+
 	"gopkg.in/mgo.v2"
 )
 
@@ -14,12 +16,16 @@ func IgniteMongoDB(container Deps) (Deps, error) {
 	if err != nil {
 		return container, err
 	}
-
+	if envURI := os.Getenv("MONGO_URL"); len(envURI) > 0 {
+		uri = envURI
+	}
 	session, err := mgo.Dial(uri)
 	if err != nil {
 		return container, err
 	}
-
+	if envDb := os.Getenv("MONGO_DB"); len(envDb) > 0 {
+		dbName = envDb
+	}
 	db := session.DB(dbName)
 
 	// Ensure indexes

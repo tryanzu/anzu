@@ -7,6 +7,9 @@ description = "Next-generation community engine, bring the conversation online."
 url = "http://localhost:3200/"
 logoUrl = "/images/anzu.svg"
 theme = "autumn"
+reactions = [
+    ["default", "upvote", "downvote"],
+]
 
 [[site.nav]]
 name = "Inicio"

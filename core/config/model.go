@@ -28,6 +28,29 @@ type anzuSite struct {
 	Nav         []siteLink     `json:"nav"`
 	Services    siteServices   `json:"services"`
 	Quickstart  siteQuickstart `json:"quickstart"`
+	Reactions   [][]string     `json:"reactions"`
+}
+
+func (site anzuSite) MakeReactions(names []string) []string {
+	m := make(map[string][]string, len(site.Reactions))
+	for _, rs := range site.Reactions {
+		if len(rs) == 0 {
+			continue
+		}
+		// Assign in map
+		m[rs[0]] = rs[1:]
+	}
+	defaults, hasDefaults := m["default"]
+	list := []string{}
+	for _, ns := range names {
+		if reactions, exists := m[ns]; exists {
+			list = append(list, reactions...)
+		}
+	}
+	if len(list) == 0 && hasDefaults {
+		list = defaults
+	}
+	return list
 }
 
 type siteLink struct {

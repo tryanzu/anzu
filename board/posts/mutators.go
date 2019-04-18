@@ -108,7 +108,6 @@ func getRelViewsCount(d deps, at time.Time) int64 {
 }
 
 func SyncRates(d deps, kind string, list []bson.ObjectId) error {
-	log.Println("[SyncRates]")
 	posts, err := FindList(d, common.WithinID(list))
 	if err != nil {
 		return err
@@ -176,7 +175,7 @@ func SyncRates(d deps, kind string, list []bson.ObjectId) error {
 		})
 	}
 
-	log.Printf("Saving rates at (rel views: %v reached: %v) %s: %+v\n", relViews, relReached, date, scores)
+	log.Printf("[RATES] Saving rates at (rel views: %v reached: %v) %s\n", relViews, relReached, date)
 	_, err = db.ZAdd([]byte("posts:"+date), scores...)
 	return err
 }

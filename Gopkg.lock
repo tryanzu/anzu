@@ -414,6 +414,12 @@
   version = "v1.0.3"
 
 [[projects]]
+  name = "github.com/subosito/gotenv"
+  packages = ["."]
+  revision = "69b5b6104433beb2cb9c3ce00bdadf3c7c2d3f34"
+  version = "v1.1.1"
+
+[[projects]]
   name = "github.com/syndtr/goleveldb"
   packages = [
     "leveldb",
@@ -666,6 +672,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "d02fa25fdb7438516fa4101689e891636d7bebead28412c479b3c516bbf2bcd0"
+  inputs-digest = "a3e18d8071db610b7fb71d84cbef51a9c1412f8c0d85739ab831bb5bbeecf339"
   solver-name = "gps-cdcl"
   solver-version = 1

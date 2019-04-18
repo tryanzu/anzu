@@ -6,9 +6,11 @@ import (
 	"os"
 
 	"github.com/olebedev/config"
+	"github.com/subosito/gotenv"
 )
 
 func IgniteConfig(d Deps) (container Deps, err error) {
+	gotenv.Load()
 	envfile := os.Getenv("ENV_FILE")
 	if envfile == "" {
 		if curr, err := os.Getwd(); err == nil {

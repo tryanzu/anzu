@@ -62,7 +62,7 @@ func (this API) Update(c *gin.Context) {
 		return
 	}
 
-	if post.Category != category.Id && user.CanWrite(category) == false {
+	if post.Category != category.Id && user.CanWrite(category.Permissions.Write) == false {
 		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Not enough permissions to write this category."})
 		return
 	}
