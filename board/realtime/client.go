@@ -24,7 +24,7 @@ func (c *Client) readWorker() {
 		case "auth":
 			token, exists := e.Params["token"].(string)
 			if !exists {
-				log.Println("Could not authenticate socket client: missing token")
+				log.Println("[REALTIME] Could not authenticate socket client: missing token")
 				continue
 			}
 
@@ -33,14 +33,14 @@ func (c *Client) readWorker() {
 			})
 
 			if err != nil {
-				log.Println("Could not parse socket client token: ", err)
+				log.Println("[REALTIME] Could not parse socket client token: ", err)
 				continue
 			}
 
 			claims := signed.Claims.(jwt.MapClaims)
 			usr, err := user.FindId(deps.Container, bson.ObjectIdHex(claims["user_id"].(string)))
 			if err != nil {
-				log.Println("Could not find user from socket token: ", err)
+				log.Println("[REALTIME] Could not find user from socket token: ", err)
 				continue
 			}
 
