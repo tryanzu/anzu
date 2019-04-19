@@ -4,6 +4,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/tryanzu/core/core/config"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -11,12 +12,8 @@ import (
 type VoteType string
 
 func isValidVoteType(str string) bool {
-	for _, t := range []string{"useful", "offtopic", "wordy", "concise"} {
-		if t == str {
-			return true
-		}
-	}
-	return false
+	cnf := config.C.Copy()
+	return cnf.Site.IsValidReaction(str)
 }
 
 type voteStatus struct {

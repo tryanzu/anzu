@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/tryanzu/core/board/comments"
@@ -108,6 +109,11 @@ func NewComment(c *gin.Context) {
 		return
 	}
 
+	form.Content = strings.TrimSpace(form.Content)
+	if len(form.Content) > 25000 || len(form.Content) < 5 {
+		jsonErr(c, http.StatusBadRequest, "invalid comment length")
+		return
+	}
 	usr := c.MustGet("user").(user.User)
 	comment, err := comments.UpsertComment(deps.Container, comments.Comment{
 		UserId:    usr.Id,
@@ -130,7 +136,7 @@ func UpdateComment(c *gin.Context) {
 	var (
 		cid  = bson.ObjectIdHex(c.Param("id"))
 		form struct {
-			Content string `json:"content" binding:"required"`
+			Content string `json:"content" binding:"required" validate:"min=2,max=25000"`
 		}
 	)
 

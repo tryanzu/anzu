@@ -51,11 +51,11 @@ func (c *Client) readWorker() {
 					"user": usr,
 				},
 			}
+			c.SafeWrite(event.encode())
 
-			c.Raw.Write(event.encode())
 		case "auth:clean":
 			c.User = nil
-			c.Raw.Write(socketEvent{
+			c.SafeWrite(socketEvent{
 				Event: "auth:cleaned",
 			}.encode())
 
@@ -67,7 +67,7 @@ func (c *Client) readWorker() {
 			}
 
 			c.Channels[channel] = c.Raw.Channel(channel)
-			c.Raw.Write(socketEvent{
+			c.SafeWrite(socketEvent{
 				Event: "listen:ready",
 				Params: map[string]interface{}{
 					"chan": channel,
@@ -82,7 +82,7 @@ func (c *Client) readWorker() {
 
 			delete(c.Channels, channel)
 
-			c.Raw.Write(socketEvent{
+			c.SafeWrite(socketEvent{
 				Event: "unlisten:ready",
 				Params: map[string]interface{}{
 					"chan": channel,
@@ -92,10 +92,16 @@ func (c *Client) readWorker() {
 	}
 }
 
+func (c *Client) SafeWrite(data string) {
+	if c.Raw != nil {
+		c.Raw.Write(data)
+	}
+}
+
 func (c *Client) send(packed []M) {
 	for _, m := range packed {
 		if m.Channel == "" {
-			c.Raw.Write(m.Content)
+			c.SafeWrite(m.Content)
 			continue
 		}
 		if m.Channel[0:4] == "user" {
@@ -108,7 +114,7 @@ func (c *Client) send(packed []M) {
 				continue
 			}
 			if id == c.User.Id {
-				c.Raw.Write(m.Content)
+				c.SafeWrite(m.Content)
 			}
 		}
 

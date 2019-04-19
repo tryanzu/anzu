@@ -31,6 +31,20 @@ type anzuSite struct {
 	Reactions   [][]string     `json:"reactions"`
 }
 
+func (site anzuSite) IsValidReaction(name string) bool {
+	for _, rs := range site.Reactions {
+		if len(rs) == 0 {
+			continue
+		}
+		for _, v := range rs[1:] {
+			if v == name {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func (site anzuSite) MakeReactions(names []string) []string {
 	m := make(map[string][]string, len(site.Reactions))
 	for _, rs := range site.Reactions {
