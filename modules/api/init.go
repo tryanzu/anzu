@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/olebedev/config"
-	"github.com/tryanzu/core/board/legacy"
+	handle "github.com/tryanzu/core/board/legacy"
 	"github.com/tryanzu/core/board/realtime"
 	chttp "github.com/tryanzu/core/core/http"
 	"github.com/tryanzu/core/modules/api/controller"
@@ -146,9 +146,9 @@ func (module *Module) Run(bindTo string) {
 	authorized.GET("/auth/resend-confirmation", module.UsersFactory.ResendConfirmation)
 
 	// Comment routes
-	authorized.POST("/comments/:id", chttp.UserMiddleware(), controller.NewComment)
-	authorized.PUT("/comments/:id", chttp.UserMiddleware(), controller.UpdateComment)
-	authorized.DELETE("/comments/:id", chttp.UserMiddleware(), controller.DeleteComment)
+	authorized.POST("/comments/:id", chttp.UserMiddleware(), chttp.Can("comment"), controller.NewComment)
+	authorized.PUT("/comments/:id", chttp.UserMiddleware(), chttp.Can("comment"), controller.UpdateComment)
+	authorized.DELETE("/comments/:id", chttp.UserMiddleware(), chttp.Can("comment"), controller.DeleteComment)
 
 	// Flag routes
 	authorized.POST("/flags", chttp.UserMiddleware(), controller.NewFlag)

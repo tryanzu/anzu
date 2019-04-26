@@ -90,7 +90,7 @@ func prepare() {
 			case <-time.After(time.Millisecond * 100):
 				if len(buffered) > 0 {
 					mark := elapsed("Flushing")
-					log.Println("Flushing buffer with", len(buffered), "items.")
+					log.Println("[REALTIME] Flushing buffer with", len(buffered), "items.")
 					dispatcher <- buffered
 					buffered = make([]M, 0, 1000)
 					mark()
