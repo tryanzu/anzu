@@ -19,16 +19,17 @@ type anzuSecurity struct {
 }
 
 type anzuSite struct {
-	Name        string         `json:"name"`
-	TitleMotto  string         `json:"titleMotto"`
-	Description string         `json:"description"`
-	Url         string         `json:"url"`
-	LogoUrl     string         `json:"logoUrl"`
-	Theme       string         `json:"theme"`
-	Nav         []siteLink     `json:"nav"`
-	Services    siteServices   `json:"services"`
-	Quickstart  siteQuickstart `json:"quickstart"`
-	Reactions   [][]string     `json:"reactions"`
+	Name           string         `json:"name"`
+	TitleMotto     string         `json:"titleMotto"`
+	Description    string         `json:"description"`
+	Url            string         `json:"url"`
+	LogoUrl        string         `json:"logoUrl"`
+	Theme          string         `json:"theme"`
+	Nav            []siteLink     `json:"nav"`
+	Services       siteServices   `json:"services"`
+	Quickstart     siteQuickstart `json:"quickstart"`
+	Reactions      [][]string     `json:"reactions"`
+	ThirdPartyAuth []string       `json:"thirdPartyAuth"`
 }
 
 func (site anzuSite) IsValidReaction(name string) bool {
