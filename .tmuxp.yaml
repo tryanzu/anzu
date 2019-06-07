@@ -1,0 +1,9 @@
+session_name: Anzu DEV
+windows:
+- window_name: Anzu basic dev env
+  layout: tiled
+  shell_command_before:
+    - echo "Welcome to Anzu"    # run as a first command in all panes
+  panes:
+    - ./develop.sh
+    - cd static/frontend && brunch watch
