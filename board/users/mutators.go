@@ -21,9 +21,17 @@ func UpsertBan(d deps, ban Ban) (Ban, error) {
 	if err != nil {
 		return ban, err
 	}
-
-	if changes.Matched == 0 {
-		// When inserted
+	if changes.Matched == 0 && ban.Status == ACTIVE {
+		err = d.Mgo().C("users").UpdateId(ban.UserID, bson.M{
+			"$set": bson.M{
+				"banned_at": ban.Created,
+				"banned":    true,
+				"banned_re": ban.Reason,
+			},
+			"$inc": bson.M{
+				"banned_times": 1,
+			},
+		})
 	}
 	return ban, nil
 }

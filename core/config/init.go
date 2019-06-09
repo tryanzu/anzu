@@ -7,6 +7,7 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/divideandconquer/go-merge/merge"
 	"github.com/fsnotify/fsnotify"
+	"github.com/hashicorp/hcl"
 )
 
 var (
@@ -21,11 +22,13 @@ func Bootstrap() {
 
 	// Watch config file
 	go C.WatchFile("./config.toml")
+	go C.WatchFile("./config.hcl")
 }
 
 type Config struct {
 	Reload  chan struct{}
 	current *Anzu
+	rules   *Rules
 }
 
 func (c *Config) Copy() Anzu {
@@ -33,6 +36,13 @@ func (c *Config) Copy() Anzu {
 		return Anzu{}
 	}
 	return *c.current
+}
+
+func (c *Config) Rules() Rules {
+	if c.rules == nil {
+		return Rules{}
+	}
+	return *c.rules
 }
 
 func (c *Config) UserCopy() (conf map[string]interface{}) {
@@ -55,6 +65,18 @@ func (c *Config) Boot() {
 	c.current = nil
 	c.Merge("./static/resources/config.toml", false)
 	c.Merge("./config.toml", true)
+	data, err := ioutil.ReadFile("./config.hcl")
+	if err != nil {
+		log.Println("Cannot load HCL configuration. Skipping")
+	}
+
+	var rules Rules
+	err = hcl.Unmarshal(data, &rules)
+	if err != nil {
+		log.Println("Cannot unmarshal HCL configuration. Skipping")
+	}
+
+	c.rules = &rules
 	log.Println("Config from filesystem loaded.")
 }
 

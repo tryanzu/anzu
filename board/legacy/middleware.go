@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/olebedev/config"
 	"github.com/op/go-logging"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 	cnf "github.com/tryanzu/core/core/config"
 	"github.com/tryanzu/core/deps"
 	"github.com/tryanzu/core/modules/acl"

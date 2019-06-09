@@ -13,6 +13,8 @@ require (
 	github.com/desertbit/glue v0.0.0-20171018142742-09c14070c2b1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/divideandconquer/go-merge v0.0.0-20160829212531-bc6b3a394b4e
+	github.com/dlclark/regexp2 v1.1.6 // indirect
+	github.com/dop251/goja v0.0.0-20190603191204-1b2d25ba9a8d
 	github.com/edsrzf/mmap-go v1.0.0 // indirect
 	github.com/facebookgo/inject v0.0.0-20180706035515-f23751cae28b
 	github.com/facebookgo/structtag v0.0.0-20150214074306-217e25fb9691 // indirect
@@ -22,8 +24,10 @@ require (
 	github.com/getsentry/raven-go v0.2.0
 	github.com/gin-gonic/contrib v0.0.0-20190526021735-7fb7810ed2a0
 	github.com/gin-gonic/gin v1.4.0
+	github.com/go-sourcemap/sourcemap v2.1.2+incompatible // indirect
 	github.com/goinggo/work v0.0.0-20150417195554-e2c4d06662b4
 	github.com/gorilla/websocket v1.4.0 // indirect
+	github.com/hashicorp/hcl v1.0.0
 	github.com/henrylee2cn/goutil v0.0.0-20190530092832-5b5425bff75c
 	github.com/hjr265/postmark.go v0.0.0-20160229184323-5546b2897115
 	github.com/kennygrant/sanitize v1.2.4

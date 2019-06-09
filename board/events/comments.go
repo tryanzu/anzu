@@ -7,6 +7,7 @@ import (
 	notify "github.com/tryanzu/core/board/notifications"
 	post "github.com/tryanzu/core/board/posts"
 	"github.com/tryanzu/core/board/votes"
+	"github.com/tryanzu/core/core/config"
 	pool "github.com/tryanzu/core/core/events"
 	"github.com/tryanzu/core/deps"
 	"github.com/tryanzu/core/modules/gaming"
@@ -86,6 +87,21 @@ func onVote(e pool.Event) error {
 	if vote.UserID == userID {
 		return nil
 	}
+	rules := config.C.Rules()
+	if rule, exists := rules.Reactions[vote.Value]; exists {
+		rewards, err := rule.Rewards()
+		if err != nil {
+			return err
+		}
+		if rewards.Provider > 0 {
+			err = gaming.IncreaseUserSwords(deps.Container, vote.UserID, int(rewards.Provider))
+		}
+
+		if rewards.Receiver > 0 {
+			err = gaming.IncreaseUserSwords(deps.Container, userID, int(rewards.Receiver))
+		}
+	}
+
 	switch vote.Value {
 	case "concise", "useful":
 		err = pipeErr(
