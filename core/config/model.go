@@ -18,6 +18,11 @@ type anzuSecurity struct {
 	StrictIPCheck bool `json:"strictIPCheck"`
 }
 
+type Rules struct {
+	Reactions  map[string]*ReactionEffect `hcl:"reaction"`
+	BanReasons map[string]*BanReason      `hcl:"banReason"`
+}
+
 type anzuSite struct {
 	Name           string         `json:"name"`
 	TitleMotto     string         `json:"titleMotto"`

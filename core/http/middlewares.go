@@ -1,8 +1,10 @@
 package http
 
 import (
+	"errors"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/tryanzu/core/core/config"
@@ -88,6 +90,29 @@ func UserMiddleware() gin.HandlerFunc {
 		}
 		if r := c.Query("reason"); len(r) > 0 {
 			sign.Reason = r
+		}
+
+		if usr.Banned && usr.BannedReason != nil {
+			reason := *usr.BannedReason
+			rules := config.C.Rules()
+			rule, exists := rules.BanReasons[reason]
+			if len(reason) == 0 || false == exists {
+				c.AbortWithError(http.StatusForbidden, errors.New("you are banned for good. bye bye"))
+				return
+			}
+			effects, err := rule.Effects(usr.BannedTimes)
+			if err != nil {
+				panic(err)
+			}
+			mins := time.Minute * time.Duration(effects.Duration)
+			if time.Now().Before(usr.BannedAt.Add(mins)) {
+				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+					"status":  "error",
+					"message": "You are banned for now... check again later!",
+					"until":   usr.BannedAt.Add(mins),
+				})
+				return
+			}
 		}
 
 		c.Set("sign", sign)

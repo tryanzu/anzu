@@ -25,6 +25,10 @@ func IncreaseUserTribute(d Deps, id bson.ObjectId, tribute int) error {
 }
 
 func increaseUserAttr(d Deps, id bson.ObjectId, field string, n int) (err error) {
+	if n == 0 {
+		// ignore.
+		return nil
+	}
 	// Perform update using $inc operator.
 	err = d.Mgo().C("users").Update(bson.M{"_id": id}, bson.M{"$inc": bson.M{field: n}})
 	if err != nil {

@@ -17,7 +17,7 @@ func HomePage(c *gin.Context) {
 	if len(conf.Site.TitleMotto) > 0 {
 		title += " - " + conf.Site.TitleMotto
 	}
-	c.HTML(200, "pages/home.tmpl", gin.H{
+	c.HTML(200, "pages/index.tmpl", gin.H{
 		"config":      conf,
 		"title":       title,
 		"description": c.MustGet("siteDescription").(string),
@@ -34,7 +34,7 @@ func UserPage(c *gin.Context) {
 		return
 	}
 
-	c.HTML(200, "pages/home.tmpl", gin.H{
+	c.HTML(200, "pages/index.tmpl", gin.H{
 		"config":      c.MustGet("config").(config.Anzu),
 		"title":       usr.UserName + " - Perfil de usuario",
 		"description": "Explora las aportaciones y el perfil de " + usr.UserName + " en Buldar",
@@ -56,7 +56,7 @@ func PostPage(c *gin.Context) {
 		return
 	}
 
-	c.HTML(200, "pages/home.tmpl", gin.H{
+	c.HTML(200, "pages/index.tmpl", gin.H{
 		"config":      c.MustGet("config").(config.Anzu),
 		"title":       post.Title,
 		"description": helpers.Truncate(post.Content, 160),

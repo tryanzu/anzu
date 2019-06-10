@@ -166,6 +166,8 @@ func (module *Module) Run(bindTo string) {
 	authorized.GET("/user/my", module.Users.UserGetByToken)
 	authorized.PUT("/user/my", module.Users.UserUpdateProfile)
 	authorized.PATCH("/me/:field", module.UsersFactory.Patch)
+	authorized.GET("/ban-reasons", chttp.UserMiddleware(), chttp.Can("users:admin"), controller.BanReasons)
+	authorized.POST("/ban", chttp.UserMiddleware(), chttp.Can("users:admin"), controller.Ban)
 
 	// Votes routes
 	authorized.POST("/react/:type/:id", chttp.UserMiddleware(), controller.UpsertReaction)

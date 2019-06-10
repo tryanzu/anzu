@@ -34,6 +34,11 @@ type User struct {
 	ConfirmSent *time.Time `bson:"confirm_sent_at" json:"-"`
 	Created     time.Time  `bson:"created_at" json:"created_at"`
 	Updated     time.Time  `bson:"updated_at" json:"updated_at"`
+
+	Banned       bool       `bson:"banned" json:"-"`
+	BannedAt     *time.Time `bson:"banned_at" json:"-"`
+	BannedReason *string    `bson:"banned_re" json:"-"`
+	BannedTimes  int        `bson:"banned_times" json:"-"`
 }
 
 type Gaming struct {
