@@ -45,10 +45,11 @@ func Users(c *gin.Context) {
 }
 
 type upsertBanForm struct {
-	RelatedTo string        `json:"related_to" binding:"required,eq=site|eq=post|eq=comment"`
-	RelatedID bson.ObjectId `json:"related_id"`
-	Reason    string        `json:"reason" binding:"required"`
-	Content   string        `json:"content" binding:"max=255"`
+	RelatedTo string         `json:"related_to" binding:"required,eq=site|eq=post|eq=comment"`
+	RelatedID *bson.ObjectId `json:"related_id"`
+	UserID    bson.ObjectId  `json:"user_id"`
+	Reason    string         `json:"reason" binding:"required"`
+	Content   string         `json:"content" binding:"max=255"`
 }
 
 // Ban endpoint.
@@ -63,9 +64,8 @@ func Ban(c *gin.Context) {
 		jsonErr(c, http.StatusBadRequest, "Invalid ban category")
 		return
 	}
-	usr := c.MustGet("user").(user.User)
 	ban, err := users.UpsertBan(deps.Container, users.Ban{
-		UserID:    usr.Id,
+		UserID:    form.UserID,
 		RelatedID: form.RelatedID,
 		RelatedTo: form.RelatedTo,
 		Content:   form.Content,
@@ -76,7 +76,7 @@ func Ban(c *gin.Context) {
 	}
 
 	//events.In <- events.NewFlag(flag.ID)
-	c.JSON(200, ban)
+	c.JSON(200, gin.H{"status": "okay", "ban": ban})
 }
 
 // BanReasons endpoint.
