@@ -49,7 +49,7 @@ func NewFlag(c *gin.Context) {
 	}
 
 	events.In <- events.NewFlag(flag.ID)
-	c.JSON(200, flag)
+	c.JSON(200, gin.H{"flag": flag, "status": "okay"})
 }
 
 // Flag status request.
