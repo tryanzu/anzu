@@ -86,5 +86,5 @@ func BanReasons(c *gin.Context) {
 	for k := range rules.BanReasons {
 		reasons = append(reasons, k)
 	}
-	c.JSON(200, reasons)
+	c.JSON(200, gin.H{"status": "okay", "reasons": reasons})
 }

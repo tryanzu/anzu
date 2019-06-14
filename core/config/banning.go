@@ -17,6 +17,9 @@ type BanEffects struct {
 
 // Effects from config (duration, ipaddress).
 func (re BanReason) Effects(times int) (BanEffects, error) {
+	if len(re.Code) == 0 {
+		return BanEffects{60, false}, nil
+	}
 	vm := goja.New()
 	vm.RunString(`
 		var exports = {};

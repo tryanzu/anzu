@@ -7,7 +7,8 @@ banReason spam {
         }
     JS
 }
-
+banReason rude {}
+banReason abuse {}
 banReason spoofing {
     effects = <<JS
         var factor = banN || 1;
@@ -17,3 +18,11 @@ banReason spoofing {
         }
     JS
 }
+banReason other {}
+
+// Flag reasons section.
+flag spam {}
+flag rude {}
+flag duplicate {}
+flag needs_review {}
+flag other {}

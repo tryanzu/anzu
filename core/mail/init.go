@@ -78,7 +78,7 @@ func sendWorker(c *config.Config) {
 	for {
 		m, alive := <-In
 		if !alive {
-			log.Println("[BOOT] Mail bad worker has stopped...")
+			log.Println("[BOOT] Mail worker has stopped...")
 			return
 		}
 

@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/tryanzu/core/board/flags"
+	"github.com/tryanzu/core/core/config"
 	"github.com/tryanzu/core/core/events"
 	"github.com/tryanzu/core/core/user"
 	"github.com/tryanzu/core/deps"
@@ -14,7 +15,7 @@ import (
 type upsertFlagForm struct {
 	RelatedTo string        `json:"related_to" binding:"required,eq=post|eq=comment"`
 	RelatedID bson.ObjectId `json:"related_id" binding:"required"`
-	Category  string        `json:"category" binding:"required"`
+	Reason    string        `json:"category" binding:"required"`
 	Content   string        `json:"content" binding:"max=255"`
 }
 
@@ -25,24 +26,26 @@ func NewFlag(c *gin.Context) {
 		jsonBindErr(c, http.StatusBadRequest, "Invalid flag request, check parameters", err)
 		return
 	}
-	category, err := flags.CastCategory(form.Category)
-	if err != nil {
-		jsonErr(c, http.StatusBadRequest, "Invalid flag category")
+
+	rules := config.C.Rules()
+	if _, exists := rules.Flags[form.Reason]; false == exists {
+		jsonErr(c, http.StatusBadRequest, "Invalid flag reason")
 		return
 	}
+
 	usr := c.MustGet("user").(user.User)
 	if count := flags.TodaysCountByUser(deps.Container, usr.Id); count > 10 {
 		jsonErr(c, http.StatusPreconditionFailed, "Can't flag anymore for today")
 		return
 	}
+
 	flag, err := flags.UpsertFlag(deps.Container, flags.Flag{
 		UserID:    usr.Id,
 		RelatedID: form.RelatedID,
 		RelatedTo: form.RelatedTo,
 		Content:   form.Content,
-		Category:  category,
+		Reason:    form.Reason,
 	})
-
 	if err != nil {
 		jsonErr(c, http.StatusInternalServerError, err.Error())
 		return
@@ -70,4 +73,14 @@ func Flag(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"flag": f})
+}
+
+// FlagReasons endpoint.
+func FlagReasons(c *gin.Context) {
+	rules := config.C.Rules()
+	reasons := []string{}
+	for k := range rules.Flags {
+		reasons = append(reasons, k)
+	}
+	c.JSON(200, gin.H{"status": "okay", "reasons": reasons})
 }

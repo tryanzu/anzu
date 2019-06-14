@@ -119,7 +119,6 @@ func (module *Module) Run(bindTo string) {
 
 	// Post routes
 	v1.GET("/feed", module.Posts.FeedGet)
-	v1.GET("/post", module.Posts.FeedGet)
 	v1.GET("/posts/:id", module.PostsFactory.Get)
 	v1.GET("/comments/:post_id", controller.Comments)
 
@@ -166,7 +165,8 @@ func (module *Module) Run(bindTo string) {
 	authorized.GET("/user/my", module.Users.UserGetByToken)
 	authorized.PUT("/user/my", module.Users.UserUpdateProfile)
 	authorized.PATCH("/me/:field", module.UsersFactory.Patch)
-	authorized.GET("/ban-reasons", chttp.UserMiddleware(), chttp.Can("users:admin"), controller.BanReasons)
+	authorized.GET("/reasons/ban", chttp.UserMiddleware(), chttp.Can("users:admin"), controller.BanReasons)
+	authorized.GET("/reasons/flag", chttp.UserMiddleware(), controller.FlagReasons)
 	authorized.POST("/ban", chttp.UserMiddleware(), chttp.Can("users:admin"), controller.Ban)
 
 	// Votes routes
