@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/desertbit/glue"
@@ -15,12 +16,12 @@ import (
 var (
 	jwtSecret  []byte
 	server     *glue.Server
-	sockets    goutil.Map
+	sockets    *sync.Map
 	clients    goutil.Map
 	dispatcher chan []M
 
 	// BufferSize holds the queue size for broadcasting channels.
-	BufferSize = 10
+	BufferSize = 100
 
 	// Broadcast receives messages to be broadcasted into global namespace.
 	Broadcast chan string
@@ -50,7 +51,7 @@ func (ev socketEvent) encode() string {
 }
 
 func prepare() {
-	sockets = goutil.AtomicMap()
+	sockets = new(sync.Map)
 	clients = goutil.RwMap(1000)
 
 	// Prepare multicast channels before starting server
@@ -90,7 +91,7 @@ func prepare() {
 			case <-time.After(time.Millisecond * 100):
 				if len(buffered) > 0 {
 					mark := elapsed("Flushing")
-					log.Println("[REALTIME] Flushing buffer with", len(buffered), "items.")
+					log.Println("[glue] Flushing buffer with", len(buffered), "items.")
 					dispatcher <- buffered
 					buffered = make([]M, 0, 1000)
 					mark()
@@ -131,7 +132,7 @@ func onNewSocket(s *glue.Socket) {
 		client.Raw = nil
 		close(client.Read)
 		sockets.Delete(s.ID())
-		log.Printf("[GLUE] Socket %s closed with remote address: %s", s.ID(), s.RemoteAddr())
+		log.Printf("[glue] Socket %s closed with remote address: %s", s.ID(), s.RemoteAddr())
 	})
 
 	// fn triggered during each received message.

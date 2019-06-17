@@ -2,6 +2,7 @@ package realtime
 
 import (
 	"log"
+	"time"
 
 	"github.com/desertbit/glue"
 	jwt "github.com/dgrijalva/jwt-go"
@@ -88,6 +89,52 @@ func (c *Client) readWorker() {
 					"chan": channel,
 				},
 			}.encode())
+		case "chat:message":
+			if c.User == nil {
+				continue
+			}
+			msg, exists := e.Params["msg"].(string)
+			if !exists {
+				log.Println("[glue] chat:message requires a message.")
+				continue
+			}
+			ToChan <- M{
+				Channel: "chat:general",
+				Content: socketEvent{
+					Event: "message",
+					Params: map[string]interface{}{
+						"msg":    msg,
+						"from":   c.User.UserName,
+						"avatar": c.User.Image,
+						"at":     time.Now(),
+						"id":     bson.NewObjectId(),
+					},
+				}.encode(),
+			}
+			if len(msg) >= 6 && msg[0:len("repeat")] == "repeat" {
+				log.Println("repeat!!")
+				go func() {
+					n := 0
+					for n < 10000 {
+						n++
+						ToChan <- M{
+							Channel: "chat:general",
+							Content: socketEvent{
+								Event: "message",
+								Params: map[string]interface{}{
+									"msg":    msg,
+									"from":   c.User.UserName,
+									"avatar": c.User.Image,
+									"at":     time.Now(),
+									"id":     bson.NewObjectId(),
+								},
+							}.encode(),
+						}
+						time.Sleep(time.Millisecond * 800)
+					}
+				}()
+			}
+			time.Sleep(time.Millisecond * 200)
 		}
 	}
 }
