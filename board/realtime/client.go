@@ -1,6 +1,8 @@
 package realtime
 
 import (
+	"bytes"
+	"encoding/gob"
 	"log"
 	"time"
 
@@ -20,6 +22,7 @@ type Client struct {
 }
 
 func (c *Client) readWorker() {
+	ledis := deps.Container.LedisDB()
 	for e := range c.Read {
 		switch e.Event {
 		case "auth":
@@ -74,6 +77,24 @@ func (c *Client) readWorker() {
 					"chan": channel,
 				},
 			}.encode())
+			if channel[0:4] == "chat" {
+				prev, err := ledis.LRange([]byte(channel), 0, 50)
+				if err != nil {
+					log.Println("[glue] [err] Cannot get previous chat list", err)
+					continue
+				}
+				for _, encoded := range prev {
+					var msg M
+					dec := gob.NewDecoder(bytes.NewBuffer(encoded))
+					err := dec.Decode(&msg)
+					if err != nil {
+						log.Println("[glue] [err] Cannot decode previous chat message", err)
+						continue
+					}
+					ToChan <- msg
+				}
+			}
+
 		case "unlisten":
 			channel, exists := e.Params["chan"].(string)
 			if !exists {
@@ -98,8 +119,14 @@ func (c *Client) readWorker() {
 				log.Println("[glue] chat:message requires a message.")
 				continue
 			}
-			ToChan <- M{
-				Channel: "chat:general",
+			var channel string
+			channel, exists = e.Params["chan"].(string)
+			if !exists {
+				log.Println("[glue] chat:message requires a chan.")
+				continue
+			}
+			m := M{
+				Channel: "chat:" + channel,
 				Content: socketEvent{
 					Event: "message",
 					Params: map[string]interface{}{
@@ -111,29 +138,24 @@ func (c *Client) readWorker() {
 					},
 				}.encode(),
 			}
-			if len(msg) >= 6 && msg[0:len("repeat")] == "repeat" {
-				log.Println("repeat!!")
-				go func() {
-					n := 0
-					for n < 10000 {
-						n++
-						ToChan <- M{
-							Channel: "chat:general",
-							Content: socketEvent{
-								Event: "message",
-								Params: map[string]interface{}{
-									"msg":    msg,
-									"from":   c.User.UserName,
-									"avatar": c.User.Image,
-									"at":     time.Now(),
-									"id":     bson.NewObjectId(),
-								},
-							}.encode(),
-						}
-						time.Sleep(time.Millisecond * 800)
-					}
-				}()
+			ToChan <- m
+			var (
+				network bytes.Buffer
+				n       int64
+			)
+			enc := gob.NewEncoder(&network)
+			err := enc.Encode(m)
+			if err != nil {
+				log.Println("[glue] [err] Cannot encode for cache", err)
 			}
+			n, err = ledis.RPush([]byte(m.Channel), network.Bytes())
+			if err != nil {
+				log.Println("[glue] [err] Cannot encode for cache", err)
+			}
+			if n >= 50 {
+				ledis.LPop([]byte(m.Channel))
+			}
+			log.Println("[glue] Cache count", n)
 			time.Sleep(time.Millisecond * 200)
 		}
 	}

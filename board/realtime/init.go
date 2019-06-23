@@ -17,6 +17,7 @@ var (
 	jwtSecret  []byte
 	server     *glue.Server
 	sockets    *sync.Map
+	channels   *sync.Map
 	clients    goutil.Map
 	dispatcher chan []M
 
@@ -52,6 +53,7 @@ func (ev socketEvent) encode() string {
 
 func prepare() {
 	sockets = new(sync.Map)
+	channels = new(sync.Map)
 	clients = goutil.RwMap(1000)
 
 	// Prepare multicast channels before starting server
@@ -88,14 +90,15 @@ func prepare() {
 				buffered = append(buffered, M{Content: m})
 			case m := <-ToChan:
 				buffered = append(buffered, m)
-			case <-time.After(time.Millisecond * 100):
-				if len(buffered) > 0 {
-					mark := elapsed("Flushing")
-					log.Println("[glue] Flushing buffer with", len(buffered), "items.")
-					dispatcher <- buffered
-					buffered = make([]M, 0, 1000)
-					mark()
+			case <-time.After(time.Millisecond * 60):
+				if len(buffered) == 0 {
+					continue
 				}
+				mark := elapsed("Flushing")
+				log.Println("[glue] Flushing buffer with", len(buffered), "items.")
+				dispatcher <- buffered
+				buffered = make([]M, 0, 1000)
+				mark()
 			}
 		}
 	}()
