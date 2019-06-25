@@ -14,6 +14,12 @@ type gpcProfiler struct {
 	Enabled bool
 }
 
+type chatChan struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Youtube     string `json:"youtubeVideo"`
+}
+
 type anzuSecurity struct {
 	StrictIPCheck bool `json:"strictIPCheck"`
 }
@@ -37,6 +43,7 @@ type anzuSite struct {
 	LogoUrl        string         `json:"logoUrl"`
 	Theme          string         `json:"theme"`
 	Nav            []siteLink     `json:"nav"`
+	Chat           []chatChan     `json:"chat"`
 	Services       siteServices   `json:"services"`
 	Quickstart     siteQuickstart `json:"quickstart"`
 	Reactions      [][]string     `json:"reactions"`
