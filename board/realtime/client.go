@@ -91,9 +91,10 @@ func (c *Client) readWorker() {
 						log.Println("[glue] [err] Cannot decode previous chat message", err)
 						continue
 					}
-					ToChan <- msg
+					c.Channels[channel].Write(msg.Content)
 				}
 			}
+			counters <- c
 
 		case "unlisten":
 			channel, exists := e.Params["chan"].(string)
@@ -101,15 +102,14 @@ func (c *Client) readWorker() {
 				log.Println("Could not remove channel: missing id")
 				continue
 			}
-
 			delete(c.Channels, channel)
-
 			c.SafeWrite(socketEvent{
 				Event: "unlisten:ready",
 				Params: map[string]interface{}{
 					"chan": channel,
 				},
 			}.encode())
+			counters <- c
 		case "chat:message":
 			if c.User == nil {
 				continue
@@ -161,6 +161,7 @@ func (c *Client) readWorker() {
 	}
 }
 
+// SafeWrite to client (from nil pointers)
 func (c *Client) SafeWrite(data string) {
 	if c.Raw != nil {
 		c.Raw.Write(data)

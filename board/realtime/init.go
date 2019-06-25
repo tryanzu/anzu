@@ -17,9 +17,9 @@ var (
 	jwtSecret  []byte
 	server     *glue.Server
 	sockets    *sync.Map
-	channels   *sync.Map
 	clients    goutil.Map
 	dispatcher chan []M
+	counters   chan *Client
 
 	// BufferSize holds the queue size for broadcasting channels.
 	BufferSize = 100
@@ -53,13 +53,13 @@ func (ev socketEvent) encode() string {
 
 func prepare() {
 	sockets = new(sync.Map)
-	channels = new(sync.Map)
 	clients = goutil.RwMap(1000)
 
 	// Prepare multicast channels before starting server
 	Broadcast = make(chan string, BufferSize)
 	ToChan = make(chan M, BufferSize)
 	dispatcher = make(chan []M, BufferSize)
+	counters = make(chan *Client, BufferSize)
 
 	// Bootstrap glue server instance
 	options := glue.Options{
@@ -73,7 +73,6 @@ func prepare() {
 	}
 
 	server = glue.NewServer(options)
-
 	secret, err := deps.Container.Config().String("application.secret")
 	if err != nil {
 		log.Panic("Could not get JWT secret token. (missing config)", err)
@@ -116,6 +115,45 @@ func prepare() {
 		}
 	}()
 
+	go func() {
+		channels := map[string]map[*Client]struct{}{}
+		changes := 0
+		for {
+			select {
+			case client := <-counters:
+				for name := range client.Channels {
+					if _, exists := channels[name]; !exists {
+						channels[name] = map[*Client]struct{}{}
+					}
+					channels[name][client] = struct{}{}
+				}
+				for name := range channels {
+					if _, exists := client.Channels[name]; !exists {
+						delete(channels[name], client)
+					}
+				}
+				changes++
+			case <-time.After(time.Millisecond * 120):
+				if changes == 0 {
+					continue
+				}
+				counters := make(map[string]interface{}, len(channels))
+				for name, listeners := range channels {
+					counters[name] = len(listeners)
+				}
+				m := M{
+					Channel: "chat:counters",
+					Content: socketEvent{
+						Event:  "counters",
+						Params: counters,
+					}.encode(),
+				}
+				changes = 0
+				ToChan <- m
+			}
+		}
+	}()
+
 	server.OnNewSocket(onNewSocket)
 }
 
@@ -135,6 +173,7 @@ func onNewSocket(s *glue.Socket) {
 		client.Raw = nil
 		close(client.Read)
 		sockets.Delete(s.ID())
+		counters <- client
 		log.Printf("[glue] Socket %s closed with remote address: %s", s.ID(), s.RemoteAddr())
 	})
 
