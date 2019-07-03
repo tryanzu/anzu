@@ -23,6 +23,8 @@ type Client struct {
 
 func (c *Client) readWorker() {
 	ledis := deps.Container.LedisDB()
+	seqHits := 0
+	lastRead := time.Now()
 	for e := range c.Read {
 		switch e.Event {
 		case "auth":
@@ -115,7 +117,7 @@ func (c *Client) readWorker() {
 				continue
 			}
 			msg, exists := e.Params["msg"].(string)
-			if !exists {
+			if !exists || len(msg) == 0 {
 				log.Println("[glue] chat:message requires a message.")
 				continue
 			}
@@ -131,6 +133,7 @@ func (c *Client) readWorker() {
 					Event: "message",
 					Params: map[string]interface{}{
 						"msg":    msg,
+						"userId": c.User.Id,
 						"from":   c.User.UserName,
 						"avatar": c.User.Image,
 						"at":     time.Now(),
@@ -139,6 +142,14 @@ func (c *Client) readWorker() {
 				}.encode(),
 			}
 			ToChan <- m
+			t := time.Now()
+			log.Println("[glue] lastRead ", t.Sub(lastRead))
+			if t.Sub(lastRead) < 300*time.Millisecond {
+				seqHits++
+			} else {
+				seqHits = 0
+			}
+			lastRead = time.Now()
 			var (
 				network bytes.Buffer
 				n       int64
@@ -155,7 +166,10 @@ func (c *Client) readWorker() {
 			if n >= 50 {
 				ledis.LPop([]byte(m.Channel))
 			}
-			log.Println("[glue] Cache count", n)
+			if seqHits >= 10 {
+				log.Println("[glue] [ban] spam rate exceeded")
+				time.Sleep(time.Second * 60)
+			}
 			time.Sleep(time.Millisecond * 200)
 		}
 	}

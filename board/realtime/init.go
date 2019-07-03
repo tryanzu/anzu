@@ -133,19 +133,37 @@ func prepare() {
 					}
 				}
 				changes++
-			case <-time.After(time.Millisecond * 120):
+			case <-time.After(time.Millisecond * 60):
 				if changes == 0 {
 					continue
 				}
 				counters := make(map[string]interface{}, len(channels))
+				peers := [][2]string{}
 				for name, listeners := range channels {
 					counters[name] = len(listeners)
+
+					// Calculate the list of connected peers on the counters channel
+					if name != "chat:counters" {
+						continue
+					}
+					for client := range listeners {
+						if client.User == nil {
+							continue
+						}
+						id := client.User.Id.Hex()
+						name := client.User.UserName
+						peers = append(peers, [2]string{id, name})
+					}
 				}
+
 				m := M{
 					Channel: "chat:counters",
 					Content: socketEvent{
-						Event:  "counters",
-						Params: counters,
+						Event: "update",
+						Params: map[string]interface{}{
+							"channels": counters,
+							"peers":    peers,
+						},
 					}.encode(),
 				}
 				changes = 0
