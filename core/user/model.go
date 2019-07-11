@@ -37,6 +37,7 @@ type User struct {
 
 	Banned       bool       `bson:"banned" json:"-"`
 	BannedAt     *time.Time `bson:"banned_at" json:"-"`
+	BannedUntil  *time.Time `bson:"banned_until" json:"-"`
 	BannedReason *string    `bson:"banned_re" json:"-"`
 	BannedTimes  int        `bson:"banned_times" json:"-"`
 }
@@ -82,4 +83,29 @@ type RecoveryToken struct {
 	Used    bool          `bson:"used" json:"used"`
 	Created time.Time     `bson:"created_at" json:"created_at"`
 	Updated time.Time     `bson:"updated_at" json:"updated_at"`
+}
+
+type status string
+type category string
+
+const (
+	ACTIVE   status = "active"
+	PENDING  status = "pending"
+	REJECTED status = "rejected"
+	REVOKED  status = "revoked"
+)
+
+// Ban represents a ban sent by a user.
+type Ban struct {
+	ID        bson.ObjectId  `bson:"_id,omitempty" json:"id,omitempty"`
+	UserID    bson.ObjectId  `bson:"user_id" json:"user_id"`
+	RelatedTo string         `bson:"related_to" json:"related_to"`
+	RelatedID *bson.ObjectId `bson:"related_id,omitempty" json:"related_id,omitempty"`
+	Content   string         `bson:"content" json:"content"`
+	Status    status         `bson:"status" json:"status"`
+	Reason    string         `bson:"reason" json:"reason"`
+	Created   time.Time      `bson:"created_at" json:"created_at"`
+	Updated   time.Time      `bson:"updated_at" json:"updated_at"`
+	Until     time.Time      `bson:"until" json:"until"`
+	Deleted   *time.Time     `bson:"deleted_at,omitempty" json:"-"`
 }

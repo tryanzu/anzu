@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/tryanzu/core/board/users"
 	"github.com/tryanzu/core/core/config"
 	"github.com/tryanzu/core/core/user"
 	"github.com/tryanzu/core/deps"
@@ -64,7 +63,7 @@ func Ban(c *gin.Context) {
 		jsonErr(c, http.StatusBadRequest, "Invalid ban category")
 		return
 	}
-	ban, err := users.UpsertBan(deps.Container, users.Ban{
+	ban, err := user.UpsertBan(deps.Container, user.Ban{
 		UserID:    form.UserID,
 		RelatedID: form.RelatedID,
 		RelatedTo: form.RelatedTo,

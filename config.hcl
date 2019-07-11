@@ -1,8 +1,14 @@
 banReason spam {
     effects = <<JS
         var factor = banN || 1;
+        var base = 60;
+        switch (related) {
+            case 'chat': 
+            base = 5;
+            break;
+        }
         exports = {
-            duration: 60 * factor,
+            duration: base * factor,
             ip: true,
         }
     JS

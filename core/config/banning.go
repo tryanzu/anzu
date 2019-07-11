@@ -16,7 +16,7 @@ type BanEffects struct {
 }
 
 // Effects from config (duration, ipaddress).
-func (re BanReason) Effects(times int) (BanEffects, error) {
+func (re BanReason) Effects(related string, times int) (BanEffects, error) {
 	if len(re.Code) == 0 {
 		return BanEffects{60, false}, nil
 	}
@@ -25,6 +25,7 @@ func (re BanReason) Effects(times int) (BanEffects, error) {
 		var exports = {};
 	`)
 	vm.Set("banN", times)
+	vm.Set("related", related)
 	if _, err := vm.RunString(re.Code); err != nil {
 		return BanEffects{}, err
 	}

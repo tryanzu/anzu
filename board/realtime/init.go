@@ -1,6 +1,8 @@
 package realtime
 
 import (
+	"bytes"
+	"encoding/gob"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -37,12 +39,21 @@ type M struct {
 	Content string
 }
 
-type socketEvent struct {
+type SocketEvent struct {
 	Event  string                 `json:"event"`
 	Params map[string]interface{} `json:"params"`
 }
 
-func (ev socketEvent) encode() string {
+func (ev SocketEvent) encode() string {
+	bytes, err := json.Marshal(ev)
+	if err != nil {
+		panic(err)
+	}
+
+	return string(bytes)
+}
+
+func (ev SocketEvent) Encode() string {
 	bytes, err := json.Marshal(ev)
 	if err != nil {
 		panic(err)
@@ -79,6 +90,7 @@ func prepare() {
 	}
 
 	jwtSecret = []byte(secret)
+	ledis := deps.Container.LedisDB()
 
 	go func() {
 		buffered := make([]M, 0, 1000)
@@ -111,6 +123,26 @@ func prepare() {
 				c.send(pack)
 				return true
 			})
+			for _, msg := range pack {
+				if len(msg.Channel) > 5 && msg.Channel[0:5] == "chat:" {
+					var (
+						buf bytes.Buffer
+						n   int64
+					)
+					enc := gob.NewEncoder(&buf)
+					err := enc.Encode(msg)
+					if err != nil {
+						log.Println("[glue] [err] Cannot encode for cache", err)
+					}
+					n, err = ledis.RPush([]byte(msg.Channel), buf.Bytes())
+					if err != nil {
+						log.Println("[glue] [err] Cannot encode for cache", err)
+					}
+					if n >= 50 {
+						ledis.LPop([]byte(msg.Channel))
+					}
+				}
+			}
 			mark()
 		}
 	}()
@@ -133,7 +165,7 @@ func prepare() {
 					}
 				}
 				changes++
-			case <-time.After(time.Millisecond * 60):
+			case <-time.After(time.Second):
 				if changes == 0 {
 					continue
 				}
@@ -158,7 +190,7 @@ func prepare() {
 
 				m := M{
 					Channel: "chat:counters",
-					Content: socketEvent{
+					Content: SocketEvent{
 						Event: "update",
 						Params: map[string]interface{}{
 							"channels": counters,
@@ -180,7 +212,7 @@ func onNewSocket(s *glue.Socket) {
 		Raw:      s,
 		Channels: make(map[string]*glue.Channel),
 		User:     nil,
-		Read:     make(chan socketEvent),
+		Read:     make(chan SocketEvent),
 	}
 
 	go client.readWorker()
@@ -197,7 +229,7 @@ func onNewSocket(s *glue.Socket) {
 
 	// fn triggered during each received message.
 	s.OnRead(func(data string) {
-		var event socketEvent
+		var event SocketEvent
 
 		err := json.Unmarshal([]byte(data), &event)
 		if err != nil {

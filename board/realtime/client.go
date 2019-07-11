@@ -8,6 +8,8 @@ import (
 
 	"github.com/desertbit/glue"
 	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/tryanzu/core/board/flags"
+	"github.com/tryanzu/core/core/events"
 	"github.com/tryanzu/core/core/user"
 	"github.com/tryanzu/core/deps"
 	"gopkg.in/mgo.v2/bson"
@@ -18,7 +20,7 @@ type Client struct {
 	Raw      *glue.Socket
 	Channels map[string]*glue.Channel
 	User     *user.User
-	Read     chan socketEvent
+	Read     chan SocketEvent
 }
 
 func (c *Client) readWorker() {
@@ -26,6 +28,9 @@ func (c *Client) readWorker() {
 	seqHits := 0
 	lastRead := time.Now()
 	for e := range c.Read {
+		if c.User != nil && user.IsBanned(deps.Container, c.User.Id) {
+			continue
+		}
 		switch e.Event {
 		case "auth":
 			token, exists := e.Params["token"].(string)
@@ -51,7 +56,7 @@ func (c *Client) readWorker() {
 			}
 
 			c.User = &usr
-			event := socketEvent{
+			event := SocketEvent{
 				Event: "auth:my",
 				Params: map[string]interface{}{
 					"user": usr,
@@ -61,7 +66,7 @@ func (c *Client) readWorker() {
 
 		case "auth:clean":
 			c.User = nil
-			c.SafeWrite(socketEvent{
+			c.SafeWrite(SocketEvent{
 				Event: "auth:cleaned",
 			}.encode())
 
@@ -73,7 +78,7 @@ func (c *Client) readWorker() {
 			}
 
 			c.Channels[channel] = c.Raw.Channel(channel)
-			c.SafeWrite(socketEvent{
+			c.SafeWrite(SocketEvent{
 				Event: "listen:ready",
 				Params: map[string]interface{}{
 					"chan": channel,
@@ -105,7 +110,7 @@ func (c *Client) readWorker() {
 				continue
 			}
 			delete(c.Channels, channel)
-			c.SafeWrite(socketEvent{
+			c.SafeWrite(SocketEvent{
 				Event: "unlisten:ready",
 				Params: map[string]interface{}{
 					"chan": channel,
@@ -117,8 +122,8 @@ func (c *Client) readWorker() {
 				continue
 			}
 			msg, exists := e.Params["msg"].(string)
-			if !exists || len(msg) == 0 {
-				log.Println("[glue] chat:message requires a message.")
+			if !exists || len(msg) == 0 || len(msg) > 255 {
+				log.Println("[glue] chat:message requires a valid message.")
 				continue
 			}
 			var channel string
@@ -129,7 +134,7 @@ func (c *Client) readWorker() {
 			}
 			m := M{
 				Channel: "chat:" + channel,
-				Content: socketEvent{
+				Content: SocketEvent{
 					Event: "message",
 					Params: map[string]interface{}{
 						"msg":    msg,
@@ -149,30 +154,33 @@ func (c *Client) readWorker() {
 			} else {
 				seqHits = 0
 			}
+
+			// Update last input time from client.
 			lastRead = time.Now()
-			var (
-				network bytes.Buffer
-				n       int64
-			)
-			enc := gob.NewEncoder(&network)
-			err := enc.Encode(m)
-			if err != nil {
-				log.Println("[glue] [err] Cannot encode for cache", err)
-			}
-			n, err = ledis.RPush([]byte(m.Channel), network.Bytes())
-			if err != nil {
-				log.Println("[glue] [err] Cannot encode for cache", err)
-			}
-			if n >= 50 {
-				ledis.LPop([]byte(m.Channel))
-			}
 			if seqHits >= 10 {
-				log.Println("[glue] [ban] spam rate exceeded")
-				time.Sleep(time.Second * 60)
+				log.Println("[glue] [ban] spam rate exceeded, sending flag")
+				c.sysFlag("spam")
 			}
 			time.Sleep(time.Millisecond * 200)
 		}
 	}
+}
+
+func (c *Client) sysFlag(reason string) {
+	if c.User == nil {
+		return
+	}
+	flag, err := flags.UpsertFlag(deps.Container, flags.Flag{
+		UserID:    c.User.Id,
+		RelatedTo: "chat",
+		Content:   "System has sent this flag.",
+		Reason:    reason,
+	})
+	if err != nil {
+		log.Println("[glue] [error] sysFlag failed, error:", err)
+		return
+	}
+	events.In <- events.NewFlag(flag.ID)
 }
 
 // SafeWrite to client (from nil pointers)
