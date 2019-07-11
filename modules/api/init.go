@@ -82,7 +82,7 @@ func (module *Module) Run(bindTo string) {
 
 	// Production only middlewares
 	if debug == false {
-		router.Use(module.Middlewares.TrustIP())
+		//router.Use(module.Middlewares.TrustIP())
 		router.Use(chttp.MaxAllowed(5))
 	}
 

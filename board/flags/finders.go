@@ -9,6 +9,14 @@ import (
 
 var FlagNotFound = errors.New("Flag has not been found by given criteria.")
 
+func FindId(d deps, id bson.ObjectId) (f Flag, err error) {
+	err = d.Mgo().C("flags").FindId(id).One(&f)
+	if err != nil {
+		err = FlagNotFound
+	}
+	return
+}
+
 func FindOne(d deps, related string, relatedID, userID bson.ObjectId) (f Flag, err error) {
 	err = d.Mgo().C("flags").Find(bson.M{
 		"related_to": related,
