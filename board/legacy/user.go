@@ -162,9 +162,7 @@ func (di *UserAPI) UserGetOne(c *gin.Context) {
 }
 
 func (di *UserAPI) UserGetByToken(c *gin.Context) {
-
 	id := c.MustGet("user_id")
-
 	if bson.IsObjectIdHex(id.(string)) == false {
 
 		// Dont allow the request
@@ -172,21 +170,13 @@ func (di *UserAPI) UserGetByToken(c *gin.Context) {
 		return
 	}
 
-	user_id := bson.ObjectIdHex(id.(string))
-
 	// Get the user using its id
-	usr, err := di.User.Get(user_id)
+	uid := bson.ObjectIdHex(id.(string))
+	usr, err := di.User.Get(uid)
 
 	if err != nil {
 
 		c.JSON(400, gin.H{"status": "error", "message": err.Error()})
-		return
-	}
-
-	trusted := di.Security.TrustUserIP(c.ClientIP(), usr)
-
-	if !trusted {
-		c.JSON(403, gin.H{"status": "error", "message": "Not trusted."})
 		return
 	}
 
@@ -235,13 +225,6 @@ func (di UserAPI) UserGetJwtToken(c *gin.Context) {
 			return
 		}
 	}
-
-	trusted := di.Security.TrustUserIP(c.ClientIP(), usr)
-	if !trusted {
-		c.JSON(403, gin.H{"status": "error", "message": "You're not trusted anymore to sign in. Contact site owner."})
-		return
-	}
-
 	sessionID := c.MustGet("session_id").(string)
 	remember := 72
 	if n, err := strconv.Atoi(qs.Get("remember")); err == nil {
