@@ -30,7 +30,7 @@ type Module struct {
 	Oauth        oauth.API
 	Users        handle.UserAPI
 	Middlewares  handle.MiddlewareAPI
-	Acl          handle.AclAPI
+	ACL          handle.AclAPI
 	Gaming       handle.GamingAPI
 	PostsFactory posts.API
 	UsersFactory users.API
@@ -116,7 +116,7 @@ func (module *Module) Run(bindTo string) {
 	v1.GET("/gamification", module.Gaming.GetRules)
 
 	// ACL routes
-	v1.GET("/permissions", module.Acl.GetRules)
+	v1.GET("/permissions", module.ACL.GetRules)
 
 	// Post routes
 	v1.GET("/feed", module.Posts.FeedGet)
@@ -210,7 +210,7 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.UsersFactory},
 		&inject.Object{Value: &module.Users},
 		&inject.Object{Value: &module.Middlewares},
-		&inject.Object{Value: &module.Acl},
+		&inject.Object{Value: &module.ACL},
 		&inject.Object{Value: &module.Gaming},
 		&inject.Object{Value: &module.Oauth},
 	)

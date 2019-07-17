@@ -6,7 +6,6 @@ type Anzu struct {
 	Homedir  string
 	Security anzuSecurity
 	Mail     anzuMail
-	Profiler gpcProfiler
 }
 
 type gpcProfiler struct {

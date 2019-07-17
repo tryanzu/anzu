@@ -34,35 +34,36 @@ func flagHandlers() {
 				ban, err := user.UpsertBan(deps.Container, user.Ban{
 					UserID:    f.UserID,
 					RelatedID: &fid,
-					RelatedTo: "flag",
-					Content:   "",
+					RelatedTo: "chat",
+					Content:   "Flag received from chat",
 					Reason:    "spam",
 				})
 				if err != nil {
 					return err
 				}
 				log.Println("[events] [flags] ban created with id", ban.ID)
-				realtime.ToChan <- banLog("spam", "general", usr)
+				realtime.ToChan <- banLog(ban, usr)
 			}
 			return nil
 		},
 	}
 }
 
-func banLog(reason, channel string, user user.User) realtime.M {
+func banLog(ban user.Ban, user user.User) realtime.M {
+	diff := ban.Until.Sub(ban.Created).Truncate(time.Second)
 	return realtime.M{
-		Channel: "chat:" + channel,
+		Channel: "chat:general",
 		Content: realtime.SocketEvent{
 			Event: "log",
 			Params: map[string]interface{}{
-				"msg":  "%1$s has been banned for a while. reason: %2$s",
-				"i18n": []string{user.UserName, reason},
+				"msg":  "%1$s has been banned for %3$s. reason: %2$s",
+				"i18n": []string{user.UserName, ban.Reason, diff.String()},
 				"meta": map[string]interface{}{
 					"userId": user.Id,
 					"user":   user.UserName,
-					"reason": reason,
+					"reason": ban.Reason,
 				},
-				"at": time.Now(),
+				"at": ban.Created,
 				"id": bson.NewObjectId(),
 			},
 		}.Encode(),

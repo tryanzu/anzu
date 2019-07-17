@@ -4,7 +4,7 @@ banReason spam {
         var base = 60;
         switch (related) {
             case 'chat': 
-            base = 5;
+            base = 1;
             break;
         }
         exports = {

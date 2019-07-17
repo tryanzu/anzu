@@ -12,3 +12,7 @@ name = "Inicio"
 [[site.nav]]
 href = "/chat"
 name = "Chat"
+
+[[site.chat]]
+name = "general"
+description = "Anzu's general chat room"
