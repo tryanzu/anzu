@@ -63,12 +63,14 @@ func (c *Client) readWorker() {
 				},
 			}
 			c.SafeWrite(event.encode())
+			counters <- c
 
 		case "auth:clean":
 			c.User = nil
 			c.SafeWrite(SocketEvent{
 				Event: "auth:cleaned",
 			}.encode())
+			counters <- c
 
 		case "listen":
 			channel, exists := e.Params["chan"].(string)
@@ -98,6 +100,12 @@ func (c *Client) readWorker() {
 						log.Println("[glue] [err] Cannot decode previous chat message", err)
 						continue
 					}
+					if msg.ID != nil {
+						n, err := ledis.SIsMember([]byte(channel+":deleted"), []byte(*msg.ID))
+						if n == 1 || err != nil {
+							continue
+						}
+					}
 					c.Channels[channel].Write(msg.Content)
 				}
 			}
@@ -117,6 +125,31 @@ func (c *Client) readWorker() {
 				},
 			}.encode())
 			counters <- c
+		case "chat:delete":
+			if c.User == nil {
+				continue
+			}
+			mid, exists := e.Params["id"].(string)
+			if !exists || bson.IsObjectIdHex(mid) == false {
+				log.Println("[glue] chat:delete requires a valid message id.")
+				continue
+			}
+			channel, exists := e.Params["chan"].(string)
+			if !exists {
+				log.Println("[glue] chat:message requires a chan.")
+				continue
+			}
+			m := M{
+				Channel: "chat:" + channel,
+				Content: SocketEvent{
+					Event: "delete",
+					Params: map[string]interface{}{
+						"id": mid,
+					},
+				}.encode(),
+			}
+			ledis.SAdd([]byte(m.Channel+":deleted"), []byte(bson.ObjectIdHex(mid)))
+			ToChan <- m
 		case "chat:message":
 			if c.User == nil {
 				continue
@@ -132,7 +165,9 @@ func (c *Client) readWorker() {
 				log.Println("[glue] chat:message requires a chan.")
 				continue
 			}
+			mid := bson.NewObjectId()
 			m := M{
+				ID:      &mid,
 				Channel: "chat:" + channel,
 				Content: SocketEvent{
 					Event: "message",
@@ -142,7 +177,7 @@ func (c *Client) readWorker() {
 						"from":   c.User.UserName,
 						"avatar": c.User.Image,
 						"at":     time.Now(),
-						"id":     bson.NewObjectId(),
+						"id":     mid,
 					},
 				}.encode(),
 			}

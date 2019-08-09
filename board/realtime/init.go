@@ -13,6 +13,7 @@ import (
 	"github.com/henrylee2cn/goutil"
 	"github.com/tryanzu/core/core/config"
 	"github.com/tryanzu/core/deps"
+	"gopkg.in/mgo.v2/bson"
 )
 
 var (
@@ -37,6 +38,7 @@ var (
 type M struct {
 	Channel string
 	Content string
+	ID      *bson.ObjectId
 }
 
 type SocketEvent struct {
@@ -90,7 +92,7 @@ func prepare() {
 	}
 
 	jwtSecret = []byte(secret)
-	ledis := deps.Container.LedisDB()
+	ledisdb := deps.Container.LedisDB()
 
 	go func() {
 		buffered := make([]M, 0, 1000)
@@ -134,12 +136,12 @@ func prepare() {
 					if err != nil {
 						log.Println("[glue] [err] Cannot encode for cache", err)
 					}
-					n, err = ledis.RPush([]byte(msg.Channel), buf.Bytes())
+					n, err = ledisdb.RPush([]byte(msg.Channel), buf.Bytes())
 					if err != nil {
 						log.Println("[glue] [err] Cannot encode for cache", err)
 					}
 					if n >= 50 {
-						ledis.LPop([]byte(msg.Channel))
+						ledisdb.LPop([]byte(msg.Channel))
 					}
 				}
 			}
