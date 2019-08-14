@@ -4,10 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"log"
-	"sync"
-	"time"
 
-	"github.com/goinggo/work"
 	"github.com/olebedev/config"
 	"github.com/tryanzu/core/deps"
 	"github.com/tryanzu/core/modules/exceptions"
@@ -116,63 +113,4 @@ func (self *Module) GetRules() Rules {
 	}
 
 	return rules
-}
-
-// Reset daily user stats
-func (self *Module) ResetTempStuff() {
-
-	// Recover from any panic even inside this goroutine
-	defer self.Errors.Recover()
-
-	var list []user.UserId
-
-	w, err := work.New(5, time.Second, logFunc)
-
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	database := deps.Container.Mgo()
-	count, _ := database.C("users").Find(nil).Count()
-	err = database.C("users").Find(nil).Select(bson.M{"_id": 1}).All(&list)
-
-	if err != nil {
-		panic(err)
-	}
-
-	var wg sync.WaitGroup
-
-	wg.Add(count)
-
-	// Get the database interface from the DI
-	log.Println("[job] [ResetTempStuff] Started")
-
-	for _, usr := range list {
-
-		usr_copy := usr
-		user_sync := UserSync{
-			user: usr_copy,
-			gmf:  self.Get(usr_copy.Id),
-		}
-
-		w.Run(&user_sync)
-		wg.Done()
-	}
-
-	wg.Wait()
-	w.Shutdown()
-
-	log.Printf("\n[job] [ResetTempStuff] Finished with users")
-}
-
-type UserSync struct {
-	user user.UserId
-	gmf  *User
-}
-
-func (self *UserSync) Work(id int) {
-
-	log.Printf("\n user %v\n", self.user.Id)
-
-	self.gmf.SyncToLevel(true)
 }

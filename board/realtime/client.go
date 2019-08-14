@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/gob"
 	"log"
+	"sync"
 	"time"
 
 	"github.com/desertbit/glue"
@@ -18,9 +19,10 @@ import (
 // Client contains a message to be broadcasted to a channel
 type Client struct {
 	Raw      *glue.Socket
-	Channels map[string]*glue.Channel
-	User     *user.User
-	Read     chan SocketEvent
+	Channels *sync.Map
+	// Channels map[string]*glue.Channel
+	User *user.User
+	Read chan SocketEvent
 }
 
 func (c *Client) readWorker() {
@@ -28,7 +30,7 @@ func (c *Client) readWorker() {
 	seqHits := 0
 	lastRead := time.Now()
 	for e := range c.Read {
-		if c.User != nil && user.IsBanned(deps.Container, c.User.Id) {
+		if c == nil || c.User != nil && user.IsBanned(deps.Container, c.User.Id) {
 			continue
 		}
 		switch e.Event {
@@ -79,7 +81,7 @@ func (c *Client) readWorker() {
 				continue
 			}
 
-			c.Channels[channel] = c.Raw.Channel(channel)
+			c.Channels.Store(channel, c.Raw.Channel(channel))
 			c.SafeWrite(SocketEvent{
 				Event: "listen:ready",
 				Params: map[string]interface{}{
@@ -106,7 +108,9 @@ func (c *Client) readWorker() {
 							continue
 						}
 					}
-					c.Channels[channel].Write(msg.Content)
+					if ch, ok := c.Channels.Load(channel); ok && c != nil {
+						ch.(*glue.Channel).Write(msg.Content)
+					}
 				}
 			}
 			counters <- c
@@ -117,7 +121,7 @@ func (c *Client) readWorker() {
 				log.Println("Could not remove channel: missing id")
 				continue
 			}
-			delete(c.Channels, channel)
+			c.Channels.Delete(channel)
 			c.SafeWrite(SocketEvent{
 				Event: "unlisten:ready",
 				Params: map[string]interface{}{
@@ -150,6 +154,30 @@ func (c *Client) readWorker() {
 			}
 			ledis.SAdd([]byte(m.Channel+":deleted"), []byte(bson.ObjectIdHex(mid)))
 			ToChan <- m
+		case "chat:star":
+			if c.User == nil {
+				continue
+			}
+			msg, exists := e.Params["message"].(map[string]interface{})
+			if !exists {
+				log.Println("[glue] chat:star requires a valid message.")
+				continue
+			}
+			channel, exists := e.Params["chan"].(string)
+			if !exists {
+				log.Println("[glue] chat:message requires a chan.")
+				continue
+			}
+			go func() {
+				m := M{
+					Channel: "chat:" + channel,
+					Content: SocketEvent{
+						Event:  "star",
+						Params: msg,
+					}.encode(),
+				}
+				featuredM <- m
+			}()
 		case "chat:message":
 			if c.User == nil {
 				continue
@@ -180,6 +208,16 @@ func (c *Client) readWorker() {
 						"id":     mid,
 					},
 				}.encode(),
+			}
+			if len(msg) > 6 && msg[0:6] == "repeat" {
+				go func() {
+					n := 0
+					for n < 100 {
+						n++
+						ToChan <- m
+						time.Sleep(500 * time.Millisecond)
+					}
+				}()
 			}
 			ToChan <- m
 			t := time.Now()
@@ -245,8 +283,8 @@ func (c *Client) send(packed []M) {
 			}
 		}
 
-		if c, exists := c.Channels[m.Channel]; exists {
-			c.Write(m.Content)
+		if c, exists := c.Channels.Load(m.Channel); exists && c != nil {
+			c.(*glue.Channel).Write(m.Content)
 		}
 	}
 }

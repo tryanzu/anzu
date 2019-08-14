@@ -101,6 +101,7 @@ func (module *Module) Run(bindTo string) {
 	router.GET("/publicar", chttp.TitleMiddleware("Nueva publicación"), controller.HomePage)
 	router.GET("/c/:slug", chttp.TitleMiddleware("Categoria"), controller.HomePage)
 	router.GET("/chat", chttp.TitleMiddleware("Chat"), controller.HomePage)
+	router.GET("/chat/:chan", chttp.TitleMiddleware("Chat"), controller.HomePage)
 	router.GET("/p/:slug/:id", controller.PostPage)
 	router.GET("/u/:username/:id", controller.UserPage)
 	router.GET("/validate/:code", module.Users.UserValidateEmail)

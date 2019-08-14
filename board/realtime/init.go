@@ -20,6 +20,7 @@ var (
 	jwtSecret  []byte
 	server     *glue.Server
 	sockets    *sync.Map
+	addresses  *sync.Map
 	clients    goutil.Map
 	dispatcher chan []M
 	counters   chan *Client
@@ -66,11 +67,13 @@ func (ev SocketEvent) Encode() string {
 
 func prepare() {
 	sockets = new(sync.Map)
+	addresses = new(sync.Map)
 	clients = goutil.RwMap(1000)
 
 	// Prepare multicast channels before starting server
 	Broadcast = make(chan string, BufferSize)
 	ToChan = make(chan M, BufferSize)
+	featuredM = make(chan M)
 	dispatcher = make(chan []M, BufferSize)
 	counters = make(chan *Client, BufferSize)
 
@@ -149,70 +152,24 @@ func prepare() {
 		}
 	}()
 
-	go func() {
-		channels := map[string]map[*Client]struct{}{}
-		changes := 0
-		for {
-			select {
-			case client := <-counters:
-				for name := range client.Channels {
-					if _, exists := channels[name]; !exists {
-						channels[name] = map[*Client]struct{}{}
-					}
-					channels[name][client] = struct{}{}
-				}
-				for name := range channels {
-					if _, exists := client.Channels[name]; !exists {
-						delete(channels[name], client)
-					}
-				}
-				changes++
-			case <-time.After(time.Second):
-				if changes == 0 {
-					continue
-				}
-				counters := make(map[string]interface{}, len(channels))
-				peers := [][2]string{}
-				for name, listeners := range channels {
-					counters[name] = len(listeners)
-
-					// Calculate the list of connected peers on the counters channel
-					if name != "chat:counters" {
-						continue
-					}
-					for client := range listeners {
-						if client.User == nil {
-							continue
-						}
-						id := client.User.Id.Hex()
-						name := client.User.UserName
-						peers = append(peers, [2]string{id, name})
-					}
-				}
-
-				m := M{
-					Channel: "chat:counters",
-					Content: SocketEvent{
-						Event: "update",
-						Params: map[string]interface{}{
-							"channels": counters,
-							"peers":    peers,
-						},
-					}.encode(),
-				}
-				changes = 0
-				ToChan <- m
-			}
-		}
-	}()
+	go countClientsWorker()
+	go starredMessagesWorker()
 
 	server.OnNewSocket(onNewSocket)
 }
 
 func onNewSocket(s *glue.Socket) {
+	addr := s.RemoteAddr()
+	if n, ok := addresses.LoadOrStore(addr, 1); ok {
+		actual := n.(int) + 1
+		if actual > 3 {
+			return
+		}
+		addresses.Store(addr, actual)
+	}
 	client := &Client{
 		Raw:      s,
-		Channels: make(map[string]*glue.Channel),
+		Channels: new(sync.Map),
 		User:     nil,
 		Read:     make(chan SocketEvent),
 	}
@@ -221,9 +178,11 @@ func onNewSocket(s *glue.Socket) {
 
 	// Set a function which is triggered as soon as the socket is closed.
 	s.OnClose(func() {
+		close(client.Read)
+		addresses.Delete(client.Raw.RemoteAddr())
+		client.User = nil
 		client.Channels = nil
 		client.Raw = nil
-		close(client.Read)
 		sockets.Delete(s.ID())
 		counters <- client
 		log.Printf("[glue] Socket %s closed with remote address: %s", s.ID(), s.RemoteAddr())

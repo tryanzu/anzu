@@ -4,9 +4,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/abiosoft/ishell"
 	"github.com/tryanzu/core/deps"
 	"github.com/tryanzu/core/modules/user"
-	"gopkg.in/abiosoft/ishell.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 

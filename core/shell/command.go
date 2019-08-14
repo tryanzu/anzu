@@ -1,6 +1,6 @@
 package shell
 
-import "gopkg.in/abiosoft/ishell.v2"
+import "github.com/abiosoft/ishell"
 
 func RunShell() {
 	shell := ishell.New()
@@ -17,6 +17,14 @@ func RunShell() {
 		Func: TestEventHandler,
 	})
 
+	shell.AddCmd(&ishell.Cmd{
+		Name: "migrate-comments",
+		Help: "Migrate legacy comments (before anzu).",
+		Func: MigrateComments,
+	})
+
 	// start shell
 	shell.Start()
+
+	select {}
 }
