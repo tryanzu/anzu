@@ -47,6 +47,29 @@ func flagHandlers() {
 			return nil
 		},
 	}
+	ev.On <- ev.EventHandler{
+		On: ev.NEW_BAN,
+		Handler: func(e ev.Event) error {
+			uid := e.Params["userId"].(bson.ObjectId)
+			usr, err := user.FindId(deps.Container, uid)
+			if err != nil {
+				return err
+			}
+			ban, err := user.UpsertBan(deps.Container, user.Ban{
+				UserID:    uid,
+				RelatedID: &uid,
+				RelatedTo: "chat",
+				Content:   "Flag ban received from chat",
+				Reason:    "spam",
+			})
+			if err != nil {
+				return err
+			}
+			log.Println("[events] [flags] ban created with id", ban.ID)
+			realtime.ToChan <- banLog(ban, usr)
+			return nil
+		},
+	}
 }
 
 func banLog(ban user.Ban, user user.User) realtime.M {

@@ -7,17 +7,17 @@ import (
 )
 
 type User struct {
-	Id           bson.ObjectId   `bson:"_id,omitempty" json:"id"`
-	FirstName    string          `bson:"first_name" json:"first_name"`
-	LastName     string          `bson:"last_name" json:"last_name"`
-	UserName     string          `bson:"username" json:"username"`
-	UserNameSlug string          `bson:"username_slug" json:"username_slug"`
-	NameChanges  int             `bson:"name_changes" json:"name_changes"`
-	Password     string          `bson:"password" json:"-"`
-	Step         int             `bson:"step,omitempty" json:"step"`
-	Email        string          `bson:"email" json:"email,omitempty"`
-	Categories   []bson.ObjectId `bson:"categories,omitempty" json:"categories,omitempty"`
-	//Roles         []UserRole             `bson:"roles" json:"roles,omitempty"`
+	Id            bson.ObjectId          `bson:"_id,omitempty" json:"id"`
+	FirstName     string                 `bson:"first_name" json:"first_name"`
+	LastName      string                 `bson:"last_name" json:"last_name"`
+	UserName      string                 `bson:"username" json:"username"`
+	UserNameSlug  string                 `bson:"username_slug" json:"username_slug"`
+	NameChanges   int                    `bson:"name_changes" json:"name_changes"`
+	Password      string                 `bson:"password" json:"-"`
+	Step          int                    `bson:"step,omitempty" json:"step"`
+	Email         string                 `bson:"email" json:"email,omitempty"`
+	Categories    []bson.ObjectId        `bson:"categories,omitempty" json:"categories,omitempty"`
+	Roles         []UserRole             `bson:"roles" json:"roles,omitempty"`
 	Permissions   []string               `bson:"permissions" json:"permissions,omitempty"`
 	Description   string                 `bson:"description" json:"description,omitempty"`
 	Image         string                 `bson:"image" json:"image"`
@@ -40,6 +40,21 @@ type User struct {
 	BannedUntil  *time.Time `bson:"banned_until" json:"-"`
 	BannedReason *string    `bson:"banned_re" json:"-"`
 	BannedTimes  int        `bson:"banned_times" json:"-"`
+}
+
+type UserRole struct {
+	Name string `bson:"name" json:"name"`
+}
+
+func (usr User) HasRole(roles ...string) bool {
+	for _, role := range usr.Roles {
+		for _, validRole := range roles {
+			if validRole == role.Name {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 type Gaming struct {

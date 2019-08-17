@@ -154,6 +154,20 @@ func (c *Client) readWorker() {
 			}
 			ledis.SAdd([]byte(m.Channel+":deleted"), []byte(bson.ObjectIdHex(mid)))
 			ToChan <- m
+		case "chat:ban":
+			if c.User == nil {
+				continue
+			}
+			if c.User.HasRole("admin", "developer") == false {
+				log.Println("[glue] chat:ban requires a higher privileges.")
+				continue
+			}
+			uid, exists := e.Params["userId"].(string)
+			if !exists || bson.IsObjectIdHex(uid) == false {
+				log.Println("[glue] chat:ban requires a valid user id.")
+				continue
+			}
+			events.In <- events.NewBanFlag(bson.ObjectIdHex(uid))
 		case "chat:star":
 			if c.User == nil {
 				continue
@@ -208,16 +222,6 @@ func (c *Client) readWorker() {
 						"id":     mid,
 					},
 				}.encode(),
-			}
-			if len(msg) > 6 && msg[0:6] == "repeat" {
-				go func() {
-					n := 0
-					for n < 100 {
-						n++
-						ToChan <- m
-						time.Sleep(500 * time.Millisecond)
-					}
-				}()
 			}
 			ToChan <- m
 			t := time.Now()

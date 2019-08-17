@@ -53,6 +53,15 @@ func NewFlag(id bson.ObjectId) Event {
 	}
 }
 
+func NewBanFlag(userID bson.ObjectId) Event {
+	return Event{
+		Name: NEW_BAN,
+		Params: map[string]interface{}{
+			"userId": userID,
+		},
+	}
+}
+
 func DeletePost(sign UserSign, id bson.ObjectId) Event {
 	return Event{
 		Name: POST_DELETED,
