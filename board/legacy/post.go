@@ -105,13 +105,17 @@ func (di PostAPI) FeedGet(c *gin.Context) {
 	}
 
 	if relevant != "" {
-		list, err := posts.FindRateList(deps.Container, relevant, offset, limit)
+		list, err := posts.FindRateList(deps.Container, relevant, offset*4, limit*4)
 		if err != nil {
 			log.Printf("[err] %v\n", err)
 		}
 		if err == nil && len(list) > 0 {
 			var temp []model.FeedPost
-			err := database.C("posts").Find(bson.M{"_id": bson.M{"$in": list}, "deleted_at": bson.M{"$exists": false}}).Select(bson.M{"comments.set": 0, "content": 0, "components": 0}).All(&temp)
+			err := database.C("posts").Find(bson.M{
+				"_id":        bson.M{"$in": list},
+				"deleted_at": bson.M{"$exists": false},
+				"created_at": bson.M{"$gte": time.Now().Add(time.Hour * 24 * 30 * -1)},
+			}).Select(bson.M{"comments.set": 0, "content": 0, "components": 0}).All(&temp)
 
 			if err != nil {
 				panic(err)
