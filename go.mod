@@ -33,6 +33,7 @@ require (
 	github.com/hjr265/postmark.go v0.0.0-20160229184323-5546b2897115
 	github.com/kennygrant/sanitize v1.2.4
 	github.com/markbates/goth v1.53.0
+	github.com/matcornic/hermes/v2 v2.0.2
 	github.com/mattn/go-colorable v0.1.2 // indirect
 	github.com/mikespook/gorbac v2.1.0+incompatible
 	github.com/mitchellh/goamz v0.0.0-20150317174335-caaaea8b30ee

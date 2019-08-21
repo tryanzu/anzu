@@ -4,6 +4,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/matcornic/hermes/v2"
 	"github.com/tryanzu/core/core/config"
 	"github.com/tryanzu/core/core/mail"
 	"github.com/tryanzu/core/core/templates"
@@ -55,7 +56,6 @@ func (u User) ConfirmationEmail(d deps) (err error) {
 }
 
 func (u User) RecoveryPasswordEmail(d deps) (err error) {
-	return nil
 	r := RecoveryToken{
 		UserId:  u.Id,
 		Token:   helpers.StrRandom(12),
@@ -63,11 +63,60 @@ func (u User) RecoveryPasswordEmail(d deps) (err error) {
 		Created: time.Now(),
 		Updated: time.Now(),
 	}
-
 	err = d.Mgo().C("user_recovery_tokens").Insert(r)
 	if err != nil {
-		return
+		return err
 	}
+	c := config.C.Copy()
+	m := gomail.NewMessage()
+	from := c.Mail.From
+	if len(from) == 0 {
+		from = "no-reply@tryanzu.com"
+	}
+	h := hermes.Hermes{
+		Product: hermes.Product{
+			Name: c.Site.Name,
+			Link: c.Site.Url,
+			Logo: c.Site.LogoUrl,
+		},
+	}
+	body, err := h.GenerateHTML(resetPasswordEmail())
+	if err != nil {
+		return err
+	}
+	m.SetHeader("From", from)
+	m.SetHeader("Reply-To", from)
+	m.SetHeader("To", u.Email)
+	m.SetHeader("Subject", "Recupera tu acceso a "+c.Site.Name)
+	m.SetBody("text/html", body)
 
-	return
+	// Send email message.
+	mail.In <- m
+
+	return nil
+}
+
+func resetPasswordEmail() hermes.Email {
+	return hermes.Email{
+		Body: hermes.Body{
+			Name: "Jon Snow",
+			Intros: []string{
+				"You have received this email because a password reset request for Hermes account was received.",
+			},
+			Actions: []hermes.Action{
+				{
+					Instructions: "Click the button below to reset your password:",
+					Button: hermes.Button{
+						Color: "#DC4D2F",
+						Text:  "Reset your password",
+						Link:  "https://hermes-example.com/reset-password?token=d9729feb74992cc3482b350163a1a010",
+					},
+				},
+			},
+			Outros: []string{
+				"If you did not request a password reset, no further action is required on your part.",
+			},
+			Signature: "Thanks",
+		},
+	}
 }
