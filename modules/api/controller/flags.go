@@ -41,7 +41,7 @@ func NewFlag(c *gin.Context) {
 
 	flag, err := flags.UpsertFlag(deps.Container, flags.Flag{
 		UserID:    usr.Id,
-		RelatedID: form.RelatedID,
+		RelatedID: &form.RelatedID,
 		RelatedTo: form.RelatedTo,
 		Content:   form.Content,
 		Reason:    form.Reason,
@@ -61,7 +61,6 @@ func Flag(c *gin.Context) {
 		id      bson.ObjectId
 		related = c.Params.ByName("related")
 	)
-	// ID validation.
 	if id = bson.ObjectIdHex(c.Params.ByName("id")); !id.Valid() {
 		jsonErr(c, http.StatusBadRequest, "malformed request, invalid id")
 		return

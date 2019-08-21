@@ -18,7 +18,6 @@ import (
 	"github.com/tryanzu/core/modules/acl"
 	"github.com/tryanzu/core/modules/api"
 	"github.com/tryanzu/core/modules/assets"
-	"github.com/tryanzu/core/modules/cli"
 	"github.com/tryanzu/core/modules/exceptions"
 	"github.com/tryanzu/core/modules/feed"
 	"github.com/tryanzu/core/modules/gaming"
@@ -42,7 +41,6 @@ func main() {
 	// Resources for the API
 	var (
 		api                 api.Module
-		cliModule           cli.Module
 		securityModule      security.Module
 		notificationsModule notifications.NotificationsModule
 		feedModule          feed.FeedModule
@@ -94,7 +92,6 @@ func main() {
 		&inject.Object{Value: assetsService, Complete: false},
 		&inject.Object{Value: userService, Complete: false},
 		&inject.Object{Value: gamingService, Complete: false},
-		&inject.Object{Value: &cliModule},
 		&inject.Object{Value: &securityModule},
 		&inject.Object{Value: &notificationsModule},
 		&inject.Object{Value: &feedModule},
@@ -117,7 +114,7 @@ func main() {
 		},
 	}
 
-	var cmdApi = &cobra.Command{
+	var cmdAPI = &cobra.Command{
 		Use:   "api",
 		Short: "Starts API web server",
 		Long: `Starts API web server listening
@@ -134,41 +131,6 @@ func main() {
 
 			// Run API module
 			api.Run(port)
-		},
-	}
-
-	var cmdSyncGamification = &cobra.Command{
-		Use:   "sync-gamification",
-		Short: "Sync gamification",
-		Long: `Sync and recalculates gamification facts
-		in proper manner
-        `,
-		Run: func(cmd *cobra.Command, args []string) {
-
-			// Populate the DI with the instances
-			if err := g.Populate(); err != nil {
-				fmt.Fprintln(os.Stderr, err)
-				os.Exit(1)
-			}
-
-			gamingService.ResetTempStuff()
-		},
-	}
-
-	var cmdRunRoutine = &cobra.Command{
-		Use:   "run [routine]",
-		Short: "Run cli routine",
-		Long: `Run specified routine
-		from cli module`,
-		Run: func(cmd *cobra.Command, args []string) {
-
-			// Populate the DI with the instances
-			if err := g.Populate(); err != nil {
-				fmt.Fprintln(os.Stderr, err)
-				os.Exit(1)
-			}
-
-			cliModule.Run(args[0])
 		},
 	}
 
@@ -190,11 +152,9 @@ func main() {
 		},
 	}
 
-	var rootCmd = &cobra.Command{Use: "blacker"}
-	rootCmd.AddCommand(cmdApi)
-	rootCmd.AddCommand(cmdSyncGamification)
+	var rootCmd = &cobra.Command{Use: "Anzu"}
+	rootCmd.AddCommand(cmdAPI)
 	rootCmd.AddCommand(cmdSyncRanking)
-	rootCmd.AddCommand(cmdRunRoutine)
 	rootCmd.AddCommand(shellCmd)
 	rootCmd.Execute()
 

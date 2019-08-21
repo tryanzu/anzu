@@ -6,12 +6,17 @@ type Anzu struct {
 	Homedir  string
 	Security anzuSecurity
 	Mail     anzuMail
-	Profiler gpcProfiler
 }
 
 type gpcProfiler struct {
 	Id      string
 	Enabled bool
+}
+
+type chatChan struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Youtube     string `json:"youtubeVideo"`
 }
 
 type anzuSecurity struct {
@@ -37,6 +42,7 @@ type anzuSite struct {
 	LogoUrl        string         `json:"logoUrl"`
 	Theme          string         `json:"theme"`
 	Nav            []siteLink     `json:"nav"`
+	Chat           []chatChan     `json:"chat"`
 	Services       siteServices   `json:"services"`
 	Quickstart     siteQuickstart `json:"quickstart"`
 	Reactions      [][]string     `json:"reactions"`

@@ -30,7 +30,7 @@ type Module struct {
 	Oauth        oauth.API
 	Users        handle.UserAPI
 	Middlewares  handle.MiddlewareAPI
-	Acl          handle.AclAPI
+	ACL          handle.AclAPI
 	Gaming       handle.GamingAPI
 	PostsFactory posts.API
 	UsersFactory users.API
@@ -82,7 +82,7 @@ func (module *Module) Run(bindTo string) {
 
 	// Production only middlewares
 	if debug == false {
-		router.Use(module.Middlewares.TrustIP())
+		//router.Use(module.Middlewares.TrustIP())
 		router.Use(chttp.MaxAllowed(5))
 	}
 
@@ -100,6 +100,8 @@ func (module *Module) Run(bindTo string) {
 	router.GET("/", controller.HomePage)
 	router.GET("/publicar", chttp.TitleMiddleware("Nueva publicación"), controller.HomePage)
 	router.GET("/c/:slug", chttp.TitleMiddleware("Categoria"), controller.HomePage)
+	router.GET("/chat", chttp.TitleMiddleware("Chat"), controller.HomePage)
+	router.GET("/chat/:chan", chttp.TitleMiddleware("Chat"), controller.HomePage)
 	router.GET("/p/:slug/:id", controller.PostPage)
 	router.GET("/u/:username/:id", controller.UserPage)
 	router.GET("/validate/:code", module.Users.UserValidateEmail)
@@ -115,7 +117,7 @@ func (module *Module) Run(bindTo string) {
 	v1.GET("/gamification", module.Gaming.GetRules)
 
 	// ACL routes
-	v1.GET("/permissions", module.Acl.GetRules)
+	v1.GET("/permissions", module.ACL.GetRules)
 
 	// Post routes
 	v1.GET("/feed", module.Posts.FeedGet)
@@ -209,7 +211,7 @@ func (module *Module) Populate(g inject.Graph) {
 		&inject.Object{Value: &module.UsersFactory},
 		&inject.Object{Value: &module.Users},
 		&inject.Object{Value: &module.Middlewares},
-		&inject.Object{Value: &module.Acl},
+		&inject.Object{Value: &module.ACL},
 		&inject.Object{Value: &module.Gaming},
 		&inject.Object{Value: &module.Oauth},
 	)

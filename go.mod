@@ -5,6 +5,7 @@ go 1.12
 require (
 	cloud.google.com/go v0.40.0
 	github.com/BurntSushi/toml v0.3.1
+	github.com/abiosoft/ishell v2.0.0+incompatible
 	github.com/abiosoft/readline v0.0.0-20180607040430-155bce2042db // indirect
 	github.com/blang/semver v3.5.1+incompatible // indirect
 	github.com/boj/redistore v0.0.0-20180917114910-cd5dcc76aeff // indirect

@@ -1,10 +1,10 @@
 package shell
 
 import (
+	"github.com/abiosoft/ishell"
 	_ "github.com/tryanzu/core/board/comments"
 	_ "github.com/tryanzu/core/board/posts"
 	"github.com/tryanzu/core/core/events"
-	"gopkg.in/abiosoft/ishell.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 

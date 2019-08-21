@@ -4,3 +4,30 @@ description = "Next-generation community engine, bring the conversation online."
 url = "https://tryanzu.com/"
 logoUrl = "/images/anzu.svg"
 thirdPartyAuth = ["fb"]
+
+[[site.nav]]
+href = "/"
+name = "Inicio"
+
+[[site.nav]]
+href = "/chat"
+name = "Chat"
+
+[[site.chat]]
+name = "general"
+description = "Anzu's general chat room"
+
+[[site.chat]]
+name = "dia-de-hueva"
+description = "Conversaciones en tiempo real. Guerras de GIFs. Consejos que ayudarán o arruinarán tu vida."
+youtube = "-O-txSXUeV0"
+
+[[site.chat]]
+name = "xbox"
+description = "Conversaciones en tiempo real. Guerras de GIFs. Consejos que ayudarán o arruinarán tu vida."
+youtube = "MEEJOZkmIxU"
+
+[[site.chat]]
+name = "issues"
+description = "Anzu's general chat room"
+youtube = "PUZn1I6llJs"
