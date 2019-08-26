@@ -92,6 +92,9 @@ func UseRecoveryToken(d deps, clientIP, token string) (user User, jwtAuthToken s
 			},
 		},
 	)
+	if err != nil {
+		return
+	}
 	var t recoveryToken
 	err = d.Mgo().C("user_recovery_tokens").Find(bson.M{"token": token}).One(&t)
 	if err != nil {
