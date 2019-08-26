@@ -154,6 +154,5 @@ func CheckPasswordHash(password, hash string) bool {
 }
 
 func IsEmail(s string) bool {
-
 	return email_exp.MatchString(s)
 }

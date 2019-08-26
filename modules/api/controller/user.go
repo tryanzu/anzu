@@ -87,3 +87,20 @@ func BanReasons(c *gin.Context) {
 	}
 	c.JSON(200, gin.H{"status": "okay", "reasons": reasons})
 }
+
+// RecoveryLink handler. Validates and performs proper flow forwards.
+func RecoveryLink(c *gin.Context) {
+	var (
+		token = c.Param("token")
+	)
+	if len(token) == 0 {
+		c.Redirect(http.StatusTemporaryRedirect, "/")
+		return
+	}
+	usr, auth, err := user.UseRecoveryToken(deps.Container, c.ClientIP(), token)
+	if err != nil {
+		c.Redirect(http.StatusTemporaryRedirect, "/")
+		return
+	}
+	c.Redirect(http.StatusTemporaryRedirect, "/"+usr.UserNameSlug+"/"+usr.Id.Hex()+"?token="+auth)
+}

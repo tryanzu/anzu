@@ -8,6 +8,7 @@ import (
 	"github.com/divideandconquer/go-merge/merge"
 	"github.com/fsnotify/fsnotify"
 	"github.com/hashicorp/hcl"
+	"github.com/matcornic/hermes/v2"
 )
 
 var (
@@ -36,6 +37,21 @@ func (c *Config) Copy() Anzu {
 		return Anzu{}
 	}
 	return *c.current
+}
+
+func (c *Config) Hermes() hermes.Hermes {
+	if c.current == nil {
+		return hermes.Hermes{}
+	}
+	site := c.current.Site
+	return hermes.Hermes{
+		Product: hermes.Product{
+			Name:      site.Name,
+			Link:      site.Url,
+			Logo:      site.LogoUrl,
+			Copyright: "Copyright © 2019 " + site.Name + ". Some rights reserved.",
+		},
+	}
 }
 
 func (c *Config) Rules() Rules {
