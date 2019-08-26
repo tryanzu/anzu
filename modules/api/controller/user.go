@@ -102,5 +102,5 @@ func RecoveryLink(c *gin.Context) {
 		c.Redirect(http.StatusTemporaryRedirect, "/")
 		return
 	}
-	c.Redirect(http.StatusTemporaryRedirect, "/"+usr.UserNameSlug+"/"+usr.Id.Hex()+"?token="+auth)
+	c.Redirect(http.StatusTemporaryRedirect, "/u/"+usr.UserNameSlug+"/"+usr.Id.Hex()+"?token="+auth)
 }
