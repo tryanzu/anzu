@@ -91,10 +91,10 @@ func (list Users) UpdateCache(d deps) (err error) {
 	return
 }
 
-type RecoveryToken struct {
-	Id      bson.ObjectId `bson:"_id,omitempty" json:"id"`
+type recoveryToken struct {
+	ID      bson.ObjectId `bson:"_id,omitempty" json:"id"`
+	UserID  bson.ObjectId `bson:"user_id" json:"user_id"`
 	Token   string        `bson:"token" json:"token"`
-	UserId  bson.ObjectId `bson:"user_id" json:"user_id"`
 	Used    bool          `bson:"used" json:"used"`
 	Created time.Time     `bson:"created_at" json:"created_at"`
 	Updated time.Time     `bson:"updated_at" json:"updated_at"`

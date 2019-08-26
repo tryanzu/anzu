@@ -56,9 +56,13 @@ func (u User) ConfirmationEmail(d deps) (err error) {
 }
 
 func (u User) RecoveryPasswordEmail(d deps) (err error) {
-	r := RecoveryToken{
-		UserId:  u.Id,
-		Token:   helpers.StrRandom(12),
+	token, err := helpers.GenerateRandomStringURLSafe(32)
+	if err != nil {
+		return err
+	}
+	r := recoveryToken{
+		UserID:  u.Id,
+		Token:   token,
 		Used:    false,
 		Created: time.Now(),
 		Updated: time.Now(),
@@ -73,14 +77,8 @@ func (u User) RecoveryPasswordEmail(d deps) (err error) {
 	if len(from) == 0 {
 		from = "no-reply@tryanzu.com"
 	}
-	h := hermes.Hermes{
-		Product: hermes.Product{
-			Name: c.Site.Name,
-			Link: c.Site.Url,
-			Logo: c.Site.LogoUrl,
-		},
-	}
-	body, err := h.GenerateHTML(resetPasswordEmail())
+	h := config.C.Hermes()
+	body, err := h.GenerateHTML(resetPasswordEmail(r, u))
 	if err != nil {
 		return err
 	}
@@ -96,20 +94,22 @@ func (u User) RecoveryPasswordEmail(d deps) (err error) {
 	return nil
 }
 
-func resetPasswordEmail() hermes.Email {
+func resetPasswordEmail(token recoveryToken, u User) hermes.Email {
+	c := config.C.Copy()
+	link := c.Site.MakeURL("recovery/" + token.Token)
 	return hermes.Email{
 		Body: hermes.Body{
-			Name: "Jon Snow",
+			Name: u.UserName,
 			Intros: []string{
-				"You have received this email because a password reset request for Hermes account was received.",
+				"You have received this email because a password reset request for your " + c.Site.Name + " account was received.",
 			},
 			Actions: []hermes.Action{
 				{
 					Instructions: "Click the button below to reset your password:",
 					Button: hermes.Button{
-						Color: "#DC4D2F",
+						Color: "#3D5AFE",
 						Text:  "Reset your password",
-						Link:  "https://hermes-example.com/reset-password?token=d9729feb74992cc3482b350163a1a010",
+						Link:  link,
 					},
 				},
 			},

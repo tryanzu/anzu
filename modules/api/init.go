@@ -104,6 +104,7 @@ func (module *Module) Run(bindTo string) {
 	router.GET("/chat/:chan", chttp.TitleMiddleware("Chat"), controller.HomePage)
 	router.GET("/p/:slug/:id", controller.PostPage)
 	router.GET("/u/:username/:id", controller.UserPage)
+	router.GET("/recovery/:token", controller.RecoveryLink)
 	router.GET("/validate/:code", module.Users.UserValidateEmail)
 
 	v1 := router.Group("/v1")
@@ -131,7 +132,6 @@ func (module *Module) Run(bindTo string) {
 	v1.GET("/user/search", module.Users.UserAutocompleteGet)
 	v1.POST("/auth/get-token", module.Users.UserGetJwtToken)
 	v1.GET("/auth/lost-password", module.UsersFactory.RequestPasswordRecovery)
-	v1.GET("/auth/recovery-token/:token", module.UsersFactory.ValidatePasswordRecovery)
 	v1.PUT("/auth/recovery-token/:token", module.UsersFactory.UpdatePasswordFromToken)
 
 	// Categories routes

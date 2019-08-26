@@ -76,3 +76,31 @@ func UpsertBan(d deps, ban Ban) (Ban, error) {
 	}
 	return ban, nil
 }
+
+// UseRecoveryToken to generate auth token.
+func UseRecoveryToken(d deps, clientIP, token string) (user User, jwtAuthToken string, err error) {
+	err = d.Mgo().C("user_recovery_tokens").Update(
+		bson.M{
+			"token":      token,
+			"used":       false,
+			"created_at": bson.M{"$gte": time.Now().Add(-15 * time.Minute)},
+		},
+		bson.M{
+			"$set": bson.M{
+				"used_at": time.Now(),
+				"used":    true,
+			},
+		},
+	)
+	var t recoveryToken
+	err = d.Mgo().C("user_recovery_tokens").Find(bson.M{"token": token}).One(&t)
+	if err != nil {
+		return
+	}
+	user, err = FindId(d, t.UserID)
+	if err != nil {
+		return
+	}
+	jwtAuthToken = genToken(clientIP, t.UserID, user.Roles, 1)
+	return
+}

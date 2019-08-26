@@ -20,7 +20,8 @@ type chatChan struct {
 }
 
 type anzuSecurity struct {
-	StrictIPCheck bool `json:"strictIPCheck"`
+	Secret        string `json:"secret"`
+	StrictIPCheck bool   `json:"strictIPCheck"`
 }
 
 type Flag struct {
@@ -47,6 +48,10 @@ type anzuSite struct {
 	Quickstart     siteQuickstart `json:"quickstart"`
 	Reactions      [][]string     `json:"reactions"`
 	ThirdPartyAuth []string       `json:"thirdPartyAuth"`
+}
+
+func (site anzuSite) MakeURL(url string) string {
+	return site.Url + url
 }
 
 func (site anzuSite) IsValidReaction(name string) bool {

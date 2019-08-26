@@ -218,19 +218,15 @@ func (module *Module) OauthSignup(provider string, user goth.User) (*One, error)
 }
 
 func (module *Module) IsValidRecoveryToken(token string) (bool, error) {
-
-	database := deps.Container.Mgo()
-
-	// Only tokens that are 15 minutes old
-	valid_date := time.Now().Add(-15 * time.Minute)
-
-	c, err := database.C("user_recovery_tokens").Find(bson.M{"token": token, "used": false, "created_at": bson.M{"$gte": valid_date}}).Count()
-
-	if err != nil {
-		return false, err
-	}
-
-	return c > 0, nil
+	// Only tokens 15 minutes old are valid
+	c, err := deps.Container.Mgo().C("user_recovery_tokens").Find(
+		bson.M{
+			"token":      token,
+			"used":       false,
+			"created_at": bson.M{"$gte": time.Now().Add(-15 * time.Minute)},
+		},
+	).Count()
+	return c > 0, err
 }
 
 func (module *Module) GetUserFromRecoveryToken(token string) (*One, error) {
