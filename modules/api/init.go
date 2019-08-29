@@ -2,12 +2,19 @@ package api
 
 import (
 	"context"
+	"fmt"
+	"html/template"
+	"log"
+	"net/http"
+	"os"
 	"os/signal"
 	"time"
 
 	"github.com/facebookgo/inject"
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
+	newrelic "github.com/newrelic/go-agent"
+	"github.com/newrelic/go-agent/_integrations/nrgin/v1"
 	"github.com/olebedev/config"
 	handle "github.com/tryanzu/core/board/legacy"
 	"github.com/tryanzu/core/board/realtime"
@@ -16,12 +23,11 @@ import (
 	"github.com/tryanzu/core/modules/api/controller/oauth"
 	"github.com/tryanzu/core/modules/api/controller/posts"
 	"github.com/tryanzu/core/modules/api/controller/users"
+)
 
-	"fmt"
-	"html/template"
-	"log"
-	"net/http"
-	"os"
+var (
+	NewRelicKey  string
+	NewRelicName string = "anzu"
 )
 
 type Module struct {
@@ -72,6 +78,17 @@ func (module *Module) Run(bindTo string) {
 		},
 	})
 	router.LoadHTMLGlob(templates)
+
+	if len(NewRelicKey) > 0 {
+		cfg := newrelic.NewConfig("Gin App", NewRelicKey)
+		cfg.Logger = newrelic.NewDebugLogger(os.Stdout)
+		app, err := newrelic.NewApplication(cfg)
+		if nil != err {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		router.Use(nrgin.Middleware(app))
+	}
 
 	// Middlewares setup
 	router.Use(sessions.Sessions("session", store))

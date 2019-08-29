@@ -17,8 +17,11 @@ require (
 	github.com/dlclark/regexp2 v1.1.6 // indirect
 	github.com/dop251/goja v0.0.0-20190603191204-1b2d25ba9a8d
 	github.com/edsrzf/mmap-go v1.0.0 // indirect
+	github.com/facebookgo/ensure v0.0.0-20160127193407-b4ab57deab51 // indirect
 	github.com/facebookgo/inject v0.0.0-20180706035515-f23751cae28b
+	github.com/facebookgo/stack v0.0.0-20160209184415-751773369052 // indirect
 	github.com/facebookgo/structtag v0.0.0-20150214074306-217e25fb9691 // indirect
+	github.com/facebookgo/subset v0.0.0-20150612182917-8dac2c3c4870 // indirect
 	github.com/fatih/color v1.7.0 // indirect
 	github.com/flynn-archive/go-shlex v0.0.0-20150515145356-3f9db97f8568 // indirect
 	github.com/fsnotify/fsnotify v1.4.7
@@ -37,6 +40,8 @@ require (
 	github.com/mattn/go-colorable v0.1.2 // indirect
 	github.com/mikespook/gorbac v2.1.0+incompatible
 	github.com/mitchellh/goamz v0.0.0-20150317174335-caaaea8b30ee
+	github.com/motain/gocheck v0.0.0-20131023154940-9beb271d26e6 // indirect
+	github.com/newrelic/go-agent v2.11.0+incompatible
 	github.com/olebedev/config v0.0.0-20190528211619-364964f3a8e4
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/pkg/errors v0.8.1 // indirect
