@@ -8,11 +8,6 @@ type Anzu struct {
 	Mail     anzuMail
 }
 
-type gpcProfiler struct {
-	Id      string
-	Enabled bool
-}
-
 type chatChan struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
