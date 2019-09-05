@@ -298,29 +298,6 @@ func (di *UserAPI) UserUpdateProfileAvatar(c *gin.Context) {
 		panic(err)
 	}
 
-	/*
-		options := bimg.Options{
-			Width:   120,
-			Height:  120,
-			Embed:   true,
-			Crop:    true,
-			Quality: 100,
-		}
-
-		thumbnail, err := bimg.NewImage(data).Process(options)
-
-		if err != nil {
-			c.JSON(400, gin.H{"status": "error", "message": "Unsupported image type..."})
-			return
-		}
-
-		path = "users/" + name + "-120x120" + extension
-		err = di.S3Bucket.Put(path, thumbnail, dataType, s3.ACL("public-read"))
-
-		if err != nil {
-			panic(err)
-		}*/
-
 	url := "https://s3-us-west-1.amazonaws.com/spartan-board/" + path
 
 	// Update the user image as well
