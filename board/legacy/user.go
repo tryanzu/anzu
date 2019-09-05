@@ -1,6 +1,8 @@
 package handle
 
 import (
+	"bytes"
+	"fmt"
 	"strings"
 
 	jwt "github.com/dgrijalva/jwt-go"
@@ -8,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin/binding"
 	"github.com/kennygrant/sanitize"
 	"github.com/mitchellh/goamz/s3"
+	"github.com/nfnt/resize"
 	"github.com/olebedev/config"
 	"github.com/tryanzu/core/board/comments"
 	"github.com/tryanzu/core/board/legacy/model"
@@ -24,7 +27,11 @@ import (
 	"github.com/xuyu/goredis"
 	"gopkg.in/mgo.v2/bson"
 
-	"io/ioutil"
+	"image"
+	// Image package needs to know how to interpret gif, png, jpeg files
+	_ "image/gif"
+	_ "image/jpeg"
+	"image/png"
 	"net/http"
 	"path/filepath"
 	"regexp"
@@ -250,8 +257,8 @@ func (di UserAPI) UserGetJwtToken(c *gin.Context) {
 func (di *UserAPI) UserUpdateProfileAvatar(c *gin.Context) {
 
 	// Check for user token
-	user_id := c.MustGet("user_id")
-	user_bson_id := bson.ObjectIdHex(user_id.(string))
+	userID := c.MustGet("user_id")
+	uid := bson.ObjectIdHex(userID.(string))
 
 	// Check the file inside the request
 	file, header, err := c.Request.FormFile("file")
@@ -263,69 +270,63 @@ func (di *UserAPI) UserUpdateProfileAvatar(c *gin.Context) {
 
 	defer file.Close()
 
-	// Read all the bytes from the image
-	data, err := ioutil.ReadAll(file)
-	if err != nil {
-		c.JSON(400, gin.H{"status": "error", "message": "Could not read the file contents..."})
-		return
+	var extension, name string
+	extension = filepath.Ext(header.Filename)
+	name = bson.NewObjectId().Hex()
+	if extension == "" {
+		extension = ".jpg"
 	}
 
-	// Detect the downloaded file type
-	dataType := http.DetectContentType(data)
+	img, _, err := image.Decode(file)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Could not read an image file..."})
+		return
+	}
+	m := resize.Resize(120, 0, img, resize.Lanczos3)
+	buff := new(bytes.Buffer)
+	// encode image to buffer
+	err = png.Encode(buff, m)
+	if err != nil {
+		fmt.Println("failed to create buffer", err)
+	}
+	// convert buffer to reader
+	reader := bytes.NewReader(buff.Bytes())
 
-	if dataType[0:5] == "image" {
+	path := "users/" + name + extension
+	err = di.S3Bucket.PutReader(path, reader, reader.Size(), "image/png", s3.ACL("public-read"))
+	if err != nil {
+		panic(err)
+	}
 
-		var extension, name string
-
-		extension = filepath.Ext(header.Filename)
-		name = bson.NewObjectId().Hex()
-
-		if extension == "" {
-			extension = ".jpg"
+	/*
+		options := bimg.Options{
+			Width:   120,
+			Height:  120,
+			Embed:   true,
+			Crop:    true,
+			Quality: 100,
 		}
 
-		path := "users/" + name + extension
-		err = di.S3Bucket.Put(path, data, dataType, s3.ACL("public-read"))
+		thumbnail, err := bimg.NewImage(data).Process(options)
+
+		if err != nil {
+			c.JSON(400, gin.H{"status": "error", "message": "Unsupported image type..."})
+			return
+		}
+
+		path = "users/" + name + "-120x120" + extension
+		err = di.S3Bucket.Put(path, thumbnail, dataType, s3.ACL("public-read"))
 
 		if err != nil {
 			panic(err)
-		}
+		}*/
 
-		/*
-			options := bimg.Options{
-				Width:   120,
-				Height:  120,
-				Embed:   true,
-				Crop:    true,
-				Quality: 100,
-			}
+	url := "https://s3-us-west-1.amazonaws.com/spartan-board/" + path
 
-			thumbnail, err := bimg.NewImage(data).Process(options)
+	// Update the user image as well
+	deps.Container.Mgo().C("users").Update(bson.M{"_id": uid}, bson.M{"$set": bson.M{"image": url}})
 
-			if err != nil {
-				c.JSON(400, gin.H{"status": "error", "message": "Unsupported image type..."})
-				return
-			}
-
-			path = "users/" + name + "-120x120" + extension
-			err = di.S3Bucket.Put(path, thumbnail, dataType, s3.ACL("public-read"))
-
-			if err != nil {
-				panic(err)
-			}*/
-
-		s3_url := "https://s3-us-west-1.amazonaws.com/spartan-board/" + path
-
-		// Update the user image as well
-		deps.Container.Mgo().C("users").Update(bson.M{"_id": user_bson_id}, bson.M{"$set": bson.M{"image": s3_url}})
-
-		// Done
-		c.JSON(200, gin.H{"status": "okay", "url": s3_url})
-
-		return
-	}
-
-	c.JSON(400, gin.H{"status": "error", "message": "Could not detect an image file..."})
+	c.JSON(200, gin.H{"status": "okay", "url": url})
 }
 
 func (di *UserAPI) UserUpdateProfile(c *gin.Context) {
@@ -548,11 +549,7 @@ func (di *UserAPI) UserGetActivity(c *gin.Context) {
 		)
 
 		for _, c := range comments.List {
-			if c.ReplyType == "post" {
-				postIds = append(postIds, c.ReplyTo)
-			} else {
-				postIds = append(postIds, c.PostId)
-			}
+			postIds = append(postIds, c.PostId)
 		}
 
 		err = database.C("posts").Find(bson.M{"_id": bson.M{"$in": postIds}}).Select(bson.M{"title": 1, "slug": 1}).All(&posts)
