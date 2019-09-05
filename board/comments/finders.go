@@ -69,7 +69,10 @@ func Post(id bson.ObjectId, limit, offset int, reverse bool, before *bson.Object
 
 func User(id bson.ObjectId, limit, offset int) common.Query {
 	return func(col *mgo.Collection) *mgo.Query {
-		return col.Find(bson.M{"user_id": id}).Limit(limit).Skip(offset).Sort("-created_at")
+		return col.Find(bson.M{
+			"user_id":    id,
+			"deleted_at": bson.M{"$exists": false},
+		}).Limit(limit).Skip(offset).Sort("-created_at")
 	}
 }
 

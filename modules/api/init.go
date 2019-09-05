@@ -80,7 +80,7 @@ func (module *Module) Run(bindTo string) {
 	router.LoadHTMLGlob(templates)
 
 	if len(NewRelicKey) > 0 {
-		cfg := newrelic.NewConfig("Gin App", NewRelicKey)
+		cfg := newrelic.NewConfig(NewRelicName, NewRelicKey)
 		cfg.Logger = newrelic.NewDebugLogger(os.Stdout)
 		app, err := newrelic.NewApplication(cfg)
 		if nil != err {

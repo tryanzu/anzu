@@ -35,86 +35,11 @@ func (c *Client) readWorker() {
 		}
 		switch e.Event {
 		case "auth":
-			token, exists := e.Params["token"].(string)
-			if !exists {
-				log.Println("[REALTIME] Could not authenticate socket client: missing token")
-				continue
-			}
-
-			signed, err := jwt.Parse(token, func(passed_token *jwt.Token) (interface{}, error) {
-				return jwtSecret, nil
-			})
-
-			if err != nil {
-				log.Println("[REALTIME] Could not parse socket client token: ", err)
-				continue
-			}
-
-			claims := signed.Claims.(jwt.MapClaims)
-			usr, err := user.FindId(deps.Container, bson.ObjectIdHex(claims["user_id"].(string)))
-			if err != nil {
-				log.Println("[REALTIME] Could not find user from socket token: ", err)
-				continue
-			}
-
-			c.User = &usr
-			event := SocketEvent{
-				Event: "auth:my",
-				Params: map[string]interface{}{
-					"user": usr,
-				},
-			}
-			c.SafeWrite(event.encode())
-			counters <- c
-
+			c.readAuth(e)
 		case "auth:clean":
-			c.User = nil
-			c.SafeWrite(SocketEvent{
-				Event: "auth:cleaned",
-			}.encode())
-			counters <- c
-
+			c.readAuthClean(e)
 		case "listen":
-			channel, exists := e.Params["chan"].(string)
-			if !exists {
-				log.Println("Could not join channel: missing id")
-				continue
-			}
-
-			c.Channels.Store(channel, c.Raw.Channel(channel))
-			c.SafeWrite(SocketEvent{
-				Event: "listen:ready",
-				Params: map[string]interface{}{
-					"chan": channel,
-				},
-			}.encode())
-			if channel[0:4] == "chat" {
-				prev, err := ledis.LRange([]byte(channel), 0, 50)
-				if err != nil {
-					log.Println("[glue] [err] Cannot get previous chat list", err)
-					continue
-				}
-				for _, encoded := range prev {
-					var msg M
-					dec := gob.NewDecoder(bytes.NewBuffer(encoded))
-					err := dec.Decode(&msg)
-					if err != nil {
-						log.Println("[glue] [err] Cannot decode previous chat message", err)
-						continue
-					}
-					if msg.ID != nil {
-						n, err := ledis.SIsMember([]byte(channel+":deleted"), []byte(*msg.ID))
-						if n == 1 || err != nil {
-							continue
-						}
-					}
-					if ch, ok := c.Channels.Load(channel); ok && c != nil {
-						ch.(*glue.Channel).Write(msg.Content)
-					}
-				}
-			}
-			counters <- c
-
+			c.readListen(e)
 		case "unlisten":
 			channel, exists := e.Params["chan"].(string)
 			if !exists {
@@ -243,6 +168,90 @@ func (c *Client) readWorker() {
 	}
 }
 
+func (c *Client) readAuth(e SocketEvent) {
+	token, exists := e.Params["token"].(string)
+	if !exists {
+		log.Println("[REALTIME] Could not authenticate socket client: missing token")
+		return
+	}
+
+	signed, err := jwt.Parse(token, func(passed_token *jwt.Token) (interface{}, error) {
+		return jwtSecret, nil
+	})
+
+	if err != nil {
+		log.Println("[REALTIME] Could not parse socket client token: ", err)
+		return
+	}
+
+	claims := signed.Claims.(jwt.MapClaims)
+	usr, err := user.FindId(deps.Container, bson.ObjectIdHex(claims["user_id"].(string)))
+	if err != nil {
+		log.Println("[REALTIME] Could not find user from socket token: ", err)
+		return
+	}
+
+	c.User = &usr
+	event := SocketEvent{
+		Event: "auth:my",
+		Params: map[string]interface{}{
+			"user": usr,
+		},
+	}
+	c.SafeWrite(event.encode())
+	counters <- c
+}
+
+func (c *Client) readAuthClean(e SocketEvent) {
+	c.User = nil
+	c.SafeWrite(SocketEvent{
+		Event: "auth:cleaned",
+	}.encode())
+	counters <- c
+}
+
+func (c *Client) readListen(e SocketEvent) {
+	ledis := deps.Container.LedisDB()
+	channel, exists := e.Params["chan"].(string)
+	if !exists {
+		log.Println("Could not join channel: missing id")
+		return
+	}
+	c.Channels.Store(channel, c.Raw.Channel(channel))
+	c.SafeWrite(SocketEvent{
+		Event: "listen:ready",
+		Params: map[string]interface{}{
+			"chan": channel,
+		},
+	}.encode())
+
+	if channel[0:4] == "chat" {
+		prev, err := ledis.LRange([]byte(channel), 0, 50)
+		if err != nil {
+			log.Println("[glue] [err] Cannot get previous chat list", err)
+			return
+		}
+		for _, encoded := range prev {
+			var msg M
+			dec := gob.NewDecoder(bytes.NewBuffer(encoded))
+			err := dec.Decode(&msg)
+			if err != nil {
+				log.Println("[glue] [err] Cannot decode previous chat message", err)
+				continue
+			}
+			if msg.ID != nil {
+				n, err := ledis.SIsMember([]byte(channel+":deleted"), []byte(*msg.ID))
+				if n == 1 || err != nil {
+					continue
+				}
+			}
+			if ch, ok := c.Channels.Load(channel); ok && c != nil {
+				ch.(*glue.Channel).Write(msg.Content)
+			}
+		}
+	}
+	counters <- c
+}
 func (c *Client) sysFlag(reason string) {
 	if c.User == nil {
 		return
