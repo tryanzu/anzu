@@ -152,14 +152,14 @@ func SyncRates(d deps, kind string, list []bson.ObjectId) error {
 		}
 		// Conversion rates calculation.
 		var (
-			viewR = 100 / float64(reached) * float64(views)
-			//commentR float64
+			viewR    = 100 / float64(reached) * float64(views)
+			commentR float64
 			//usersR   float64
 		)
-		/*if views > 0 {
+		if views > 0 {
 			commentR = 100 / float64(views) * float64(post.Comments.Count)
 		}
-		if post.Comments.Count > 0 {
+		/*if post.Comments.Count > 0 {
 			usersR = 100 / float64(post.Comments.Count) * float64(len(post.Users))
 		}*/
 
@@ -168,7 +168,7 @@ func SyncRates(d deps, kind string, list []bson.ObjectId) error {
 			reachRR = float64(reached) / float64(relReached)
 			viewRR  = float64(views) / float64(relViews)
 		)
-		rate := ((viewRR * viewR) + reachRR) / 2
+		rate := ((viewRR * viewR) + reachRR + commentR) / 3
 		scores = append(scores, ledis.ScorePair{
 			Score:  int64(rate * 10000),
 			Member: []byte(id),
