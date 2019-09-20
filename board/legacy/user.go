@@ -476,7 +476,6 @@ func (di *UserAPI) UserRegisterAction(c *gin.Context) {
 }
 
 func (di *UserAPI) UserGetActivity(c *gin.Context) {
-
 	var (
 		limit    = 10
 		offset   = 0
@@ -509,7 +508,7 @@ func (di *UserAPI) UserGetActivity(c *gin.Context) {
 	switch kind {
 	case "comments":
 		type Post struct {
-			Id    bson.ObjectId `bson:"_id"`
+			ID    bson.ObjectId `bson:"_id"`
 			Title string        `bson:"title"`
 			Slug  string        `bson:"slug"`
 		}
@@ -526,7 +525,13 @@ func (di *UserAPI) UserGetActivity(c *gin.Context) {
 		)
 
 		for _, c := range comments.List {
-			postIds = append(postIds, c.PostId)
+			if c.ReplyType == "post" {
+				postIds = append(postIds, c.ReplyTo)
+			} else {
+				if c.PostId.Valid() {
+					postIds = append(postIds, c.PostId)
+				}
+			}
 		}
 
 		err = database.C("posts").Find(bson.M{"_id": bson.M{"$in": postIds}}).Select(bson.M{"title": 1, "slug": 1}).All(&posts)
@@ -536,7 +541,7 @@ func (di *UserAPI) UserGetActivity(c *gin.Context) {
 
 		pmap = make(map[bson.ObjectId]Post, len(posts))
 		for _, p := range posts {
-			pmap[p.Id] = p
+			pmap[p.ID] = p
 		}
 
 		count, err := database.C("comments").Find(bson.M{"user_id": usr.Data().Id, "deleted_at": bson.M{"$exists": false}}).Count()
@@ -550,7 +555,7 @@ func (di *UserAPI) UserGetActivity(c *gin.Context) {
 				continue
 			}
 			activity = append(activity, model.UserActivity{
-				Id:        post.Id,
+				Id:        post.ID,
 				Title:     post.Title,
 				Slug:      post.Slug,
 				Content:   c.Content,
