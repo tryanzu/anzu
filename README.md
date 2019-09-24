@@ -11,9 +11,11 @@ This repository contains the core backend and the frontend submodule link.
 We're still working in the first alpha, so previous knowledge about the stack is required to set things up.
 
 ## Alpha screenshot
-![Anzu alpha post](https://i.imgur.com/udag6at.png)
-![Anzu alpha](https://i.imgur.com/yrfoIWL.png)
-![Anzu alpha publisher](https://i.imgur.com/l974Zc6.png)
+![Anzu alpha post](https://imgur.com/pXDutG0.png)
+![Anzu alpha publisher](https://imgur.com/tF1ApnP.png)
+![Anzu alpha post](https://imgur.com/IAv9V8C.png)
+![Anzu alpha chat](https://imgur.com/vlari7x.png)
+![Anzu alpha profile](https://imgur.com/uG4C9LE.png)
 
 ## Anzu's stack
 - Golang.
