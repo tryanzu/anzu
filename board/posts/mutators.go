@@ -134,6 +134,7 @@ func SyncRates(d deps, kind string, list []bson.ObjectId) error {
 			relReached += count
 		}
 	}
+	update := d.Mgo().C("posts").Bulk()
 	scores := []ledis.ScorePair{}
 	for _, post := range posts {
 		var (
@@ -147,6 +148,7 @@ func SyncRates(d deps, kind string, list []bson.ObjectId) error {
 		if n, err := db.Get([]byte("posts:reached:" + id)); err == nil {
 			reached, _ = strconv.Atoi(string(n))
 		}
+		update.Update(bson.M{"_id": post.Id}, bson.M{"$set": bson.M{"views": views, "reached": reached}})
 		if reached == 0 || relReached == 0 || relViews == 0 {
 			continue
 		}
@@ -175,6 +177,10 @@ func SyncRates(d deps, kind string, list []bson.ObjectId) error {
 		})
 	}
 
+	_, err = update.Run()
+	if err != nil {
+		return err
+	}
 	log.Printf("[RATES] Saving rates at (rel views: %v reached: %v) %s\n", relViews, relReached, date)
 	_, err = db.ZAdd([]byte("posts:"+date), scores...)
 	return err

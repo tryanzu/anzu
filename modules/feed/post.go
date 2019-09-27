@@ -32,6 +32,8 @@ type Post struct {
 	Lock              bool             `bson:"lock" json:"lock"`
 	IsQuestion        bool             `bson:"is_question" json:"is_question"`
 	Solved            bool             `bson:"solved,omitempty" json:"solved,omitempty"`
+	Views             int              `bson:"views,omitempty" json:"views"`
+	Reached           int              `bson:"reached,omitempty" json:"-"`
 	Voted             []string         `bson:"-" json:"voted"`
 	Created           time.Time        `bson:"created_at" json:"created_at"`
 	Updated           time.Time        `bson:"updated_at" json:"updated_at"`
