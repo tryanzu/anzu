@@ -3,7 +3,6 @@ package realtime
 import (
 	"bytes"
 	"encoding/gob"
-	"log"
 	"sync"
 	"time"
 
@@ -43,7 +42,7 @@ func (c *Client) readWorker() {
 		case "unlisten":
 			channel, exists := e.Params["chan"].(string)
 			if !exists {
-				log.Println("Could not remove channel: missing id")
+				log.Debugf("Could not remove channel: missing id")
 				continue
 			}
 			c.Channels.Delete(channel)
@@ -60,12 +59,12 @@ func (c *Client) readWorker() {
 			}
 			mid, exists := e.Params["id"].(string)
 			if !exists || bson.IsObjectIdHex(mid) == false {
-				log.Println("[glue] chat:delete requires a valid message id.")
+				log.Warning("chat:delete requires a valid message id.")
 				continue
 			}
 			channel, exists := e.Params["chan"].(string)
 			if !exists {
-				log.Println("[glue] chat:message requires a chan.")
+				log.Debugf("chat:message requires a chan.")
 				continue
 			}
 			m := M{
@@ -84,12 +83,12 @@ func (c *Client) readWorker() {
 				continue
 			}
 			if c.User.HasRole("admin", "developer") == false {
-				log.Println("[glue] chat:ban requires a higher privileges.")
+				log.Debugf("chat:ban requires a higher privileges.")
 				continue
 			}
 			uid, exists := e.Params["userId"].(string)
 			if !exists || bson.IsObjectIdHex(uid) == false {
-				log.Println("[glue] chat:ban requires a valid user id.")
+				log.Debugf("chat:ban requires a valid user id.")
 				continue
 			}
 			events.In <- events.NewBanFlag(bson.ObjectIdHex(uid))
@@ -99,12 +98,12 @@ func (c *Client) readWorker() {
 			}
 			msg, exists := e.Params["message"].(map[string]interface{})
 			if !exists {
-				log.Println("[glue] chat:star requires a valid message.")
+				log.Debugf("chat:star requires a valid message.")
 				continue
 			}
 			channel, exists := e.Params["chan"].(string)
 			if !exists {
-				log.Println("[glue] chat:message requires a chan.")
+				log.Debugf("chat:message requires a chan.")
 				continue
 			}
 			go func() {
@@ -123,13 +122,13 @@ func (c *Client) readWorker() {
 			}
 			msg, exists := e.Params["msg"].(string)
 			if !exists || len(msg) == 0 || len(msg) > 255 {
-				log.Println("[glue] chat:message requires a valid message.")
+				log.Debugf("chat:message requires a valid message.")
 				continue
 			}
 			var channel string
 			channel, exists = e.Params["chan"].(string)
 			if !exists {
-				log.Println("[glue] chat:message requires a chan.")
+				log.Debugf("chat:message requires a chan.")
 				continue
 			}
 			mid := bson.NewObjectId()
@@ -150,7 +149,7 @@ func (c *Client) readWorker() {
 			}
 			ToChan <- m
 			t := time.Now()
-			log.Println("[glue] lastRead ", t.Sub(lastRead))
+			log.Debugf("lastRead ", t.Sub(lastRead))
 			if t.Sub(lastRead) < 300*time.Millisecond {
 				seqHits++
 			} else {
@@ -160,18 +159,41 @@ func (c *Client) readWorker() {
 			// Update last input time from client.
 			lastRead = time.Now()
 			if seqHits >= 10 {
-				log.Println("[glue] [ban] spam rate exceeded, sending flag")
+				log.Infof("spam rate exceeded, sending sys flag, client = %+v", c)
 				c.sysFlag("spam")
 			}
 			time.Sleep(time.Millisecond * 200)
 		}
 	}
+	log.Infof("read worker stopped, client = %+v", c)
+}
+
+// finish client connection.
+func (c *Client) finish() {
+	var uid *bson.ObjectId
+	if c.User != nil {
+		uid = &c.User.Id
+		err := user.LastSeenAt(deps.Container, c.User.Id, time.Now())
+		if err != nil {
+			log.Error(err)
+		}
+	}
+	// Close the channel so readWorker stops.
+	close(c.Read)
+	// Clean up pointers & logging.
+	addresses.Delete(c.Raw.RemoteAddr())
+	log.Infof("socket closed, id = %s | address = %s | userId = %v", c.Raw.ID(), c.Raw.RemoteAddr(), uid)
+	c.User = nil
+	c.Channels = nil
+	sockets.Delete(c.Raw.ID())
+	c.Raw = nil
+	counters <- c
 }
 
 func (c *Client) readAuth(e SocketEvent) {
 	token, exists := e.Params["token"].(string)
 	if !exists {
-		log.Println("[REALTIME] Could not authenticate socket client: missing token")
+		log.Warning("could not authenticate socket client: missing token")
 		return
 	}
 
@@ -180,14 +202,14 @@ func (c *Client) readAuth(e SocketEvent) {
 	})
 
 	if err != nil {
-		log.Println("[REALTIME] Could not parse socket client token: ", err)
+		log.Warningf("could not parse socket client token: %v", err)
 		return
 	}
 
 	claims := signed.Claims.(jwt.MapClaims)
 	usr, err := user.FindId(deps.Container, bson.ObjectIdHex(claims["user_id"].(string)))
 	if err != nil {
-		log.Println("[REALTIME] Could not find user from socket token: ", err)
+		log.Errorf("could not find user from socket token: %v", err)
 		return
 	}
 
@@ -211,10 +233,9 @@ func (c *Client) readAuthClean(e SocketEvent) {
 }
 
 func (c *Client) readListen(e SocketEvent) {
-	ledis := deps.Container.LedisDB()
 	channel, exists := e.Params["chan"].(string)
 	if !exists {
-		log.Println("Could not join channel: missing id")
+		log.Warning("could not join channel: missing id")
 		return
 	}
 	c.Channels.Store(channel, c.Raw.Channel(channel))
@@ -225,33 +246,49 @@ func (c *Client) readListen(e SocketEvent) {
 		},
 	}.encode())
 
+	// When a user listens to a chat channel additional business logic needs to be executed
 	if channel[0:4] == "chat" {
-		prev, err := ledis.LRange([]byte(channel), 0, 50)
+		err := c.enterChatChannel(channel)
 		if err != nil {
-			log.Println("[glue] [err] Cannot get previous chat list", err)
-			return
-		}
-		for _, encoded := range prev {
-			var msg M
-			dec := gob.NewDecoder(bytes.NewBuffer(encoded))
-			err := dec.Decode(&msg)
-			if err != nil {
-				log.Println("[glue] [err] Cannot decode previous chat message", err)
-				continue
-			}
-			if msg.ID != nil {
-				n, err := ledis.SIsMember([]byte(channel+":deleted"), []byte(*msg.ID))
-				if n == 1 || err != nil {
-					continue
-				}
-			}
-			if ch, ok := c.Channels.Load(channel); ok && c != nil {
-				ch.(*glue.Channel).Write(msg.Content)
-			}
+			// switch err.(type) {
+			// case :
+
+			// }
 		}
 	}
+
+	// Acknowledge connected client in counters.
 	counters <- c
 }
+
+func (c *Client) enterChatChannel(channel string) error {
+	ledis := deps.Container.LedisDB()
+	prev, err := ledis.LRange([]byte(channel), 0, 50)
+	if err != nil {
+		log.Error(err)
+		return nil
+	}
+	for _, encoded := range prev {
+		var msg M
+		dec := gob.NewDecoder(bytes.NewBuffer(encoded))
+		err := dec.Decode(&msg)
+		if err != nil {
+			log.Warningf("cannot decode previous chat message, err is: %v", err)
+			continue
+		}
+		if msg.ID != nil {
+			n, err := ledis.SIsMember([]byte(channel+":deleted"), []byte(*msg.ID))
+			if n == 1 || err != nil {
+				continue
+			}
+		}
+		if ch, ok := c.Channels.Load(channel); ok && c != nil {
+			ch.(*glue.Channel).Write(msg.Content)
+		}
+	}
+	return nil
+}
+
 func (c *Client) sysFlag(reason string) {
 	if c.User == nil {
 		return
@@ -263,7 +300,8 @@ func (c *Client) sysFlag(reason string) {
 		Reason:    reason,
 	})
 	if err != nil {
-		log.Println("[glue] [error] sysFlag failed, error:", err)
+		log.Errorf("sysFlag failed, userId = %s | relatedTo: chat | reason: %s", c.User.Id, reason)
+		log.Error(err)
 		return
 	}
 	events.In <- events.NewFlag(flag.ID)
@@ -288,7 +326,7 @@ func (c *Client) send(packed []M) {
 			}
 			id := bson.ObjectIdHex(m.Channel[5:])
 			if id.Valid() == false {
-				log.Println("Invalid userId in packed messages sending. Chan:", m.Channel)
+				log.Debugf("invalid userId in packed messages sending, chan = %s", m.Channel)
 				continue
 			}
 			if id == c.User.Id {

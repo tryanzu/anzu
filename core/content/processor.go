@@ -1,9 +1,12 @@
 package content
 
 import (
-	"log"
 	"time"
+
+	"github.com/op/go-logging"
 )
+
+var log = logging.MustGetLogger("content")
 
 // Content processor definition.
 type Processor func(deps, Parseable, tags) (Parseable, error)
@@ -29,7 +32,7 @@ func Postprocess(d deps, c Parseable) (processed Parseable, err error) {
 	}
 
 	elapsed := time.Since(starts)
-	log.Printf("[CONTENT] Parsable postprocess took: %v\n", elapsed)
+	log.Debugf("took = %v", elapsed)
 	return
 }
 
@@ -51,7 +54,7 @@ func Preprocess(d deps, c Parseable) (processed Parseable, err error) {
 	}
 
 	elapsed := time.Since(starts)
-	log.Printf("Parsable preprocess took: %v\n", elapsed)
+	log.Debugf("took = %v", elapsed)
 	return
 }
 

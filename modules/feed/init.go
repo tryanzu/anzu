@@ -3,6 +3,7 @@ package feed
 import (
 	"github.com/tryanzu/core/modules/content"
 	"github.com/tryanzu/core/modules/exceptions"
+
 	//"github.com/tryanzu/core/modules/notifications"
 	"github.com/tryanzu/core/deps"
 	"github.com/tryanzu/core/modules/user"
@@ -85,9 +86,7 @@ func (feed *FeedModule) LightPosts(posts interface{}) ([]LightPostModel, error) 
 
 		// Use light post model
 		err := database.C("posts").Find(bson.M{"_id": bson.M{"$in": posts.([]bson.ObjectId)}}).Select(lightPostFields).All(&list)
-
 		if err != nil {
-
 			return nil, exceptions.NotFound{"Invalid posts id. Not found."}
 		}
 
@@ -101,7 +100,6 @@ func (feed *FeedModule) LightPosts(posts interface{}) ([]LightPostModel, error) 
 
 		// Use light post model
 		err := database.C("posts").Find(posts.(bson.M)).Select(lightPostFields).All(&list)
-
 		if err != nil {
 			return nil, exceptions.NotFound{"Invalid posts criteria. Not found."}
 		}

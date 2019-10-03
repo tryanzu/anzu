@@ -34,6 +34,7 @@ type User struct {
 	ConfirmSent *time.Time `bson:"confirm_sent_at" json:"-"`
 	Created     time.Time  `bson:"created_at" json:"created_at"`
 	Updated     time.Time  `bson:"updated_at" json:"updated_at"`
+	Seen        *time.Time `bson:"last_seen_at" json:"last_seen_at,omitempty"`
 
 	Banned       bool       `bson:"banned" json:"-"`
 	BannedAt     *time.Time `bson:"banned_at" json:"-"`
