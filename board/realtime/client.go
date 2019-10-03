@@ -3,12 +3,14 @@ package realtime
 import (
 	"bytes"
 	"encoding/gob"
+	"html"
 	"sync"
 	"time"
 
 	"github.com/desertbit/glue"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/tryanzu/core/board/flags"
+	"github.com/tryanzu/core/core/content"
 	"github.com/tryanzu/core/core/events"
 	"github.com/tryanzu/core/core/user"
 	"github.com/tryanzu/core/deps"
@@ -22,12 +24,16 @@ type Client struct {
 	// Channels map[string]*glue.Channel
 	User *user.User
 	Read chan SocketEvent
+
+	seqHits  int
+	lastRead *time.Time
 }
 
 func (c *Client) readWorker() {
 	ledis := deps.Container.LedisDB()
-	seqHits := 0
-	lastRead := time.Now()
+	now := time.Now()
+	c.seqHits = 0
+	c.lastRead = &now
 	for e := range c.Read {
 		if c == nil || c.User != nil && user.IsBanned(deps.Container, c.User.Id) {
 			continue
@@ -53,6 +59,8 @@ func (c *Client) readWorker() {
 				},
 			}.encode())
 			counters <- c
+		case "chat:message":
+			c.readChatMessage(e)
 		case "chat:delete":
 			if c.User == nil {
 				continue
@@ -116,53 +124,6 @@ func (c *Client) readWorker() {
 				}
 				featuredM <- m
 			}()
-		case "chat:message":
-			if c.User == nil {
-				continue
-			}
-			msg, exists := e.Params["msg"].(string)
-			if !exists || len(msg) == 0 || len(msg) > 255 {
-				log.Debugf("chat:message requires a valid message.")
-				continue
-			}
-			var channel string
-			channel, exists = e.Params["chan"].(string)
-			if !exists {
-				log.Debugf("chat:message requires a chan.")
-				continue
-			}
-			mid := bson.NewObjectId()
-			m := M{
-				ID:      &mid,
-				Channel: "chat:" + channel,
-				Content: SocketEvent{
-					Event: "message",
-					Params: map[string]interface{}{
-						"msg":    msg,
-						"userId": c.User.Id,
-						"from":   c.User.UserName,
-						"avatar": c.User.Image,
-						"at":     time.Now(),
-						"id":     mid,
-					},
-				}.encode(),
-			}
-			ToChan <- m
-			t := time.Now()
-			log.Debugf("lastRead ", t.Sub(lastRead))
-			if t.Sub(lastRead) < 300*time.Millisecond {
-				seqHits++
-			} else {
-				seqHits = 0
-			}
-
-			// Update last input time from client.
-			lastRead = time.Now()
-			if seqHits >= 10 {
-				log.Infof("spam rate exceeded, sending sys flag, client = %+v", c)
-				c.sysFlag("spam")
-			}
-			time.Sleep(time.Millisecond * 200)
 		}
 	}
 	log.Infof("read worker stopped, client = %+v", c)
@@ -180,13 +141,16 @@ func (c *Client) finish() {
 	}
 	// Close the channel so readWorker stops.
 	close(c.Read)
-	// Clean up pointers & logging.
 	addresses.Delete(c.Raw.RemoteAddr())
 	log.Infof("socket closed, id = %s | address = %s | userId = %v", c.Raw.ID(), c.Raw.RemoteAddr(), uid)
+
+	// Clean up pointers & logging.
 	c.User = nil
 	c.Channels = nil
 	sockets.Delete(c.Raw.ID())
 	c.Raw = nil
+
+	// Acknowledge connected client in counters.
 	counters <- c
 }
 
@@ -230,6 +194,107 @@ func (c *Client) readAuthClean(e SocketEvent) {
 		Event: "auth:cleaned",
 	}.encode())
 	counters <- c
+}
+
+type chatMessage map[string]interface{}
+
+func (c chatMessage) GetContent() string {
+	return c["msg"].(string)
+}
+
+func (c chatMessage) UpdateContent(content string) content.Parseable {
+	c["msg"] = content
+	return c
+}
+
+func (c chatMessage) GetParseableMeta() map[string]interface{} {
+	meta := make(map[string]interface{})
+	meta["id"] = c["id"]
+	meta["related"] = "chat"
+	meta["user_id"] = c["userId"]
+	return meta
+}
+
+func (c *Client) readChatMessage(e SocketEvent) {
+	if c.User == nil {
+		return
+	}
+	msg, exists := e.Params["msg"].(string)
+	if !exists || len(msg) == 0 || len(msg) > 255 {
+		log.Debugf("chat:message requires a valid message.")
+		return
+	}
+	var channel string
+	channel, exists = e.Params["chan"].(string)
+	if !exists {
+		log.Warning("chat:message requires a chan.")
+		return
+	}
+	mid := bson.NewObjectId()
+	chatM := chatMessage{
+		"msg":    html.EscapeString(msg),
+		"userId": c.User.Id,
+		"from":   c.User.UserName,
+		"avatar": c.User.Image,
+		"at":     time.Now(),
+		"id":     mid,
+	}
+	pre, err := content.Preprocess(deps.Container, chatM)
+	if err != nil {
+		log.Errorf("could not preprocess chat message, err: %v", err)
+		return
+	}
+	chatM = pre.(chatMessage)
+	post, err := content.Postprocess(deps.Container, chatM)
+	if err != nil {
+		log.Errorf("could not postprocess chat message, err: %v", err)
+		return
+	}
+	chatM = post.(chatMessage)
+	m := M{
+		ID:      &mid,
+		Channel: "chat:" + channel,
+		Content: SocketEvent{
+			Event:  "message",
+			Params: chatM,
+		}.encode(),
+	}
+	ToChan <- m
+	now := time.Now()
+	last := *c.lastRead
+	log.Debugf("client chat message, lastRead = %v", now.Sub(last))
+	if now.Sub(last) < 300*time.Millisecond {
+		c.seqHits++
+	} else {
+		c.seqHits = 0
+	}
+
+	// Update last input time from client.
+	c.lastRead = &now
+	if c.seqHits >= 10 {
+		log.Infof("spam rate exceeded, sending sys flag, client = %+v", c)
+		c.sysFlag("spam")
+	}
+	time.Sleep(time.Millisecond * 60)
+	mark := elapsed("caching message")
+	ledisdb := deps.Container.LedisDB()
+	var (
+		buf bytes.Buffer
+		n   int64
+	)
+	enc := gob.NewEncoder(&buf)
+	err = enc.Encode(m)
+	if err != nil {
+		log.Debug("[err] Cannot encode for cache", err)
+	}
+	n, err = ledisdb.RPush([]byte(m.Channel), buf.Bytes())
+	if err != nil {
+		log.Debug("[err] Cannot encode for cache", err)
+	}
+	if n >= 50 {
+		ledisdb.LPop([]byte(m.Channel))
+	}
+	mark()
 }
 
 func (c *Client) readListen(e SocketEvent) {

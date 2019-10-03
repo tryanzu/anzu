@@ -1,8 +1,6 @@
 package realtime
 
 import (
-	"bytes"
-	"encoding/gob"
 	"encoding/json"
 	"net/http"
 	"sync"
@@ -95,10 +93,7 @@ func prepare() {
 	if err != nil {
 		log.Panic("Could not get JWT secret token. (missing config)", err)
 	}
-
 	jwtSecret = []byte(secret)
-	ledisdb := deps.Container.LedisDB()
-
 	go func() {
 		buffered := make([]M, 0, 1000)
 
@@ -112,8 +107,8 @@ func prepare() {
 				if len(buffered) == 0 {
 					continue
 				}
-				mark := elapsed("Flushing")
-				log.Debug("Flushing buffer with", len(buffered), "items.")
+				mark := elapsed("flushing")
+				log.Debugf("flushing buffer, items = %v", len(buffered))
 				dispatcher <- buffered
 				buffered = make([]M, 0, 1000)
 				mark()
@@ -123,33 +118,13 @@ func prepare() {
 
 	go func() {
 		for pack := range dispatcher {
-			mark := elapsed("Dispatching")
-			log.Debugf("Messages: %+v\n", pack)
+			mark := elapsed("dispatching")
+			log.Debugf("dispatching messages, list = %+v", pack)
 			sockets.Range(func(k, v interface{}) bool {
 				c := v.(*Client)
 				c.send(pack)
 				return true
 			})
-			for _, msg := range pack {
-				if len(msg.Channel) > 5 && msg.Channel[0:5] == "chat:" {
-					var (
-						buf bytes.Buffer
-						n   int64
-					)
-					enc := gob.NewEncoder(&buf)
-					err := enc.Encode(msg)
-					if err != nil {
-						log.Debug("[err] Cannot encode for cache", err)
-					}
-					n, err = ledisdb.RPush([]byte(msg.Channel), buf.Bytes())
-					if err != nil {
-						log.Debug("[err] Cannot encode for cache", err)
-					}
-					if n >= 50 {
-						ledisdb.LPop([]byte(msg.Channel))
-					}
-				}
-			}
 			mark()
 		}
 	}()

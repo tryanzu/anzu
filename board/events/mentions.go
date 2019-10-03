@@ -14,13 +14,24 @@ func mentionEvents() {
 			userID := e.Params["user_id"].(bson.ObjectId)
 			relatedID := e.Params["related_id"].(bson.ObjectId)
 			users := e.Params["users"].([]bson.ObjectId)
+			related := e.Params["related"].(string)
 
 			// Create notification
-			notify.Database <- notify.Notification{
-				UserId:    userID,
-				Type:      "mention",
-				RelatedId: relatedID,
-				Users:     users,
+			if related == "comment" {
+				notify.Database <- notify.Notification{
+					UserId:    userID,
+					Type:      "mention",
+					RelatedId: relatedID,
+					Users:     users,
+				}
+			}
+			if related == "chat" {
+				notify.Database <- notify.Notification{
+					UserId:    userID,
+					Type:      "chat",
+					RelatedId: relatedID,
+					Users:     users,
+				}
 			}
 			return nil
 		},

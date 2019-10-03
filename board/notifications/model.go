@@ -111,6 +111,14 @@ func (all Notifications) Humanize(deps Deps) (list []map[string]interface{}, err
 				"subtitle":  post.Title,
 				"createdAt": n.Created,
 			})
+		case "chat":
+			user := umap[n.Users[0]]
+			list = append(list, map[string]interface{}{
+				"id":        n.Id.Hex(),
+				"target":    "/chat",
+				"title":     "@" + user.UserName + " te mencionó en el chat",
+				"createdAt": n.Created,
+			})
 		}
 	}
 

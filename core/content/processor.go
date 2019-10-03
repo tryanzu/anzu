@@ -32,7 +32,7 @@ func Postprocess(d deps, c Parseable) (processed Parseable, err error) {
 	}
 
 	elapsed := time.Since(starts)
-	log.Debugf("took = %v", elapsed)
+	log.Debugf("postprocess took = %v", elapsed)
 	return
 }
 
@@ -54,7 +54,7 @@ func Preprocess(d deps, c Parseable) (processed Parseable, err error) {
 	}
 
 	elapsed := time.Since(starts)
-	log.Debugf("took = %v", elapsed)
+	log.Debugf("preprocess took = %v", elapsed)
 	return
 }
 
