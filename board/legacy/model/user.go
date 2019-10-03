@@ -1,8 +1,9 @@
 package model
 
 import (
-	"gopkg.in/mgo.v2/bson"
 	"time"
+
+	"gopkg.in/mgo.v2/bson"
 )
 
 type User struct {
@@ -27,6 +28,7 @@ type User struct {
 	Stats         UserStats              `bson:"stats,omitempty" json:"stats,omitempty"`
 	Version       string                 `bson:"version,omitempty" json:"version,omitempty"`
 	Validated     bool                   `bson:"validated" json:"validated"`
+	Seen          *time.Time             `bson:"last_seen_at" json:"last_seen_at,omitempty"`
 	Created       time.Time              `bson:"created_at" json:"created_at"`
 	Updated       time.Time              `bson:"updated_at" json:"updated_at"`
 }

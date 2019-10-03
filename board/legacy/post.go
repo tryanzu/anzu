@@ -215,6 +215,7 @@ func (di PostAPI) FeedGet(c *gin.Context) {
 					UserName: postUser.UserName,
 					Step:     authorLevel,
 					Image:    postUser.Image,
+					Seen:     postUser.Seen,
 				}
 			}
 		}

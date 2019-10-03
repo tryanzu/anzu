@@ -4,17 +4,19 @@ import (
 	"bytes"
 	"encoding/gob"
 	"encoding/json"
-	"log"
 	"net/http"
 	"sync"
 	"time"
 
 	"github.com/desertbit/glue"
 	"github.com/henrylee2cn/goutil"
+	"github.com/op/go-logging"
 	"github.com/tryanzu/core/core/config"
 	"github.com/tryanzu/core/deps"
 	"gopkg.in/mgo.v2/bson"
 )
+
+var log = logging.MustGetLogger("realtime")
 
 var (
 	jwtSecret  []byte
@@ -111,7 +113,7 @@ func prepare() {
 					continue
 				}
 				mark := elapsed("Flushing")
-				log.Println("[glue] Flushing buffer with", len(buffered), "items.")
+				log.Debug("Flushing buffer with", len(buffered), "items.")
 				dispatcher <- buffered
 				buffered = make([]M, 0, 1000)
 				mark()
@@ -122,7 +124,7 @@ func prepare() {
 	go func() {
 		for pack := range dispatcher {
 			mark := elapsed("Dispatching")
-			log.Printf("Messages: %+v\n", pack)
+			log.Debugf("Messages: %+v\n", pack)
 			sockets.Range(func(k, v interface{}) bool {
 				c := v.(*Client)
 				c.send(pack)
@@ -137,11 +139,11 @@ func prepare() {
 					enc := gob.NewEncoder(&buf)
 					err := enc.Encode(msg)
 					if err != nil {
-						log.Println("[glue] [err] Cannot encode for cache", err)
+						log.Debug("[err] Cannot encode for cache", err)
 					}
 					n, err = ledisdb.RPush([]byte(msg.Channel), buf.Bytes())
 					if err != nil {
-						log.Println("[glue] [err] Cannot encode for cache", err)
+						log.Debug("[err] Cannot encode for cache", err)
 					}
 					if n >= 50 {
 						ledisdb.LPop([]byte(msg.Channel))
@@ -160,12 +162,13 @@ func prepare() {
 
 func onNewSocket(s *glue.Socket) {
 	addr := s.RemoteAddr()
+	conns := 1
 	if n, ok := addresses.LoadOrStore(addr, 1); ok {
-		actual := n.(int) + 1
-		if actual > 3 {
+		conns = n.(int) + 1
+		if conns > 3 {
 			return
 		}
-		addresses.Store(addr, actual)
+		addresses.Store(addr, conns)
 	}
 	client := &Client{
 		Raw:      s,
@@ -174,19 +177,14 @@ func onNewSocket(s *glue.Socket) {
 		Read:     make(chan SocketEvent),
 	}
 
+	log.Infof("client connected, id = %s | address = %s | connections = %v", s.ID(), addr, conns)
+
+	// READ WORKER
+	// This little dedicated goroutine will handle all incoming messages for this particular client.
 	go client.readWorker()
 
 	// Set a function which is triggered as soon as the socket is closed.
-	s.OnClose(func() {
-		close(client.Read)
-		addresses.Delete(client.Raw.RemoteAddr())
-		client.User = nil
-		client.Channels = nil
-		client.Raw = nil
-		sockets.Delete(s.ID())
-		counters <- client
-		log.Printf("[glue] Socket %s closed with remote address: %s", s.ID(), s.RemoteAddr())
-	})
+	s.OnClose(client.finish)
 
 	// fn triggered during each received message.
 	s.OnRead(func(data string) {
@@ -194,8 +192,8 @@ func onNewSocket(s *glue.Socket) {
 
 		err := json.Unmarshal([]byte(data), &event)
 		if err != nil {
-			log.Println("Could not unmarshal read event from client: ", data)
-			log.Println("Error: ", err)
+			log.Errorf("Could not unmarshal read event from client: %s", data)
+			log.Error(err)
 			return
 		}
 
@@ -248,6 +246,6 @@ func elapsed(name string) func() {
 	return func() {
 		ends := time.Now()
 		elapsed := ends.Sub(starts)
-		log.Printf("%s took %s", name, elapsed)
+		log.Debugf("time elapsed in, name = %s | took = %s", name, elapsed)
 	}
 }

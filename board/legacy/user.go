@@ -180,9 +180,7 @@ func (di *UserAPI) UserGetByToken(c *gin.Context) {
 	// Get the user using its id
 	uid := bson.ObjectIdHex(id.(string))
 	usr, err := di.User.Get(uid)
-
 	if err != nil {
-
 		c.JSON(400, gin.H{"status": "error", "message": err.Error()})
 		return
 	}

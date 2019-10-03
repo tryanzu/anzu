@@ -20,6 +20,12 @@ func ResetNotifications(d deps, id bson.ObjectId) (err error) {
 	return
 }
 
+// LastSeenAt mutation
+func LastSeenAt(d deps, id bson.ObjectId, t time.Time) (err error) {
+	err = d.Mgo().C("users").Update(bson.M{"_id": id}, bson.M{"$set": bson.M{"last_seen_at": t}})
+	return
+}
+
 // UpsertBan performs validations before upserting data struct
 func UpsertBan(d deps, ban Ban) (Ban, error) {
 	if ban.ID.Valid() == false {

@@ -39,6 +39,7 @@ type UserPrivate struct {
 	Duplicates       []bson.ObjectId `bson:"duplicates" json:"-"`
 	ConfirmationSent *time.Time      `bson:"confirm_sent_at" json:"-"`
 	Updated          time.Time       `bson:"updated_at" json:"updated_at"`
+	Seen             *time.Time      `bson:"last_seen_at" json:"last_seen_at,omitempty"`
 	Gamificated      time.Time       `bson:"gamificated_at" json:"gamificated_at"`
 }
 
@@ -56,8 +57,9 @@ type UserSimple struct {
 	BattlenetId string `bson:"battlenet_id,omitempty" json:"battlenet_id"`
 	SteamId     string `bson:"steam_id,omitempty" json:"steam_id"`
 
-	Validated bool      `bson:"validated" json:"validated"`
-	Created   time.Time `bson:"created_at" json:"created_at"`
+	Validated bool       `bson:"validated" json:"validated"`
+	Created   time.Time  `bson:"created_at" json:"created_at"`
+	Seen      *time.Time `bson:"last_seen_at" json:"last_seen_at,omitempty"`
 }
 
 type UserRecoveryToken struct {
@@ -69,8 +71,8 @@ type UserRecoveryToken struct {
 	Updated time.Time     `bson:"updated_at" json:"updated_at"`
 }
 
-var UserSimpleFields bson.M = bson.M{"id": 1, "username": 1, "description": 1, "username_slug": 1, "country": 1, "origin_id": 1, "battlenet_id": 1, "steam_id": 1, "image": 1, "gaming.level": 1, "gaming.swords": 1, "roles": 1, "validated": 1, "created_at": 1}
-var UserBasicFields bson.M = bson.M{"id": 1, "username": 1, "description": 1, "facebook": 1, "country": 1, "origin_id": 1, "battlenet_id": 1, "steam_id": 1, "email": 1, "validated": 1, "banned": 1, "username_slug": 1, "image": 1, "gaming": 1, "created_at": 1, "updated_at": 1}
+var UserSimpleFields bson.M = bson.M{"id": 1, "username": 1, "description": 1, "username_slug": 1, "country": 1, "origin_id": 1, "battlenet_id": 1, "steam_id": 1, "image": 1, "gaming.level": 1, "gaming.swords": 1, "roles": 1, "validated": 1, "created_at": 1, "last_seen_at": 1}
+var UserBasicFields bson.M = bson.M{"id": 1, "username": 1, "description": 1, "facebook": 1, "country": 1, "origin_id": 1, "battlenet_id": 1, "steam_id": 1, "email": 1, "validated": 1, "banned": 1, "username_slug": 1, "image": 1, "gaming": 1, "created_at": 1, "updated_at": 1, "last_seen_at": 1}
 
 type UserBasic struct {
 	Id           bson.ObjectId `bson:"_id,omitempty" json:"id"`
@@ -88,14 +90,15 @@ type UserBasic struct {
 	BattlenetId string `bson:"battlenet_id,omitempty" json:"battlenet_id"`
 	SteamId     string `bson:"steam_id,omitempty" json:"steam_id"`
 
-	Validated bool      `bson:"validated" json:"validated"`
-	Banned    bool      `bson:"banned" json:"banned"`
-	Created   time.Time `bson:"created_at" json:"created_at"`
-	Updated   time.Time `bson:"updated_at" json:"updated_at"`
+	Validated bool       `bson:"validated" json:"validated"`
+	Banned    bool       `bson:"banned" json:"banned"`
+	Created   time.Time  `bson:"created_at" json:"created_at"`
+	Updated   time.Time  `bson:"updated_at" json:"updated_at"`
+	Seen      *time.Time `bson:"last_seen_at" json:"last_seen_at,omitempty"`
 }
 
 func (u UserBasic) ToSimple() UserSimple {
-	return UserSimple{u.Id, u.Roles, u.UserName, u.UserNameSlug, u.Gaming, u.Image, u.Description, u.Country, u.OriginId, u.BattlenetId, u.SteamId, u.Validated, u.Created}
+	return UserSimple{u.Id, u.Roles, u.UserName, u.UserNameSlug, u.Gaming, u.Image, u.Description, u.Country, u.OriginId, u.BattlenetId, u.SteamId, u.Validated, u.Created, u.Seen}
 }
 
 type UserRole struct {
