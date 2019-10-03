@@ -20,9 +20,9 @@ We're still working in the first alpha, so previous knowledge about the stack is
 ## Anzu's stack
 - Golang.
 - Redis (to be replaced)
-- BuntDB (embedded cache)
-- MongoDB (DB)
-- Cycle.JS (A functional and reactive JavaScript framework)
+- LedisDB (embedded cache)
+- MongoDB (persistent storage)
+- React JS
 
 # Contribute
 
@@ -43,8 +43,6 @@ export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
 ```
 
 Now you need to download and configure **MongoDB** and **Redis**. Alternatively you can use remote servers.
-
-Install `dep` for go dependencies: [https://github.com/golang/dep](https://github.com/golang/dep). In MacOS it can be installed with `brew`.
 
 Execute the following command: `go get https://github.com/cespare/reflex`
 

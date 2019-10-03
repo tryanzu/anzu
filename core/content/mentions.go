@@ -66,6 +66,7 @@ func preReplaceMentionTags(d deps, c Parseable) (processed Parseable, err error)
 
 	meta := processed.GetParseableMeta()
 	relatedID := meta["id"].(bson.ObjectId)
+	related := meta["related"].(string)
 	userID := meta["user_id"].(bson.ObjectId)
 	usersID := []bson.ObjectId{userID}
 
@@ -80,7 +81,7 @@ func preReplaceMentionTags(d deps, c Parseable) (processed Parseable, err error)
 		content = mention.Replace(content)
 
 		// Track mention
-		events.In <- events.TrackMention(usr.ID, relatedID, usersID)
+		events.In <- events.TrackMention(usr.ID, relatedID, related, usersID)
 	}
 
 	processed = processed.UpdateContent(content)

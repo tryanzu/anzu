@@ -114,11 +114,12 @@ func RawEmit(channel, event string, params map[string]interface{}) Event {
 	}
 }
 
-func TrackMention(userID, relatedID bson.ObjectId, usersID []bson.ObjectId) Event {
+func TrackMention(userID, relatedID bson.ObjectId, related string, usersID []bson.ObjectId) Event {
 	return Event{
 		Name: NEW_MENTION,
 		Params: map[string]interface{}{
 			"user_id":    userID,
+			"related":    related,
 			"related_id": relatedID,
 			"users":      usersID,
 		},
