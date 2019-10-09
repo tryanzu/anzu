@@ -153,7 +153,7 @@ func UpdateComment(c *gin.Context) {
 		c.AbortWithError(404, errors.New("unknown comment to update"))
 		return
 	}
-	post, err := posts.FindId(deps.Container, comment.ReplyTo)
+	post, err := posts.FindId(deps.Container, comment.PostId)
 	if err != nil {
 		c.AbortWithError(404, errors.New("unknown comment's post to update"))
 		return
