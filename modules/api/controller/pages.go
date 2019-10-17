@@ -22,6 +22,7 @@ func HomePage(c *gin.Context) {
 		"title":       title,
 		"description": c.MustGet("siteDescription").(string),
 		"image":       c.MustGet("siteUrl").(string) + "/images/default-post.jpg",
+		"jwt":         c.GetString("jwt"),
 	})
 }
 
@@ -39,6 +40,7 @@ func UserPage(c *gin.Context) {
 		"title":       usr.UserName + " - Perfil de usuario",
 		"description": "Explora las aportaciones y el perfil de " + usr.UserName + " en Buldar",
 		"image":       c.MustGet("siteUrl").(string) + "/images/default-post.jpg",
+		"jwt":         c.GetString("jwt"),
 	})
 }
 
@@ -61,5 +63,6 @@ func PostPage(c *gin.Context) {
 		"title":       post.Title,
 		"description": helpers.Truncate(post.Content, 160),
 		"image":       c.MustGet("siteUrl").(string) + "/images/default-post.jpg",
+		"jwt":         c.GetString("jwt"),
 	})
 }

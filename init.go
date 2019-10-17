@@ -45,7 +45,7 @@ func main() {
 		notificationsModule notifications.NotificationsModule
 		feedModule          feed.FeedModule
 		exceptions          exceptions.ExceptionsModule
-		log                 = logging.MustGetLogger("blacker")
+		log                 = logging.MustGetLogger("anzu")
 		format              = logging.MustStringFormatter(
 			`%{color}%{time:15:04:05.000} %{module} %{shortfile} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}`,
 		)
