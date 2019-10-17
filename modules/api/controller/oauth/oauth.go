@@ -118,12 +118,6 @@ func (a API) CompleteAuth(c *gin.Context) {
 
 	// The id for the token would be the same as the facebook user
 	id = u.Data().Id
-	trusted_user := a.Security.TrustUserIP(c.ClientIP(), u)
-	if !trusted_user {
-		c.JSON(403, gin.H{"status": "error", "message": "Not trusted."})
-		return
-	}
-
 	if len(usr.Email) > 0 {
 		_ = u.Update(map[string]interface{}{usr.Provider: usr.RawData, "email": usr.Email})
 	}
