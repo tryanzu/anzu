@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/tryanzu/core/core/config"
 	"github.com/tryanzu/core/core/events"
@@ -14,7 +15,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-// Load site config into middlewares pipe context.
+// SiteMiddleware loads site config into middlewares pipe context.
 func SiteMiddleware() gin.HandlerFunc {
 	legacy := deps.Container.Config()
 	siteName, err := legacy.String("site.name")
@@ -33,6 +34,13 @@ func SiteMiddleware() gin.HandlerFunc {
 	}
 
 	return func(c *gin.Context) {
+		bucket := sessions.Default(c)
+		if token := bucket.Get("jwt"); token != nil {
+			c.Set("jwt", token.(string))
+			bucket.Delete("jwt")
+			bucket.Save()
+		}
+
 		c.Set("config", config.C.Copy())
 		c.Set("siteName", siteName)
 		c.Set("siteDescription", description)

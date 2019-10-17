@@ -1,7 +1,6 @@
 package oauth
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
@@ -71,11 +70,6 @@ func (a API) CompleteAuth(c *gin.Context) {
 		c.JSON(500, gin.H{"status": "error", "message": "Could not get oauth session ref"})
 		return
 	}
-	redir := bucket.Get("redir")
-	bucket.Delete("oauth")
-	bucket.Delete("redir")
-	bucket.Save()
-
 	sess, err := provider.UnmarshalSession(oauth.(string))
 	if err != nil {
 		c.JSON(500, gin.H{"status": "session-error", "oauth": oauth, "message": err.Error()})
@@ -121,7 +115,7 @@ func (a API) CompleteAuth(c *gin.Context) {
 	if len(usr.Email) > 0 {
 		_ = u.Update(map[string]interface{}{usr.Provider: usr.RawData, "email": usr.Email})
 	}
-
+	redir := bucket.Get("redir")
 	forward := redir.(string)
 
 	if len(forward) < 6 {
@@ -133,9 +127,11 @@ func (a API) CompleteAuth(c *gin.Context) {
 
 	// Generate JWT with the information about the user
 	token := a.generateUserToken(id, u.Data().Roles, 72)
-	url := fmt.Sprintf("%s/?token=%s", forward, token)
-
-	c.Redirect(303, url)
+	bucket.Delete("oauth")
+	bucket.Delete("redir")
+	bucket.Set("jwt", token)
+	bucket.Save()
+	c.Redirect(303, forward)
 }
 
 type UserToken struct {

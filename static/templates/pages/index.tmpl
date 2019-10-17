@@ -51,6 +51,9 @@
             site: {{ .config.Site }}
         }
     </script>
+    {{ if .jwt }}
+    <script type="text/javascript">window.localStorage.setItem('_auth', JSON.stringify({ token: '{{ .jwt }}' }))</script>
+    {{ end }}
     <script type="text/javascript" src="/assets/dist/others.js"></script>
     <script type="text/javascript" src="/assets/dist/core.js"></script>
 
