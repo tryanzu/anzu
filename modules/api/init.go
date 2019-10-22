@@ -99,7 +99,6 @@ func (module *Module) Run(bindTo string) {
 
 	// Production only middlewares
 	if debug == false {
-		//router.Use(module.Middlewares.TrustIP())
 		router.Use(chttp.MaxAllowed(5))
 	}
 
@@ -143,6 +142,7 @@ func (module *Module) Run(bindTo string) {
 	v1.GET("/comments/:post_id", controller.Comments)
 
 	// User routes
+	v1.GET("/search/users/:name", controller.SearchUsers)
 	v1.POST("/user", module.Users.UserRegisterAction)
 	v1.GET("/users/:id", module.Users.UserGetOne)
 	v1.GET("/users/:id/:kind", module.Users.UserGetActivity)
