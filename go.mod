@@ -11,6 +11,7 @@ require (
 	github.com/boj/redistore v0.0.0-20180917114910-cd5dcc76aeff // indirect
 	github.com/certifi/gocertifi v0.0.0-20190506164543-d2eda7129713 // indirect
 	github.com/cupcake/rdb v0.0.0-20161107195141-43ba34106c76 // indirect
+	github.com/deckarep/golang-set v1.7.1 // indirect
 	github.com/desertbit/glue v0.0.0-20171018142742-09c14070c2b1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/divideandconquer/go-merge v0.0.0-20160829212531-bc6b3a394b4e
@@ -35,6 +36,7 @@ require (
 	github.com/henrylee2cn/goutil v0.0.0-20190530092832-5b5425bff75c
 	github.com/hjr265/postmark.go v0.0.0-20160229184323-5546b2897115
 	github.com/kennygrant/sanitize v1.2.4
+	github.com/lestrrat-go/ngram v0.0.0-20180220114513-adb5d38f67cc
 	github.com/markbates/goth v1.53.0
 	github.com/matcornic/hermes/v2 v2.0.2
 	github.com/mattn/go-colorable v0.1.2 // indirect

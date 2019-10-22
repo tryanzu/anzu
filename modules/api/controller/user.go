@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/tryanzu/core/board/search"
 	"github.com/tryanzu/core/core/config"
 	"github.com/tryanzu/core/core/user"
 	"github.com/tryanzu/core/deps"
@@ -41,6 +42,16 @@ func Users(c *gin.Context) {
 		panic(err)
 	}
 	c.JSON(200, set)
+}
+
+func SearchUsers(c *gin.Context) {
+	match := c.Param("name")
+	if len(match) > 20 || len(match) == 0 {
+		jsonErr(c, http.StatusBadRequest, "invalid match string")
+		return
+	}
+	results := search.Users(match)
+	c.JSON(200, gin.H{"list": results})
 }
 
 type upsertBanForm struct {
