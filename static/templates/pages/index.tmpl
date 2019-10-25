@@ -54,15 +54,7 @@
     {{ if .jwt }}
     <script type="text/javascript">window.localStorage.setItem('_auth', JSON.stringify({ token: '{{ .jwt }}' }))</script>
     {{ end }}
-    <script type="text/javascript" src="/assets/dist/others.js"></script>
-    <script type="text/javascript" src="/assets/dist/core.js"></script>
-
-    <script type="text/javascript">
-        document.addEventListener('DOMContentLoaded', function() {
-            var mount = require('src/mount.js');
-            mount.anzu(document.getElementById('react-anzu'));
-        })
-    </script>
+    <script type="text/javascript" src="/assets/dist/main.bundle.js"></script>
 </body>
 </html>
 {{ end }}
