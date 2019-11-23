@@ -12,6 +12,7 @@ type chatChan struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	Youtube     string `json:"youtubeVideo"`
+	Twitch      string `json:"twitchVideo"`
 }
 
 type anzuSecurity struct {
