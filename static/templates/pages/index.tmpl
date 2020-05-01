@@ -46,8 +46,8 @@
     <!-- Anzu board components -->
     <script type="text/javascript">
         window.Anzu = {
-            layer: '{{ "site.url" | config }}/v1/',
-            globalIO: '{{ "site.url" | config }}',
+            layer: '{{ .config.Site.Url }}/v1/',
+            globalIO: '{{ .config.Site.Url }}',
             site: {{ .config.Site }}
         }
     </script>

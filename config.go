@@ -30,6 +30,12 @@ func init() {
 	if v, exists := os.LookupEnv("MONGO_NAME"); exists {
 		deps.MongoName = v
 	}
+	if v, exists := os.LookupEnv("REDIS_URL"); exists {
+		deps.RedisURL = v
+	}
+	if v, exists := os.LookupEnv("SENTRY_URL"); exists {
+		deps.SentryURL = v
+	}
 	// Run config service bootstraping sequences.
 	config.Bootstrap()
 

@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"os"
 	"strings"
 	"syscall"
 )
@@ -109,16 +108,10 @@ func (di *MiddlewareAPI) Authorization() gin.HandlerFunc {
 		if token != "" {
 			// Check for the JWT inside the header
 			if token[0:6] == "Bearer" {
-				tkn := token[7:len(token)]
-				secret, err := di.ConfigService.String("application.secret")
-				if err != nil {
-					panic(err)
-				}
-
-				signed, err := jwt.Parse(tkn, func(passed_token *jwt.Token) (interface{}, error) {
+				signed, err := jwt.Parse(token[7:], func(passed_token *jwt.Token) (interface{}, error) {
 					// since we only use the one private key to sign the tokens,
 					// we also only use its public counter part to verify
-					return []byte(secret), nil
+					return []byte(deps.AppSecret), nil
 				})
 
 				// Branch out into the possible error from signing
@@ -177,7 +170,7 @@ func (di *MiddlewareAPI) Authorization() gin.HandlerFunc {
 				}
 
 				// Set the token for further usage
-				c.Set("token", tkn)
+				c.Set("token", token[7:])
 				c.Set("user_id", claims["user_id"].(string))
 				c.Set("userID", bson.ObjectIdHex(claims["user_id"].(string)))
 				c.Set("scope", scope)
@@ -230,17 +223,7 @@ func (di *MiddlewareAPI) NeedAclAuthorization(permission string) gin.HandlerFunc
 
 func (di *MiddlewareAPI) ErrorTracking(debug bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
-
 		if debug == false {
-			envfile := os.Getenv("ENV_FILE")
-			if envfile == "" {
-				envfile = "./env.json"
-			}
-
-			tags := map[string]string{
-				"config_file": envfile,
-			}
-
 			defer func() {
 				var packet *raven.Packet
 
@@ -270,13 +253,12 @@ func (di *MiddlewareAPI) ErrorTracking(debug bool) gin.HandlerFunc {
 				}
 
 				// Grab the error and send it to sentry
-				di.ErrorService.Capture(packet, tags)
+				di.ErrorService.Capture(packet, nil)
 
 				// Also abort the request with 500
 				c.AbortWithStatus(500)
 			}()
 		} else {
-
 			defer func() {
 
 				switch rval := recover().(type) {

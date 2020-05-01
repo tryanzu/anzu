@@ -8,10 +8,13 @@ import (
 var (
 	ENV       string
 	AppSecret string
+
+	// SentryURL config
+	SentryURL string
 )
 
 func IgniteConfig(d Deps) (container Deps, err error) {
-	gamingRules, err := ioutil.ReadFile("./gaming.json")
+	gamingRules, err := ioutil.ReadFile("gaming.json")
 	if err != nil {
 		log.Error(err)
 		return

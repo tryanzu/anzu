@@ -6,6 +6,17 @@ type Anzu struct {
 	Homedir  string
 	Security anzuSecurity
 	Mail     anzuMail
+	Oauth    OauthConfig
+}
+
+type OauthConfig struct {
+	Facebook OauthKeys
+}
+
+type OauthKeys struct {
+	Key      string
+	Secret   string
+	Callback string
 }
 
 type chatChan struct {
