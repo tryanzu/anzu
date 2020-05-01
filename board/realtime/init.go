@@ -82,18 +82,14 @@ func prepare() {
 		HTTPSocketType: glue.HTTPSocketTypeNone,
 	}
 
-	if env, err := deps.Container.Config().String("environment"); err == nil && env == "development" {
+	if deps.ENV == "dev" {
 		options.CheckOrigin = func(r *http.Request) bool {
 			return true
 		}
 	}
 
 	server = glue.NewServer(options)
-	secret, err := deps.Container.Config().String("application.secret")
-	if err != nil {
-		log.Panic("Could not get JWT secret token. (missing config)", err)
-	}
-	jwtSecret = []byte(secret)
+	jwtSecret = []byte(deps.AppSecret)
 	go func() {
 		buffered := make([]M, 0, 1000)
 
@@ -108,7 +104,7 @@ func prepare() {
 					continue
 				}
 				mark := elapsed("flushing")
-				log.Debugf("flushing buffer, items = %v", len(buffered))
+				log.Debugf("flushing messages buffer, items = %v", len(buffered))
 				dispatcher <- buffered
 				buffered = make([]M, 0, 1000)
 				mark()
@@ -119,7 +115,7 @@ func prepare() {
 	go func() {
 		for pack := range dispatcher {
 			mark := elapsed("dispatching")
-			log.Debugf("dispatching messages, list = %+v", pack)
+			log.Debugf("dispatching %v messages", len(pack))
 			sockets.Range(func(k, v interface{}) bool {
 				c := v.(*Client)
 				c.send(pack)
@@ -152,7 +148,7 @@ func onNewSocket(s *glue.Socket) {
 		Read:     make(chan SocketEvent),
 	}
 
-	log.Infof("client connected, id = %s | address = %s | connections = %v", s.ID(), addr, conns)
+	log.Infof("client connected, id=%s | address=%s | connections=%v", s.ID(), addr, conns)
 
 	// READ WORKER
 	// This little dedicated goroutine will handle all incoming messages for this particular client.
@@ -221,6 +217,6 @@ func elapsed(name string) func() {
 	return func() {
 		ends := time.Now()
 		elapsed := ends.Sub(starts)
-		log.Debugf("time elapsed in, name = %s | took = %s", name, elapsed)
+		log.Debugf("benchmark name=%s | took=%s", name, elapsed)
 	}
 }

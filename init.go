@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/facebookgo/inject"
@@ -30,6 +29,7 @@ import (
 func main() {
 
 	// Graph main object (used to inject dependencies)
+	// LEGACY: To be depecrated asap
 	var g inject.Graph
 
 	// Run with the specified env file
@@ -45,15 +45,8 @@ func main() {
 		notificationsModule notifications.NotificationsModule
 		feedModule          feed.FeedModule
 		exceptions          exceptions.ExceptionsModule
-		log                 = logging.MustGetLogger("anzu")
-		format              = logging.MustStringFormatter(
-			`%{color}%{time:15:04:05.000} %{module} %{shortfile} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}`,
-		)
+		log                 = logging.MustGetLogger("main")
 	)
-
-	backend := logging.NewLogBackend(os.Stderr, "", 0)
-	backendFormatter := logging.NewBackendFormatter(backend, format)
-	logging.SetBackend(backendFormatter)
 
 	// Services for the DI
 	configService, _ := config.ParseJsonFile(envfile)
@@ -65,19 +58,15 @@ func main() {
 	assetsService := assets.Boot()
 
 	// Authentication services
-	facebookProvider := facebook.New(string_value(configService.String("auth.facebook.key")), string_value(configService.String("auth.facebook.secret")), string_value(configService.String("auth.facebook.callback")), "email")
-	fmt.Printf("facebook provider client %s secret %s", facebookProvider.ClientKey, facebookProvider.Secret)
-	facebookProvider.Debug(true)
-	goth.UseProviders(facebookProvider)
+	oauthFacebook := facebook.New(string_value(configService.String("auth.facebook.key")), string_value(configService.String("auth.facebook.secret")), string_value(configService.String("auth.facebook.callback")), "email")
+	goth.UseProviders(oauthFacebook)
 
 	// Amazon services for the DI
 	amazonAuth, err := aws.GetAuth(string_value(configService.String("amazon.access_key")), string_value(configService.String("amazon.secret")))
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
-
-	s3Region := aws.USWest
-	s3Service := s3.New(amazonAuth, s3Region)
+	s3Service := s3.New(amazonAuth, aws.USWest)
 	s3BucketService := s3Service.Bucket(string_value(configService.String("amazon.s3.bucket")))
 
 	// Provide graph with service instances
@@ -99,8 +88,7 @@ func main() {
 	)
 
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+		log.Fatal(err)
 	}
 
 	shellCmd := &cobra.Command{
@@ -114,7 +102,7 @@ func main() {
 		},
 	}
 
-	var cmdAPI = &cobra.Command{
+	cmdAPI := &cobra.Command{
 		Use:   "api",
 		Short: "Starts API web server",
 		Long: `Starts API web server listening
@@ -134,7 +122,7 @@ func main() {
 		},
 	}
 
-	var cmdSyncRanking = &cobra.Command{
+	cmdSyncRanking := &cobra.Command{
 		Use:   "sync-ranking",
 		Short: "Sync ranking",
 		Long: `Sync and recalculates ranking facts
@@ -144,21 +132,18 @@ func main() {
 
 			// Populate the DI with the instances
 			if err := g.Populate(); err != nil {
-				fmt.Fprintln(os.Stderr, err)
-				os.Exit(1)
+				log.Fatal(err)
 			}
 
 			gamingService.ResetGeneralRanking()
 		},
 	}
 
-	var rootCmd = &cobra.Command{Use: "Anzu"}
+	rootCmd := &cobra.Command{Use: "Anzu"}
 	rootCmd.AddCommand(cmdAPI)
 	rootCmd.AddCommand(cmdSyncRanking)
 	rootCmd.AddCommand(shellCmd)
 	rootCmd.Execute()
-
-	return
 }
 
 func string_value(value string, err error) string {

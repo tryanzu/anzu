@@ -1,7 +1,6 @@
 package http
 
 import (
-	"log"
 	"net/http"
 	"time"
 
@@ -17,22 +16,6 @@ import (
 
 // SiteMiddleware loads site config into middlewares pipe context.
 func SiteMiddleware() gin.HandlerFunc {
-	legacy := deps.Container.Config()
-	siteName, err := legacy.String("site.name")
-	if err != nil {
-		log.Panicf("site.name not found in config")
-	}
-
-	description, err := legacy.String("site.description")
-	if err != nil {
-		log.Panicf("site.description not found in config")
-	}
-
-	url, err := legacy.String("site.url")
-	if err != nil {
-		log.Panicf("site.url not found in config")
-	}
-
 	return func(c *gin.Context) {
 		bucket := sessions.Default(c)
 		if token := bucket.Get("jwt"); token != nil {
@@ -40,19 +23,19 @@ func SiteMiddleware() gin.HandlerFunc {
 			bucket.Delete("jwt")
 			bucket.Save()
 		}
-
-		c.Set("config", config.C.Copy())
-		c.Set("siteName", siteName)
-		c.Set("siteDescription", description)
-		c.Set("siteUrl", url)
+		cnf := config.C.Copy()
+		c.Set("config", cnf)
+		c.Set("siteName", cnf.Site.Name)
+		c.Set("siteDescription", cnf.Site.Description)
+		c.Set("siteUrl", cnf.Site.Url)
 		c.Next()
 	}
 }
 
 // Limit number of simultaneous connections.
 func MaxAllowed(n int) gin.HandlerFunc {
-	sem := make(chan bool, n)
-	acquire := func() { sem <- true }
+	sem := make(chan struct{}, n)
+	acquire := func() { sem <- struct{}{} }
 	release := func() { <-sem }
 	return func(c *gin.Context) {
 		acquire()       // before request

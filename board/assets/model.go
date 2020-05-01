@@ -101,7 +101,8 @@ func (list Assets) HostRemotes(deps Deps, related string) {
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 	client := &http.Client{Transport: tr}
-	baseURL := deps.Config().UString("amazon.url", "")
+	// TODO: complement with env var
+	baseURL := ""
 
 	for _, ref := range list {
 		res, err := client.Get(ref.Original)

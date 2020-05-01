@@ -2,7 +2,6 @@ package post
 
 import (
 	"errors"
-	"log"
 	"math"
 
 	"github.com/tryanzu/core/core/common"
@@ -32,6 +31,6 @@ func FindRateList(d deps, date string, offset, limit int) ([]bson.ObjectId, erro
 		id := bson.ObjectIdHex(string(n.Member))
 		list = append(list, id)
 	}
-	log.Printf("Ratings at %s: %+v\n", date, scores)
+	log.Info("getting rate list at %s", date)
 	return list, err
 }

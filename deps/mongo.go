@@ -1,32 +1,24 @@
 package deps
 
 import (
-	"os"
-
 	"gopkg.in/mgo.v2"
 )
 
-func IgniteMongoDB(container Deps) (Deps, error) {
-	uri, err := container.Config().String("database.uri")
-	if err != nil {
-		return container, err
-	}
+var (
+	// MongoURL config uri
+	MongoURL string
+	// MongoName db name
+	MongoName string
+)
 
-	dbName, err := container.Config().String("database.name")
+func IgniteMongoDB(container Deps) (Deps, error) {
+	session, err := mgo.Dial(MongoURL)
 	if err != nil {
+		log.Error(err)
+		log.Info(MongoURL)
 		return container, err
 	}
-	if envURI := os.Getenv("MONGO_URL"); len(envURI) > 0 {
-		uri = envURI
-	}
-	session, err := mgo.Dial(uri)
-	if err != nil {
-		return container, err
-	}
-	if envDb := os.Getenv("MONGO_DB"); len(envDb) > 0 {
-		dbName = envDb
-	}
-	db := session.DB(dbName)
+	db := session.DB(MongoName)
 
 	// Ensure indexes
 	db.C("users").EnsureIndex(

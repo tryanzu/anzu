@@ -3,11 +3,13 @@ package templates
 import (
 	"bytes"
 	"html/template"
-	"log"
 	"strings"
 
+	"github.com/op/go-logging"
 	"github.com/tryanzu/core/core/config"
 )
+
+var log = logging.MustGetLogger("templates")
 
 var GlobalFuncs = template.FuncMap{
 	"trust": func(html string) template.HTML {
@@ -25,7 +27,7 @@ func Boot() {
 		for {
 			c := config.C.Copy()
 			Templates = template.Must(template.New("").Funcs(GlobalFuncs).ParseGlob(c.Homedir + "static/templates/**/*.html"))
-			log.Println("[BOOT] core/templates configured.")
+			log.Info("core/templates is now configured")
 
 			// Wait for config changes...
 			<-config.C.Reload

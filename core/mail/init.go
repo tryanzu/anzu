@@ -1,14 +1,16 @@
 package mail
 
 import (
-	"log"
 	"time"
 
+	"github.com/op/go-logging"
 	"github.com/tryanzu/core/core/config"
 	gomail "gopkg.in/gomail.v2"
 )
 
 var (
+	log = logging.MustGetLogger("search")
+
 	// In channel will receive the messages to be sent.
 	In chan *gomail.Message
 )
@@ -43,13 +45,13 @@ func sendWorker(c *config.Config) {
 
 	mail := c.Copy().Mail
 	if len(mail.Server) > 0 {
-		log.Println("[BOOT] Mail send worker has started...", mail)
+		log.Info("send worker has started...", mail)
 		dialer := gomail.NewPlainDialer(mail.Server, 587, mail.User, mail.Password)
 		for {
 			select {
 			case m, alive := <-In:
 				if !alive {
-					log.Println("Mail send worker has stopped...")
+					log.Info("Mail send worker has stopped...")
 					return
 				}
 				if !open {
@@ -59,7 +61,7 @@ func sendWorker(c *config.Config) {
 					open = true
 				}
 				if err := gomail.Send(sender, m); err != nil {
-					log.Print(err)
+					log.Error(err)
 				}
 			case <-time.After(30 * time.Second):
 				// Close the connection to the SMTP server if no email was sent in
@@ -74,14 +76,14 @@ func sendWorker(c *config.Config) {
 		}
 	}
 
-	log.Println("[BOOT] Mail worker is not configured, discarding emails...")
+	log.Warning("mail settings are not configured, discarding emails...")
 	for {
 		m, alive := <-In
 		if !alive {
-			log.Println("[BOOT] Mail worker has stopped...")
+			log.Info("worker has stopped...")
 			return
 		}
 
-		log.Println("[BOOT] Discarding mail message", m)
+		log.Debug(m)
 	}
 }

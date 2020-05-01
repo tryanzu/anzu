@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -16,6 +15,7 @@ import (
 	newrelic "github.com/newrelic/go-agent"
 	"github.com/newrelic/go-agent/_integrations/nrgin/v1"
 	"github.com/olebedev/config"
+	"github.com/op/go-logging"
 	handle "github.com/tryanzu/core/board/legacy"
 	"github.com/tryanzu/core/board/realtime"
 	chttp "github.com/tryanzu/core/core/http"
@@ -26,8 +26,13 @@ import (
 )
 
 var (
-	NewRelicKey  string
-	NewRelicName string = "anzu"
+	DEBUG         bool   = true
+	ENV           string = "dev"
+	AppSecret     string
+	TemplatesGlob string = "./static/templates/**/*"
+	NewRelicKey   string
+	NewRelicName  string = "anzu"
+	log                  = logging.MustGetLogger("http-api")
 )
 
 type Module struct {
@@ -47,37 +52,19 @@ type ModuleDI struct {
 }
 
 func (module *Module) Run(bindTo string) {
-	debug := true
-	environment, err := module.Dependencies.Config.String("environment")
-	if err != nil {
-		panic(err)
-	}
-
-	// If development turn debug on
-	if environment != "development" {
-		debug = false
+	if ENV != "dev" {
+		DEBUG = false
 		gin.SetMode(gin.ReleaseMode)
 	}
-
-	// Session storage
-	secret, err := module.Dependencies.Config.String("application.secret")
-	if err != nil {
-		panic(err)
-	}
-
-	store := sessions.NewCookieStore([]byte(secret))
-	templates, err := module.Dependencies.Config.String("application.templates")
-	if err != nil {
-		panic(err)
-	}
-
-	router := gin.Default()
+	store := sessions.NewCookieStore([]byte(AppSecret))
+	router := gin.New()
+	router.Use(gin.Recovery())
 	router.SetFuncMap(template.FuncMap{
 		"config": func(key string) string {
 			return module.Dependencies.Config.UString(key, fmt.Sprintf("[Fatal error] Cannot get config with key %s", key))
 		},
 	})
-	router.LoadHTMLGlob(templates)
+	router.LoadHTMLGlob(TemplatesGlob)
 
 	if len(NewRelicKey) > 0 {
 		cfg := newrelic.NewConfig(NewRelicName, NewRelicKey)
@@ -92,13 +79,13 @@ func (module *Module) Run(bindTo string) {
 
 	// Middlewares setup
 	router.Use(sessions.Sessions("session", store))
-	router.Use(module.Middlewares.ErrorTracking(debug))
+	router.Use(module.Middlewares.ErrorTracking(DEBUG))
 	router.Use(module.Middlewares.CORS())
 	router.Use(module.Middlewares.MongoRefresher())
 	router.Use(chttp.SiteMiddleware())
 
 	// Production only middlewares
-	if debug == false {
+	if DEBUG == false {
 		router.Use(chttp.MaxAllowed(5))
 	}
 
@@ -205,19 +192,20 @@ func (module *Module) Run(bindTo string) {
 			log.Fatalf("Listen: %s\n", err)
 		}
 	}()
+	log.Info("http server has started")
 	// Wait for interrupt signal to gracefully shutdown the server with
 	// a timeout of 5 seconds.
 	quit := make(chan os.Signal)
 	signal.Notify(quit, os.Interrupt)
 	<-quit
-	log.Println("Shutdown Server ...")
+	log.Info("server shutting down")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
 		log.Fatal("Server Shutdown:", err)
 	}
-	log.Println("Server exiting")
+	log.Info("all done, bye")
 }
 
 func (module *Module) Populate(g inject.Graph) {
@@ -234,13 +222,11 @@ func (module *Module) Populate(g inject.Graph) {
 	)
 
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+		log.Fatal(err)
 	}
 
 	// Populate the DI with the instances
 	if err := g.Populate(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+		log.Fatal(err)
 	}
 }

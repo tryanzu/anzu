@@ -43,12 +43,12 @@ func prepare() {
 		iter := deps.Container.Mgo().C("users").Find(nil).Sort("-last_seen_at").Limit(bufferSize).Iter()
 		usersIndex = ngram.NewIndex(1)
 		for iter.Next(&user) {
-			log.Debugf("indexing %+v", user)
 			err := usersIndex.AddItem(user)
 			if err != nil {
 				log.Error(err)
 			}
 		}
+		log.Info("in-memory user search index has finished")
 	}()
 }
 

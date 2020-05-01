@@ -1,1 +1,1 @@
-reflex -R '^(static|vendor)/' -r '\.(go|html)$' -s -- sh -c 'go build -o anzu && ./anzu api'
+reflex -R '^(static|vendor|var)/' -r '\.(go|html)$' -s -- sh -c 'go build -o anzu && ./anzu api'

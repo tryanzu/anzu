@@ -4,13 +4,12 @@ import (
 	"github.com/xuyu/goredis"
 )
 
-func IgniteCache(container Deps) (Deps, error) {
-	address, err := container.Config().String("cache.redis")
-	if err != nil {
-		return container, err
-	}
+var (
+	RedisURL string
+)
 
-	redis, err := goredis.Dial(&goredis.DialConfig{Address: address})
+func IgniteCache(container Deps) (Deps, error) {
+	redis, err := goredis.Dial(&goredis.DialConfig{Address: RedisURL})
 	if err != nil {
 		return container, err
 	}
