@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/tryanzu/core.svg?branch=release%2Falpha)](https://travis-ci.org/tryanzu/core)
+![Go](https://github.com/tryanzu/anzu/workflows/Go/badge.svg)
 [![Go Report Card](https://goreportcard.com/badge/github.com/tryanzu/core)](https://goreportcard.com/report/github.com/tryanzu/core)
 
 # Meet Anzu
@@ -10,7 +10,7 @@ Forum platforms to host communities are vast. Many would say it's a lifeless spa
 This repository contains the core backend and the frontend submodule link. 
 We're still working in the first alpha, so previous knowledge about the stack is required to set things up.
 
-## Alpha screenshot
+## Alpha screenshots
 ![Anzu alpha post](https://imgur.com/pXDutG0.png)
 ![Anzu alpha publisher](https://imgur.com/tF1ApnP.png)
 ![Anzu alpha post](https://imgur.com/IAv9V8C.png)
@@ -18,11 +18,10 @@ We're still working in the first alpha, so previous knowledge about the stack is
 ![Anzu alpha profile](https://imgur.com/uG4C9LE.png)
 
 ## Anzu's stack
-- Golang.
-- Redis (to be replaced)
-- LedisDB (embedded cache)
-- MongoDB (persistent storage)
-- React JS
+- [Go](https://golang.org/) programming language
+- [redis](https://redis.io/) (required) for cache
+- [mongoDB](https://www.mongodb.com/) (required)
+- [react](https://reactjs.org/) for the webapp
 
 # Contribute
 
@@ -30,27 +29,12 @@ We're still working in the first alpha, so previous knowledge about the stack is
 
 ### Download dependencies
 The first step is to download Go, official binary distributions are available at [https://golang.org/dl/](https://golang.org/dl/).
-If you are upgrading from an older version of Go you must first [remove the existing version](https://golang.org/doc/install?download=go1.11.4.darwin-amd64.pkg#uninstall).
-
-[Download the package file](https://golang.org/dl/), open it, and follow the prompts to install the Go tools. The package installs the Go distribution to /usr/local/go.
-The package should put the /usr/local/go/bin directory in your PATH environment variable. You may need to restart any open Terminal sessions for the change to take effect.
-
-Make sure you have defined your GOPATH:
-
-```zsh
-export GOPATH=$HOME/go
-export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
-```
 
 Now you need to download and configure **MongoDB** and **Redis**. Alternatively you can use remote servers.
 
-Execute the following command: `go get https://github.com/cespare/reflex`
-
-Reflex probably only works on Linux and Mac OS.
-
 ### Download the repositories
 
-Download the [core](http://github.com/tryanzu/core) in any path.
+Download the [core](http://github.com/tryanzu/anzu) in any path.
 
 Initialize the repo submodule, so the [frontend](http://github.com/tryanzu/frontend) is in `static/frontend`.
 
@@ -67,13 +51,10 @@ Install the frontend dependencies with `yarn install`.
 
 Copy the `.env.example` file into `.env` and edit it to meet your local environment configuration.
 
-Edit `static/frontend/src/index.html`. The `window.Anzu` variable is the configuration section.
-
 ### Last steps
 
-Execute the script `develop.sh` to have hot reload (compile and run) while editing the core code.
-
-Execute `brunch watch -s` in `static/frontend` to have hot reload while editing the frontend code.
+Building the frontend before getting started is required, to do so, execute `npm install && npm run build` inside `static/frontend` submodule.
+Once the frontend is built you can build the backend program with `go build -o anzu` and then execute `./anzu api` to run anzu's http web server.
 
 ## Commits
 

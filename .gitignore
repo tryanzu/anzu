@@ -21,4 +21,5 @@ vendor
 cache.db
 var
 .vscode
+.env
 config.toml
