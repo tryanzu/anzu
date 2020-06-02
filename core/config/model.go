@@ -1,5 +1,7 @@
 package config
 
+import "strings"
+
 // Anzu config params struct.
 type Anzu struct {
 	Site     anzuSite
@@ -58,7 +60,11 @@ type anzuSite struct {
 }
 
 func (site anzuSite) MakeURL(url string) string {
-	return site.Url + url
+	u := site.Url
+	if strings.HasSuffix(u, "/") == false {
+		u = u + "/"
+	}
+	return u + url
 }
 
 func (site anzuSite) IsValidReaction(name string) bool {
