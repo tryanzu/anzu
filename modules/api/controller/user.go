@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/tryanzu/core/board/search"
 	"github.com/tryanzu/core/core/config"
@@ -113,5 +114,8 @@ func RecoveryLink(c *gin.Context) {
 		c.Redirect(http.StatusTemporaryRedirect, "/")
 		return
 	}
-	c.Redirect(http.StatusTemporaryRedirect, "/u/"+usr.UserNameSlug+"/"+usr.Id.Hex()+"?token="+auth)
+	bucket := sessions.Default(c)
+	bucket.Set("jwt", auth)
+	bucket.Save()
+	c.Redirect(http.StatusTemporaryRedirect, "/u/"+usr.UserNameSlug+"/"+usr.Id.Hex())
 }
