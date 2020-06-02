@@ -13,10 +13,10 @@ import (
 	"github.com/gin-gonic/gin"
 	newrelic "github.com/newrelic/go-agent"
 	"github.com/newrelic/go-agent/_integrations/nrgin/v1"
-	"github.com/olebedev/config"
 	"github.com/op/go-logging"
 	handle "github.com/tryanzu/core/board/legacy"
 	"github.com/tryanzu/core/board/realtime"
+	"github.com/tryanzu/core/core/config"
 	chttp "github.com/tryanzu/core/core/http"
 	"github.com/tryanzu/core/modules/api/controller"
 	"github.com/tryanzu/core/modules/api/controller/oauth"
@@ -27,7 +27,6 @@ import (
 var (
 	DEBUG         bool   = true
 	ENV           string = "dev"
-	AppSecret     string
 	TemplatesGlob string = "./static/templates/**/*"
 	NewRelicKey   string
 	NewRelicName  string = "anzu"
@@ -46,7 +45,6 @@ type Module struct {
 }
 
 type ModuleDI struct {
-	Config *config.Config `inject:""`
 }
 
 func (module *Module) Run(bindTo string) {
@@ -54,14 +52,15 @@ func (module *Module) Run(bindTo string) {
 		DEBUG = false
 		gin.SetMode(gin.ReleaseMode)
 	}
-	store := sessions.NewCookieStore([]byte(AppSecret))
+	cnf := config.C.Copy()
+	store := sessions.NewCookieStore([]byte(cnf.Security.Secret))
 	router := gin.New()
 	router.Use(gin.Recovery())
 	router.LoadHTMLGlob(TemplatesGlob)
 
 	if len(NewRelicKey) > 0 {
 		cfg := newrelic.NewConfig(NewRelicName, NewRelicKey)
-		cfg.Logger = newrelic.NewDebugLogger(os.Stdout)
+		cfg.Logger = newrelic.NewLogger(os.Stdout)
 		app, err := newrelic.NewApplication(cfg)
 		if nil != err {
 			fmt.Println(err)

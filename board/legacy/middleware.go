@@ -111,7 +111,7 @@ func (di *MiddlewareAPI) Authorization() gin.HandlerFunc {
 				signed, err := jwt.Parse(token[7:], func(passed_token *jwt.Token) (interface{}, error) {
 					// since we only use the one private key to sign the tokens,
 					// we also only use its public counter part to verify
-					return []byte(deps.AppSecret), nil
+					return []byte(conf.Security.Secret), nil
 				})
 
 				// Branch out into the possible error from signing
