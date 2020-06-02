@@ -11,9 +11,9 @@ import (
 	"github.com/kennygrant/sanitize"
 	"github.com/mitchellh/goamz/s3"
 	"github.com/nfnt/resize"
-	"github.com/olebedev/config"
 	"github.com/tryanzu/core/board/comments"
 	"github.com/tryanzu/core/board/legacy/model"
+	"github.com/tryanzu/core/core/config"
 	"github.com/tryanzu/core/core/events"
 	u "github.com/tryanzu/core/core/user"
 	"github.com/tryanzu/core/deps"
@@ -41,15 +41,14 @@ import (
 )
 
 type UserAPI struct {
-	Errors        *exceptions.ExceptionsModule `inject:""`
-	CacheService  *goredis.Redis               `inject:""`
-	ConfigService *config.Config               `inject:""`
-	S3Bucket      *s3.Bucket                   `inject:""`
-	User          *user.Module                 `inject:""`
-	Content       *content.Module              `inject:""`
-	Gaming        *gaming.Module               `inject:""`
-	Acl           *acl.Module                  `inject:""`
-	Security      *security.Module             `inject:""`
+	Errors       *exceptions.ExceptionsModule `inject:""`
+	CacheService *goredis.Redis               `inject:""`
+	S3Bucket     *s3.Bucket                   `inject:""`
+	User         *user.Module                 `inject:""`
+	Content      *content.Module              `inject:""`
+	Gaming       *gaming.Module               `inject:""`
+	Acl          *acl.Module                  `inject:""`
+	Security     *security.Module             `inject:""`
 }
 
 func (di *UserAPI) UserCategorySubscribe(c *gin.Context) {
@@ -223,7 +222,7 @@ func (di UserAPI) UserGetJwtToken(c *gin.Context) {
 	}
 
 	// Development mode
-	if env := di.ConfigService.UString("environment", "development"); env != "development" {
+	if env := deps.ENV; env != "dev" {
 		hash := helpers.Sha256(password)
 		if usr.Data().Password != hash && helpers.CheckPasswordHash(password, usr.Data().Password) == false {
 			c.JSON(400, gin.H{"status": "error", "message": "Account credentials are not correct.", "code": 400})
@@ -621,15 +620,11 @@ func (di *UserAPI) generateUserToken(c *gin.Context, id bson.ObjectId, roles []u
 		},
 	}
 
+	conf := config.C.Copy()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	// Use the secret inside the configuration to encrypt it
-	secret, err := di.ConfigService.String("application.secret")
-	if err != nil {
-		panic(err)
-	}
-
-	tkn, err := token.SignedString([]byte(secret))
+	tkn, err := token.SignedString([]byte(conf.Security.Secret))
 	if err != nil {
 		panic(err)
 	}
