@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/markbates/goth"
-	"github.com/olebedev/config"
+	"github.com/tryanzu/core/core/config"
 	"github.com/tryanzu/core/modules/security"
 	"github.com/tryanzu/core/modules/user"
 	"gopkg.in/mgo.v2/bson"
@@ -21,11 +21,6 @@ type API struct {
 }
 
 func (a API) GetAuthRedirect(c *gin.Context) {
-	siteUrl, err := a.Config.String("application.siteUrl")
-	if err != nil {
-		panic(err)
-	}
-
 	provider, err := goth.GetProvider(c.Param("provider"))
 	if err != nil {
 		c.JSON(500, gin.H{"status": "error", "message": err.Error()})
@@ -43,8 +38,8 @@ func (a API) GetAuthRedirect(c *gin.Context) {
 		c.JSON(500, gin.H{"status": "error", "message": err.Error()})
 		return
 	}
-
-	if !strings.HasPrefix(c.Query("redir"), siteUrl) && !strings.HasPrefix(c.Query("redir"), "https://buldar.com") {
+	cnf := config.C.Copy()
+	if !strings.HasPrefix(c.Query("redir"), cnf.Site.Url) {
 		c.JSON(401, gin.H{"status": "unauthorized."})
 		return
 	}
@@ -117,12 +112,9 @@ func (a API) CompleteAuth(c *gin.Context) {
 	}
 	redir := bucket.Get("redir")
 	forward := redir.(string)
-
 	if len(forward) < 6 {
-		forward, err = a.Config.String("application.siteUrl")
-		if err != nil {
-			panic(err)
-		}
+		cnf := config.C.Copy()
+		forward = cnf.Site.Url
 	}
 
 	// Generate JWT with the information about the user
@@ -158,12 +150,8 @@ func (a API) generateUserToken(id bson.ObjectId, roles []user.UserRole, expirati
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	// Use the secret inside the configuration to encrypt it
-	secret, err := a.Config.String("application.secret")
-	if err != nil {
-		panic(err)
-	}
-
-	tokenString, err := token.SignedString([]byte(secret))
+	cnf := config.C.Copy()
+	tokenString, err := token.SignedString([]byte(cnf.Security.Secret))
 	if err != nil {
 		panic(err)
 	}

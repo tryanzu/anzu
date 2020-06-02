@@ -56,7 +56,8 @@ func sendWorker(c *config.Config) {
 				}
 				if !open {
 					if sender, err = dialer.Dial(); err != nil {
-						panic(err)
+						log.Error(err)
+						continue
 					}
 					open = true
 				}
@@ -68,7 +69,8 @@ func sendWorker(c *config.Config) {
 				// the last 30 seconds.
 				if open {
 					if err := sender.Close(); err != nil {
-						panic(err)
+						log.Error(err)
+						break
 					}
 					open = false
 				}

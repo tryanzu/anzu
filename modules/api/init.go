@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"fmt"
-	"html/template"
 	"net/http"
 	"os"
 	"os/signal"
@@ -36,7 +35,6 @@ var (
 )
 
 type Module struct {
-	Dependencies ModuleDI
 	Posts        handle.PostAPI
 	Oauth        oauth.API
 	Users        handle.UserAPI
@@ -59,11 +57,6 @@ func (module *Module) Run(bindTo string) {
 	store := sessions.NewCookieStore([]byte(AppSecret))
 	router := gin.New()
 	router.Use(gin.Recovery())
-	router.SetFuncMap(template.FuncMap{
-		"config": func(key string) string {
-			return module.Dependencies.Config.UString(key, fmt.Sprintf("[Fatal error] Cannot get config with key %s", key))
-		},
-	})
 	router.LoadHTMLGlob(TemplatesGlob)
 
 	if len(NewRelicKey) > 0 {
@@ -210,7 +203,6 @@ func (module *Module) Run(bindTo string) {
 
 func (module *Module) Populate(g inject.Graph) {
 	err := g.Provide(
-		&inject.Object{Value: &module.Dependencies},
 		&inject.Object{Value: &module.Posts},
 		&inject.Object{Value: &module.PostsFactory},
 		&inject.Object{Value: &module.UsersFactory},
