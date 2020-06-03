@@ -3,7 +3,10 @@ package realtime
 import (
 	"bytes"
 	"encoding/gob"
+	"errors"
+	"fmt"
 	"html"
+	"strings"
 	"sync"
 	"time"
 
@@ -126,7 +129,14 @@ func (c *Client) readWorker() {
 			}()
 		}
 	}
-	log.Infof("read worker stopped, client = %+v", c)
+	log.Infof("read worker stopped	user=%v", c)
+}
+
+func (c *Client) String() string {
+	if c.User != nil {
+		return fmt.Sprintf("%s:%s", c.User.Id, c.User.UserName)
+	}
+	return fmt.Sprintf("ipAddr:%s", c.Raw.RemoteAddr())
 }
 
 // finish client connection.
@@ -142,9 +152,9 @@ func (c *Client) finish() {
 	// Close the channel so readWorker stops.
 	close(c.Read)
 	addresses.Delete(c.Raw.RemoteAddr())
-	log.Infof("socket closed	id = %s | address = %s | userId = %v", c.Raw.ID(), c.Raw.RemoteAddr(), uid)
+	log.Infof("socket closed	id=%s | address=%s | userId=%v", c.Raw.ID(), c.Raw.RemoteAddr(), uid)
 
-	// Clean up pointers & logging.
+	// Clean up pointers.
 	c.User = nil
 	c.Channels = nil
 	sockets.Delete(c.Raw.ID())
@@ -271,12 +281,12 @@ func (c *Client) readChatMessage(e SocketEvent) {
 
 	// Update last input time from client.
 	c.lastRead = &now
-	if c.seqHits >= 10 {
+	if c.seqHits >= 4 {
 		log.Infof("spam rate exceeded, sending sys flag, client = %+v", c)
 		c.sysFlag("spam")
 	}
 	time.Sleep(time.Millisecond * 60)
-	mark := elapsed("caching message")
+	timetrace := elapsed("caching message")
 	ledisdb := deps.Container.LedisDB()
 	var (
 		buf bytes.Buffer
@@ -294,7 +304,7 @@ func (c *Client) readChatMessage(e SocketEvent) {
 	if n >= 50 {
 		ledisdb.LPop([]byte(m.Channel))
 	}
-	mark()
+	timetrace()
 }
 
 func (c *Client) readListen(e SocketEvent) {
@@ -315,10 +325,7 @@ func (c *Client) readListen(e SocketEvent) {
 	if channel[0:4] == "chat" {
 		err := c.enterChatChannel(channel)
 		if err != nil {
-			// switch err.(type) {
-			// case :
-
-			// }
+			log.Errorf("failed entering room	channel=%s	err=%v", channel, err)
 		}
 	}
 
@@ -327,6 +334,23 @@ func (c *Client) readListen(e SocketEvent) {
 }
 
 func (c *Client) enterChatChannel(channel string) error {
+	parts := strings.Split(channel, ":")
+	// A channel for a private conversation between two users looks like this: chat:u:user1:user2
+	if len(parts) > 3 && parts[1] == "u" {
+		if c.User == nil {
+			return errors.New("cannot enter private users channel")
+		}
+		peer := false
+		for _, part := range parts[1:] {
+			if c.User.Id.Hex() == part {
+				peer = true
+				break
+			}
+		}
+		if !peer {
+			return errors.New("not a member of this private channel")
+		}
+	}
 	ledis := deps.Container.LedisDB()
 	prev, err := ledis.LRange([]byte(channel), 0, 50)
 	if err != nil {
