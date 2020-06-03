@@ -27,6 +27,7 @@ func Boot() {
 		for {
 			c := config.C.Copy()
 			Templates = template.Must(template.New("").Funcs(GlobalFuncs).ParseGlob(c.Homedir + "static/templates/**/*.html"))
+			log.SetBackend(config.LoggingBackend)
 			log.Info("core/templates is now configured")
 
 			// Wait for config changes...

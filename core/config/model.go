@@ -9,6 +9,7 @@ type Anzu struct {
 	Security anzuSecurity
 	Mail     anzuMail
 	Oauth    OauthConfig
+	Runtime  anzuRuntime
 }
 
 type OauthConfig struct {
@@ -31,6 +32,10 @@ type chatChan struct {
 type anzuSecurity struct {
 	Secret        string `json:"secret"`
 	StrictIPCheck bool   `json:"strictIPCheck"`
+}
+
+type anzuRuntime struct {
+	LoggingLevel string `json:"logLevel"`
 }
 
 type Flag struct {

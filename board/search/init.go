@@ -6,6 +6,7 @@ import (
 
 	"github.com/lestrrat-go/ngram"
 	"github.com/op/go-logging"
+	"github.com/tryanzu/core/core/config"
 	"github.com/tryanzu/core/deps"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -37,18 +38,28 @@ func (a users) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a users) Less(i, j int) bool { return a[i].Score > a[j].Score }
 
 func prepare() {
+	log.SetBackend(config.LoggingBackend)
 	log.Info("service starting...")
 	go func() {
-		var user User
-		iter := deps.Container.Mgo().C("users").Find(nil).Sort("-last_seen_at").Limit(bufferSize).Iter()
-		usersIndex = ngram.NewIndex(1)
-		for iter.Next(&user) {
-			err := usersIndex.AddItem(user)
-			if err != nil {
-				log.Error(err)
+		for {
+			var user User
+			iter := deps.Container.Mgo().C("users").Find(nil).Sort("-last_seen_at").Limit(bufferSize).Iter()
+			usersIndex = ngram.NewIndex(1)
+			for iter.Next(&user) {
+				err := usersIndex.AddItem(user)
+				if err != nil {
+					log.Error(err)
+				}
 			}
+			log.Info("in-memory user search index has been rehydrated")
+			time.Sleep(10 * time.Minute)
 		}
-		log.Info("in-memory user search index has finished")
+	}()
+	go func() {
+		for {
+			<-config.C.Reload
+			log.SetBackend(config.LoggingBackend)
+		}
 	}()
 }
 

@@ -14,9 +14,8 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-var log = logging.MustGetLogger("realtime")
-
 var (
+	log        = logging.MustGetLogger("realtime")
 	jwtSecret  []byte
 	server     *glue.Server
 	sockets    *sync.Map
@@ -105,7 +104,7 @@ func prepare() {
 					continue
 				}
 				mark := elapsed("flushing")
-				log.Debugf("flushing messages buffer, items = %v", len(buffered))
+				log.Debugf("flushing messages	items = %v", len(buffered))
 				dispatcher <- buffered
 				buffered = make([]M, 0, 1000)
 				mark()
@@ -116,7 +115,7 @@ func prepare() {
 	go func() {
 		for pack := range dispatcher {
 			mark := elapsed("dispatching")
-			log.Debugf("dispatching %v messages", len(pack))
+			log.Debugf("dispatching		messages=%v", len(pack))
 			sockets.Range(func(k, v interface{}) bool {
 				c := v.(*Client)
 				c.send(pack)
@@ -149,7 +148,7 @@ func onNewSocket(s *glue.Socket) {
 		Read:     make(chan SocketEvent),
 	}
 
-	log.Infof("client connected, id=%s | address=%s | connections=%v", s.ID(), addr, conns)
+	log.Infof("client connected	id=%s | address=%s | connections=%v", s.ID(), addr, conns)
 
 	// READ WORKER
 	// This little dedicated goroutine will handle all incoming messages for this particular client.
@@ -177,9 +176,9 @@ func onNewSocket(s *glue.Socket) {
 		"event":  "config",
 		"params": runtime.Site,
 	})
-
 	if err != nil {
-		panic(err)
+		log.Criticalf("could not marshal site config		err=%v", err)
+		return
 	}
 
 	// Send a welcome string to the client.
@@ -191,6 +190,8 @@ func onNewSocket(s *glue.Socket) {
 
 // ServeHTTP exposes http server handler for glue.
 func ServeHTTP() func(w http.ResponseWriter, r *http.Request) {
+	log.SetBackend(config.LoggingBackend)
+
 	// Prepare server to handle requests.
 	prepare()
 
@@ -202,8 +203,10 @@ func ServeHTTP() func(w http.ResponseWriter, r *http.Request) {
 				"event":  "config",
 				"params": runtime.Site,
 			})
+			log.SetBackend(config.LoggingBackend)
 			if err != nil {
-				panic(err)
+				log.Criticalf("cound not marshal site configuration		err=%v", err)
+				continue
 			}
 
 			Broadcast <- string(conf)
@@ -218,6 +221,6 @@ func elapsed(name string) func() {
 	return func() {
 		ends := time.Now()
 		elapsed := ends.Sub(starts)
-		log.Debugf("benchmark name=%s | took=%s", name, elapsed)
+		log.Debugf("benchmark		name=%s | took=%s", name, elapsed)
 	}
 }

@@ -2,21 +2,35 @@ package config
 
 import (
 	"io/ioutil"
-	"log"
+	"os"
+	"strings"
 
 	"github.com/BurntSushi/toml"
 	"github.com/divideandconquer/go-merge/merge"
 	"github.com/fsnotify/fsnotify"
 	"github.com/hashicorp/hcl"
 	"github.com/matcornic/hermes/v2"
+	"github.com/op/go-logging"
 )
 
 var (
 	// C stands for config
 	C *Config
+
+	// LoggingBackend packages should use.
+	LoggingBackend logging.LeveledBackend
+	log            = logging.MustGetLogger("config")
+	format         = logging.MustStringFormatter(
+		`%{color}%{time:15:04:05.000}  %{pid} %{module}	%{shortfile}	▶ %{level:.4s} %{id:03x}%{color:reset} %{message}`,
+	)
 )
 
 func Bootstrap() {
+	formatted := logging.NewBackendFormatter(logging.NewLogBackend(os.Stdout, "", 0), format)
+	LoggingBackend = logging.AddModuleLevel(formatted)
+	LoggingBackend.SetLevel(logging.INFO, "")
+	log.SetBackend(LoggingBackend)
+
 	C = new(Config)
 	C.Reload = make(chan struct{})
 	C.Boot()
@@ -66,7 +80,7 @@ func (c *Config) UserCopy() (conf map[string]interface{}) {
 	// Read the file first
 	dat, err := ioutil.ReadFile("./config.toml")
 	if err != nil {
-		log.Println("error:", err)
+		log.Info("error:", err)
 		return
 	}
 
@@ -81,19 +95,23 @@ func (c *Config) Boot() {
 	c.current = nil
 	c.Merge("./static/resources/config.toml", false)
 	c.Merge("./config.toml", true)
+	if level, err := logging.LogLevel(strings.ToUpper(c.current.Runtime.LoggingLevel)); err == nil {
+		LoggingBackend.SetLevel(level, "")
+		log.Noticef("logging level reloaded	level=%s", c.current.Runtime.LoggingLevel)
+	}
 	data, err := ioutil.ReadFile("./config.hcl")
 	if err != nil {
-		log.Println("Cannot load HCL configuration. Skipping")
+		log.Error("Cannot load HCL configuration. Skipping")
 	}
 
 	var rules Rules
 	err = hcl.Unmarshal(data, &rules)
 	if err != nil {
-		log.Println("Cannot unmarshal HCL configuration. Skipping")
+		log.Error("Cannot unmarshal HCL configuration. Skipping")
 	}
 
 	c.rules = &rules
-	log.Println("Config from filesystem loaded.")
+	log.Notice("config loaded from filesystem")
 }
 
 func (c *Config) Merge(file string, reload bool) {
@@ -102,7 +120,7 @@ func (c *Config) Merge(file string, reload bool) {
 	// Read the file first
 	dat, err := ioutil.ReadFile(file)
 	if err != nil {
-		log.Println("error:", err)
+		log.Info("error:", err)
 		return
 	}
 
@@ -142,13 +160,13 @@ func (c *Config) WatchFile(file string) {
 					c.Boot()
 				}
 			case err := <-watcher.Errors:
-				log.Println("error:", err)
+				log.Info("error:", err)
 			}
 		}
 	}()
 
 	err = watcher.Add(file)
 	if err != nil {
-		log.Println("error:", err)
+		log.Info("error:", err)
 	}
 }

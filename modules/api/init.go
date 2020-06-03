@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -52,6 +51,7 @@ func (module *Module) Run(bindTo string) {
 		DEBUG = false
 		gin.SetMode(gin.ReleaseMode)
 	}
+	log.SetBackend(config.LoggingBackend)
 	cnf := config.C.Copy()
 	store := sessions.NewCookieStore([]byte(cnf.Security.Secret))
 	router := gin.New()
@@ -62,11 +62,11 @@ func (module *Module) Run(bindTo string) {
 		cfg := newrelic.NewConfig(NewRelicName, NewRelicKey)
 		cfg.Logger = newrelic.NewLogger(os.Stdout)
 		app, err := newrelic.NewApplication(cfg)
-		if nil != err {
-			fmt.Println(err)
-			os.Exit(1)
+		if err != nil {
+			log.Errorf("error while initializing new relic		err=%v", err)
+		} else {
+			router.Use(nrgin.Middleware(app))
 		}
-		router.Use(nrgin.Middleware(app))
 	}
 
 	// Middlewares setup

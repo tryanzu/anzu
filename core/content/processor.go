@@ -32,7 +32,7 @@ func Postprocess(d deps, c Parseable) (processed Parseable, err error) {
 	}
 
 	elapsed := time.Since(starts)
-	log.Debugf("postprocess took = %v", elapsed)
+	log.Debugf("postprocess content	took=%v", elapsed)
 	return
 }
 

@@ -180,7 +180,7 @@ func SyncRates(d deps, kind string, list []bson.ObjectId) error {
 	if err != nil {
 		return err
 	}
-	log.Infof("updating rates for %v items, relViews=%v relReach=%v date=%v", len(scores), relViews, relReached, date)
+	log.Infof("updating rates	count=%v relViews=%v relReach=%v date=%v", len(scores), relViews, relReached, date)
 	_, err = db.ZAdd([]byte("posts:"+date), scores...)
 	return err
 }

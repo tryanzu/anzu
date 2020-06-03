@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	log = logging.MustGetLogger("search")
+	log = logging.MustGetLogger("mailer")
 
 	// In channel will receive the messages to be sent.
 	In chan *gomail.Message
@@ -19,6 +19,8 @@ var (
 func Boot() {
 	go func() {
 		for {
+			log.SetBackend(config.LoggingBackend)
+
 			// New incoming messages chan && sendingWorkers
 			In = make(chan *gomail.Message, 4)
 

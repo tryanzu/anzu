@@ -142,7 +142,7 @@ func (c *Client) finish() {
 	// Close the channel so readWorker stops.
 	close(c.Read)
 	addresses.Delete(c.Raw.RemoteAddr())
-	log.Infof("socket closed, id = %s | address = %s | userId = %v", c.Raw.ID(), c.Raw.RemoteAddr(), uid)
+	log.Infof("socket closed	id = %s | address = %s | userId = %v", c.Raw.ID(), c.Raw.RemoteAddr(), uid)
 
 	// Clean up pointers & logging.
 	c.User = nil

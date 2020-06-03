@@ -4,8 +4,10 @@ import (
 	"os"
 
 	"github.com/subosito/gotenv"
+	post "github.com/tryanzu/core/board/posts"
 	"github.com/tryanzu/core/board/search"
 	"github.com/tryanzu/core/core/config"
+	"github.com/tryanzu/core/core/content"
 	"github.com/tryanzu/core/core/mail"
 	"github.com/tryanzu/core/core/templates"
 	"github.com/tryanzu/core/deps"
@@ -43,6 +45,8 @@ func init() {
 	deps.Bootstrap()
 
 	// Boot internal services.
+	content.Boot()
+	post.Boot()
 	mail.Boot()
 	templates.Boot()
 	search.Boot()
