@@ -88,8 +88,9 @@ func prepare() {
 		}
 	}
 
+	conf := config.C.Copy()
 	server = glue.NewServer(options)
-	jwtSecret = []byte(deps.AppSecret)
+	jwtSecret = []byte(conf.Security.Secret)
 	go func() {
 		buffered := make([]M, 0, 1000)
 
