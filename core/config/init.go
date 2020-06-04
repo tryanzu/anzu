@@ -21,7 +21,7 @@ var (
 	LoggingBackend logging.LeveledBackend
 	log            = logging.MustGetLogger("config")
 	format         = logging.MustStringFormatter(
-		`%{color}%{time:15:04:05.000}  %{pid} %{module}	%{shortfile}	▶ %{level:.4s} %{id:03x}%{color:reset} %{message}`,
+		`%{color}%{level:.4s} %{time:15:04:05.000} %{module}	%{shortfile}	▶ %{color:reset} %{message}`,
 	)
 )
 
