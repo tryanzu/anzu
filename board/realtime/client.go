@@ -129,14 +129,17 @@ func (c *Client) readWorker() {
 			}()
 		}
 	}
-	log.Infof("read worker stopped	user=%v", c)
+	log.Infof("read worker stopped	user=%s", c.String())
 }
 
 func (c *Client) String() string {
 	if c.User != nil {
 		return fmt.Sprintf("%s:%s", c.User.Id, c.User.UserName)
 	}
-	return fmt.Sprintf("ipAddr:%s", c.Raw.RemoteAddr())
+	if c.Raw != nil {
+		return fmt.Sprintf("ipAddr:%s", c.Raw.RemoteAddr())
+	}
+	return fmt.Sprintf("%p", c)
 }
 
 // finish client connection.
