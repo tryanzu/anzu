@@ -184,7 +184,7 @@ func (module *Module) Run(bindTo string) {
 			log.Fatalf("Listen: %s\n", err)
 		}
 	}()
-	log.Info("http server has started")
+	log.Infof("http server has started	addr=%v", bindTo)
 	// Wait for interrupt signal to gracefully shutdown the server with
 	// a timeout of 5 seconds.
 	quit := make(chan os.Signal)

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+
 	"github.com/facebookgo/inject"
 	"github.com/getsentry/raven-go"
 	"github.com/markbates/goth"
@@ -38,7 +40,7 @@ func main() {
 	aclService := acl.Boot("roles.json")
 	gamingService := gaming.Boot("gaming.json")
 	userService := user.Boot()
-	errorService, _ := raven.NewClient(deps.SentryURL, nil)
+	errorService, _ := raven.NewWithTags(deps.SentryURL, nil)
 	cacheService, _ := goredis.Dial(&goredis.DialConfig{Address: deps.RedisURL})
 	assetsService := assets.Boot()
 
@@ -50,7 +52,7 @@ func main() {
 	}
 
 	// Graph main object (used to inject dependencies)
-	// LEGACY: To be depecrated asap
+	// LEGACY: To be deprecated asap
 	var g inject.Graph
 	err := g.Provide(
 		&inject.Object{Value: log, Complete: true},
@@ -91,6 +93,9 @@ func main() {
 			port := ":3200"
 			if len(args) == 1 {
 				port = args[0]
+			}
+			if v, exists := os.LookupEnv("BIND_TO"); exists {
+				port = v
 			}
 
 			// Populate dependencies using the already instantiated DI

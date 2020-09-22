@@ -36,11 +36,8 @@ func (module *Module) User(id bson.ObjectId) *User {
 }
 
 func (refs *Module) CheckPermissions(roles []string, permission string) bool {
-
 	for _, role := range roles {
-
 		p, exists := refs.Permissions[permission]
-
 		if exists {
 			if refs.Map.IsGranted(role, p, nil) {
 				// User's role is granted to do "permission"
@@ -48,21 +45,18 @@ func (refs *Module) CheckPermissions(roles []string, permission string) bool {
 			}
 		}
 	}
-
 	return false
 }
 
 func Boot(file string) *Module {
-
 	module := &Module{}
-	rules_data, err := ioutil.ReadFile(file)
-
+	rules, err := ioutil.ReadFile(file)
 	if err != nil {
 		panic(err)
 	}
 
 	// Unmarshal file with gaming rules
-	if err := json.Unmarshal(rules_data, &module.Rules); err != nil {
+	if err := json.Unmarshal(rules, &module.Rules); err != nil {
 		panic(err)
 	}
 

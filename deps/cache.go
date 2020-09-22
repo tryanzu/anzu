@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	RedisURL string
+	RedisURL string = "127.0.0.1:6379"
 )
 
 func IgniteCache(container Deps) (Deps, error) {
