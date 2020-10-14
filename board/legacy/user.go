@@ -43,7 +43,6 @@ import (
 type UserAPI struct {
 	Errors       *exceptions.ExceptionsModule `inject:""`
 	CacheService *goredis.Redis               `inject:""`
-	S3Bucket     *s3.Bucket                   `inject:""`
 	User         *user.Module                 `inject:""`
 	Content      *content.Module              `inject:""`
 	Gaming       *gaming.Module               `inject:""`
@@ -288,9 +287,8 @@ func (di *UserAPI) UserUpdateProfileAvatar(c *gin.Context) {
 	}
 	// convert buffer to reader
 	reader := bytes.NewReader(buff.Bytes())
-
 	path := "users/" + name + extension
-	err = di.S3Bucket.PutReader(path, reader, reader.Size(), "image/png", s3.ACL("public-read"))
+	err = deps.Container.S3().PutReader(path, reader, reader.Size(), "image/png", s3.ACL("public-read"))
 	if err != nil {
 		panic(err)
 	}
