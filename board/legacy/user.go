@@ -320,8 +320,8 @@ func (di *UserAPI) UserUpdateProfile(c *gin.Context) {
 
 	set := bson.M{}
 	if username, exists := form["username"]; exists {
-		if user.NameChanges > 1 {
-			c.JSON(400, gin.H{"status": "error", "message": "Cannot change username more than 2 times."})
+		if user.NameChanges > 3 {
+			c.JSON(400, gin.H{"status": "error", "message": "Cannot change username more than 4 times."})
 			return
 		}
 		validator := regexp.MustCompile(`^[a-zA-Z]+([_.-]?[a-zA-Z0-9])*$`)
