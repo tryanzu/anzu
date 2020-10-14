@@ -290,7 +290,8 @@ func (di *UserAPI) UserUpdateProfileAvatar(c *gin.Context) {
 	path := "users/" + name + extension
 	err = deps.Container.S3().PutReader(path, reader, reader.Size(), "image/png", s3.ACL("public-read"))
 	if err != nil {
-		panic(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": err})
+		return
 	}
 
 	url := "https://s3-us-west-1.amazonaws.com/spartan-board/" + path
