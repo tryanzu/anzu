@@ -3,10 +3,12 @@ package shell
 import (
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/abiosoft/ishell"
 	"github.com/tryanzu/core/deps"
 	"github.com/tryanzu/core/modules/user"
+	coreUser "github.com/tryanzu/core/core/user"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -138,6 +140,31 @@ func CleanupDuplicatedEmails(c *ishell.Context) {
 				c.Println("Could not remove user", err)
 				continue
 			}
+		}
+	}
+}
+
+
+func RunAnzuGarbageCollector(c *ishell.Context) {
+	c.Print("running anzu garbage collector...")
+	c.ShowPrompt(false)
+	defer c.ShowPrompt(true)
+
+	db := deps.Container.Mgo()
+	query := db.C("users").Find(bson.M{"validated": false, "scheduled_delete": bson.M{"$exists": false}})
+	iter := query.Iter()
+	var usr coreUser.User
+
+	for iter.Next(&usr) {
+		err := usr.EnforceAccountValidationEmail(deps.Container)
+		if err != nil {
+			c.Println("enforce account validation email failed", err)
+			continue
+		}
+		err = db.C("users").UpdateId(usr.Id, bson.M{"$set": bson.M{"scheduled_delete": time.Now().Add(time.Hour * 24)}})
+		if err != nil {
+			c.Println("scheduled delete failed", err)
+			continue
 		}
 	}
 }

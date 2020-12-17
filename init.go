@@ -97,6 +97,9 @@ func main() {
 			if v, exists := os.LookupEnv("BIND_TO"); exists {
 				port = v
 			}
+			if v, exists := os.LookupEnv("PORT"); exists {
+				port = v
+			}
 
 			// Populate dependencies using the already instantiated DI
 			api.Populate(g)

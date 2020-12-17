@@ -2,6 +2,7 @@ package user
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/matcornic/hermes/v2"
@@ -94,6 +95,30 @@ func (u User) RecoveryPasswordEmail(d deps) (err error) {
 	return nil
 }
 
+func (u User) EnforceAccountValidationEmail(d deps) (err error) {
+	c := config.C.Copy()
+	m := gomail.NewMessage()
+	from := c.Mail.From
+	if len(from) == 0 {
+		from = "no-reply@tryanzu.com"
+	}
+	h := config.C.Hermes()
+	body, err := h.GenerateHTML(requestAccountValidation(u))
+	if err != nil {
+		return err
+	}
+	m.SetHeader("From", from)
+	m.SetHeader("Reply-To", from)
+	m.SetHeader("To", u.Email)
+	m.SetHeader("Subject", "Verifica el correo de tu cuenta en "+c.Site.Name)
+	m.SetBody("text/html", body)
+
+	// Send email message.
+	mail.In <- m
+
+	return nil
+}
+
 func resetPasswordEmail(token recoveryToken, u User) hermes.Email {
 	c := config.C.Copy()
 	link := c.Site.MakeURL("recovery/" + token.Token)
@@ -117,6 +142,34 @@ func resetPasswordEmail(token recoveryToken, u User) hermes.Email {
 				"If you did not request a password reset, no further action is required on your part.",
 			},
 			Signature: "Thanks",
+		},
+	}
+}
+
+func requestAccountValidation(u User) hermes.Email {
+	c := config.C.Copy()
+	link := c.Site.MakeURL("validate/" + u.VerificationCode)
+	return hermes.Email{
+		Body: hermes.Body{
+			Name: u.UserName,
+			Intros: []string{
+				fmt.Sprintf("Tu cuenta en %s (%s) aún no ha sido validada, si recuerdas tu registro en %s ayudanos a validarla a la brevedad.", c.Site.Name, u.UserName, c.Site.Name),
+				fmt.Sprintf("Si tu cuenta no es validada en las proximas 24 horas, borraremos esta cuenta y sus datos de nuestra plataforma."),
+			},
+			Actions: []hermes.Action{
+				{
+					Instructions: "Da click en el boton para validar el correo electrónico de tu cuenta:",
+					Button: hermes.Button{
+						Color: "#3D5AFE",
+						Text:  "Validar mi cuenta",
+						Link:  link,
+					},
+				},
+			},
+			Outros: []string{
+				fmt.Sprintf("Si no recuerdas tu registro en %s o no te interesa mantener una cuenta en nuestra comunidad, ignora este mensaje.", c.Site.Name),
+			},
+			Signature: "Gracias",
 		},
 	}
 }

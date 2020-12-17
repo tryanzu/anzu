@@ -5,11 +5,11 @@ import (
 )
 
 var (
-	RedisURL string = "127.0.0.1:6379"
+	RedisURL string = "tcp://127.0.0.1:6379"
 )
 
 func IgniteCache(container Deps) (Deps, error) {
-	redis, err := goredis.Dial(&goredis.DialConfig{Address: RedisURL})
+	redis, err := goredis.DialURL(RedisURL)
 	if err != nil {
 		return container, err
 	}

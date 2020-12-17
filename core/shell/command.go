@@ -23,8 +23,16 @@ func RunShell() {
 		Func: MigrateComments,
 	})
 
+	shell.AddCmd(&ishell.Cmd{
+		Name: "gc",
+		Help: "Run garbage collector and timed events.",
+		Func: RunAnzuGarbageCollector,
+	})
+
 	// start shell
 	shell.Start()
 
 	select {}
 }
+
+
