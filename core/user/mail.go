@@ -95,7 +95,7 @@ func (u User) RecoveryPasswordEmail(d deps) (err error) {
 	return nil
 }
 
-func (u User) EnforceAccountValidationEmail(d deps) (err error) {
+func (u User) EnforceAccountValidationEmail() (err error) {
 	c := config.C.Copy()
 	m := gomail.NewMessage()
 	from := c.Mail.From
@@ -111,6 +111,30 @@ func (u User) EnforceAccountValidationEmail(d deps) (err error) {
 	m.SetHeader("Reply-To", from)
 	m.SetHeader("To", u.Email)
 	m.SetHeader("Subject", "Verifica el correo de tu cuenta en "+c.Site.Name)
+	m.SetBody("text/html", body)
+
+	// Send email message.
+	mail.In <- m
+
+	return nil
+}
+
+func (u User) UnvalidatedAccountDeletion() (err error) {
+	c := config.C.Copy()
+	m := gomail.NewMessage()
+	from := c.Mail.From
+	if len(from) == 0 {
+		from = "no-reply@tryanzu.com"
+	}
+	h := config.C.Hermes()
+	body, err := h.GenerateHTML(unvalidatedAccountDeletion(u))
+	if err != nil {
+		return err
+	}
+	m.SetHeader("From", from)
+	m.SetHeader("Reply-To", from)
+	m.SetHeader("To", u.Email)
+	m.SetHeader("Subject", "Hasta pronto!, tu cuenta y tus datos han sido removidos de "+c.Site.Name)
 	m.SetBody("text/html", body)
 
 	// Send email message.
@@ -170,6 +194,24 @@ func requestAccountValidation(u User) hermes.Email {
 				fmt.Sprintf("Si no recuerdas tu registro en %s o no te interesa mantener una cuenta en nuestra comunidad, ignora este mensaje.", c.Site.Name),
 			},
 			Signature: "Gracias",
+		},
+	}
+}
+
+func unvalidatedAccountDeletion(u User) hermes.Email {
+	c := config.C.Copy()
+	return hermes.Email{
+		Body: hermes.Body{
+			Name: u.UserName,
+			Intros: []string{
+				fmt.Sprintf("Tu cuenta en %s (con el usuario %s) ha sido eliminada debido a que el correo electrónico no fue confirmado.", c.Site.Name, u.UserName),
+				"Nos entristece verte partir pero puedes volver a crear una cuenta en nuestra comunidad cuando así lo desees.",
+			},
+			Actions: []hermes.Action{},
+			Outros: []string{
+				fmt.Sprintf("Si no recuerdas tu registro en %s o no te interesa mantener una cuenta en nuestra comunidad, ignora este mensaje.", c.Site.Name),
+			},
+			Signature: "Hasta pronto!",
 		},
 	}
 }

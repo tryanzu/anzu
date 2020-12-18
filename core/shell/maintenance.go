@@ -10,6 +10,7 @@ import (
 	"github.com/tryanzu/core/modules/user"
 	coreUser "github.com/tryanzu/core/core/user"
 	"gopkg.in/mgo.v2/bson"
+	"github.com/goware/emailx"
 )
 
 const (
@@ -154,9 +155,8 @@ func RunAnzuGarbageCollector(c *ishell.Context) {
 	query := db.C("users").Find(bson.M{"validated": false, "scheduled_delete": bson.M{"$exists": false}})
 	iter := query.Iter()
 	var usr coreUser.User
-
 	for iter.Next(&usr) {
-		err := usr.EnforceAccountValidationEmail(deps.Container)
+		err := usr.EnforceAccountValidationEmail()
 		if err != nil {
 			c.Println("enforce account validation email failed", err)
 			continue
@@ -165,6 +165,36 @@ func RunAnzuGarbageCollector(c *ishell.Context) {
 		if err != nil {
 			c.Println("scheduled delete failed", err)
 			continue
+		}
+	}
+	query = db.C("users").Find(bson.M{"scheduled_delete": bson.M{"$lte": time.Now()}})
+	count, _ := query.Count()
+	iter = query.Iter()
+	c.Printf("about to delete %v users", count)
+	for iter.Next(&usr) {
+		// lets move the user to another collection of deleted users.
+		err := db.C("deleted_users").Insert(&usr)
+		if err != nil {
+			c.Printf("something went wrong deleting user %v: %v", usr.Id, err)
+			continue
+		}
+		err = db.C("users").RemoveId(usr.Id)
+		if err != nil {
+			c.Printf("something went wrong deleting user %v: %v", usr.Id, err)
+		}
+		info, err := db.C("comments").UpdateAll(bson.M{"user_id": usr.Id}, bson.M{"deleted_at": time.Now()})
+		if err != nil {
+			c.Printf("something went wrong deleting comments %v: %v", usr.Id, err)
+		}
+		c.Printf("removed %v comments from %v", info.Updated, usr.Id)
+		info, err = db.C("posts").UpdateAll(bson.M{"user_id": usr.Id}, bson.M{"deleted_at": time.Now()})
+		if err != nil {
+			c.Printf("something went wrong deleting comments %v: %v", usr.Id, err)
+		}
+		c.Printf("removed %v posts from %v", info.Updated, usr.Id)
+		err = emailx.Validate(usr.Email)
+		if err == nil {
+			usr.UnvalidatedAccountDeletion()
 		}
 	}
 }
