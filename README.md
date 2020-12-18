@@ -1,21 +1,18 @@
 ![Go](https://github.com/tryanzu/anzu/workflows/Go/badge.svg)
 [![Go Report Card](https://goreportcard.com/badge/github.com/tryanzu/core)](https://goreportcard.com/report/github.com/tryanzu/core)
 
-# Meet Anzu
+# What is Anzu? 
 
-Anzu is our greatest endeavor to build the most rad, simple & reactive forum software out there since the Javascript revolution. 
+Anzu is an open source software designed to create communities. Simple, reactive, and performant forums software. 
 
-Forum platforms to host communities are vast. Many would say it's a lifeless space with almost zero innovation, and attempting to create something new is pointless. We dissent, and if you found this repository you might also share with us the idea that there has to be an alternative to the old forum. Well, we think Anzu is that young and sexy software that could bring back to life the community-building movement.
+This repository contains the core backend code and the frontend as a git submodule inside static/frontend. 
 
-This repository contains the core backend and the frontend submodule link. 
-We're still working in the first alpha, so previous knowledge about the stack is required to set things up.
+While usable in production (we've run it ourselves in [buldar.com](https://buldar.com) quite smoothly for 5 years) this forums platform is in early stages of development, and it may change suddenly, we're finding our way to define a first stable version.
 
-## Alpha screenshots
+For install previous knowledge about the stack (golang, mongodb, redis) is required to set things up.
+
+## 
 ![Anzu alpha post](https://imgur.com/pXDutG0.png)
-![Anzu alpha publisher](https://imgur.com/tF1ApnP.png)
-![Anzu alpha post](https://imgur.com/IAv9V8C.png)
-![Anzu alpha chat](https://imgur.com/vlari7x.png)
-![Anzu alpha profile](https://imgur.com/uG4C9LE.png)
 
 ## Anzu's stack
 - [Go](https://golang.org/) programming language
@@ -44,7 +41,7 @@ git submodule update --init --recursive
 
 Install the core dependencies with `go build`.
 
-Install the frontend dependencies with `yarn install`.
+Install the frontend dependencies with `npm install`.
 
 
 ### Configure
