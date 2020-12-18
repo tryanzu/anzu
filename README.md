@@ -3,7 +3,7 @@
 
 # What is Anzu? 
 
-Anzu is an open source software designed to create communities. Simple, reactive, and performant forums software. 
+Anzu is an open source software project designed to create communities. Simple, reactive, and performant forums software. 
 
 This repository contains the core backend code and the frontend as a git submodule inside static/frontend. 
 
