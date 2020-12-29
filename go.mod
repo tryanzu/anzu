@@ -26,10 +26,11 @@ require (
 	github.com/facebookgo/subset v0.0.0-20150612182917-8dac2c3c4870 // indirect
 	github.com/fatih/color v1.7.0 // indirect
 	github.com/flynn-archive/go-shlex v0.0.0-20150515145356-3f9db97f8568 // indirect
-	github.com/fsnotify/fsnotify v1.4.7
+	github.com/fsnotify/fsnotify v1.4.9
 	github.com/getsentry/raven-go v0.2.0
 	github.com/gin-gonic/contrib v0.0.0-20190526021735-7fb7810ed2a0
 	github.com/gin-gonic/gin v1.4.0
+	github.com/go-redis/redis/v8 v8.4.4
 	github.com/go-sourcemap/sourcemap v2.1.2+incompatible // indirect
 	github.com/gorilla/websocket v1.4.0 // indirect
 	github.com/goware/emailx v0.2.0
@@ -56,21 +57,18 @@ require (
 	github.com/sirupsen/logrus v1.4.2 // indirect
 	github.com/smartystreets/goconvey v0.0.0-20190330032615-68dc04aab96a
 	github.com/spf13/cobra v0.0.5
-	github.com/stretchr/testify v1.4.0 // indirect
 	github.com/subosito/gotenv v1.1.1
 	github.com/syndtr/goleveldb v1.0.0 // indirect
 	github.com/vaughan0/go-ini v0.0.0-20130923145212-a98ad7ee00ec // indirect
 	github.com/xuyu/goredis v0.0.0-20160929021245-89fbe9474b37
-	golang.org/x/crypto v0.0.0-20190605123033-f99c8df09eb5
+	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45 // indirect
-	golang.org/x/sys v0.0.0-20190507160741-ecd444e8653b // indirect
-	golang.org/x/text v0.3.2
+	golang.org/x/text v0.3.3
 	google.golang.org/appengine v1.5.0 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/go-playground/validator.v8 v8.18.2
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/mgo.v2 v2.0.0-20180705113604-9856a29383ce
-	gopkg.in/yaml.v2 v2.2.7 // indirect
 	launchpad.net/gocheck v0.0.0-20140225173054-000000000087 // indirect
 )
 

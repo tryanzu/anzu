@@ -29,6 +29,12 @@ func RunShell() {
 		Func: RunAnzuGarbageCollector,
 	})
 
+	shell.AddCmd(&ishell.Cmd{
+		Name: "rebuild-trustnet",
+		Help: "Rebuild trustnet from scratch",
+		Func: RebuildTrustNet,
+	})
+
 	// start shell
 	shell.Start()
 

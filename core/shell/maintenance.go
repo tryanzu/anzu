@@ -1,16 +1,26 @@
 package shell
 
 import (
+	"context"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/go-redis/redis/v8"
+	"github.com/tryanzu/core/board/comments"
+	"github.com/tryanzu/core/board/votes"
+
 	"github.com/abiosoft/ishell"
+	"github.com/goware/emailx"
+	"github.com/op/go-logging"
+	coreUser "github.com/tryanzu/core/core/user"
 	"github.com/tryanzu/core/deps"
 	"github.com/tryanzu/core/modules/user"
-	coreUser "github.com/tryanzu/core/core/user"
 	"gopkg.in/mgo.v2/bson"
-	"github.com/goware/emailx"
+)
+
+var (
+	log = logging.MustGetLogger("shell")
 )
 
 const (
@@ -145,7 +155,6 @@ func CleanupDuplicatedEmails(c *ishell.Context) {
 	}
 }
 
-
 func RunAnzuGarbageCollector(c *ishell.Context) {
 	c.Print("running anzu garbage collector...")
 	c.ShowPrompt(false)
@@ -195,6 +204,40 @@ func RunAnzuGarbageCollector(c *ishell.Context) {
 		err = emailx.Validate(usr.Email)
 		if err == nil {
 			usr.UnvalidatedAccountDeletion()
+		}
+	}
+}
+
+func RebuildTrustNet(c *ishell.Context) {
+	c.ShowPrompt(false)
+	defer c.ShowPrompt(true)
+	log.Info("rebuild trust net...")
+	db := deps.Container.Mgo()
+	cache := deps.Container.CacheProvider
+	now := time.Now()
+	query := db.C("users").Find(bson.M{"validated": true, "last_seen_at": bson.M{"$gte": time.Date(2020, 1, 1, 12, 0, 0, 0, now.Location())}}).Iter()
+	var usr coreUser.User
+	for query.Next(&usr) {
+		usrVotes := db.C("votes").Find(bson.M{"user_id": usr.Id}).Iter()
+		var vote votes.Vote
+		for usrVotes.Next(&vote) {
+			var c comments.Comment
+			if vote.Type == "comment" {
+				if vote.Value == "useful" || vote.Value == "goodExplanation" || vote.Value == "upvote" {
+					err := db.C("comments").FindId(vote.RelatedID).One(&c)
+					if err == nil {
+						cmd := cache.XAdd(context.Background(), &redis.XAddArgs{
+							Stream: "trustnet.assignment",
+							ID:     "*",
+							Values: []string{"src", usr.Id.Hex(), "dst", c.UserId.Hex(), "weight", "0.25"},
+						})
+						if cmd.Err() != nil {
+							log.Error(cmd.Err())
+						}
+						log.Debugf("assigned xadd succeed 	usr=%s", usr.UserName)
+					}
+				}
+			}
 		}
 	}
 }

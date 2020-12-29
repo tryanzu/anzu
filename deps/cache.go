@@ -1,19 +1,22 @@
 package deps
 
 import (
-	"github.com/xuyu/goredis"
+	"github.com/go-redis/redis/v8"
 )
 
 var (
-	RedisURL string = "tcp://127.0.0.1:6379"
+	RedisURL string = "redis://127.0.0.1:6379"
 )
 
 func IgniteCache(container Deps) (Deps, error) {
-	redis, err := goredis.DialURL(RedisURL)
+	url, err := redis.ParseURL(RedisURL)
 	if err != nil {
 		return container, err
 	}
-
-	container.CacheProvider = redis
+	client := redis.NewClient(url)
+	if err != nil {
+		return container, err
+	}
+	container.CacheProvider = client
 	return container, nil
 }

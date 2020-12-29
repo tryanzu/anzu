@@ -5,8 +5,8 @@ import (
 	"github.com/op/go-logging"
 	"github.com/siddontang/ledisdb/ledis"
 	"github.com/tryanzu/core/board/legacy/model"
-	"github.com/xuyu/goredis"
 	"gopkg.in/mgo.v2"
+	"github.com/go-redis/redis/v8"
 )
 
 type Deps struct {
@@ -14,7 +14,7 @@ type Deps struct {
 	DatabaseSessionProvider *mgo.Session
 	DatabaseProvider        *mgo.Database
 	LoggerProvider          *logging.Logger
-	CacheProvider           *goredis.Redis
+	CacheProvider           *redis.Client
 	S3Provider              *s3.Bucket
 	LedisProvider           *ledis.DB
 }
