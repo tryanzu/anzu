@@ -2,6 +2,7 @@ package controller
 
 import (
 	"errors"
+	"github.com/siddontang/go/log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -93,19 +94,17 @@ func NewComment(c *gin.Context) {
 			Content string `json:"content" binding:"required"`
 		}
 	)
-
 	if cid.Valid() == false {
-		c.AbortWithError(500, errors.New("Invalid id for reply"))
+		c.AbortWithError(http.StatusBadRequest, errors.New("Invalid id for reply"))
 		return
 	}
-
 	if err := c.BindJSON(&form); err != nil {
-		c.AbortWithError(500, errors.New("Invalid kind of reply"))
+		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 
 	if kind != "post" && kind != "comment" {
-		c.AbortWithError(500, errors.New("Invalid kind of reply"))
+		c.AbortWithError(500, errors.New("invalid kind of reply"))
 		return
 	}
 
@@ -123,12 +122,12 @@ func NewComment(c *gin.Context) {
 	})
 
 	if err != nil {
-		c.AbortWithError(500, errors.New("Invalid kind of reply"))
+		log.Errorf("upsert comment failed	err=%v", err)
+		c.AbortWithError(http.StatusInternalServerError, errors.New("invalid kind of reply"))
 		return
 	}
-
 	events.In <- events.PostComment(comment.Id)
-	c.JSON(200, comment)
+	c.JSON(http.StatusOK, comment)
 }
 
 // UpdateComment pushes a new reply.

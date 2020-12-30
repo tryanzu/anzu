@@ -1,17 +1,21 @@
 package events
 
 import (
+	"errors"
 	"fmt"
-
 	"github.com/tryanzu/core/board/comments"
 	notify "github.com/tryanzu/core/board/notifications"
 	post "github.com/tryanzu/core/board/posts"
 	"github.com/tryanzu/core/board/votes"
 	"github.com/tryanzu/core/core/config"
 	pool "github.com/tryanzu/core/core/events"
+	"github.com/tryanzu/core/core/mail"
+	"github.com/tryanzu/core/core/user"
 	"github.com/tryanzu/core/deps"
 	"github.com/tryanzu/core/modules/gaming"
+	"gopkg.in/gomail.v2"
 	"gopkg.in/mgo.v2/bson"
+	"time"
 )
 
 // Bind event handlers for comment related actions...
@@ -74,12 +78,11 @@ func onVote(e pool.Event) error {
 		if err != nil {
 			return err
 		}
-
-		post, err := post.FindId(deps.Container, vote.RelatedID)
+		p, err := post.FindId(deps.Container, vote.RelatedID)
 		if err != nil {
 			return err
 		}
-		userID = post.UserId
+		userID = p.UserId
 		factor = factor * 2
 	}
 
@@ -151,41 +154,61 @@ func onPostComment(e pool.Event) error {
 	if err != nil {
 		return err
 	}
-
-	if comment.ReplyType == "comment" {
+	switch comment.ReplyType {
+	case "comment":
 		ref, err := comments.FindId(deps.Container, comment.RelatedID())
+		if err != nil || ref.UserId == comment.UserId {
+			return err
+		}
+		notify.Database <- notify.Notification{
+			UserId:    ref.UserId,
+			Type:      "comment",
+			RelatedId: comment.Id,
+			Users:     []bson.ObjectId{comment.UserId},
+		}
+	case "post":
+		p, err := post.FindId(deps.Container, comment.RelatedID())
 		if err != nil {
 			return err
 		}
+		if p.UserId != comment.UserId {
+			usr, err := user.FindId(deps.Container, p.UserId)
+			if err != nil {
+				return err
+			}
+			seen := usr.Seen
+			if seen == nil || seen.Add(time.Minute*15).Before(time.Now()) {
+				c := config.C.Copy()
+				m := gomail.NewMessage()
+				from := c.Mail.From
+				if len(from) == 0 {
+					from = "no-reply@tryanzu.com"
+				}
+				h := config.C.Hermes()
+				body, err := h.GenerateHTML(post.SomeoneCommentedYourPost(usr.UserName, p))
+				if err != nil {
+					return err
+				}
+				m.SetHeader("From", from)
+				m.SetHeader("Reply-To", from)
+				m.SetHeader("To", usr.Email)
+				m.SetHeader("Subject", "Alguien respondió tu publicación: "+p.Title)
+				m.SetBody("text/html", body)
 
-		if ref.UserId != comment.UserId {
+				// Send email message.
+				mail.In <- m
+			}
 			notify.Database <- notify.Notification{
-				UserId:    ref.UserId,
+				UserId:    p.UserId,
 				Type:      "comment",
 				RelatedId: comment.Id,
 				Users:     []bson.ObjectId{comment.UserId},
 			}
 		}
-	}
 
-	if comment.ReplyType == "post" {
-		post, err := post.FindId(deps.Container, comment.RelatedID())
+		c, err := comments.FetchCount(deps.Container, comments.Post(p.Id, 0, 0, false, nil, nil))
 		if err != nil {
 			return err
-		}
-
-		if post.UserId != comment.UserId {
-			notify.Database <- notify.Notification{
-				UserId:    post.UserId,
-				Type:      "comment",
-				RelatedId: comment.Id,
-				Users:     []bson.ObjectId{comment.UserId},
-			}
-		}
-
-		c, err := comments.FetchCount(deps.Container, comments.Post(post.Id, 0, 0, false, nil, nil))
-		if err != nil {
-			panic(err)
 		}
 
 		notify.Transmit <- notify.Socket{
@@ -208,8 +231,7 @@ func onPostComment(e pool.Event) error {
 			},
 		}
 	}
-
-	return nil
+	return errors.New("invalid onPostComment comment.ReplyType " + comment.ReplyType)
 }
 
 func onCommentUpdate(e pool.Event) error {

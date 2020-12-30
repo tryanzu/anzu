@@ -147,10 +147,13 @@ func (c *Client) finish() {
 	var uid *bson.ObjectId
 	if c.User != nil {
 		uid = &c.User.Id
-		err := user.LastSeenAt(deps.Container, c.User.Id, time.Now())
-		if err != nil {
-			log.Error(err)
-		}
+		// Decouple user last seen update for a faster finish call
+		go func() {
+			err := user.LastSeenAt(deps.Container, c.User.Id, time.Now())
+			if err != nil {
+				log.Error(err)
+			}
+		}()
 	}
 	// Close the channel so readWorker stops.
 	close(c.Read)

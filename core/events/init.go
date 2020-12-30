@@ -1,7 +1,7 @@
 package events
 
 import (
-	"log"
+	"github.com/siddontang/go/log"
 	"time"
 
 	"github.com/tryanzu/core/deps"
@@ -45,19 +45,6 @@ type UserSign struct {
 }
 
 func execHandlers(list []Handler, event Event) {
-	defer func() {
-		switch rval := recover().(type) {
-		case nil:
-			return
-		case error:
-			// Show the error
-			log.Printf("[ERR] [events]: %+v\n", rval)
-
-		default:
-			// Show the error
-			log.Printf("[ERR] [events]: %+v\n", rval)
-		}
-	}()
 	starts := time.Now()
 	ref := eventLog{
 		ID:      bson.NewObjectId(),
@@ -68,12 +55,15 @@ func execHandlers(list []Handler, event Event) {
 	}
 	err := deps.Container.Mgo().C("events").Insert(&ref)
 	if err != nil {
-		panic(err)
+		log.Errorf("events insert failed	err=%v", err)
+		return
 	}
+	var failed uint16
 	for h := range list {
 		err = list[h](event)
 		if err != nil {
-			panic(err)
+			log.Errorf("events run handler failed	err=%v", err)
+			failed++
 		}
 	}
 	finished := time.Now()
@@ -82,8 +72,11 @@ func execHandlers(list []Handler, event Event) {
 		"finished_at": finished,
 		"elapsed":     elapsed,
 		"handlers":    len(list),
+		"failed":      failed,
 	}})
-	return
+	if err != nil {
+		log.Errorf("events finish update failed	err=%v", err)
+	}
 }
 
 func sink(in chan Event, on chan EventHandler) {
