@@ -167,6 +167,24 @@ func onPostComment(e pool.Event) error {
 			RelatedId: comment.Id,
 			Users:     []bson.ObjectId{comment.UserId},
 		}
+		p, err := post.FindId(deps.Container, ref.PostId)
+		if err != nil {
+			return err
+		}
+		usr, err := user.FindId(deps.Container, ref.UserId)
+		if err != nil {
+			return err
+		}
+		seen := usr.Seen
+		if usr.EmailNotifications && (seen == nil || seen.Add(time.Minute*15).Before(time.Now())) {
+			m, err := notifications.SomeoneCommentedYourCommentEmail(p, ref, usr)
+			if err != nil {
+				return err
+			}
+
+			// Send email message.
+			mail.In <- m
+		}
 	case "post":
 		p, err := post.FindId(deps.Container, comment.RelatedID())
 		if err != nil {
