@@ -128,11 +128,12 @@ func (module *Module) SignUp(email, username, password, referral string) (*One, 
 			},
 			Validated: false,
 		},
-		Password:         hashed,
-		Email:            email,
-		ReferralCode:     helpers.StrRandom(6),
-		VerificationCode: helpers.StrRandom(12),
-		Updated:          time.Now(),
+		Password:           hashed,
+		Email:              email,
+		EmailNotifications: true,
+		ReferralCode:       helpers.StrRandom(6),
+		VerificationCode:   helpers.StrRandom(12),
+		Updated:            time.Now(),
 	}
 
 	err = deps.Container.Mgo().C("users").Insert(usr)
@@ -200,6 +201,9 @@ func (module *Module) OauthSignup(provider string, user goth.User) (*One, error)
 		ReferralCode:     helpers.StrRandom(6),
 		VerificationCode: helpers.StrRandom(12),
 		Updated:          time.Now(),
+	}
+	if len(usr.Email) > 0 {
+		usr.EmailNotifications = true
 	}
 
 	err = deps.Container.Mgo().C("users").Insert(usr)

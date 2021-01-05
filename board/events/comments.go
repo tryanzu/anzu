@@ -3,7 +3,10 @@ package events
 import (
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/tryanzu/core/board/comments"
+	"github.com/tryanzu/core/board/notifications"
 	notify "github.com/tryanzu/core/board/notifications"
 	post "github.com/tryanzu/core/board/posts"
 	"github.com/tryanzu/core/board/votes"
@@ -13,9 +16,7 @@ import (
 	"github.com/tryanzu/core/core/user"
 	"github.com/tryanzu/core/deps"
 	"github.com/tryanzu/core/modules/gaming"
-	"gopkg.in/gomail.v2"
 	"gopkg.in/mgo.v2/bson"
-	"time"
 )
 
 // Bind event handlers for comment related actions...
@@ -177,23 +178,11 @@ func onPostComment(e pool.Event) error {
 				return err
 			}
 			seen := usr.Seen
-			if seen == nil || seen.Add(time.Minute*15).Before(time.Now()) {
-				c := config.C.Copy()
-				m := gomail.NewMessage()
-				from := c.Mail.From
-				if len(from) == 0 {
-					from = "no-reply@tryanzu.com"
-				}
-				h := config.C.Hermes()
-				body, err := h.GenerateHTML(post.SomeoneCommentedYourPost(usr.UserName, p))
+			if usr.EmailNotifications && (seen == nil || seen.Add(time.Minute*15).Before(time.Now())) {
+				m, err := notifications.SomeoneCommentedYourPostEmail(p, usr)
 				if err != nil {
 					return err
 				}
-				m.SetHeader("From", from)
-				m.SetHeader("Reply-To", from)
-				m.SetHeader("To", usr.Email)
-				m.SetHeader("Subject", "Alguien respondió tu publicación: "+p.Title)
-				m.SetBody("text/html", body)
 
 				// Send email message.
 				mail.In <- m

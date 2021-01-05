@@ -30,6 +30,8 @@ type User struct {
 	Validated        bool   `bson:"validated" json:"validated"`
 	VerificationCode string `bson:"ver_code,omitempty" json:"-"`
 
+	EmailNotifications bool `bson:"emailNotifications" json:"-"`
+
 	Warnings    int        `bson:"warnings" json:"-"`
 	ConfirmSent *time.Time `bson:"confirm_sent_at" json:"-"`
 	Created     time.Time  `bson:"created_at" json:"created_at"`
