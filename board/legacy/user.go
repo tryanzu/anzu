@@ -169,8 +169,6 @@ func (di *UserAPI) UserGetOne(c *gin.Context) {
 func (di *UserAPI) UserGetByToken(c *gin.Context) {
 	id := c.MustGet("user_id")
 	if bson.IsObjectIdHex(id.(string)) == false {
-
-		// Dont allow the request
 		c.JSON(400, gin.H{"status": "error", "message": "Invalid request, need valid token."})
 		return
 	}
@@ -389,6 +387,14 @@ func (di *UserAPI) UserUpdateProfile(c *gin.Context) {
 
 	if country, exists := form["country"]; exists && len([]rune(country)) <= 3 {
 		set["country"] = country
+	}
+
+	if v, exists := form["emailNotifications"]; exists {
+		if v == "true" {
+			set["emailNotifications"] = true
+		} else if v == "false" {
+			set["emailNotifications"] = false
+		}
 	}
 
 	if password, exists := form["password"]; exists {

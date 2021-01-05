@@ -134,7 +134,8 @@ func (c *Client) readWorker() {
 
 func (c *Client) String() string {
 	if c.User != nil {
-		return fmt.Sprintf("%s:%s", c.User.Id, c.User.UserName)
+		usr := *c.User
+		return fmt.Sprintf("%s:%s", usr.Id, usr.UserName)
 	}
 	if c.Raw != nil {
 		return fmt.Sprintf("ipAddr:%s", c.Raw.RemoteAddr())
@@ -149,7 +150,7 @@ func (c *Client) finish() {
 		uid = &c.User.Id
 		// Decouple user last seen update for a faster finish call
 		go func() {
-			err := user.LastSeenAt(deps.Container, c.User.Id, time.Now())
+			err := user.LastSeenAt(deps.Container, *uid, time.Now())
 			if err != nil {
 				log.Error(err)
 			}

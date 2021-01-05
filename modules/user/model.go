@@ -25,22 +25,23 @@ type User struct {
 }
 
 type UserPrivate struct {
-	User             `bson:",inline"`
-	Password         string          `bson:"password,omitempty" json:"-"`
-	Step             int             `bson:"step,omitempty" json:"step"`
-	Notifications    int             `bson:"notifications,omitempty" json:"notifications"`
-	Email            string          `bson:"email,omitempty" json:"email,omitempty"`
-	Categories       []bson.ObjectId `bson:"categories,omitempty" json:"categories,omitempty"`
-	Facebook         interface{}     `bson:"facebook,omitempty" json:"facebook,omitempty"`
-	Stats            UserStats       `bson:"stats,omitempty" json:"stats,omitempty"`
-	ReferralCode     string          `bson:"ref_code,omitempty" json:"ref_code"`
-	VerificationCode string          `bson:"ver_code,omitempty" json:"ver_code"`
-	SessionId        string          `bson:"-" json:"session_id"`
-	Duplicates       []bson.ObjectId `bson:"duplicates" json:"-"`
-	ConfirmationSent *time.Time      `bson:"confirm_sent_at" json:"-"`
-	Updated          time.Time       `bson:"updated_at" json:"updated_at"`
-	Seen             *time.Time      `bson:"last_seen_at" json:"last_seen_at,omitempty"`
-	Gamificated      time.Time       `bson:"gamificated_at" json:"gamificated_at"`
+	User               `bson:",inline"`
+	Password           string          `bson:"password,omitempty" json:"-"`
+	Step               int             `bson:"step,omitempty" json:"step"`
+	Notifications      int             `bson:"notifications,omitempty" json:"notifications"`
+	Email              string          `bson:"email,omitempty" json:"email,omitempty"`
+	Categories         []bson.ObjectId `bson:"categories,omitempty" json:"categories,omitempty"`
+	Facebook           interface{}     `bson:"facebook,omitempty" json:"facebook,omitempty"`
+	Stats              UserStats       `bson:"stats,omitempty" json:"stats,omitempty"`
+	ReferralCode       string          `bson:"ref_code,omitempty" json:"ref_code"`
+	VerificationCode   string          `bson:"ver_code,omitempty" json:"ver_code"`
+	SessionId          string          `bson:"-" json:"session_id"`
+	Duplicates         []bson.ObjectId `bson:"duplicates" json:"-"`
+	ConfirmationSent   *time.Time      `bson:"confirm_sent_at" json:"-"`
+	Updated            time.Time       `bson:"updated_at" json:"updated_at"`
+	Seen               *time.Time      `bson:"last_seen_at" json:"last_seen_at,omitempty"`
+	Gamificated        time.Time       `bson:"gamificated_at" json:"gamificated_at"`
+	EmailNotifications bool            `bson:"emailNotifications" json:"emailNotifications"`
 }
 
 type UserSimple struct {
