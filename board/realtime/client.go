@@ -195,6 +195,12 @@ func (c *Client) readAuth(e SocketEvent) {
 	}
 
 	c.User = &usr
+	go func(id bson.ObjectId) {
+		err := user.LastSeenAt(deps.Container, id, time.Now())
+		if err != nil {
+			log.Error(err)
+		}
+	}(usr.Id)
 	event := SocketEvent{
 		Event: "auth:my",
 		Params: map[string]interface{}{
