@@ -189,7 +189,7 @@ func DeleteComment(c *gin.Context) {
 		return
 	}
 
-	post, err := posts.FindId(deps.Container, comment.PostId)
+	post, err := posts.FindId(deps.Container, comment.RelatedPost())
 	if err != nil {
 		c.JSON(404, "unknown comment's post to update")
 		return
