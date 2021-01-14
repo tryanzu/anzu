@@ -1,6 +1,13 @@
 package events
 
-import pool "github.com/tryanzu/core/core/events"
+import (
+	"github.com/op/go-logging"
+	pool "github.com/tryanzu/core/core/events"
+)
+
+var (
+	log = logging.MustGetLogger("main")
+)
 
 func init() {
 	globalEvents()

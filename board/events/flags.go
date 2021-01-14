@@ -2,7 +2,6 @@ package events
 
 import (
 	"errors"
-	"log"
 	"time"
 
 	"github.com/tryanzu/core/board/flags"
@@ -41,7 +40,7 @@ func flagHandlers() {
 				if err != nil {
 					return err
 				}
-				log.Println("[events] [flags] ban created with id", ban.ID)
+				log.Debug("ban created with id", ban.ID)
 				realtime.ToChan <- banLog(ban, usr)
 			}
 			return nil
@@ -65,7 +64,7 @@ func flagHandlers() {
 			if err != nil {
 				return err
 			}
-			log.Println("[events] [flags] ban created with id", ban.ID)
+			log.Debug("ban created with id", ban.ID)
 			realtime.ToChan <- banLog(ban, usr)
 			return nil
 		},

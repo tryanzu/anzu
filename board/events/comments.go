@@ -159,6 +159,11 @@ func onPostComment(e pool.Event) error {
 	case "comment":
 		ref, err := comments.FindId(deps.Container, comment.RelatedID())
 		if err != nil || ref.UserId == comment.UserId {
+			if ref.UserId == comment.UserId {
+				log.Debugf("reply to a comment of self	id=%s", comment.RelatedID().Hex())
+			} else {
+				log.Errorf("comments.FindId 	err=%s", err)
+			}
 			return err
 		}
 		notify.Database <- notify.Notification{
@@ -167,12 +172,14 @@ func onPostComment(e pool.Event) error {
 			RelatedId: comment.Id,
 			Users:     []bson.ObjectId{comment.UserId},
 		}
-		p, err := post.FindId(deps.Container, ref.PostId)
+		p, err := post.FindId(deps.Container, ref.RelatedPost())
 		if err != nil {
+			log.Errorf("post.FindId 	err=%s", err)
 			return err
 		}
 		usr, err := user.FindId(deps.Container, ref.UserId)
 		if err != nil {
+			log.Errorf("user.FindId 	err=%s", err)
 			return err
 		}
 		seen := usr.Seen
@@ -185,6 +192,7 @@ func onPostComment(e pool.Event) error {
 			// Send email message.
 			mail.In <- m
 		}
+		return nil
 	case "post":
 		p, err := post.FindId(deps.Container, comment.RelatedID())
 		if err != nil {
@@ -237,6 +245,7 @@ func onPostComment(e pool.Event) error {
 				"comment_id": comment.Id.Hex(),
 			},
 		}
+		return nil
 	}
 	return errors.New("invalid onPostComment comment.ReplyType " + comment.ReplyType)
 }

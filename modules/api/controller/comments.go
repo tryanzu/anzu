@@ -2,7 +2,6 @@ package controller
 
 import (
 	"errors"
-	"github.com/siddontang/go/log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -180,34 +179,34 @@ func DeleteComment(c *gin.Context) {
 	)
 
 	if cid.Valid() == false {
-		c.AbortWithError(500, errors.New("Invalid id for reply"))
+		c.JSON(500, "Invalid id for reply")
 		return
 	}
 
 	comment, err := comments.FindId(deps.Container, cid)
 	if err != nil {
-		c.AbortWithError(404, errors.New("unknown comment to delete"))
+		c.JSON(404, "unknown comment to delete")
 		return
 	}
 
-	post, err := posts.FindId(deps.Container, comment.ReplyTo)
+	post, err := posts.FindId(deps.Container, comment.PostId)
 	if err != nil {
-		c.AbortWithError(404, errors.New("unknown comment's post to update"))
+		c.JSON(404, "unknown comment's post to update")
 		return
 	}
 
 	if perms(c).CanDeleteComment(comment.UserId, post.Category) == false {
-		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"status": "error", "message": "Not allowed to perform this operation"})
+		c.JSON(http.StatusForbidden, gin.H{"status": "error", "message": "Not allowed to perform this operation"})
 		return
 	}
 
 	err = comments.Delete(deps.Container, comment)
 	if err != nil {
-		c.AbortWithError(500, err)
+		c.JSON(500, err)
 		return
 	}
 	// Notify events pool.
-	events.In <- events.DeleteComment(signs(c), comment.PostId, comment.Id)
+	events.In <- events.DeleteComment(signs(c), post.Id, comment.Id)
 	c.JSON(200, gin.H{"status": "okay"})
 }
 
