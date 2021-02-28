@@ -1,6 +1,8 @@
 package activity
 
-import "gopkg.in/mgo.v2/bson"
+import (
+	"gopkg.in/mgo.v2/bson"
+)
 
 func Count(d deps, q bson.M) int {
 	n, err := d.Mgo().C("activity").Find(q).Count()
@@ -21,7 +23,7 @@ func CountList(d deps, q bson.M) int {
 		{"$group": bson.M{"_id": "null", "count": bson.M{"$sum": "$size"}}},
 	}).One(&result)
 	if err != nil {
-		panic(err)
+		log.Errorf("activity count	err=%v", err)
 	}
 	return result.Count
 }

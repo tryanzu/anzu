@@ -25,8 +25,8 @@ type OauthKeys struct {
 type chatChan struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
-	Youtube     string `json:"youtubeVideo"`
-	Twitch      string `json:"twitchVideo"`
+	Youtube     string `json:"youtubeVideo" toml:"youtubeVideo"`
+	Twitch      string `json:"twitchVideo" toml:"twitchVideo"`
 }
 
 type anzuSecurity struct {
