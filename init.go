@@ -7,6 +7,7 @@ import (
 	"github.com/getsentry/raven-go"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/providers/facebook"
+	"github.com/markbates/goth/providers/google"
 	"github.com/op/go-logging"
 	"github.com/spf13/cobra"
 	_ "github.com/tryanzu/core/board/events"
@@ -46,9 +47,15 @@ func main() {
 
 	// Authentication services
 	runtime := config.C.Copy()
-	facebookCnf := runtime.Oauth.Facebook
-	if len(facebookCnf.Key) > 0 && len(facebookCnf.Secret) > 0 {
-		goth.UseProviders(facebook.New(facebookCnf.Key, facebookCnf.Secret, facebookCnf.Callback, "email"))
+	if cnf := runtime.Oauth.Google; cnf.Key != "" && cnf.Secret != "" {
+		goth.UseProviders(
+			google.New(cnf.Key, cnf.Secret, cnf.Callback),
+		)
+	}
+	if cnf := runtime.Oauth.Facebook; cnf.Key != "" && cnf.Secret != "" {
+		goth.UseProviders(
+			facebook.New(cnf.Key, cnf.Secret, cnf.Callback),
+		)
 	}
 
 	// Graph main object (used to inject dependencies)

@@ -14,6 +14,7 @@ type Anzu struct {
 
 type OauthConfig struct {
 	Facebook OauthKeys
+	Google   OauthKeys
 }
 
 type OauthKeys struct {
