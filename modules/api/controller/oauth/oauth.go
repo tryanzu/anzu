@@ -53,7 +53,7 @@ func (a API) GetAuthRedirect(c *gin.Context) {
 }
 
 func (a API) CompleteAuth(c *gin.Context) {
-	provider, err := goth.GetProvider("facebook")
+	provider, err := goth.GetProvider(c.Param("provider"))
 	if err != nil {
 		c.JSON(500, gin.H{"status": "provider-error", "message": err.Error()})
 		return
