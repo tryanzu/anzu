@@ -48,7 +48,7 @@ func sendWorker(c *config.Config) {
 	mail := c.Copy().Mail
 	if len(mail.Server) > 0 {
 		log.Info("send worker has started...", mail)
-		dialer := gomail.NewPlainDialer(mail.Server, 587, mail.User, mail.Password)
+		dialer := gomail.NewDialer(mail.Server, 587, mail.User, mail.Password)
 		for {
 			select {
 			case m, alive := <-In:
@@ -65,6 +65,7 @@ func sendWorker(c *config.Config) {
 				}
 				if err := gomail.Send(sender, m); err != nil {
 					log.Error(err)
+					open = false
 				}
 			case <-time.After(30 * time.Second):
 				// Close the connection to the SMTP server if no email was sent in
