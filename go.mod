@@ -29,7 +29,7 @@ require (
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/getsentry/raven-go v0.2.0
 	github.com/gin-gonic/contrib v0.0.0-20190526021735-7fb7810ed2a0
-	github.com/gin-gonic/gin v1.4.0
+	github.com/gin-gonic/gin v1.7.0
 	github.com/go-redis/redis/v8 v8.4.4
 	github.com/go-sourcemap/sourcemap v2.1.2+incompatible // indirect
 	github.com/gorilla/websocket v1.4.0 // indirect
@@ -44,6 +44,8 @@ require (
 	github.com/mattn/go-colorable v0.1.2 // indirect
 	github.com/mikespook/gorbac v2.1.0+incompatible
 	github.com/mitchellh/goamz v0.0.0-20150317174335-caaaea8b30ee
+	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
+	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/motain/gocheck v0.0.0-20131023154940-9beb271d26e6 // indirect
 	github.com/newrelic/go-agent v2.11.0+incompatible
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
@@ -66,6 +68,7 @@ require (
 	golang.org/x/text v0.3.3
 	google.golang.org/appengine v1.5.0 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
+	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/validator.v8 v8.18.2
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/mgo.v2 v2.0.0-20180705113604-9856a29383ce
