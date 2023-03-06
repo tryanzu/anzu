@@ -32,7 +32,7 @@ require (
 	github.com/gin-gonic/gin v1.4.0
 	github.com/go-redis/redis/v8 v8.4.4
 	github.com/go-sourcemap/sourcemap v2.1.2+incompatible // indirect
-	github.com/gorilla/websocket v1.4.0 // indirect
+	github.com/gorilla/websocket v1.4.1 // indirect
 	github.com/goware/emailx v0.2.0
 	github.com/hashicorp/hcl v1.0.0
 	github.com/henrylee2cn/goutil v0.0.0-20190530092832-5b5425bff75c
