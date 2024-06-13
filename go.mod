@@ -29,7 +29,7 @@ require (
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/getsentry/raven-go v0.2.0
 	github.com/gin-gonic/contrib v0.0.0-20190526021735-7fb7810ed2a0
-	github.com/gin-gonic/gin v1.4.0
+	github.com/gin-gonic/gin v1.9.1
 	github.com/go-redis/redis/v8 v8.4.4
 	github.com/go-sourcemap/sourcemap v2.1.2+incompatible // indirect
 	github.com/gorilla/websocket v1.4.0 // indirect
@@ -66,6 +66,7 @@ require (
 	golang.org/x/text v0.14.0
 	google.golang.org/appengine v1.5.0 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
+	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/validator.v8 v8.18.2
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/mgo.v2 v2.0.0-20180705113604-9856a29383ce
