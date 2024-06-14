@@ -2,7 +2,19 @@
 version: '3.1'
 
 services:
-
+  anzu:
+    build: .
+    ports:
+      - 3200:3200
+    environment:
+      MONGO_URL: mongodb://root:example@mongo:27017/
+      MONGO_NAME: anzu
+      AWS_ACCESS_KEY_ID: minio
+      AWS_SECRET_ACCESS_KEY: minio123
+      AWS_S3_ENDPOINT: http://minio:9000
+    depends_on:
+      - mongo
+      - minio
   mongo:
     image: mongo:3
     restart: always
@@ -22,3 +34,16 @@ services:
       ME_CONFIG_MONGODB_ADMINPASSWORD: example
       ME_CONFIG_MONGODB_URL: mongodb://root:example@mongo:27017/
       ME_CONFIG_BASICAUTH: false
+  minio:
+    image: minio/minio
+    restart: always
+    ports:
+      - 9000:9000
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio-data:/data
+volumes:
+  minio-data:

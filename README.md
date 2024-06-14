@@ -14,11 +14,9 @@ The system is a WIP and while usable things might change dramatically.
 
 ## Anzu's stack
 - [Go](https://golang.org/) programming language
-- [redis](https://redis.io/) (required) for cache
-- [mongoDB](https://www.mongodb.com/) (required)
-- [react](https://reactjs.org/) for the webapp
-
-# Contribute
+- [Redis](https://redis.io/) (required) for cache
+- [MongoDB](https://www.mongodb.com/) (required)
+- [React](https://reactjs.org/) for the webapp
 
 ## Installation
 
@@ -59,3 +57,15 @@ password: admin
 ## Commits
 
 We follow the [Conventional Commits](https://www.conventionalcommits.org) specification, which help us with automatic semantic versioning and CHANGELOG generation.
+
+## Contributing
+
+We welcome contributions from the community! Whether it's reporting bugs, suggesting new features, or submitting code changes, your input is valuable. To get started:
+
+1. Fork the repository and create a new branch for your contribution.
+2. Make your changes and ensure they follow our coding style and guidelines.
+3. Write clear commit messages following the [Conventional Commits](https://www.conventionalcommits.org) specification.
+4. Test your changes thoroughly.
+5. Submit a pull request with a detailed description of your changes.
+
+We appreciate your help in making Anzu better! If you have any questions or need assistance, feel free to reach out to the maintainers or join our community channels.

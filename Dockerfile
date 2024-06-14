@@ -16,7 +16,7 @@ FROM alpine:3.9
 RUN apk add ca-certificates
 
 COPY --from=build_base /tmp/anzu/out/anzu /anzu
-COPY --from=build_base /tmp/anzu/config.toml /config.toml
+COPY --from=build_base /tmp/anzu/config.toml.example /config.toml
 COPY --from=build_base /tmp/anzu/config.hcl /config.hcl
 COPY --from=build_base /tmp/anzu/gaming.json /gaming.json
 COPY --from=build_base /tmp/anzu/roles.json /roles.json
