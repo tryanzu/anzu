@@ -1,4 +1,4 @@
-FROM golang:1.15-alpine AS build_base
+FROM golang:1.22-alpine AS build_base
 RUN apk add --no-cache git
 WORKDIR /tmp/anzu
 # We want to populate the module cache based on the go.{mod,sum} files.
