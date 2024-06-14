@@ -12,6 +12,7 @@ import (
 	"github.com/tryanzu/core/core/mail"
 	"github.com/tryanzu/core/core/templates"
 	"github.com/tryanzu/core/deps"
+	"github.com/tryanzu/core/internal/dal"
 	"github.com/tryanzu/core/modules/api"
 )
 
@@ -45,6 +46,12 @@ func init() {
 
 	// Run dependencies bootstraping sequences.
 	deps.Bootstrap()
+	if deps.ShouldSeed != nil && *deps.ShouldSeed {
+		err := dal.Seed(deps.Container.Mgo())
+		if err != nil {
+			deps.Container.Log().Error("db seed failed", err)
+		}
+	}
 
 	// Boot internal services.
 	content.Boot()

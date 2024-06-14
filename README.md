@@ -7,12 +7,10 @@ Anzu is an open source software project designed to create communities. Simple, 
 
 This repository contains the core backend code and the frontend as a git submodule inside static/frontend. 
 
-While usable in production (we've run it ourselves in [buldar.com](https://buldar.com) quite smoothly for 5 years) this forums platform is in early stages of development, and it may change suddenly, we're finding our way to define a first stable version.
-
-For install previous knowledge about the stack (golang, mongodb, redis) is required to set things up.
+The system is a WIP and while usable things might change dramatically.
 
 ## 
-![Anzu alpha post](https://imgur.com/pXDutG0.png)
+![Anzu alpha post page screenshot](https://imgur.com/pXDutG0.png)
 
 ## Anzu's stack
 - [Go](https://golang.org/) programming language
@@ -39,19 +37,24 @@ Initialize the repo submodule, so the [frontend](http://github.com/tryanzu/front
 git submodule update --init --recursive
 ```
 
-Install the core dependencies with `go build`.
-
-Install the frontend dependencies with `npm install`.
-
-
 ### Configure
 
 Copy the `.env.example` file into `.env` and edit it to meet your local environment configuration.
+
+### Run MongoDB with docker compose
+Start a local MongoDB 3.1 server with the help of docker and docker compose, ensure you have docker installed and then run:
+`docker compose up`
 
 ### Last steps
 
 Building the frontend before getting started is required, to do so, execute `npm install && npm run build` inside `static/frontend` submodule.
 Once the frontend is built you can build the backend program with `go build -o anzu` and then execute `./anzu api` to run anzu's http web server.
+
+If you are running anzu for the first time you should be able to log-in with the credentials:
+```
+username: admin@local.domain 
+password: admin
+```
 
 ## Commits
 

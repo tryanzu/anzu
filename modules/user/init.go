@@ -68,53 +68,52 @@ func (module *Module) Get(usr interface{}) (*One, error) {
 	return user, nil
 }
 
-// SignUp a user with email and username checks
-func (module *Module) SignUp(email, username, password, referral string) (*One, error) {
-	id := bson.NewObjectId()
-	if validUsername.MatchString(username) == false || strings.Count(username, "") < 3 || strings.Count(username, "") > 21 {
-		return nil, exceptions.OutOfBounds{
-			Msg: "Invalid username. Must have only alphanumeric characters.",
+type Store interface {
+	Insert(docs ...interface{}) error
+}
+
+type Opt func(*UserPrivate)
+
+func Validated(v bool) Opt {
+	return func(up *UserPrivate) {
+		up.Validated = v
+	}
+}
+
+func WithRole(role string) Opt {
+	return func(up *UserPrivate) {
+		var f bool
+		for _, v := range up.Roles {
+			if v.Name == role {
+				f = true
+				break
+			}
+		}
+		if !f {
+			up.Roles = append(up.Roles, UserRole{
+				Name: role,
+			})
 		}
 	}
+}
 
-	if helpers.IsEmail(email) == false {
-		return nil, exceptions.OutOfBounds{
-			Msg: "Invalid email. Provide a real one.",
-		}
-	}
-
-	// Check if user already exists using that email
-	unique, err := deps.Container.Mgo().C("users").Find(bson.M{
-		"$or": []bson.M{
-			{"email": email},
-			{"username": bson.RegEx{
-				Pattern: regexp.QuoteMeta(username),
-				Options: "i",
-			}},
-		},
-	}).Count()
-	if unique > 0 || err != nil {
-		return nil, exceptions.OutOfBounds{
-			Msg: "User already exists.",
-		}
-	}
-
+// InsertUser creates a new user with the provided username, password, and email.
+// It generates a new user ID, sets the initial user properties, and inserts the
+// user into the database. If the insert fails, it returns an error.
+func InsertUser(dal Store, username, password, email string, opts ...Opt) (*UserPrivate, error) {
 	hashed, err := helpers.HashPassword(password)
 	if err != nil {
 		return nil, err
 	}
-
-	profile := map[string]interface{}{
-		"country": "",
-		"bio":     "",
-	}
-
 	usr := &UserPrivate{
 		User: User{
-			Id:          id,
+			Id:          bson.NewObjectId(),
 			UserName:    username,
 			Description: "",
-			Profile:     profile,
+			Profile: map[string]interface{}{
+				"country": "",
+				"bio":     "",
+			},
 			Created:     time.Now(),
 			Permissions: make([]string, 0),
 			NameChanges: 1,
@@ -135,8 +134,45 @@ func (module *Module) SignUp(email, username, password, referral string) (*One, 
 		VerificationCode:   helpers.StrRandom(12),
 		Updated:            time.Now(),
 	}
+	for _, fn := range opts {
+		fn(usr)
+	}
+	err = dal.Insert(usr)
+	if err != nil {
+		return nil, err
+	}
+	return usr, nil
+}
 
-	err = deps.Container.Mgo().C("users").Insert(usr)
+// SignUp a user with email and username checks
+func (module *Module) SignUp(email, username, password, referral string) (*One, error) {
+	if !validUsername.MatchString(username) || strings.Count(username, "") < 3 || strings.Count(username, "") > 21 {
+		return nil, exceptions.OutOfBounds{
+			Msg: "Invalid username. Must have only alphanumeric characters.",
+		}
+	}
+	if !helpers.IsEmail(email) {
+		return nil, exceptions.OutOfBounds{
+			Msg: "Invalid email. Provide a real one.",
+		}
+	}
+
+	// Check if user already exists using that email
+	unique, err := deps.Container.Mgo().C("users").Find(bson.M{
+		"$or": []bson.M{
+			{"email": email},
+			{"username": bson.RegEx{
+				Pattern: regexp.QuoteMeta(username),
+				Options: "i",
+			}},
+		},
+	}).Count()
+	if unique > 0 || err != nil {
+		return nil, exceptions.OutOfBounds{
+			Msg: "User already exists.",
+		}
+	}
+	usr, err := InsertUser(deps.Container.Mgo().C("users"), username, password, email)
 	if err != nil {
 		panic(err)
 	}

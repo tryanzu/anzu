@@ -1,6 +1,8 @@
 package deps
 
 import (
+	"flag"
+
 	"gopkg.in/mgo.v2"
 )
 
@@ -9,6 +11,8 @@ var (
 	MongoURL string
 	// MongoName db name
 	MongoName string
+
+	ShouldSeed = flag.Bool("should-seed", false, "determines whether we seed the initial categories and admin user to bootstrap the site")
 )
 
 func IgniteMongoDB(container Deps) (Deps, error) {
@@ -19,7 +23,20 @@ func IgniteMongoDB(container Deps) (Deps, error) {
 		return container, err
 	}
 	db := session.DB(MongoName)
-
+	collections, err := db.CollectionNames()
+	if err != nil {
+		return container, err
+	}
+	seed := true
+	for _, v := range collections {
+		if v == "users" {
+			seed = false
+			break
+		}
+	}
+	if seed {
+		ShouldSeed = &seed
+	}
 	// Ensure indexes
 	db.C("users").EnsureIndex(
 		mgo.Index{
