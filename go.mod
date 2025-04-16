@@ -1,6 +1,7 @@
 module github.com/tryanzu/core
 
 go 1.22
+toolchain go1.24.1
 
 require (
 	github.com/BurntSushi/toml v0.3.1
@@ -35,8 +36,8 @@ require (
 	github.com/spf13/cobra v0.0.5
 	github.com/subosito/gotenv v1.1.1
 	github.com/xuyu/goredis v0.0.0-20160929021245-89fbe9474b37
-	golang.org/x/crypto v0.21.0
-	golang.org/x/text v0.14.0
+	golang.org/x/crypto v0.36.0
+	golang.org/x/text v0.23.0
 	gopkg.in/go-playground/validator.v8 v8.18.2
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/mgo.v2 v2.0.0-20180705113604-9856a29383ce
@@ -116,9 +117,9 @@ require (
 	github.com/vaughan0/go-ini v0.0.0-20130923145212-a98ad7ee00ec // indirect
 	go.opentelemetry.io/otel v0.15.0 // indirect
 	golang.org/x/arch v0.3.0 // indirect
-	golang.org/x/net v0.23.0 // indirect
+	golang.org/x/net v0.38.0 // indirect
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45 // indirect
-	golang.org/x/sys v0.18.0 // indirect
+	golang.org/x/sys v0.31.0 // indirect
 	google.golang.org/appengine v1.5.0 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
