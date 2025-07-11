@@ -1,6 +1,7 @@
 package search
 
 import (
+	"context"
 	"sort"
 	"time"
 
@@ -8,7 +9,9 @@ import (
 	"github.com/op/go-logging"
 	"github.com/tryanzu/core/core/config"
 	"github.com/tryanzu/core/deps"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 var log = logging.MustGetLogger("search")
@@ -17,10 +20,10 @@ var usersIndex *ngram.Index
 const bufferSize = 256
 
 type User struct {
-	ID       bson.ObjectId `bson:"_id,omitempty"`
-	Username string        `bson:"username"`
-	Seen     time.Time     `bson:"last_seen_at"`
-	Score    float64       `bson:"-"`
+	ID       primitive.ObjectID `bson:"_id,omitempty"`
+	Username string             `bson:"username"`
+	Seen     time.Time          `bson:"last_seen_at"`
+	Score    float64            `bson:"-"`
 }
 
 func (u User) Id() string {
@@ -42,15 +45,27 @@ func prepare() {
 	log.Info("service starting...")
 	go func() {
 		for {
-			var user User
-			iter := deps.Container.Mgo().C("users").Find(nil).Sort("-last_seen_at").Limit(bufferSize).Iter()
+			opts := options.Find().SetSort(bson.M{"last_seen_at": -1}).SetLimit(bufferSize)
+			cursor, err := deps.Container.Mgo().Collection("users").Find(context.Background(), bson.M{}, opts)
+			if err != nil {
+				log.Error(err)
+				time.Sleep(10 * time.Minute)
+				continue
+			}
 			usersIndex = ngram.NewIndex(1)
-			for iter.Next(&user) {
-				err := usersIndex.AddItem(user)
+			for cursor.Next(context.Background()) {
+				var user User
+				err := cursor.Decode(&user)
+				if err != nil {
+					log.Error(err)
+					continue
+				}
+				err = usersIndex.AddItem(user)
 				if err != nil {
 					log.Error(err)
 				}
 			}
+			cursor.Close(context.Background())
 			log.Info("in-memory user search index has been rehydrated")
 			time.Sleep(10 * time.Minute)
 		}

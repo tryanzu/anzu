@@ -1,18 +1,21 @@
 package user
 
 import (
+	"context"
+	"errors"
+	"regexp"
+	"strings"
+	"time"
+
 	"github.com/markbates/goth"
 	logging "github.com/op/go-logging"
 	"github.com/tryanzu/core/deps"
 	"github.com/tryanzu/core/modules/exceptions"
 	"github.com/tryanzu/core/modules/helpers"
-	mgo "gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
-
-	"errors"
-	"regexp"
-	"strings"
-	"time"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func Boot() *Module {
@@ -30,46 +33,46 @@ var (
 
 // Gets an instance of a user
 func (module *Module) Get(usr interface{}) (*One, error) {
-
+	ctx := context.Background()
 	var model *UserPrivate
-	context := module
+	ctx_module := module
 	database := deps.Container.Mgo()
+	collection := database.Collection("users")
 
 	switch usr.(type) {
-	case bson.ObjectId:
-
-		// Get the user using it's id
-		err := database.C("users").FindId(usr.(bson.ObjectId)).One(&model)
-
+	case primitive.ObjectID:
+		// Get the user using its id
+		err := collection.FindOne(ctx, bson.M{"_id": usr.(primitive.ObjectID)}).Decode(&model)
 		if err != nil {
-
-			return nil, exceptions.NotFound{"Invalid user id. Not found."}
+			if err == mongo.ErrNoDocuments {
+				return nil, exceptions.NotFound{"Invalid user id. Not found."}
+			}
+			return nil, err
 		}
 
 	case bson.M:
-
-		// Get the user using it's id
-		err := database.C("users").Find(usr.(bson.M)).One(&model)
-
+		// Get the user using the filter
+		err := collection.FindOne(ctx, usr.(bson.M)).Decode(&model)
 		if err != nil {
-
-			return nil, exceptions.NotFound{"Invalid user id. Not found."}
+			if err == mongo.ErrNoDocuments {
+				return nil, exceptions.NotFound{"Invalid user id. Not found."}
+			}
+			return nil, err
 		}
 
 	case *UserPrivate:
-
 		model = usr.(*UserPrivate)
 
 	default:
-		panic("Unkown argument")
+		panic("Unknown argument")
 	}
 
-	user := &One{data: model, di: context}
+	user := &One{data: model, di: ctx_module}
 	return user, nil
 }
 
 type Store interface {
-	Insert(docs ...interface{}) error
+	InsertOne(ctx context.Context, document interface{}, opts ...*options.InsertOneOptions) (*mongo.InsertOneResult, error)
 }
 
 type Opt func(*UserPrivate)
@@ -101,13 +104,14 @@ func WithRole(role string) Opt {
 // It generates a new user ID, sets the initial user properties, and inserts the
 // user into the database. If the insert fails, it returns an error.
 func InsertUser(dal Store, username, password, email string, opts ...Opt) (*UserPrivate, error) {
+	ctx := context.Background()
 	hashed, err := helpers.HashPassword(password)
 	if err != nil {
 		return nil, err
 	}
 	usr := &UserPrivate{
 		User: User{
-			Id:          bson.NewObjectId(),
+			Id:          primitive.NewObjectID(),
 			UserName:    username,
 			Description: "",
 			Profile: map[string]interface{}{
@@ -137,7 +141,7 @@ func InsertUser(dal Store, username, password, email string, opts ...Opt) (*User
 	for _, fn := range opts {
 		fn(usr)
 	}
-	err = dal.Insert(usr)
+	_, err = dal.InsertOne(ctx, usr)
 	if err != nil {
 		return nil, err
 	}
@@ -146,6 +150,7 @@ func InsertUser(dal Store, username, password, email string, opts ...Opt) (*User
 
 // SignUp a user with email and username checks
 func (module *Module) SignUp(email, username, password, referral string) (*One, error) {
+	ctx := context.Background()
 	if !validUsername.MatchString(username) || strings.Count(username, "") < 3 || strings.Count(username, "") > 21 {
 		return nil, exceptions.OutOfBounds{
 			Msg: "Invalid username. Must have only alphanumeric characters.",
@@ -158,21 +163,24 @@ func (module *Module) SignUp(email, username, password, referral string) (*One, 
 	}
 
 	// Check if user already exists using that email
-	unique, err := deps.Container.Mgo().C("users").Find(bson.M{
+	database := deps.Container.Mgo()
+	collection := database.Collection("users")
+	filter := bson.M{
 		"$or": []bson.M{
 			{"email": email},
-			{"username": bson.RegEx{
-				Pattern: regexp.QuoteMeta(username),
-				Options: "i",
+			{"username": bson.M{
+				"$regex":   regexp.QuoteMeta(username),
+				"$options": "i",
 			}},
 		},
-	}).Count()
+	}
+	unique, err := collection.CountDocuments(ctx, filter)
 	if unique > 0 || err != nil {
 		return nil, exceptions.OutOfBounds{
 			Msg: "User already exists.",
 		}
 	}
-	usr, err := InsertUser(deps.Container.Mgo().C("users"), username, password, email)
+	usr, err := InsertUser(collection, username, password, email)
 	if err != nil {
 		panic(err)
 	}
@@ -204,7 +212,8 @@ func (m *Module) computeNickname(nicknames ...string) (string, error) {
 
 // Sign up user from oauth provider
 func (module *Module) OauthSignup(provider string, user goth.User) (*One, error) {
-	id := bson.NewObjectId()
+	ctx := context.Background()
+	id := primitive.NewObjectID()
 
 	profile := map[string]interface{}{
 		"country": "",
@@ -242,12 +251,15 @@ func (module *Module) OauthSignup(provider string, user goth.User) (*One, error)
 		usr.EmailNotifications = true
 	}
 
-	err = deps.Container.Mgo().C("users").Insert(usr)
+	database := deps.Container.Mgo()
+	collection := database.Collection("users")
+	_, err = collection.InsertOne(ctx, usr)
 	if err != nil {
 		panic(err)
 	}
 
-	err = deps.Container.Mgo().C("users").Update(bson.M{"_id": id}, bson.M{"$set": bson.M{provider: user.RawData}})
+	update := bson.M{"$set": bson.M{provider: user.RawData}}
+	_, err = collection.UpdateOne(ctx, bson.M{"_id": id}, update)
 	if err != nil {
 		panic(err)
 	}
@@ -258,35 +270,35 @@ func (module *Module) OauthSignup(provider string, user goth.User) (*One, error)
 }
 
 func (module *Module) IsValidRecoveryToken(token string) (bool, error) {
+	ctx := context.Background()
 	// Only tokens 15 minutes old are valid
-	c, err := deps.Container.Mgo().C("user_recovery_tokens").Find(
-		bson.M{
-			"token":      token,
-			"used":       false,
-			"created_at": bson.M{"$gte": time.Now().Add(-15 * time.Minute)},
-		},
-	).Count()
+	database := deps.Container.Mgo()
+	collection := database.Collection("user_recovery_tokens")
+	filter := bson.M{
+		"token":      token,
+		"used":       false,
+		"created_at": bson.M{"$gte": time.Now().Add(-15 * time.Minute)},
+	}
+	c, err := collection.CountDocuments(ctx, filter)
 	return c > 0, err
 }
 
 func (module *Module) GetUserFromRecoveryToken(token string) (*One, error) {
-
+	ctx := context.Background()
 	var model UserRecoveryToken
 
 	database := deps.Container.Mgo()
-	change := mgo.Change{
-		Update:    bson.M{"$set": bson.M{"used": true, "updated_at": time.Now()}},
-		ReturnNew: false,
-	}
+	collection := database.Collection("user_recovery_tokens")
+	filter := bson.M{"token": token}
+	update := bson.M{"$set": bson.M{"used": true, "updated_at": time.Now()}}
 
-	_, err := database.C("user_recovery_tokens").Find(bson.M{"token": token}).Apply(change, &model)
-
+	opts := options.FindOneAndUpdate().SetReturnDocument(options.Before)
+	err := collection.FindOneAndUpdate(ctx, filter, update, opts).Decode(&model)
 	if err != nil {
 		return nil, err
 	}
 
 	usr, err := module.Get(model.UserId)
-
 	if err != nil {
 		return nil, err
 	}

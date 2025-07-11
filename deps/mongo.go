@@ -1,9 +1,12 @@
 package deps
 
 import (
+	"context"
 	"flag"
+	"time"
 
-	"gopkg.in/mgo.v2"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 var (
@@ -16,14 +19,24 @@ var (
 )
 
 func IgniteMongoDB(container Deps) (Deps, error) {
-	session, err := mgo.Dial(MongoURL)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(MongoURL))
 	if err != nil {
 		log.Error(err)
 		log.Info(MongoURL)
 		return container, err
 	}
-	db := session.DB(MongoName)
-	collections, err := db.CollectionNames()
+	
+	// Test connection
+	if err := client.Ping(ctx, nil); err != nil {
+		log.Error(err)
+		return container, err
+	}
+	
+	db := client.Database(MongoName)
+	collections, err := db.ListCollectionNames(ctx, map[string]interface{}{})
 	if err != nil {
 		return container, err
 	}
@@ -37,36 +50,51 @@ func IgniteMongoDB(container Deps) (Deps, error) {
 	if seed {
 		ShouldSeed = &seed
 	}
+	
 	// Ensure indexes
-	db.C("users").EnsureIndex(
-		mgo.Index{
-			Key:        []string{"email"},
-			Unique:     true,
-			Background: true,
-		},
-	)
-	db.C("users").EnsureIndex(
-		mgo.Index{
-			Key:        []string{"username"},
-			Unique:     true,
-			Background: true,
-		},
-	)
-	search := mgo.Index{
-		Key: []string{"$text:title", "$text:content"},
-		Weights: map[string]int{
-			"title":   3,
-			"content": 1,
-		},
-		DefaultLanguage: "spanish",
-		Background:      true, // See notes.
+	usersCol := db.Collection("users")
+	
+	// Email index
+	emailIndexModel := mongo.IndexModel{
+		Keys:    map[string]interface{}{"email": 1},
+		Options: options.Index().SetUnique(true).SetBackground(true),
 	}
-	db.C("posts").EnsureIndex(search)
+	_, err = usersCol.Indexes().CreateOne(ctx, emailIndexModel)
+	if err != nil {
+		log.Error("Failed to create email index:", err)
+	}
+	
+	// Username index
+	usernameIndexModel := mongo.IndexModel{
+		Keys:    map[string]interface{}{"username": 1},
+		Options: options.Index().SetUnique(true).SetBackground(true),
+	}
+	_, err = usersCol.Indexes().CreateOne(ctx, usernameIndexModel)
+	if err != nil {
+		log.Error("Failed to create username index:", err)
+	}
+	
+	// Text search index for posts
+	postsCol := db.Collection("posts")
+	searchIndexModel := mongo.IndexModel{
+		Keys: map[string]interface{}{
+			"title":   "text",
+			"content": "text",
+		},
+		Options: options.Index().
+			SetWeights(map[string]interface{}{
+				"title":   3,
+				"content": 1,
+			}).
+			SetDefaultLanguage("spanish").
+			SetBackground(true),
+	}
+	_, err = postsCol.Indexes().CreateOne(ctx, searchIndexModel)
+	if err != nil {
+		log.Error("Failed to create text search index:", err)
+	}
 
-	// See https://godoc.org/gopkg.in/mgo.v2#Session.SetMode
-	//session.SetMode(mgo.Monotonic, true)
-
-	container.DatabaseSessionProvider = session
+	container.DatabaseSessionProvider = client
 	container.DatabaseProvider = db
 
 	return container, nil

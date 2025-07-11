@@ -1,25 +1,45 @@
 package assets
 
 import (
+	"context"
+	"time"
+
 	"github.com/tryanzu/core/core/common"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func FindList(d Deps, scopes ...common.Scope) (list Assets, err error) {
-	err = d.Mgo().C("remote_assets").Find(common.ByScope(scopes...)).All(&list)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	
+	cursor, err := d.Mgo().Collection("remote_assets").Find(ctx, common.ByScope(scopes...))
+	if err != nil {
+		return
+	}
+	defer cursor.Close(ctx)
+	
+	err = cursor.All(ctx, &list)
 	return
 }
 
 func FindHash(d Deps, hash string) (asset Asset, err error) {
-	err = d.Mgo().C("remote_assets").Find(bson.M{
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	
+	err = d.Mgo().Collection("remote_assets").FindOne(ctx, bson.M{
 		"hash": hash,
-	}).One(&asset)
+	}).Decode(&asset)
+	if err == mongo.ErrNoDocuments {
+		err = nil // Convert to match original behavior
+	}
 	return
 }
 
-func FindURLs(d Deps, list ...bson.ObjectId) (common.AssetRefsMap, error) {
+func FindURLs(d Deps, list ...primitive.ObjectID) (common.AssetRefsMap, error) {
 	hash := common.AssetRefsMap{}
-	missing := []bson.ObjectId{}
+	missing := []primitive.ObjectID{}
 
 	// Attempt to fill hashmap using cache layer first.
 	for _, id := range list {

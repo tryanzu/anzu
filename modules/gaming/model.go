@@ -1,8 +1,9 @@
 package gaming
 
 import (
-	"gopkg.in/mgo.v2/bson"
 	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Rules struct {
@@ -22,21 +23,21 @@ type RuleModel struct {
 }
 
 type BadgeModel struct {
-	Id            bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
-	Type          string        `bson:"type" json:"type"`
-	TypeLabel     string        `bson:"type_label" json:"type_label"`
-	Slug          string        `bson:"slug" json:"slug"`
-	Name          string        `bson:"name" json:"name"`
-	Description   string        `bson:"description" json:"description"`
-	Coins         int           `bson:"coins,omitempty" json:"coins,omitempty"`
-	RequiredBadge bson.ObjectId `bson:"required_badge,omitempty" json:"required_badge,omitempty"`
-	RequiredLevel int           `bson:"required_level,omitempty" json:"required_level,omitempty"`
-	Avaliable     bool          `bson:"available" json:"available"`
+	Id            primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
+	Type          string             `bson:"type" json:"type"`
+	TypeLabel     string             `bson:"type_label" json:"type_label"`
+	Slug          string             `bson:"slug" json:"slug"`
+	Name          string             `bson:"name" json:"name"`
+	Description   string             `bson:"description" json:"description"`
+	Coins         int                `bson:"coins,omitempty" json:"coins,omitempty"`
+	RequiredBadge primitive.ObjectID `bson:"required_badge,omitempty" json:"required_badge,omitempty"`
+	RequiredLevel int                `bson:"required_level,omitempty" json:"required_level,omitempty"`
+	Avaliable     bool               `bson:"available" json:"available"`
 }
 
 type RankingModel struct {
-	Id       bson.ObjectId        `bson:"_id,omitempty" json:"id,omitempty"`
-	UserId   bson.ObjectId        `bson:"user_id" json:"user_id"`
+	Id       primitive.ObjectID   `bson:"_id,omitempty" json:"id,omitempty"`
+	UserId   primitive.ObjectID   `bson:"user_id" json:"user_id"`
 	Badges   int                  `bson:"badges" json:"badges"`
 	Swords   int                  `bson:"swords" json:"swords"`
 	Coins    int                  `bson:"coins" json:"coins"`
@@ -53,7 +54,7 @@ type RankingPositionModel struct {
 }
 
 type RankingUserModel struct {
-	Id       bson.ObjectId          `bson:"_id,omitempty" json:"id"`
+	Id       primitive.ObjectID     `bson:"_id,omitempty" json:"id"`
 	UserName string                 `bson:"username" json:"username"`
 	Image    string                 `bson:"image" json:"image,omitempty"`
 	Gaming   map[string]interface{} `bson:"gaming" json:"gaming,omitempty"`

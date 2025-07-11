@@ -11,7 +11,7 @@ import (
 	"github.com/tryanzu/core/core/user"
 	"github.com/tryanzu/core/deps"
 	"github.com/tryanzu/core/modules/acl"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // SiteMiddleware loads site config into middlewares pipe context.
@@ -53,7 +53,7 @@ func TitleMiddleware(title string) gin.HandlerFunc {
 
 func Can(permission string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		users := acl.LoadedACL.User(c.MustGet("userID").(bson.ObjectId))
+		users := acl.LoadedACL.User(c.MustGet("userID").(primitive.ObjectID))
 		if !users.Can(permission) {
 			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"status": "error", "message": "Not allowed to perform this operation"})
 			return
@@ -67,7 +67,7 @@ func Can(permission string) gin.HandlerFunc {
 func UserMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		sid := c.MustGet("user_id").(string)
-		oid := bson.ObjectIdHex(sid)
+		oid, _ := primitive.ObjectIDFromHex(sid)
 
 		// Attempt to retrieve user data otherwise abort request.
 		usr, err := user.FindId(deps.Container, oid)

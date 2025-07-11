@@ -3,11 +3,11 @@ package model
 import (
 	"time"
 
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type User struct {
-	Id            bson.ObjectId          `bson:"_id,omitempty" json:"id"`
+	Id            primitive.ObjectID     `bson:"_id,omitempty" json:"id"`
 	FirstName     string                 `bson:"first_name" json:"first_name"`
 	LastName      string                 `bson:"last_name" json:"last_name"`
 	UserName      string                 `bson:"username" json:"username"`
@@ -16,7 +16,7 @@ type User struct {
 	Password      string                 `bson:"password" json:"-"`
 	Step          int                    `bson:"step,omitempty" json:"step"`
 	Email         string                 `bson:"email" json:"email,omitempty"`
-	Categories    []bson.ObjectId        `bson:"categories,omitempty" json:"categories,omitempty"`
+	Categories    []primitive.ObjectID   `bson:"categories,omitempty" json:"categories,omitempty"`
 	Roles         []UserRole             `bson:"roles" json:"roles,omitempty"`
 	Permissions   []string               `bson:"permissions" json:"permissions,omitempty"`
 	Description   string                 `bson:"description" json:"description,omitempty"`
@@ -34,8 +34,8 @@ type User struct {
 }
 
 type UserRole struct {
-	Name       string          `bson:"name" json:"name"`
-	Categories []bson.ObjectId `bson:"categories,omitempty" json:"categories,omitempty"`
+	Name       string               `bson:"name" json:"name"`
+	Categories []primitive.ObjectID `bson:"categories,omitempty" json:"categories,omitempty"`
 }
 
 type UserStats struct {
@@ -51,12 +51,12 @@ type UserGaming struct {
 }
 
 type UserToken struct {
-	Id      bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
-	UserId  bson.ObjectId `bson:"user_id" json:"user_id"`
-	Token   string        `bson:"token" json:"token"`
-	Closed  bool          `bson:"closed,omitempty" json"closed,omitempty"`
-	Created time.Time     `bson:"created_at" json:"created_at"`
-	Updated time.Time     `bson:"updated_at" json:"updated_at"`
+	Id      primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
+	UserId  primitive.ObjectID `bson:"user_id" json:"user_id"`
+	Token   string             `bson:"token" json:"token"`
+	Closed  bool               `bson:"closed,omitempty" json"closed,omitempty"`
+	Created time.Time          `bson:"created_at" json:"created_at"`
+	Updated time.Time          `bson:"updated_at" json:"updated_at"`
 }
 
 type UserPc struct {
@@ -64,21 +64,21 @@ type UserPc struct {
 }
 
 type UserFollowing struct {
-	Id            bson.ObjectId `bson:"_id,omitempty" json:"id"`
-	Follower      bson.ObjectId `bson:"follower,omitempty" json:"follower"`
-	Following     bson.ObjectId `bson:"following,omitempty" json:"following"`
-	Notifications bool          `bson:"notifications,omitempty" json:"notifications"`
-	Created       time.Time     `bson:"created_at" json:"created_at"`
+	Id            primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	Follower      primitive.ObjectID `bson:"follower,omitempty" json:"follower"`
+	Following     primitive.ObjectID `bson:"following,omitempty" json:"following"`
+	Notifications bool               `bson:"notifications,omitempty" json:"notifications"`
+	Created       time.Time          `bson:"created_at" json:"created_at"`
 }
 
 type UserActivity struct {
-	Id        bson.ObjectId     `json:"related_id"`
-	Title     string            `json:"title"`
-	Slug      string            `json:"slug"`
-	Directive string            `json:"directive"`
-	Content   string            `json:"content"`
-	Author    map[string]string `json:"user"`
-	Created   time.Time         `json:"created_at"`
+	Id        primitive.ObjectID `json:"related_id"`
+	Title     string             `json:"title"`
+	Slug      string             `json:"slug"`
+	Directive string             `json:"directive"`
+	Content   string             `json:"content"`
+	Author    map[string]string  `json:"user"`
+	Created   time.Time          `json:"created_at"`
 }
 
 type UserProfileForm struct {
@@ -104,9 +104,9 @@ type UserRegisterForm struct {
 }
 
 type UserSubscribe struct {
-	Id       bson.ObjectId `bson:"_id,omitempty" json:"id"`
-	Category string        `bson:"category" json:"category"`
-	Email    string        `bson:"email" json:"email"`
+	Id       primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	Category string             `bson:"category" json:"category"`
+	Email    string             `bson:"email" json:"email"`
 }
 
 type UserSubscribeForm struct {

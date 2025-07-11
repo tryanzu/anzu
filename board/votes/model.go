@@ -1,8 +1,8 @@
 package votes
 
 import (
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 
 	"time"
 )
@@ -16,11 +16,11 @@ const (
 
 // Vote represents a reaction to a post || comment
 type Vote struct {
-	ID         bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
-	UserID     bson.ObjectId `bson:"user_id" json:"user_id"`
+	ID         primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
+	UserID     primitive.ObjectID `bson:"user_id" json:"user_id"`
 	Type       string        `bson:"type" json:"type"`
 	NestedType string        `bson:"nested_type,omitempty" json:"nested_type,omitempty"`
-	RelatedID  bson.ObjectId `bson:"related_id" json:"related_id"`
+	RelatedID  primitive.ObjectID `bson:"related_id" json:"related_id"`
 	Value      string        `bson:"value" json:"value"`
 	Created    time.Time     `bson:"created_at" json:"created_at"`
 	Deleted    *time.Time    `bson:"deleted_at,omitempty" json:"-"`
@@ -43,8 +43,8 @@ type Votes map[string]int
 	Rating int `bson:"rating,omitempty" json:"rating,omitempty"`
 }*/
 
-func coll(deps Deps) *mgo.Collection {
-	return deps.Mgo().C("votes")
+func coll(deps Deps) *mongo.Collection {
+	return deps.Mgo().Collection("votes")
 }
 
 // List aggregates a list of votes for certain event.

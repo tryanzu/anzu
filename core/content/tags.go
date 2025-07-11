@@ -3,7 +3,7 @@ package content
 import (
 	"regexp"
 
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 var tagRegex, _ = regexp.Compile(`(?i)\[([a-z0-9]+(:?))+\]`)
@@ -28,14 +28,15 @@ func (list tags) withTag(name string) tags {
 	return filtered
 }
 
-func (list tags) getIdParams(index int) (id []bson.ObjectId) {
+func (list tags) getIdParams(index int) (id []primitive.ObjectID) {
 	for _, tag := range list {
 		if len(tag.Params) < index+1 {
 			continue
 		}
 
-		if cid := tag.Params[index]; bson.IsObjectIdHex(cid) {
-			id = append(id, bson.ObjectIdHex(cid))
+		if cid := tag.Params[index]; primitive.IsValidObjectID(cid) {
+			objID, _ := primitive.ObjectIDFromHex(cid)
+			id = append(id, objID)
 		}
 	}
 	return

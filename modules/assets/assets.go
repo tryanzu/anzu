@@ -1,14 +1,15 @@
 package assets
 
 import (
-	"github.com/mitchellh/goamz/s3"
-	"github.com/tryanzu/core/deps"
-	"gopkg.in/mgo.v2/bson"
-
+	"context"
 	"encoding/base64"
 	"net/http"
 	"path/filepath"
 	"time"
+
+	"github.com/mitchellh/goamz/s3"
+	"github.com/tryanzu/core/deps"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func Boot() *Module {
@@ -22,16 +23,15 @@ type Module struct {
 	S3 *s3.Bucket `inject:""`
 }
 
-func (module *Module) UploadBase64(content, filename, related string, related_id bson.ObjectId, meta interface{}) error {
-
+func (module *Module) UploadBase64(content, filename, related string, related_id primitive.ObjectID, meta interface{}) error {
+	ctx := context.Background()
 	data, err := base64.StdEncoding.DecodeString(content)
-
 	if err != nil {
 		return err
 	}
 
 	extension := filepath.Ext(filename)
-	random := bson.NewObjectId().Hex()
+	random := primitive.NewObjectID().Hex()
 
 	// Detect the downloaded file type
 	dataType := http.DetectContentType(data)
@@ -41,7 +41,6 @@ func (module *Module) UploadBase64(content, filename, related string, related_id
 
 	// Upload binary to s3
 	err = module.S3.Put(path, data, dataType, s3.ACL("public-read"))
-
 	if err != nil {
 		return err
 	}
@@ -55,8 +54,8 @@ func (module *Module) UploadBase64(content, filename, related string, related_id
 		Created:   time.Now(),
 	}
 
-	err = database.C("assets").Insert(asset)
-
+	collection := database.Collection("assets")
+	_, err = collection.InsertOne(ctx, asset)
 	if err != nil {
 		return err
 	}

@@ -17,7 +17,7 @@ import (
 	"github.com/tryanzu/core/core/events"
 	"github.com/tryanzu/core/core/user"
 	"github.com/tryanzu/core/deps"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Client contains a message to be broadcasted to a channel
@@ -69,7 +69,7 @@ func (c *Client) readWorker() {
 				continue
 			}
 			mid, exists := e.Params["id"].(string)
-			if !exists || bson.IsObjectIdHex(mid) == false {
+			if !exists || !primitive.IsValidObjectID(mid) {
 				log.Warning("chat:delete requires a valid message id.")
 				continue
 			}
@@ -87,7 +87,8 @@ func (c *Client) readWorker() {
 					},
 				}.encode(),
 			}
-			ledis.SAdd([]byte(m.Channel+":deleted"), []byte(bson.ObjectIdHex(mid)))
+			id, _ := primitive.ObjectIDFromHex(mid)
+			ledis.SAdd([]byte(m.Channel+":deleted"), []byte(id.Hex()))
 			ToChan <- m
 		case "chat:ban":
 			if c.User == nil {
@@ -98,11 +99,12 @@ func (c *Client) readWorker() {
 				continue
 			}
 			uid, exists := e.Params["userId"].(string)
-			if !exists || bson.IsObjectIdHex(uid) == false {
+			if !exists || !primitive.IsValidObjectID(uid) {
 				log.Debugf("chat:ban requires a valid user id.")
 				continue
 			}
-			events.In <- events.NewBanFlag(bson.ObjectIdHex(uid))
+			id, _ := primitive.ObjectIDFromHex(uid)
+			events.In <- events.NewBanFlag(id)
 		case "chat:star":
 			if c.User == nil {
 				continue
@@ -145,7 +147,7 @@ func (c *Client) String() string {
 
 // finish client connection.
 func (c *Client) finish() {
-	var uid *bson.ObjectId
+	var uid *primitive.ObjectID
 	if c.User != nil {
 		uid = &c.User.Id
 		// Decouple user last seen update for a faster finish call
@@ -188,14 +190,15 @@ func (c *Client) readAuth(e SocketEvent) {
 	}
 
 	claims := signed.Claims.(jwt.MapClaims)
-	usr, err := user.FindId(deps.Container, bson.ObjectIdHex(claims["user_id"].(string)))
+	id, _ := primitive.ObjectIDFromHex(claims["user_id"].(string))
+	usr, err := user.FindId(deps.Container, id)
 	if err != nil {
 		log.Errorf("could not find user from socket token: %v", err)
 		return
 	}
 
 	c.User = &usr
-	go func(id bson.ObjectId) {
+	go func(id primitive.ObjectID) {
 		err := user.LastSeenAt(deps.Container, id, time.Now())
 		if err != nil {
 			log.Error(err)
@@ -253,7 +256,7 @@ func (c *Client) readChatMessage(e SocketEvent) {
 		log.Warning("chat:message requires a chan.")
 		return
 	}
-	mid := bson.NewObjectId()
+	mid := primitive.NewObjectID()
 	chatM := chatMessage{
 		"msg":    html.EscapeString(msg),
 		"userId": c.User.Id,
@@ -379,7 +382,7 @@ func (c *Client) enterChatChannel(channel string) error {
 			continue
 		}
 		if msg.ID != nil {
-			n, err := ledis.SIsMember([]byte(channel+":deleted"), []byte(*msg.ID))
+			n, err := ledis.SIsMember([]byte(channel+":deleted"), []byte(msg.ID.Hex()))
 			if n == 1 || err != nil {
 				continue
 			}
@@ -426,8 +429,8 @@ func (c *Client) send(packed []M) {
 			if c.User == nil {
 				continue
 			}
-			id := bson.ObjectIdHex(m.Channel[5:])
-			if id.Valid() == false {
+			id, err := primitive.ObjectIDFromHex(m.Channel[5:])
+			if err != nil {
 				log.Debugf("invalid userId in packed messages sending, chan = %s", m.Channel)
 				continue
 			}

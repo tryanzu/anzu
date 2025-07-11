@@ -1,13 +1,14 @@
 package user
 
 import (
-	"gopkg.in/mgo.v2/bson"
-
 	"time"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type User struct {
-	Id          bson.ObjectId `bson:"_id,omitempty" json:"id"`
+	Id          primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 	UserName    string        `bson:"username" json:"username"`
 	NameChanges int           `bson:"name_changes" json:"name_changes"`
 	Description string        `bson:"description" json:"description,omitempty"`
@@ -30,13 +31,13 @@ type UserPrivate struct {
 	Step               int             `bson:"step,omitempty" json:"step"`
 	Notifications      int             `bson:"notifications,omitempty" json:"notifications"`
 	Email              string          `bson:"email,omitempty" json:"email,omitempty"`
-	Categories         []bson.ObjectId `bson:"categories,omitempty" json:"categories,omitempty"`
+	Categories         []primitive.ObjectID `bson:"categories,omitempty" json:"categories,omitempty"`
 	Facebook           interface{}     `bson:"facebook,omitempty" json:"facebook,omitempty"`
 	Stats              UserStats       `bson:"stats,omitempty" json:"stats,omitempty"`
 	ReferralCode       string          `bson:"ref_code,omitempty" json:"ref_code"`
 	VerificationCode   string          `bson:"ver_code,omitempty" json:"ver_code"`
 	SessionId          string          `bson:"-" json:"session_id"`
-	Duplicates         []bson.ObjectId `bson:"duplicates" json:"-"`
+	Duplicates         []primitive.ObjectID `bson:"duplicates" json:"-"`
 	ConfirmationSent   *time.Time      `bson:"confirm_sent_at" json:"-"`
 	Updated            time.Time       `bson:"updated_at" json:"updated_at"`
 	Seen               *time.Time      `bson:"last_seen_at" json:"last_seen_at,omitempty"`
@@ -45,7 +46,7 @@ type UserPrivate struct {
 }
 
 type UserSimple struct {
-	Id           bson.ObjectId `bson:"_id,omitempty" json:"id"`
+	Id           primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 	Roles        []UserRole    `bson:"roles" json:"roles,omitempty"`
 	UserName     string        `bson:"username" json:"username"`
 	UserNameSlug string        `bson:"username_slug" json:"username_slug"`
@@ -64,9 +65,9 @@ type UserSimple struct {
 }
 
 type UserRecoveryToken struct {
-	Id      bson.ObjectId `bson:"_id,omitempty" json:"id"`
-	Token   string        `bson:"token" json:"token"`
-	UserId  bson.ObjectId `bson:"user_id" json:"user_id"`
+	Id      primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	Token   string             `bson:"token" json:"token"`
+	UserId  primitive.ObjectID `bson:"user_id" json:"user_id"`
 	Used    bool          `bson:"used" json:"used"`
 	Created time.Time     `bson:"created_at" json:"created_at"`
 	Updated time.Time     `bson:"updated_at" json:"updated_at"`
@@ -76,7 +77,7 @@ var UserSimpleFields bson.M = bson.M{"id": 1, "username": 1, "description": 1, "
 var UserBasicFields bson.M = bson.M{"id": 1, "username": 1, "description": 1, "facebook": 1, "country": 1, "origin_id": 1, "battlenet_id": 1, "steam_id": 1, "email": 1, "validated": 1, "banned": 1, "username_slug": 1, "image": 1, "gaming": 1, "created_at": 1, "updated_at": 1, "last_seen_at": 1}
 
 type UserBasic struct {
-	Id           bson.ObjectId `bson:"_id,omitempty" json:"id"`
+	Id           primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 	UserName     string        `bson:"username" json:"username"`
 	UserNameSlug string        `bson:"username_slug" json:"username_slug"`
 	Roles        []UserRole    `bson:"roles" json:"roles,omitempty"`
@@ -104,7 +105,7 @@ func (u UserBasic) ToSimple() UserSimple {
 
 type UserRole struct {
 	Name       string          `bson:"name" json:"name"`
-	Categories []bson.ObjectId `bson:"categories,omitempty" json:"categories,omitempty"`
+	Categories []primitive.ObjectID `bson:"categories,omitempty" json:"categories,omitempty"`
 }
 
 type UserStats struct {
@@ -121,13 +122,13 @@ type UserGaming struct {
 }
 
 type UserBadge struct {
-	Id   bson.ObjectId `bson:"id" json:"id"`
+	Id   primitive.ObjectID `bson:"id" json:"id"`
 	Date time.Time     `bson:"date" json:"date"`
 }
 
 type UserToken struct {
-	Id      bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
-	UserId  bson.ObjectId `bson:"user_id" json:"user_id"`
+	Id      primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
+	UserId  primitive.ObjectID `bson:"user_id" json:"user_id"`
 	Token   string        `bson:"token" json:"token"`
 	Closed  bool          `bson:"closed,omitempty" json"closed,omitempty"`
 	Created time.Time     `bson:"created_at" json:"created_at"`
@@ -139,9 +140,9 @@ type UserPc struct {
 }
 
 type UserFollowing struct {
-	Id            bson.ObjectId `bson:"_id,omitempty" json:"id"`
-	Follower      bson.ObjectId `bson:"follower,omitempty" json:"follower"`
-	Following     bson.ObjectId `bson:"following,omitempty" json:"following"`
+	Id            primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	Follower      primitive.ObjectID `bson:"follower,omitempty" json:"follower"`
+	Following     primitive.ObjectID `bson:"following,omitempty" json:"following"`
 	Notifications bool          `bson:"notifications,omitempty" json:"notifications"`
 	Created       time.Time     `bson:"created_at" json:"created_at"`
 }
@@ -155,7 +156,7 @@ type UserActivity struct {
 }
 
 type UserLightModel struct {
-	Id       bson.ObjectId `bson:"_id,omitempty" json:"id"`
+	Id       primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 	Username string        `bson:"username" json:"username"`
 	Email    string        `bson:"email" json:"email"`
 	Image    string        `bson:"image" json:"image"`
@@ -172,7 +173,7 @@ type UserRegisterForm struct {
 }
 
 type UserSubscribe struct {
-	Id       bson.ObjectId `bson:"_id,omitempty" json:"id"`
+	Id       primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 	Category string        `bson:"category" json:"category"`
 	Email    string        `bson:"email" json:"email"`
 }
@@ -183,20 +184,20 @@ type UserSubscribeForm struct {
 }
 
 type UserId struct {
-	Id bson.ObjectId `bson:"_id,omitempty" json:"id"`
+	Id primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 }
 
 type ViewModel struct {
-	Id        bson.ObjectId `bson:"_id,omitempty" json:"id"`
-	UserId    bson.ObjectId `bson:"user_id" json:"user_id"`
-	Related   string        `bson:"related" json:"related"`
-	RelatedId bson.ObjectId `bson:"related_id" json:"related_id"`
+	Id        primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	UserId    primitive.ObjectID `bson:"user_id" json:"user_id"`
+	Related   string             `bson:"related" json:"related"`
+	RelatedId primitive.ObjectID `bson:"related_id" json:"related_id"`
 	Created   time.Time     `bson:"created_at" json:"created_at"`
 }
 
 type CheckinModel struct {
-	Id      bson.ObjectId `bson:"_id,omitempty" json:"id"`
-	UserId  bson.ObjectId `bson:"user_id" json:"user_id"`
+	Id      primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	UserId  primitive.ObjectID `bson:"user_id" json:"user_id"`
 	Address string        `bson:"client_ip" json:"client_ip"`
 	Date    time.Time     `bson:"date" json:"date"`
 }

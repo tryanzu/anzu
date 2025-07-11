@@ -1,13 +1,16 @@
 package content
 
 import (
-	"github.com/tryanzu/core/deps"
-	"gopkg.in/mgo.v2/bson"
-
+	"context"
 	"fmt"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/tryanzu/core/deps"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 var tag_regex, _ = regexp.Compile(`(?i)\[([a-z0-9]+(:?))+\]`)
@@ -30,8 +33,10 @@ func (self Module) ParseMentionTags(o Parseable, tags []Tag) bool {
 
 			// Ensure tag for mentions and its params
 			if tag.Name == "mention" && len(tag.Params) > 0 {
-				if id := tag.Params[0]; bson.IsObjectIdHex(id) {
-					ids = append(ids, id)
+				if id := tag.Params[0]; len(id) == 24 {
+					if _, err := primitive.ObjectIDFromHex(id); err == nil {
+						ids = append(ids, id)
+					}
 				}
 			}
 		}
@@ -42,14 +47,13 @@ func (self Module) ParseMentionTags(o Parseable, tags []Tag) bool {
 
 			// Ensure tag for mentions and its params
 			if tag.Name == "mention" && len(tag.Params) > 0 {
-				if id := tag.Params[0]; bson.IsObjectIdHex(id) {
-
-					usr, exists := users[id]
-
-					if exists {
-
-						link := `<a class="user-mention" data-id="` + id + `" data-username="` + usr + `">@` + usr + `</a>`
-						c = strings.Replace(c, tag.Original, link, -1)
+				if id := tag.Params[0]; len(id) == 24 {
+					if _, err := primitive.ObjectIDFromHex(id); err == nil {
+						usr, exists := users[id]
+						if exists {
+							link := `<a class="user-mention" data-id="` + id + `" data-username="` + usr + `">@` + usr + `</a>`
+							c = strings.Replace(c, tag.Original, link, -1)
+						}
 					}
 				}
 			}
@@ -72,8 +76,10 @@ func (self Module) ParseAssetTags(o Parseable, tags []Tag) bool {
 
 			// Ensure tag for mentions and its params
 			if tag.Name == "asset" && len(tag.Params) > 0 {
-				if id := tag.Params[0]; bson.IsObjectIdHex(id) {
-					ids = append(ids, id)
+				if id := tag.Params[0]; len(id) == 24 {
+					if _, err := primitive.ObjectIDFromHex(id); err == nil {
+						ids = append(ids, id)
+					}
 				}
 			}
 		}
@@ -84,14 +90,13 @@ func (self Module) ParseAssetTags(o Parseable, tags []Tag) bool {
 
 			// Ensure tag for mentions and its params
 			if tag.Name == "asset" && len(tag.Params) > 0 {
-				if id := tag.Params[0]; bson.IsObjectIdHex(id) {
-
-					asset, exists := assets[id]
-
-					if exists {
-
-						link := asset
-						c = strings.Replace(c, tag.Original, link, -1)
+				if id := tag.Params[0]; len(id) == 24 {
+					if _, err := primitive.ObjectIDFromHex(id); err == nil {
+						asset, exists := assets[id]
+						if exists {
+							link := asset
+							c = strings.Replace(c, tag.Original, link, -1)
+						}
 					}
 				}
 			}
@@ -122,23 +127,33 @@ func (self Module) FetchUsersHelper(ls []string) map[string]string {
 		}
 	}
 
-	missing := []bson.ObjectId{}
+	missing := []primitive.ObjectID{}
 
 	for _, id := range ls {
 		if _, exists := usrMap[id]; !exists {
-			missing = append(missing, bson.ObjectIdHex(id))
+			if oid, err := primitive.ObjectIDFromHex(id); err == nil {
+				missing = append(missing, oid)
+			}
 		}
 	}
 
 	if len(missing) > 0 {
-
 		var targets []struct {
-			Id       bson.ObjectId `bson:"_id"`
-			Username string        `bson:"username"`
+			Id       primitive.ObjectID `bson:"_id"`
+			Username string            `bson:"username"`
 		}
 
+		ctx := context.Background()
 		database := deps.Container.Mgo()
-		err := database.C("users").Find(bson.M{"_id": bson.M{"$in": missing}}).Select(bson.M{"username": 1}).All(&targets)
+		collection := database.Collection("users")
+		filter := bson.M{"_id": bson.M{"$in": missing}}
+		opts := options.Find().SetProjection(bson.M{"username": 1})
+		cursor, err := collection.Find(ctx, filter, opts)
+		if err != nil {
+			return usrMap
+		}
+		defer cursor.Close(ctx)
+		err = cursor.All(ctx, &targets)
 
 		if err == nil {
 			for _, usr := range targets {
@@ -171,20 +186,29 @@ func (self Module) FetchAssetsHelper(ls []string) map[string]string {
 		}
 	}
 
-	missing := []bson.ObjectId{}
+	missing := []primitive.ObjectID{}
 
 	for _, id := range ls {
 		if _, exists := assetMap[id]; !exists {
-			missing = append(missing, bson.ObjectIdHex(id))
+			if oid, err := primitive.ObjectIDFromHex(id); err == nil {
+				missing = append(missing, oid)
+			}
 		}
 	}
 
 	if len(missing) > 0 {
-
 		var targets []Asset
 
+		ctx := context.Background()
 		database := deps.Container.Mgo()
-		err := database.C("remote_assets").Find(bson.M{"_id": bson.M{"$in": missing}}).All(&targets)
+		collection := database.Collection("remote_assets")
+		filter := bson.M{"_id": bson.M{"$in": missing}}
+		cursor, err := collection.Find(ctx, filter)
+		if err != nil {
+			return assetMap
+		}
+		defer cursor.Close(ctx)
+		err = cursor.All(ctx, &targets)
 
 		if err == nil {
 			for _, asset := range targets {

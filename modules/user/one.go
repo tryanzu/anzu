@@ -1,11 +1,13 @@
 package user
 
 import (
+	"context"
+	"time"
+
 	"github.com/tryanzu/core/deps"
 	"github.com/tryanzu/core/modules/helpers"
-	"gopkg.in/mgo.v2/bson"
-
-	"time"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type One struct {
@@ -24,17 +26,12 @@ func (self *One) RUpdate(data *UserPrivate) {
 }
 
 func (self *One) Email() string {
-
 	if self.data.Facebook != nil {
-
 		fb := self.data.Facebook.(bson.M)
-
 		if email, exists := fb["email"]; exists {
-
 			return email.(string)
 		}
 	}
-
 	return self.data.Email
 }
 
@@ -44,39 +41,43 @@ func (self *One) Name() string {
 
 // Helper method to track a signin from the user
 func (self *One) TrackUserSignin(client_address string) {
+	ctx := context.Background()
 	record := &CheckinModel{
 		UserId:  self.data.Id,
 		Address: client_address,
 		Date:    time.Now(),
 	}
 
-	err := deps.Container.Mgo().C("checkins").Insert(record)
-
+	database := deps.Container.Mgo()
+	collection := database.Collection("checkins")
+	_, err := collection.InsertOne(ctx, record)
 	if err != nil {
 		panic(err)
 	}
 }
 
 // Helper method to track a signin from the user
-func (self *One) ROwns(entity string, id bson.ObjectId) {
-	_, err := deps.Container.Mgo().C("user_owns").UpdateAll(
-		bson.M{
-			"related":    entity,
-			"related_id": id,
-			"user_id":    self.data.Id,
-			"removed":    bson.M{"$exists": false},
-		},
-		bson.M{
-			"$set": bson.M{"removed": true, "removed_at": time.Now()},
-		},
-	)
-
+func (self *One) ROwns(entity string, id primitive.ObjectID) {
+	ctx := context.Background()
+	database := deps.Container.Mgo()
+	collection := database.Collection("user_owns")
+	filter := bson.M{
+		"related":    entity,
+		"related_id": id,
+		"user_id":    self.data.Id,
+		"removed":    bson.M{"$exists": false},
+	}
+	update := bson.M{
+		"$set": bson.M{"removed": true, "removed_at": time.Now()},
+	}
+	_, err := collection.UpdateMany(ctx, filter, update)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func (self *One) TrackView(entity string, entity_id bson.ObjectId) {
+func (self *One) TrackView(entity string, entity_id primitive.ObjectID) {
+	ctx := context.Background()
 	database := deps.Container.Mgo()
 	record := &ViewModel{
 		UserId:    self.data.Id,
@@ -85,15 +86,17 @@ func (self *One) TrackView(entity string, entity_id bson.ObjectId) {
 		Created:   time.Now(),
 	}
 
-	err := database.C("user_views").Insert(record)
-
+	userViewsCollection := database.Collection("user_views")
+	_, err := userViewsCollection.InsertOne(ctx, record)
 	if err != nil {
 		panic(err)
 	}
 
 	if entity == "component" {
-		err := database.C("components").Update(bson.M{"_id": entity_id}, bson.M{"$inc": bson.M{"views": 1}})
-
+		componentsCollection := database.Collection("components")
+		filter := bson.M{"_id": entity_id}
+		update := bson.M{"$inc": bson.M{"views": 1}}
+		_, err := componentsCollection.UpdateOne(ctx, filter, update)
 		if err != nil {
 			panic(err)
 		}
@@ -101,8 +104,12 @@ func (self *One) TrackView(entity string, entity_id bson.ObjectId) {
 }
 
 func (self *One) MarkAsValidated() {
-	err := deps.Container.Mgo().C("users").Update(bson.M{"_id": self.data.Id}, bson.M{"$set": bson.M{"validated": true}})
-
+	ctx := context.Background()
+	database := deps.Container.Mgo()
+	collection := database.Collection("users")
+	filter := bson.M{"_id": self.data.Id}
+	update := bson.M{"$set": bson.M{"validated": true}}
+	_, err := collection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		panic(err)
 	}
@@ -118,15 +125,25 @@ func (o *One) IsValidated() bool {
 }
 
 func (self *One) Update(data map[string]interface{}) (err error) {
+	ctx := context.Background()
 	if password, exists := data["password"]; exists {
 		data["password"] = helpers.Sha256(password.(string))
 	}
 
-	err = deps.Container.Mgo().C("users").Update(bson.M{"_id": self.data.Id}, bson.M{"$set": data})
+	database := deps.Container.Mgo()
+	collection := database.Collection("users")
+	filter := bson.M{"_id": self.data.Id}
+	update := bson.M{"$set": data}
+	_, err = collection.UpdateOne(ctx, filter, update)
 	return
 }
 
 func (self *One) followReferral() {
+	ctx := context.Background()
 	// Just update blindly
-	deps.Container.Mgo().C("referrals").Update(bson.M{"user_id": self.data.Id}, bson.M{"$set": bson.M{"confirmed": true}})
+	database := deps.Container.Mgo()
+	collection := database.Collection("referrals")
+	filter := bson.M{"user_id": self.data.Id}
+	update := bson.M{"$set": bson.M{"confirmed": true}}
+	collection.UpdateOne(ctx, filter, update)
 }

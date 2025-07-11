@@ -11,7 +11,8 @@ import (
 	"github.com/tryanzu/core/core/config"
 	"github.com/tryanzu/core/modules/security"
 	"github.com/tryanzu/core/modules/user"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type API struct {
@@ -84,7 +85,7 @@ func (a API) CompleteAuth(c *gin.Context) {
 	}
 
 	var constraints []bson.M
-	var id bson.ObjectId
+	var id primitive.ObjectID
 
 	if len(usr.UserID) > 0 {
 		field := usr.Provider + ".id"
@@ -132,7 +133,7 @@ type UserToken struct {
 	jwt.StandardClaims
 }
 
-func (a API) generateUserToken(id bson.ObjectId, roles []user.UserRole, expiration int) string {
+func (a API) generateUserToken(id primitive.ObjectID, roles []user.UserRole, expiration int) string {
 	scope := []string{}
 	for _, role := range roles {
 		scope = append(scope, role.Name)

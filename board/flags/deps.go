@@ -3,11 +3,11 @@ package flags
 import (
 	"github.com/mitchellh/goamz/s3"
 	"github.com/siddontang/ledisdb/ledis"
-	"gopkg.in/mgo.v2"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type deps interface {
-	Mgo() *mgo.Database
+	Mgo() *mongo.Database
 	S3() *s3.Bucket
 	LedisDB() *ledis.DB
 }

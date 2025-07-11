@@ -1,9 +1,12 @@
 package gaming
 
 import (
+	"context"
 	"github.com/tryanzu/core/deps"
 	"github.com/tryanzu/core/modules/user"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
 	"sort"
 	"time"
@@ -11,24 +14,36 @@ import (
 
 func (self *Module) GetRankingBy(sort string) []RankingModel {
 
-	var ranking RankingModel
 	var rankings []RankingModel
 	var users []RankingUserModel
-	var users_id []bson.ObjectId
+	var users_id []primitive.ObjectID
 
+	ctx := context.Background()
 	database := deps.Container.Mgo()
 
 	// Get the rankings with the sort parameter
-	iter := database.C("stats").Find(nil).Sort("-created_at", "position."+sort).Limit(50).Iter()
+	cursor, err := database.Collection("stats").Find(ctx, bson.M{}, options.Find().SetSort(bson.M{"created_at": -1, "position." + sort: 1}).SetLimit(50))
+	if err != nil {
+		panic(err)
+	}
+	defer cursor.Close(ctx)
 
-	for iter.Next(&ranking) {
+	err = cursor.All(ctx, &rankings)
+	if err != nil {
+		panic(err)
+	}
 
-		rankings = append(rankings, ranking)
+	for _, ranking := range rankings {
 		users_id = append(users_id, ranking.UserId)
 	}
 
-	err := database.C("users").Find(bson.M{"_id": bson.M{"$in": users_id}}).Select(bson.M{"_id": 1, "username": 1, "image": 1, "gaming.level": 1}).All(&users)
+	cursor, err = database.Collection("users").Find(ctx, bson.M{"_id": bson.M{"$in": users_id}}, options.Find().SetProjection(bson.M{"_id": 1, "username": 1, "image": 1, "gaming.level": 1}))
+	if err != nil {
+		panic(err)
+	}
+	defer cursor.Close(ctx)
 
+	err = cursor.All(ctx, &users)
 	if err != nil {
 		panic(err)
 	}
@@ -61,21 +76,30 @@ func (self *Module) ResetGeneralRanking() {
 	// Recover from any panic even inside this goroutine
 	defer self.Errors.Recover()
 
+	ctx := context.Background()
 	database := deps.Container.Mgo()
 	current_batch := time.Now()
 
-	iter := database.C("users").Find(nil).Batch(1000).Prefetch(0.50).Iter()
+	cursor, err := database.Collection("users").Find(ctx, bson.M{}, options.Find().SetBatchSize(1000))
+	if err != nil {
+		panic(err)
+	}
+	defer cursor.Close(ctx)
 
 	log.Println("[job] [ResetGeneralRanking] Started")
 
-	for iter.Next(&usr) {
+	for cursor.Next(ctx) {
+		err := cursor.Decode(&usr)
+		if err != nil {
+			panic(err)
+		}
 
 		log.Printf("[job] [ResetGeneralRanking] Processing user %v\n", usr.Id.Hex())
 
 		var before RankingPositionModel
 		var before_this RankingModel
 
-		err := database.C("stats").Find(bson.M{"user_id": usr.Id}).Sort("-created_at").Limit(1).One(&before_this)
+		err = database.Collection("stats").FindOne(ctx, bson.M{"user_id": usr.Id}, options.FindOne().SetSort(bson.M{"created_at": -1})).Decode(&before_this)
 
 		if err != nil {
 
@@ -150,7 +174,7 @@ func (self *Module) ResetGeneralRanking() {
 
 		log.Printf("[job] [ResetGeneralRanking] [Badges] User %v is %v \n", item.Id, pos)
 
-		err := database.C("stats").Insert(rankings[item.Id])
+		_, err := database.Collection("stats").InsertOne(ctx, rankings[item.Id])
 		if err != nil {
 			panic(err)
 		}

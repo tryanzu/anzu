@@ -2,6 +2,7 @@ package handle
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"strings"
 
@@ -25,7 +26,8 @@ import (
 	"github.com/tryanzu/core/modules/security"
 	"github.com/tryanzu/core/modules/user"
 	"github.com/xuyu/goredis"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"image"
 	// Image package needs to know how to interpret gif, png, jpeg files
@@ -59,24 +61,23 @@ func (di *UserAPI) UserCategorySubscribe(c *gin.Context) {
 	redis := di.CacheService
 	user_id := c.MustGet("user_id")
 	category_id := c.Param("id")
-	user_bson_id := bson.ObjectIdHex(user_id.(string))
+	user_bson_id, _ := primitive.ObjectIDFromHex(user_id.(string))
 
-	if bson.IsObjectIdHex(category_id) == false {
+	if !primitive.IsValidObjectID(category_id) {
 
 		c.JSON(400, gin.H{"status": "error", "message": "Invalid category id."})
 		return
 	}
 
-	_, err := database.C("categories").Find(bson.M{"_id": bson.ObjectIdHex(category_id), "parent": bson.M{"$exists": true}}).Count()
-
-	if err != nil {
-
+	categoryIDHex, _ := primitive.ObjectIDFromHex(category_id)
+	count, err := database.Collection("categories").CountDocuments(context.Background(), bson.M{"_id": categoryIDHex, "parent": bson.M{"$exists": true}})
+	if err != nil || count == 0 {
 		c.JSON(400, gin.H{"status": "error", "message": "No such category."})
 		return
 	}
 
 	// Get the user using the session
-	err = database.C("users").Find(bson.M{"_id": user_bson_id}).One(&user)
+	err = database.Collection("users").FindOne(context.Background(), bson.M{"_id": user_bson_id}).Decode(&user)
 
 	if err != nil {
 		panic(err)
@@ -91,7 +92,7 @@ func (di *UserAPI) UserCategorySubscribe(c *gin.Context) {
 		}
 	}
 
-	err = database.C("users").Update(bson.M{"_id": user.Id}, bson.M{"$push": bson.M{"categories": bson.ObjectIdHex(category_id)}})
+	_, err = database.Collection("users").UpdateOne(context.Background(), bson.M{"_id": user.Id}, bson.M{"$push": bson.M{"categories": categoryIDHex}})
 
 	if err != nil {
 		panic(err)
@@ -110,24 +111,23 @@ func (di *UserAPI) UserCategoryUnsubscribe(c *gin.Context) {
 	redis := di.CacheService
 	user_id := c.MustGet("user_id")
 	category_id := c.Param("id")
-	user_bson_id := bson.ObjectIdHex(user_id.(string))
+	user_bson_id, _ := primitive.ObjectIDFromHex(user_id.(string))
 
-	if bson.IsObjectIdHex(category_id) == false {
+	if !primitive.IsValidObjectID(category_id) {
 
 		c.JSON(400, gin.H{"status": "error", "message": "Invalid category id."})
 		return
 	}
 
-	_, err := database.C("categories").Find(bson.M{"_id": bson.ObjectIdHex(category_id), "parent": bson.M{"$exists": true}}).Count()
-
-	if err != nil {
-
+	categoryIDHex, _ := primitive.ObjectIDFromHex(category_id)
+	count, err := database.Collection("categories").CountDocuments(context.Background(), bson.M{"_id": categoryIDHex, "parent": bson.M{"$exists": true}})
+	if err != nil || count == 0 {
 		c.JSON(400, gin.H{"status": "error", "message": "No such category."})
 		return
 	}
 
-	remove := []bson.ObjectId{bson.ObjectIdHex(category_id)}
-	err = database.C("users").Update(bson.M{"_id": user_bson_id}, bson.M{"$pullAll": bson.M{"categories": remove}})
+	remove := []primitive.ObjectID{categoryIDHex}
+	_, err = database.Collection("users").UpdateOne(context.Background(), bson.M{"_id": user_bson_id}, bson.M{"$pullAll": bson.M{"categories": remove}})
 
 	if err != nil {
 		panic(err)
@@ -141,13 +141,13 @@ func (di *UserAPI) UserCategoryUnsubscribe(c *gin.Context) {
 
 func (di *UserAPI) UserGetOne(c *gin.Context) {
 	user_id := c.Param("id")
-	if bson.IsObjectIdHex(user_id) == false {
+	if !primitive.IsValidObjectID(user_id) {
 		c.JSON(400, gin.H{"status": "error", "message": "Invalid user id."})
 		return
 	}
 
 	// Get the user using its id
-	id := bson.ObjectIdHex(user_id)
+	id, _ := primitive.ObjectIDFromHex(user_id)
 	usr, err := di.User.Get(id)
 	if err != nil {
 		c.JSON(400, gin.H{"status": "error", "message": err.Error()})
@@ -156,8 +156,9 @@ func (di *UserAPI) UserGetOne(c *gin.Context) {
 
 	// Save the activity
 	if uid, auth := c.Get("user_id"); auth {
+		userID, _ := primitive.ObjectIDFromHex(uid.(string))
 		events.In <- events.TrackActivity(model.Activity{
-			UserId:    bson.ObjectIdHex(uid.(string)),
+			UserId:    userID,
 			Event:     "user",
 			RelatedId: usr.Data().Id,
 		})
@@ -168,13 +169,13 @@ func (di *UserAPI) UserGetOne(c *gin.Context) {
 
 func (di *UserAPI) UserGetByToken(c *gin.Context) {
 	id := c.MustGet("user_id")
-	if bson.IsObjectIdHex(id.(string)) == false {
+	if !primitive.IsValidObjectID(id.(string)) {
 		c.JSON(400, gin.H{"status": "error", "message": "Invalid request, need valid token."})
 		return
 	}
 
 	// Get the user using its id
-	uid := bson.ObjectIdHex(id.(string))
+	uid, _ := primitive.ObjectIDFromHex(id.(string))
 	usr, err := di.User.Get(uid)
 	if err != nil {
 		c.JSON(400, gin.H{"status": "error", "message": err.Error()})
@@ -197,7 +198,7 @@ func (di *UserAPI) UserGetByToken(c *gin.Context) {
 	data.SessionId = session_id
 
 	if len(data.Categories) == 0 {
-		data.Categories = make([]bson.ObjectId, 0)
+		data.Categories = make([]primitive.ObjectID, 0)
 	}
 
 	// Alright, go back and send the user info
@@ -252,7 +253,7 @@ func (di *UserAPI) UserUpdateProfileAvatar(c *gin.Context) {
 
 	// Check for user token
 	userID := c.MustGet("user_id")
-	uid := bson.ObjectIdHex(userID.(string))
+	uid, _ := primitive.ObjectIDFromHex(userID.(string))
 
 	// Check the file inside the request
 	file, header, err := c.Request.FormFile("file")
@@ -266,7 +267,7 @@ func (di *UserAPI) UserUpdateProfileAvatar(c *gin.Context) {
 
 	var extension, name string
 	extension = filepath.Ext(header.Filename)
-	name = bson.NewObjectId().Hex()
+	name = primitive.NewObjectID().Hex()
 	if extension == "" {
 		extension = ".jpg"
 	}
@@ -295,7 +296,7 @@ func (di *UserAPI) UserUpdateProfileAvatar(c *gin.Context) {
 	url := "https://s3-us-west-1.amazonaws.com/spartan-board/" + path
 
 	// Update the user image as well
-	deps.Container.Mgo().C("users").Update(bson.M{"_id": uid}, bson.M{"$set": bson.M{"image": url}})
+	deps.Container.Mgo().Collection("users").UpdateOne(context.Background(), bson.M{"_id": uid}, bson.M{"$set": bson.M{"image": url}})
 
 	c.JSON(200, gin.H{"status": "okay", "url": url})
 }
@@ -305,8 +306,8 @@ func (di *UserAPI) UserUpdateProfile(c *gin.Context) {
 		user model.User
 		form map[string]string
 	)
-	uid := c.MustGet("userID").(bson.ObjectId)
-	err := deps.Container.Mgo().C("users").FindId(uid).One(&user)
+	uid := c.MustGet("userID").(primitive.ObjectID)
+	err := deps.Container.Mgo().Collection("users").FindOne(context.Background(), bson.M{"_id": uid}).Decode(&user)
 	if err != nil {
 		panic(err)
 	}
@@ -332,7 +333,7 @@ func (di *UserAPI) UserUpdateProfile(c *gin.Context) {
 		usernameSlug := sanitize.Path(sanitize.Accents(username))
 
 		// Check whether user exists
-		count, _ := deps.Container.Mgo().C("users").Find(bson.M{"username_slug": usernameSlug}).Count()
+		count, _ := deps.Container.Mgo().Collection("users").CountDocuments(context.Background(), bson.M{"username_slug": usernameSlug})
 		if count == 0 {
 			set["username"] = username
 			set["username_slug"] = usernameSlug
@@ -411,7 +412,7 @@ func (di *UserAPI) UserUpdateProfile(c *gin.Context) {
 	set["updated_at"] = time.Now()
 
 	// Update the user profile with some godness
-	err = deps.Container.Mgo().C("users").UpdateId(user.Id, bson.M{"$set": set})
+	_, err = deps.Container.Mgo().Collection("users").UpdateOne(context.Background(), bson.M{"_id": user.Id}, bson.M{"$set": set})
 	if err != nil {
 		panic(err)
 	}
@@ -488,12 +489,13 @@ func (di *UserAPI) UserGetActivity(c *gin.Context) {
 	)
 
 	// Get the database interface from the DI
-	if bson.IsObjectIdHex(user_id) == false {
+	if !primitive.IsValidObjectID(user_id) {
 		c.JSON(400, gin.H{"status": "error", "message": "Invalid user id."})
 		return
 	}
 
-	usr, err := di.User.Get(bson.ObjectIdHex(user_id))
+	userID, _ := primitive.ObjectIDFromHex(user_id)
+	usr, err := di.User.Get(userID)
 	if err != nil {
 		c.JSON(400, gin.H{"status": "error", "message": err.Error()})
 		return
@@ -510,9 +512,9 @@ func (di *UserAPI) UserGetActivity(c *gin.Context) {
 	switch kind {
 	case "comments":
 		type Post struct {
-			ID    bson.ObjectId `bson:"_id"`
-			Title string        `bson:"title"`
-			Slug  string        `bson:"slug"`
+			ID    primitive.ObjectID `bson:"_id"`
+			Title string             `bson:"title"`
+			Slug  string             `bson:"slug"`
 		}
 
 		comments, err := comments.FetchBy(deps.Container, comments.User(usr.Data().Id, limit, offset))
@@ -521,32 +523,36 @@ func (di *UserAPI) UserGetActivity(c *gin.Context) {
 		}
 
 		var (
-			postIds []bson.ObjectId
+			postIds []primitive.ObjectID
 			posts   []Post
-			pmap    map[bson.ObjectId]Post
+			pmap    map[primitive.ObjectID]Post
 		)
 
 		for _, c := range comments.List {
 			if c.ReplyType == "post" {
 				postIds = append(postIds, c.ReplyTo)
 			} else {
-				if c.PostId.Valid() {
+				if !c.PostId.IsZero() {
 					postIds = append(postIds, c.PostId)
 				}
 			}
 		}
 
-		err = database.C("posts").Find(bson.M{"_id": bson.M{"$in": postIds}}).Select(bson.M{"title": 1, "slug": 1}).All(&posts)
+		cursor, err := database.Collection("posts").Find(context.Background(), bson.M{"_id": bson.M{"$in": postIds}}, nil)
+		if err == nil {
+			defer cursor.Close(context.Background())
+			err = cursor.All(context.Background(), &posts)
+		}
 		if err != nil {
 			panic(err)
 		}
 
-		pmap = make(map[bson.ObjectId]Post, len(posts))
+		pmap = make(map[primitive.ObjectID]Post, len(posts))
 		for _, p := range posts {
 			pmap[p.ID] = p
 		}
 
-		count, err := database.C("comments").Find(bson.M{"user_id": usr.Data().Id, "deleted_at": bson.M{"$exists": false}}).Count()
+		count, err := database.Collection("comments").CountDocuments(context.Background(), bson.M{"user_id": usr.Data().Id, "deleted_at": bson.M{"$exists": false}})
 		if err != nil {
 			panic(err)
 		}
@@ -591,7 +597,11 @@ func (di *UserAPI) UserAutocompleteGet(c *gin.Context) {
 	qs := c.Request.URL.Query()
 	name := qs.Get("search")
 	if name != "" {
-		err := database.C("users").Find(bson.M{"username": bson.RegEx{"^" + name, "i"}}).Select(bson.M{"_id": 1, "username": 1, "email": 1}).All(&users)
+		cursor, err := database.Collection("users").Find(context.Background(), bson.M{"username": bson.M{"$regex": "^" + name, "$options": "i"}}, nil)
+		if err == nil {
+			defer cursor.Close(context.Background())
+			err = cursor.All(context.Background(), &users)
+		}
 		if err != nil {
 			panic(err)
 		}
@@ -607,7 +617,7 @@ type userToken struct {
 	jwt.StandardClaims
 }
 
-func (di *UserAPI) generateUserToken(c *gin.Context, id bson.ObjectId, roles []user.UserRole, expiration int) string {
+func (di *UserAPI) generateUserToken(c *gin.Context, id primitive.ObjectID, roles []user.UserRole, expiration int) string {
 	scope := make([]string, len(roles))
 	for k, role := range roles {
 		scope[k] = role.Name

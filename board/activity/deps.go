@@ -2,7 +2,7 @@ package activity
 
 import (
 	"github.com/op/go-logging"
-	"gopkg.in/mgo.v2"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 var (
@@ -10,5 +10,5 @@ var (
 )
 
 type deps interface {
-	Mgo() *mgo.Database
+	Mgo() *mongo.Database
 }

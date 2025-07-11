@@ -1,11 +1,11 @@
 package model
 
 import (
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type PartByModel struct {
-	Id              bson.ObjectId `bson:"_id,omitempty" json:"id"`
+	Id              primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 	Name            string        `bson:"name" json:"name"`
 	Type            string        `bson:"type" json:"type"`
 	Slug            string        `bson:"slug" json:"slug"`

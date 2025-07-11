@@ -3,11 +3,11 @@ package user
 import (
 	"time"
 
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type User struct {
-	Id            bson.ObjectId          `bson:"_id,omitempty" json:"id"`
+	Id            primitive.ObjectID          `bson:"_id,omitempty" json:"id"`
 	FirstName     string                 `bson:"first_name" json:"first_name"`
 	LastName      string                 `bson:"last_name" json:"last_name"`
 	UserName      string                 `bson:"username" json:"username"`
@@ -16,7 +16,7 @@ type User struct {
 	Password      string                 `bson:"password" json:"-"`
 	Step          int                    `bson:"step,omitempty" json:"step"`
 	Email         string                 `bson:"email" json:"email,omitempty"`
-	Categories    []bson.ObjectId        `bson:"categories,omitempty" json:"categories,omitempty"`
+	Categories    []primitive.ObjectID        `bson:"categories,omitempty" json:"categories,omitempty"`
 	Roles         []UserRole             `bson:"roles" json:"roles,omitempty"`
 	Permissions   []string               `bson:"permissions" json:"permissions,omitempty"`
 	Description   string                 `bson:"description" json:"description,omitempty"`
@@ -75,8 +75,8 @@ type UsersSet struct {
 	Count int   `json:"count"`
 }
 
-func (list Users) Map() map[bson.ObjectId]User {
-	m := make(map[bson.ObjectId]User, len(list))
+func (list Users) Map() map[primitive.ObjectID]User {
+	m := make(map[primitive.ObjectID]User, len(list))
 	for _, item := range list {
 		m[item.Id] = item
 	}
@@ -95,8 +95,8 @@ func (list Users) UpdateCache(d deps) (err error) {
 }
 
 type recoveryToken struct {
-	ID      bson.ObjectId `bson:"_id,omitempty" json:"id"`
-	UserID  bson.ObjectId `bson:"user_id" json:"user_id"`
+	ID      primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	UserID  primitive.ObjectID `bson:"user_id" json:"user_id"`
 	Token   string        `bson:"token" json:"token"`
 	Used    bool          `bson:"used" json:"used"`
 	Created time.Time     `bson:"created_at" json:"created_at"`
@@ -115,10 +115,10 @@ const (
 
 // Ban represents a ban sent by a user.
 type Ban struct {
-	ID        bson.ObjectId  `bson:"_id,omitempty" json:"id,omitempty"`
-	UserID    bson.ObjectId  `bson:"user_id" json:"user_id"`
+	ID        primitive.ObjectID  `bson:"_id,omitempty" json:"id,omitempty"`
+	UserID    primitive.ObjectID  `bson:"user_id" json:"user_id"`
 	RelatedTo string         `bson:"related_to" json:"related_to"`
-	RelatedID *bson.ObjectId `bson:"related_id,omitempty" json:"related_id,omitempty"`
+	RelatedID *primitive.ObjectID `bson:"related_id,omitempty" json:"related_id,omitempty"`
 	Content   string         `bson:"content" json:"content"`
 	Status    status         `bson:"status" json:"status"`
 	Reason    string         `bson:"reason" json:"reason"`

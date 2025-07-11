@@ -1,20 +1,23 @@
 package assets
 
 import (
+	"context"
 	"time"
 
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // FromURL asset.
 func FromURL(deps Deps, url string) (ref Asset, err error) {
 	ref = Asset{
-		ID:       bson.NewObjectId(),
+		ID:       primitive.NewObjectID(),
 		Original: url,
 		Status:   "awaiting",
 		Created:  time.Now(),
 		Updated:  time.Now(),
 	}
-	err = deps.Mgo().C("remote_assets").Insert(&ref)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	_, err = deps.Mgo().Collection("remote_assets").InsertOne(ctx, &ref)
 	return
 }

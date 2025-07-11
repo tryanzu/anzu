@@ -1,6 +1,7 @@
 package user
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"time"
@@ -11,7 +12,7 @@ import (
 	"github.com/tryanzu/core/core/templates"
 	"github.com/tryanzu/core/modules/helpers"
 	gomail "gopkg.in/gomail.v2"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 func (u User) ConfirmationEmail(d deps) (err error) {
@@ -47,8 +48,11 @@ func (u User) ConfirmationEmail(d deps) (err error) {
 	mail.In <- m
 
 	// Update sent at date.
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	
 	update := bson.M{"$set": bson.M{"confirm_sent_at": time.Now()}}
-	err = d.Mgo().C("users").Update(bson.M{"_id": u.Id}, update)
+	_, err = d.Mgo().Collection("users").UpdateOne(ctx, bson.M{"_id": u.Id}, update)
 	if err != nil {
 		return
 	}
@@ -68,7 +72,10 @@ func (u User) RecoveryPasswordEmail(d deps) (err error) {
 		Created: time.Now(),
 		Updated: time.Now(),
 	}
-	err = d.Mgo().C("user_recovery_tokens").Insert(r)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	
+	_, err = d.Mgo().Collection("user_recovery_tokens").InsertOne(ctx, r)
 	if err != nil {
 		return err
 	}

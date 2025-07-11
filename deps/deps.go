@@ -5,14 +5,14 @@ import (
 	"github.com/op/go-logging"
 	"github.com/siddontang/ledisdb/ledis"
 	"github.com/tryanzu/core/board/legacy/model"
-	"gopkg.in/mgo.v2"
+	"go.mongodb.org/mongo-driver/mongo"
 	"github.com/go-redis/redis/v8"
 )
 
 type Deps struct {
 	GamingConfigProvider    *model.GamingRules
-	DatabaseSessionProvider *mgo.Session
-	DatabaseProvider        *mgo.Database
+	DatabaseSessionProvider *mongo.Client
+	DatabaseProvider        *mongo.Database
 	LoggerProvider          *logging.Logger
 	CacheProvider           *redis.Client
 	S3Provider              *s3.Bucket
@@ -28,7 +28,7 @@ func (d Deps) Log() *logging.Logger {
 
 }
 
-func (d Deps) Mgo() *mgo.Database {
+func (d Deps) Mgo() *mongo.Database {
 	return d.DatabaseProvider
 }
 
@@ -36,7 +36,7 @@ func (d Deps) LedisDB() *ledis.DB {
 	return d.LedisProvider
 }
 
-func (d Deps) MgoSession() *mgo.Session {
+func (d Deps) MgoSession() *mongo.Client {
 	return d.DatabaseSessionProvider
 }
 

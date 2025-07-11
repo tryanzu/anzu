@@ -1,29 +1,43 @@
 package comments
 
 import (
+	"context"
 	"errors"
 
 	"github.com/tryanzu/core/core/common"
 	"github.com/tryanzu/core/core/content"
-	mgo "gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 var CommentNotFound = errors.New("Comment has not been found by given criteria.")
 
 func FetchCount(d Deps, query common.Query) (c int, err error) {
-	c, err = query(d.Mgo().C("comments")).Limit(0).Count()
-	return
+	ctx := context.TODO()
+	cursor, err := query(d.Mgo().Collection("comments"), ctx)
+	if err != nil {
+		return 0, err
+	}
+	defer cursor.Close(ctx)
+	count := 0
+	for cursor.Next(ctx) {
+		count++
+	}
+	return count, nil
 }
 
 func FetchBy(deps Deps, query common.Query) (CommentsSet, error) {
-	c, err := query(deps.Mgo().C("comments")).Limit(0).Count()
+	ctx := context.TODO()
+	cursor, err := query(deps.Mgo().Collection("comments"), ctx)
 	if err != nil {
 		return CommentsSet{}, err
 	}
+	defer cursor.Close(ctx)
 
 	var list Comments
-	err = query(deps.Mgo().C("comments")).All(&list)
+	err = cursor.All(ctx, &list)
 	if err != nil {
 		return CommentsSet{}, err
 	}
@@ -40,12 +54,12 @@ func FetchBy(deps Deps, query common.Query) (CommentsSet, error) {
 
 	return CommentsSet{
 		List:  list,
-		Count: c,
+		Count: len(list),
 	}, nil
 }
 
-func Post(id bson.ObjectId, limit, offset int, reverse bool, before *bson.ObjectId, after *bson.ObjectId) common.Query {
-	return func(col *mgo.Collection) *mgo.Query {
+func Post(id primitive.ObjectID, limit, offset int, reverse bool, before *primitive.ObjectID, after *primitive.ObjectID) common.Query {
+	return func(col *mongo.Collection, ctx context.Context) (*mongo.Cursor, error) {
 		criteria := bson.M{
 			"reply_type": "post",
 			"reply_to":   id,
@@ -62,32 +76,62 @@ func Post(id bson.ObjectId, limit, offset int, reverse bool, before *bson.Object
 			offset = 0
 		}
 
-		return col.Find(criteria).Limit(limit).Skip(offset).Sort("-created_at")
-		// .Sort("-votes.up", "votes.down", "-created_at")
+		opts := &options.FindOptions{}
+		if limit > 0 {
+			opts.SetLimit(int64(limit))
+		}
+		if offset > 0 {
+			opts.SetSkip(int64(offset))
+		}
+		opts.SetSort(bson.M{"created_at": -1})
+
+		return col.Find(ctx, criteria, opts)
 	}
 }
 
-func User(id bson.ObjectId, limit, offset int) common.Query {
-	return func(col *mgo.Collection) *mgo.Query {
-		return col.Find(bson.M{
+func User(id primitive.ObjectID, limit, offset int) common.Query {
+	return func(col *mongo.Collection, ctx context.Context) (*mongo.Cursor, error) {
+		criteria := bson.M{
 			"user_id":    id,
 			"deleted_at": bson.M{"$exists": false},
-		}).Limit(limit).Skip(offset).Sort("-created_at")
+		}
+
+		opts := &options.FindOptions{}
+		if limit > 0 {
+			opts.SetLimit(int64(limit))
+		}
+		if offset > 0 {
+			opts.SetSkip(int64(offset))
+		}
+		opts.SetSort(bson.M{"created_at": -1})
+
+		return col.Find(ctx, criteria, opts)
 	}
 }
 
-func FindId(deps Deps, id bson.ObjectId) (comment Comment, err error) {
-	err = deps.Mgo().C("comments").FindId(id).One(&comment)
+func FindId(deps Deps, id primitive.ObjectID) (comment Comment, err error) {
+	ctx := context.TODO()
+	err = deps.Mgo().Collection("comments").FindOne(ctx, bson.M{"_id": id}).Decode(&comment)
+	if err == mongo.ErrNoDocuments {
+		err = CommentNotFound
+	}
 	return
 }
 
 func FindList(deps Deps, scopes ...common.Scope) (list Comments, err error) {
-	err = deps.Mgo().C("comments").Find(common.ByScope(scopes...)).All(&list)
+	ctx := context.TODO()
+	cursor, err := deps.Mgo().Collection("comments").Find(ctx, common.ByScope(scopes...))
+	if err != nil {
+		return
+	}
+	defer cursor.Close(ctx)
+	err = cursor.All(ctx, &list)
 	return
 }
 
 func FindReplies(deps Deps, list Comments, max int) (lists []Replies, err error) {
-	err = deps.Mgo().C("comments").Pipe([]bson.M{
+	ctx := context.TODO()
+	pipeline := []bson.M{
 		{"$match": bson.M{
 			"reply_type": "comment",
 			"reply_to":   bson.M{"$in": list.IDList()},
@@ -96,6 +140,12 @@ func FindReplies(deps Deps, list Comments, max int) (lists []Replies, err error)
 		{"$sort": bson.M{"-created_at": 1}},
 		{"$group": bson.M{"_id": "$reply_to", "count": bson.M{"$sum": 1}, "list": bson.M{"$push": "$$ROOT"}}},
 		{"$project": bson.M{"count": 1, "list": bson.M{"$slice": []interface{}{"$list", 0, max}}}},
-	}).All(&lists)
+	}
+	cursor, err := deps.Mgo().Collection("comments").Aggregate(ctx, pipeline)
+	if err != nil {
+		return
+	}
+	defer cursor.Close(ctx)
+	err = cursor.All(ctx, &lists)
 	return
 }

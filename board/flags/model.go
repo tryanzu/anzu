@@ -3,7 +3,7 @@ package flags
 import (
 	"time"
 
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type status string
@@ -15,10 +15,10 @@ const (
 
 // Flag represents a report sent by a user flagging a post/comment.
 type Flag struct {
-	ID        bson.ObjectId  `bson:"_id,omitempty" json:"id,omitempty"`
-	UserID    bson.ObjectId  `bson:"user_id" json:"user_id"`
+	ID        primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
+	UserID    primitive.ObjectID `bson:"user_id" json:"user_id"`
 	RelatedTo string         `bson:"related_to" json:"related_to"`
-	RelatedID *bson.ObjectId `bson:"related_id" json:"related_id,omitempty"`
+	RelatedID *primitive.ObjectID `bson:"related_id" json:"related_id,omitempty"`
 	Content   string         `bson:"content" json:"content"`
 	Status    status         `bson:"status" json:"status"`
 	Reason    string         `bson:"reason" json:"reason"`

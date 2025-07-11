@@ -10,7 +10,7 @@ import (
 	"github.com/tryanzu/core/core/config"
 	"github.com/tryanzu/core/core/user"
 	"github.com/tryanzu/core/deps"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Users paginated fetch.
@@ -18,20 +18,20 @@ func Users(c *gin.Context) {
 	var (
 		limit  = 10
 		sort   = c.Query("sort")
-		before *bson.ObjectId
-		after  *bson.ObjectId
+		before *primitive.ObjectID
+		after  *primitive.ObjectID
 	)
 	if n, err := strconv.Atoi(c.Query("limit")); err == nil && n <= 50 {
 		limit = n
 	}
 
-	if bid := c.Query("before"); len(bid) > 0 && bson.IsObjectIdHex(bid) {
-		id := bson.ObjectIdHex(bid)
+	if bid := c.Query("before"); len(bid) > 0 && primitive.IsValidObjectID(bid) {
+		id, _ := primitive.ObjectIDFromHex(bid)
 		before = &id
 	}
 
-	if bid := c.Query("after"); len(bid) > 0 && bson.IsObjectIdHex(bid) {
-		id := bson.ObjectIdHex(bid)
+	if bid := c.Query("after"); len(bid) > 0 && primitive.IsValidObjectID(bid) {
+		id, _ := primitive.ObjectIDFromHex(bid)
 		after = &id
 	}
 
@@ -56,11 +56,11 @@ func SearchUsers(c *gin.Context) {
 }
 
 type upsertBanForm struct {
-	RelatedTo string         `json:"related_to" binding:"required,eq=site|eq=post|eq=comment"`
-	RelatedID *bson.ObjectId `json:"related_id"`
-	UserID    bson.ObjectId  `json:"user_id"`
-	Reason    string         `json:"reason" binding:"required"`
-	Content   string         `json:"content" binding:"max=255"`
+	RelatedTo string              `json:"related_to" binding:"required,eq=site|eq=post|eq=comment"`
+	RelatedID *primitive.ObjectID `json:"related_id"`
+	UserID    primitive.ObjectID  `json:"user_id"`
+	Reason    string              `json:"reason" binding:"required"`
+	Content   string              `json:"content" binding:"max=255"`
 }
 
 // Ban endpoint.

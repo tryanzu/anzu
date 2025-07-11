@@ -1,16 +1,16 @@
 package model
 
 import (
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"time"
 )
 
 type ElectionOption struct {
-	UserId  bson.ObjectId `bson:"user_id" json:"user_id"`
-	Content string        `bson:"content" json:"content"`
-	User    interface{}   `bson:"author,omitempty" json:"author,omitempty"`
-	Votes   Votes         `bson:"votes" json:"votes"`
-	Created time.Time     `bson:"created_at" json:"created_at"`
+	UserId  primitive.ObjectID `bson:"user_id" json:"user_id"`
+	Content string             `bson:"content" json:"content"`
+	User    interface{}        `bson:"author,omitempty" json:"author,omitempty"`
+	Votes   Votes              `bson:"votes" json:"votes"`
+	Created time.Time          `bson:"created_at" json:"created_at"`
 }
 
 type ElectionForm struct {

@@ -3,21 +3,21 @@ package post
 import (
 	"time"
 
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Post struct {
-	Id                bson.ObjectId   `bson:"_id,omitempty" json:"id,omitempty"`
+	Id                primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
 	Title             string          `bson:"title" json:"title"`
 	Slug              string          `bson:"slug" json:"slug"`
 	Type              string          `bson:"type" json:"type"`
 	Content           string          `bson:"content" json:"content"`
 	Categories        []string        `bson:"categories" json:"categories"`
 	Comments          comments        `bson:"comments"`
-	Category          bson.ObjectId   `bson:"category" json:"category"`
-	UserId            bson.ObjectId   `bson:"user_id,omitempty" json:"user_id,omitempty"`
-	Users             []bson.ObjectId `bson:"users,omitempty" json:"users,omitempty"`
-	RelatedComponents []bson.ObjectId `bson:"related_components,omitempty" json:"related_components,omitempty"`
+	Category          primitive.ObjectID `bson:"category" json:"category"`
+	UserId            primitive.ObjectID `bson:"user_id,omitempty" json:"user_id,omitempty"`
+	Users             []primitive.ObjectID `bson:"users,omitempty" json:"users,omitempty"`
+	RelatedComponents []primitive.ObjectID `bson:"related_components,omitempty" json:"related_components,omitempty"`
 	Following         bool            `bson:"following,omitempty" json:"following,omitempty"`
 	Pinned            bool            `bson:"pinned,omitempty" json:"pinned,omitempty"`
 	Lock              bool            `bson:"lock" json:"lock"`
@@ -37,23 +37,23 @@ func (Post) VotableType() string {
 	return "post"
 }
 
-func (p Post) VotableID() bson.ObjectId {
+func (p Post) VotableID() primitive.ObjectID {
 	return p.Id
 }
 
 // Posts list.
 type Posts []Post
 
-func (list Posts) IDs() []bson.ObjectId {
-	m := make([]bson.ObjectId, len(list))
+func (list Posts) IDs() []primitive.ObjectID {
+	m := make([]primitive.ObjectID, len(list))
 	for k, item := range list {
 		m[k] = item.Id
 	}
 	return m
 }
 
-func (list Posts) Map() map[bson.ObjectId]Post {
-	m := make(map[bson.ObjectId]Post, len(list))
+func (list Posts) Map() map[primitive.ObjectID]Post {
+	m := make(map[primitive.ObjectID]Post, len(list))
 	for _, item := range list {
 		m[item.Id] = item
 	}

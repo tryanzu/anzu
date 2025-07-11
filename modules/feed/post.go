@@ -1,12 +1,15 @@
 package feed
 
 import (
+	"context"
 	"github.com/tryanzu/core/board/votes"
 	"github.com/tryanzu/core/core/content"
 	"github.com/tryanzu/core/deps"
 	"github.com/tryanzu/core/modules/helpers"
 	"github.com/tryanzu/core/modules/user"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"html"
 	"time"
@@ -14,19 +17,19 @@ import (
 
 // Post model refers to board posts
 type Post struct {
-	Id                bson.ObjectId    `bson:"_id,omitempty" json:"id,omitempty"`
+	Id                primitive.ObjectID    `bson:"_id,omitempty" json:"id,omitempty"`
 	Title             string           `bson:"title" json:"title"`
 	Slug              string           `bson:"slug" json:"slug"`
 	Type              string           `bson:"type" json:"type"`
 	Content           string           `bson:"content" json:"content"`
 	Categories        []string         `bson:"categories" json:"categories"`
-	Category          bson.ObjectId    `bson:"category" json:"category"`
+	Category          primitive.ObjectID    `bson:"category" json:"category"`
 	Comments          Comments         `bson:"comments" json:"comments"`
 	Author            *user.UserSimple `bson:"-" json:"author,omitempty"`
-	UserId            bson.ObjectId    `bson:"user_id,omitempty" json:"user_id,omitempty"`
-	Users             []bson.ObjectId  `bson:"users,omitempty" json:"users,omitempty"`
+	UserId            primitive.ObjectID    `bson:"user_id,omitempty" json:"user_id,omitempty"`
+	Users             []primitive.ObjectID  `bson:"users,omitempty" json:"users,omitempty"`
 	Votes             votes.Votes      `bson:"votes" json:"votes"`
-	RelatedComponents []bson.ObjectId  `bson:"related_components,omitempty" json:"related_components,omitempty"`
+	RelatedComponents []primitive.ObjectID  `bson:"related_components,omitempty" json:"related_components,omitempty"`
 	Following         bool             `bson:"following,omitempty" json:"following,omitempty"`
 	Pinned            bool             `bson:"pinned,omitempty" json:"pinned,omitempty"`
 	Lock              bool             `bson:"lock" json:"lock"`
@@ -53,7 +56,14 @@ func (self *Post) LoadUsersHashtables() {
 	var users []user.UserSimple
 	ids := self.Users
 	ids = append(ids, self.UserId)
-	err := deps.Container.Mgo().C("users").Find(bson.M{"_id": bson.M{"$in": ids}}).All(&users)
+	ctx := context.Background()
+	collection := deps.Container.Mgo().Collection("users")
+	cursor, err := collection.Find(ctx, bson.M{"_id": bson.M{"$in": ids}})
+	if err != nil {
+		panic(err)
+	}
+	defer cursor.Close(ctx)
+	err = cursor.All(ctx, &users)
 	if err != nil {
 		panic(err)
 	}
@@ -68,14 +78,16 @@ func (self *Post) LoadUsersHashtables() {
 }
 
 // Comment loading by ID for post
-func (self *Post) LoadCommentById(id bson.ObjectId) error {
+func (self *Post) LoadCommentById(id primitive.ObjectID) error {
 
 	var c *Comment
 
 	// Use content module to run processors chain
 	content := self.di.Content
+	ctx := context.Background()
 	database := deps.Container.Mgo()
-	err := database.C("comments").Find(bson.M{"_id": id, "deleted_at": bson.M{"$exists": false}}).One(&c)
+	collection := database.Collection("comments")
+	err := collection.FindOne(ctx, bson.M{"_id": id, "deleted_at": bson.M{"$exists": false}}).Decode(&c)
 
 	if err != nil {
 		self.Comments.Set = make([]*Comment, 0)
@@ -92,7 +104,7 @@ func (self *Post) LoadCommentById(id bson.ObjectId) error {
 }
 
 // Push Comment on the post
-func (self *Post) PushComment(c string, user_id bson.ObjectId) *Comment {
+func (self *Post) PushComment(c string, user_id primitive.ObjectID) *Comment {
 
 	c = html.EscapeString(c)
 	if len(c) > 3000 {
@@ -102,7 +114,7 @@ func (self *Post) PushComment(c string, user_id bson.ObjectId) *Comment {
 	pos := self.GetCommentCount()
 
 	comment := &Comment{
-		Id:       bson.NewObjectId(),
+		Id:       primitive.NewObjectID(),
 		PostId:   self.Id,
 		UserId:   user_id,
 		Content:  c,
@@ -117,13 +129,14 @@ func (self *Post) PushComment(c string, user_id bson.ObjectId) *Comment {
 	content.Parse(comment)
 
 	// Publish comment
+	ctx := context.Background()
 	database := deps.Container.Mgo()
-	err := database.C("comments").Insert(comment)
+	_, err := database.Collection("comments").InsertOne(ctx, comment)
 	if err != nil {
 		panic(err)
 	}
 
-	err = database.C("posts").Update(bson.M{"_id": self.Id}, bson.M{"$set": bson.M{"updated_at": time.Now()}, "$inc": bson.M{"comments.count": 1}})
+	_, err = database.Collection("posts").UpdateOne(ctx, bson.M{"_id": self.Id}, bson.M{"$set": bson.M{"updated_at": time.Now()}, "$inc": bson.M{"comments.count": 1}})
 	if err != nil {
 		panic(err)
 	}
@@ -138,7 +151,7 @@ func (self *Post) PushComment(c string, user_id bson.ObjectId) *Comment {
 }
 
 // Push new user to the participants list
-func (p *Post) PushUser(user_id bson.ObjectId) bool {
+func (p *Post) PushUser(user_id primitive.ObjectID) bool {
 
 	pushed := false
 
@@ -150,7 +163,8 @@ func (p *Post) PushUser(user_id bson.ObjectId) bool {
 	}
 
 	if !pushed {
-		err := deps.Container.Mgo().C("posts").Update(bson.M{"_id": p.Id}, bson.M{"$push": bson.M{"users": user_id}})
+		ctx := context.Background()
+		_, err := deps.Container.Mgo().Collection("posts").UpdateOne(ctx, bson.M{"_id": p.Id}, bson.M{"$push": bson.M{"users": user_id}})
 
 		if err != nil {
 			panic(err)
@@ -163,7 +177,7 @@ func (p *Post) PushUser(user_id bson.ObjectId) bool {
 // LoadUsers for a post.
 func (p *Post) LoadUsers() {
 
-	var list []bson.ObjectId
+	var list []primitive.ObjectID
 	var users []user.UserSimple
 
 	// Check if author need to be loaded
@@ -190,12 +204,21 @@ func (p *Post) LoadUsers() {
 	}
 
 	if len(list) > 0 {
-		err := deps.Container.Mgo().C("users").Find(bson.M{"_id": bson.M{"$in": list}}).Select(user.UserSimpleFields).All(&users)
+		ctx := context.Background()
+		collection := deps.Container.Mgo().Collection("users")
+		cursor, err := collection.Find(ctx, bson.M{"_id": bson.M{"$in": list}}, &options.FindOptions{
+			Projection: user.UserSimpleFields,
+		})
+		if err != nil {
+			panic(err)
+		}
+		defer cursor.Close(ctx)
+		err = cursor.All(ctx, &users)
 		if err != nil {
 			panic(err)
 		}
 
-		usersMap := make(map[bson.ObjectId]interface{})
+		usersMap := make(map[primitive.ObjectID]interface{})
 
 		for i, usr := range users {
 			usersMap[usr.Id] = usr
@@ -218,14 +241,21 @@ func (p *Post) LoadUsers() {
 }
 
 // LoadVotes for a post/user.
-func (p *Post) LoadVotes(user_id bson.ObjectId) {
+func (p *Post) LoadVotes(user_id primitive.ObjectID) {
 	var list []votes.Vote
-	err := deps.Container.Mgo().C("votes").Find(bson.M{
+	ctx := context.Background()
+	collection := deps.Container.Mgo().Collection("votes")
+	cursor, err := collection.Find(ctx, bson.M{
 		"type":       "post",
 		"related_id": p.Id,
 		"user_id":    user_id,
 		"deleted_at": bson.M{"$exists": false},
-	}).All(&list)
+	})
+	if err != nil {
+		panic(err)
+	}
+	defer cursor.Close(ctx)
+	err = cursor.All(ctx, &list)
 	if err != nil {
 		panic(err)
 	}

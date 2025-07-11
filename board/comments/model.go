@@ -5,21 +5,21 @@ import (
 	"github.com/tryanzu/core/core/common"
 	"github.com/tryanzu/core/core/content"
 	"github.com/tryanzu/core/core/user"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"time"
 )
 
 type Comment struct {
-	Id        bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
-	UserId    bson.ObjectId `bson:"user_id" json:"user_id"`
-	PostId    bson.ObjectId `bson:"post_id,omitempty" json:"post_id,omitempty"`
+	Id        primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
+	UserId    primitive.ObjectID `bson:"user_id" json:"user_id"`
+	PostId    primitive.ObjectID `bson:"post_id,omitempty" json:"post_id,omitempty"`
 	Votes     votes.Votes   `bson:"votes" json:"votes"`
 	User      interface{}   `bson:"-" json:"author,omitempty"`
 	Position  int           `bson:"position" json:"-"`
 	Liked     int           `bson:"-" json:"liked,omitempty"`
 	Content   string        `bson:"content" json:"content"`
-	ReplyTo   bson.ObjectId `bson:"reply_to,omitempty" json:"reply_to,omitempty"`
+	ReplyTo   primitive.ObjectID `bson:"reply_to,omitempty" json:"reply_to,omitempty"`
 	ReplyType string        `bson:"reply_type,omitempty" json:"reply_type,omitempty"`
 	Chosen    bool          `bson:"chosen,omitempty" json:"chosen,omitempty"`
 	Created   time.Time     `bson:"created_at" json:"created_at"`
@@ -47,11 +47,11 @@ func (c Comment) GetParseableMeta() map[string]interface{} {
 	return meta
 }
 
-func (c Comment) RelatedID() bson.ObjectId {
+func (c Comment) RelatedID() primitive.ObjectID {
 	return c.ReplyTo
 }
 
-func (c Comment) RelatedPost() bson.ObjectId {
+func (c Comment) RelatedPost() primitive.ObjectID {
 	if c.ReplyType == "post" {
 		return c.ReplyTo
 	}
@@ -62,12 +62,12 @@ func (c Comment) VotableType() string {
 	return "comment"
 }
 
-func (c Comment) VotableID() bson.ObjectId {
+func (c Comment) VotableID() primitive.ObjectID {
 	return c.Id
 }
 
 type Replies struct {
-	Id    bson.ObjectId `bson:"_id,omitempty" json:"-"`
+	Id    primitive.ObjectID `bson:"_id,omitempty" json:"-"`
 	Count int           `bson:"count" json:"count"`
 	List  Comments      `bson:"list" json:"list"`
 }
@@ -81,8 +81,8 @@ type CommentsSet struct {
 
 type Comments []Comment
 
-func (all Comments) Map() map[bson.ObjectId]Comment {
-	m := make(map[bson.ObjectId]Comment, len(all.NestedIDList()))
+func (all Comments) Map() map[primitive.ObjectID]Comment {
+	m := make(map[primitive.ObjectID]Comment, len(all.NestedIDList()))
 	for _, c := range all {
 		m[c.Id] = c
 
@@ -172,7 +172,7 @@ func (all Comments) WithUsers(deps Deps) (Comments, error) {
 	return list, nil
 }
 
-func (all Comments) NestedIDList() (list []bson.ObjectId) {
+func (all Comments) NestedIDList() (list []primitive.ObjectID) {
 	for _, c := range all {
 		list = append(list, c.Id)
 		if c.Replies != nil {
@@ -184,8 +184,8 @@ func (all Comments) NestedIDList() (list []bson.ObjectId) {
 	return
 }
 
-func (all Comments) IDList() []bson.ObjectId {
-	list := make([]bson.ObjectId, len(all))
+func (all Comments) IDList() []primitive.ObjectID {
+	list := make([]primitive.ObjectID, len(all))
 	index := 0
 	for _, c := range all {
 		list[index] = c.Id
@@ -201,14 +201,14 @@ func (all Comments) IDList() []bson.ObjectId {
 }
 
 func (all Comments) UsersScope() common.Scope {
-	users := map[bson.ObjectId]struct{}{}
+	users := map[primitive.ObjectID]struct{}{}
 	for _, c := range all {
 		if _, exists := users[c.UserId]; !exists {
 			users[c.UserId] = struct{}{}
 		}
 	}
 
-	list := make([]bson.ObjectId, len(users))
+	list := make([]primitive.ObjectID, len(users))
 	index := 0
 	for k := range users {
 		list[index] = k
@@ -218,10 +218,10 @@ func (all Comments) UsersScope() common.Scope {
 	return common.WithinID(list)
 }
 
-func (all Comments) PostIDs() []bson.ObjectId {
-	posts := map[bson.ObjectId]struct{}{}
+func (all Comments) PostIDs() []primitive.ObjectID {
+	posts := map[primitive.ObjectID]struct{}{}
 	for _, c := range all {
-		if c.PostId.Valid() {
+		if !c.PostId.IsZero() {
 			posts[c.PostId] = struct{}{}
 		}
 		if _, exists := posts[c.ReplyTo]; c.ReplyType == "post" && !exists {
@@ -229,7 +229,7 @@ func (all Comments) PostIDs() []bson.ObjectId {
 		}
 	}
 
-	list := make([]bson.ObjectId, len(posts))
+	list := make([]primitive.ObjectID, len(posts))
 	index := 0
 	for k := range posts {
 		list[index] = k
@@ -243,13 +243,7 @@ func (all Comments) PostsScope() common.Scope {
 }
 
 // VotesOf userId in comments resultset.
-func (all Comments) VotesOf(deps Deps, userID bson.ObjectId) (list votes.List, err error) {
-	list, err = votes.FindList(deps, func(criteria bson.M) bson.M {
-		criteria["user_id"] = userID
-		criteria["type"] = "comment"
-		criteria["related_id"] = bson.M{"$in": all.NestedIDList()}
-		criteria["deleted_at"] = bson.M{"$exists": false}
-		return criteria
-	})
+func (all Comments) VotesOf(deps Deps, userID primitive.ObjectID) (list votes.List, err error) {
+	list, err = votes.FindList(deps, common.WithinID(all.NestedIDList()))
 	return
 }

@@ -1,6 +1,7 @@
 package events
 
 import (
+	"context"
 	"time"
 
 	"github.com/tryanzu/core/board/legacy/model"
@@ -17,7 +18,7 @@ func activityEvents() {
 			activity.Created = time.Now()
 
 			// Attempt to record recent activity.
-			err = deps.Container.Mgo().C("activity").Insert(activity)
+			_, err = deps.Container.Mgo().Collection("activity").InsertOne(context.Background(), activity)
 			return
 		},
 	}

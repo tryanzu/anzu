@@ -1,18 +1,18 @@
 package model
 
 import (
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"time"
 )
 
 type Vote struct {
-	Id         bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
-	UserId     bson.ObjectId `bson:"user_id" json:"user_id"`
-	Type       string        `bson:"type" json:"type"`
-	NestedType string        `bson:"nested_type,omitempty" json:"nested_type,omitempty"`
-	RelatedId  bson.ObjectId `bson:"related_id" json:"related_id"`
-	Value      int           `bson:"value" json:"value"`
-	Created    time.Time     `bson:"created_at" json:"created_at"`
+	Id         primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
+	UserId     primitive.ObjectID `bson:"user_id" json:"user_id"`
+	Type       string             `bson:"type" json:"type"`
+	NestedType string             `bson:"nested_type,omitempty" json:"nested_type,omitempty"`
+	RelatedId  primitive.ObjectID `bson:"related_id" json:"related_id"`
+	Value      int                `bson:"value" json:"value"`
+	Created    time.Time          `bson:"created_at" json:"created_at"`
 }
 
 type VoteForm struct {

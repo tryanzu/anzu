@@ -8,20 +8,20 @@ import (
 	"github.com/tryanzu/core/core/events"
 	"github.com/tryanzu/core/core/user"
 	"github.com/tryanzu/core/deps"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // UpdatePost pushes a new reply.
 func UpdatePost(c *gin.Context) {
 	var (
 		kind = c.DefaultQuery("type", "post")
-		cid  = bson.ObjectIdHex(c.Param("id"))
 		form struct {
 			Content string `json:"content" binding:"required"`
 		}
 	)
 
-	if cid.Valid() == false {
+	cid, err := primitive.ObjectIDFromHex(c.Param("id"))
+	if err != nil {
 		c.AbortWithError(500, errors.New("Invalid id for reply"))
 		return
 	}

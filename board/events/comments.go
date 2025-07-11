@@ -1,6 +1,7 @@
 package events
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"time"
@@ -16,7 +17,8 @@ import (
 	"github.com/tryanzu/core/core/user"
 	"github.com/tryanzu/core/deps"
 	"github.com/tryanzu/core/modules/gaming"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Bind event handlers for comment related actions...
@@ -46,7 +48,7 @@ func commentsEvents() {
 func onVote(e pool.Event) error {
 	var (
 		err    error
-		userID bson.ObjectId
+		userID primitive.ObjectID
 	)
 	vote := e.Params["vote"].(votes.Vote)
 	field := vote.DbField()
@@ -62,7 +64,7 @@ func onVote(e pool.Event) error {
 	}
 	switch vote.Type {
 	case "comment":
-		err = deps.Container.Mgo().C("comments").UpdateId(vote.RelatedID, bson.M{"$inc": bson.M{field: value}})
+		_, err = deps.Container.Mgo().Collection("comments").UpdateOne(context.Background(), bson.M{"_id": vote.RelatedID}, bson.M{"$inc": bson.M{field: value}})
 		if err != nil {
 			return err
 		}
@@ -75,7 +77,7 @@ func onVote(e pool.Event) error {
 		userID = comment.UserId
 		factor = factor * 4
 	case "post":
-		err = deps.Container.Mgo().C("posts").UpdateId(vote.RelatedID, bson.M{"$inc": bson.M{field: value}})
+		_, err = deps.Container.Mgo().Collection("posts").UpdateOne(context.Background(), bson.M{"_id": vote.RelatedID}, bson.M{"$inc": bson.M{field: value}})
 		if err != nil {
 			return err
 		}
@@ -122,8 +124,8 @@ func onVote(e pool.Event) error {
 }
 
 func onCommentDelete(e pool.Event) error {
-	cid := e.Params["id"].(bson.ObjectId)
-	pid := e.Params["post_id"].(bson.ObjectId)
+	cid := e.Params["id"].(primitive.ObjectID)
+	pid := e.Params["post_id"].(primitive.ObjectID)
 
 	notify.Transmit <- notify.Socket{
 		Chan:   "feed",
@@ -151,7 +153,7 @@ func onCommentDelete(e pool.Event) error {
 }
 
 func onPostComment(e pool.Event) error {
-	comment, err := comments.FindId(deps.Container, e.Params["id"].(bson.ObjectId))
+	comment, err := comments.FindId(deps.Container, e.Params["id"].(primitive.ObjectID))
 	if err != nil {
 		return err
 	}
@@ -170,7 +172,7 @@ func onPostComment(e pool.Event) error {
 			UserId:    ref.UserId,
 			Type:      "comment",
 			RelatedId: comment.Id,
-			Users:     []bson.ObjectId{comment.UserId},
+			Users:     []primitive.ObjectID{comment.UserId},
 		}
 		p, err := post.FindId(deps.Container, ref.RelatedPost())
 		if err != nil {
@@ -217,7 +219,7 @@ func onPostComment(e pool.Event) error {
 				UserId:    p.UserId,
 				Type:      "comment",
 				RelatedId: comment.Id,
-				Users:     []bson.ObjectId{comment.UserId},
+				Users:     []primitive.ObjectID{comment.UserId},
 			}
 		}
 
@@ -251,8 +253,8 @@ func onPostComment(e pool.Event) error {
 }
 
 func onCommentUpdate(e pool.Event) error {
-	cid := e.Params["id"].(bson.ObjectId)
-	pid := e.Params["post_id"].(bson.ObjectId)
+	cid := e.Params["id"].(primitive.ObjectID)
+	pid := e.Params["post_id"].(primitive.ObjectID)
 	notify.Transmit <- notify.Socket{
 		Chan:   "post",
 		Action: pid.Hex(),

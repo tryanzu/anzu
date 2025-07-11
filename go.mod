@@ -35,11 +35,12 @@ require (
 	github.com/spf13/cobra v0.0.5
 	github.com/subosito/gotenv v1.1.1
 	github.com/xuyu/goredis v0.0.0-20160929021245-89fbe9474b37
+	go.mongodb.org/mongo-driver v1.13.1
 	golang.org/x/crypto v0.21.0
 	golang.org/x/text v0.14.0
 	gopkg.in/go-playground/validator.v8 v8.18.2
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
-	gopkg.in/mgo.v2 v2.0.0-20180705113604-9856a29383ce
+	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22
 )
 
 require (
@@ -75,7 +76,7 @@ require (
 	github.com/go-sourcemap/sourcemap v2.1.2+incompatible // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/golang/protobuf v1.5.0 // indirect
-	github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db // indirect
+	github.com/golang/snappy v0.0.1 // indirect
 	github.com/gomodule/redigo v2.0.0+incompatible // indirect
 	github.com/google/uuid v1.0.0 // indirect
 	github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1 // indirect
@@ -89,6 +90,7 @@ require (
 	github.com/jaytaylor/html2text v0.0.0-20180606194806-57d518f124b0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
+	github.com/klauspost/compress v1.13.6 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.4 // indirect
 	github.com/konsorten/go-windows-terminal-sequences v1.0.1 // indirect
 	github.com/leodido/go-urn v1.2.4 // indirect
@@ -97,6 +99,7 @@ require (
 	github.com/mattn/go-runewidth v0.0.3 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
+	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe // indirect
 	github.com/motain/gocheck v0.0.0-20131023154940-9beb271d26e6 // indirect
 	github.com/olekukonko/tablewriter v0.0.1 // indirect
 	github.com/pelletier/go-toml v1.2.0 // indirect
@@ -114,10 +117,15 @@ require (
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.11 // indirect
 	github.com/vaughan0/go-ini v0.0.0-20130923145212-a98ad7ee00ec // indirect
+	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
+	github.com/xdg-go/scram v1.1.2 // indirect
+	github.com/xdg-go/stringprep v1.0.4 // indirect
+	github.com/youmark/pkcs8 v0.0.0-20181117223130-1be2e3e5546d // indirect
 	go.opentelemetry.io/otel v0.15.0 // indirect
 	golang.org/x/arch v0.3.0 // indirect
 	golang.org/x/net v0.23.0 // indirect
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45 // indirect
+	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4 // indirect
 	golang.org/x/sys v0.18.0 // indirect
 	google.golang.org/appengine v1.5.0 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect

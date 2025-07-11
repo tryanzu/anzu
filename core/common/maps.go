@@ -1,15 +1,15 @@
 package common
 
 import (
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // UsersStringMap is just map of id -> username (cache purposes).
-type UsersStringMap map[bson.ObjectId]string
+type UsersStringMap map[primitive.ObjectID]string
 
 type AssetRef struct {
 	URL         string
 	UseOriginal bool
 }
 
-type AssetRefsMap map[bson.ObjectId]AssetRef
+type AssetRefsMap map[primitive.ObjectID]AssetRef

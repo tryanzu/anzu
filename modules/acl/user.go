@@ -4,7 +4,7 @@ import (
 	"github.com/tryanzu/core/board/legacy/model"
 	"github.com/tryanzu/core/modules/feed"
 	"github.com/tryanzu/core/modules/helpers"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type User struct {
@@ -88,17 +88,17 @@ func (user *User) CanDeletePost(post *feed.Post) bool {
 }
 
 // CanUpdateComment helper.
-func (user *User) CanUpdateComment(ownerID, categoryID bson.ObjectId) bool {
+func (user *User) CanUpdateComment(ownerID, categoryID primitive.ObjectID) bool {
 	return user.isActionGranted(ownerID, categoryID, "edit-own-comments", "edit-board-comments", "edit-category-comments")
 }
 
 // Check if user can delete comment
-func (user *User) CanDeleteComment(ownerID, categoryID bson.ObjectId) bool {
+func (user *User) CanDeleteComment(ownerID, categoryID primitive.ObjectID) bool {
 	return user.isActionGranted(ownerID, categoryID, "delete-own-comments", "delete-board-comments", "delete-category-comments")
 }
 
 // Check if user can do action, super_action or category_action
-func (user *User) isActionGranted(entity_owner, category bson.ObjectId, action, super_action, category_action string) bool {
+func (user *User) isActionGranted(entity_owner, category primitive.ObjectID, action, super_action, category_action string) bool {
 
 	// Post author check
 	if entity_owner == user.data.Id {

@@ -8,7 +8,7 @@ import (
 	"github.com/tryanzu/core/core/events"
 	"github.com/tryanzu/core/core/user"
 	"github.com/tryanzu/core/deps"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"net/http"
 )
@@ -20,7 +20,7 @@ type upsertReactionBody struct {
 // UpsertReaction realted to a reactable.
 func UpsertReaction(c *gin.Context) {
 	var (
-		id      bson.ObjectId
+		id      primitive.ObjectID
 		body    upsertReactionBody
 		votable votes.Votable
 		err     error
@@ -33,7 +33,7 @@ func UpsertReaction(c *gin.Context) {
 	}
 
 	// ID validation.
-	if id = bson.ObjectIdHex(c.Params.ByName("id")); !id.Valid() {
+	if id, err = primitive.ObjectIDFromHex(c.Params.ByName("id")); err != nil {
 		jsonErr(c, http.StatusBadRequest, "malformed request, invalid id")
 		return
 	}
@@ -46,8 +46,8 @@ func UpsertReaction(c *gin.Context) {
 
 	switch c.Params.ByName("type") {
 	case "post":
-		if post, err := post.FindId(deps.Container, id); err == nil {
-			votable = post
+		if postData, err := post.FindId(deps.Container, id); err == nil {
+			votable = postData
 		}
 	case "comment":
 		if comment, err := comments.FindId(deps.Container, id); err == nil {

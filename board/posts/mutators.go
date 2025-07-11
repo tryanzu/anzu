@@ -1,17 +1,20 @@
 package post
 
 import (
+	"context"
 	"strconv"
 	"time"
 
 	"github.com/siddontang/ledisdb/ledis"
 	"github.com/tryanzu/core/board/activity"
 	"github.com/tryanzu/core/core/common"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // TrackView for a post/user.
-func TrackView(d deps, id, user bson.ObjectId) (err error) {
+func TrackView(d deps, id, user primitive.ObjectID) (err error) {
 	err = activity.Track(d, activity.M{
 		RelatedID: id,
 		Event:     "post",
@@ -24,10 +27,10 @@ func TrackView(d deps, id, user bson.ObjectId) (err error) {
 	if err != nil {
 		return
 	}
-	return SyncRates(d, "views", []bson.ObjectId{id})
+	return SyncRates(d, "views", []primitive.ObjectID{id})
 }
 
-func TrackReachedList(d deps, list []bson.ObjectId, user bson.ObjectId) (err error) {
+func TrackReachedList(d deps, list []primitive.ObjectID, user primitive.ObjectID) (err error) {
 	err = activity.Track(d, activity.M{
 		List:   list,
 		Event:  "feed",
@@ -106,7 +109,7 @@ func getRelViewsCount(d deps, at time.Time) int64 {
 	return int64(n)
 }
 
-func SyncRates(d deps, kind string, list []bson.ObjectId) error {
+func SyncRates(d deps, kind string, list []primitive.ObjectID) error {
 	posts, err := FindList(d, common.WithinID(list))
 	if err != nil {
 		return err
@@ -133,7 +136,8 @@ func SyncRates(d deps, kind string, list []bson.ObjectId) error {
 			relReached += count
 		}
 	}
-	update := d.Mgo().C("posts").Bulk()
+	ctx := context.TODO()
+	updateOps := []mongo.WriteModel{}
 	scores := []ledis.ScorePair{}
 	for _, post := range posts {
 		var (
@@ -147,7 +151,7 @@ func SyncRates(d deps, kind string, list []bson.ObjectId) error {
 		if n, err := db.Get([]byte("posts:reached:" + id)); err == nil {
 			reached, _ = strconv.Atoi(string(n))
 		}
-		update.Update(bson.M{"_id": post.Id}, bson.M{"$set": bson.M{"views": views, "reached": reached}})
+		updateOps = append(updateOps, mongo.NewUpdateOneModel().SetFilter(bson.M{"_id": post.Id}).SetUpdate(bson.M{"$set": bson.M{"views": views, "reached": reached}}))
 		if reached == 0 || relReached == 0 || relViews == 0 {
 			continue
 		}
@@ -176,9 +180,11 @@ func SyncRates(d deps, kind string, list []bson.ObjectId) error {
 		})
 	}
 
-	_, err = update.Run()
-	if err != nil {
-		return err
+	if len(updateOps) > 0 {
+		_, err = d.Mgo().Collection("posts").BulkWrite(ctx, updateOps)
+		if err != nil {
+			return err
+		}
 	}
 	log.Infof("updating rates	count=%v relViews=%v relReach=%v date=%v", len(scores), relViews, relReached, date)
 	_, err = db.ZAdd([]byte("posts:"+date), scores...)
