@@ -11,7 +11,7 @@ import (
 	"github.com/op/go-logging"
 	"github.com/tryanzu/core/core/config"
 	"github.com/tryanzu/core/deps"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 var (
@@ -38,7 +38,7 @@ var (
 type M struct {
 	Channel string
 	Content string
-	ID      *bson.ObjectId
+	ID      *primitive.ObjectID
 }
 
 type SocketEvent struct {

@@ -1,12 +1,12 @@
 package model
 
 import (
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type StatsComments struct {
-	Id    bson.ObjectId `bson:"_id,omitempty" json:"_id,omitempty"`
-	Count int           `bson:"count" json:"count"`
+	Id    primitive.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
+	Count int                `bson:"count" json:"count"`
 }
 
 type Stats struct {

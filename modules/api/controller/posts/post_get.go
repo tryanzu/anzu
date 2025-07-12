@@ -6,7 +6,8 @@ import (
 	"github.com/tryanzu/core/core/events"
 	"github.com/tryanzu/core/deps"
 	"github.com/tryanzu/core/modules/feed"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func (this API) Get(c *gin.Context) {
@@ -17,7 +18,7 @@ func (this API) Get(c *gin.Context) {
 	)
 
 	id := c.Params.ByName("id")
-	if bson.IsObjectIdHex(id) {
+	if _, err := primitive.ObjectIDFromHex(id); err == nil {
 		kind = "id"
 	}
 
@@ -31,7 +32,8 @@ func (this API) Get(c *gin.Context) {
 	}
 
 	if kind == "id" {
-		post, err = this.Feed.Post(bson.ObjectIdHex(id))
+		oid, _ := primitive.ObjectIDFromHex(id)
+		post, err = this.Feed.Post(oid)
 	} else {
 		post, err = this.Feed.Post(bson.M{"slug": id})
 	}
@@ -43,7 +45,7 @@ func (this API) Get(c *gin.Context) {
 	// Needed data loading to show post
 	post.LoadUsers()
 	if sid, exists := c.Get("userID"); exists {
-		uid := sid.(bson.ObjectId)
+		uid := sid.(primitive.ObjectID)
 		post.LoadVotes(uid)
 
 		// Notify about view.
@@ -59,7 +61,7 @@ func (this API) Get(c *gin.Context) {
 }
 
 func signs(c *gin.Context) events.UserSign {
-	usr := c.MustGet("userID").(bson.ObjectId)
+	usr := c.MustGet("userID").(primitive.ObjectID)
 	sign := events.UserSign{
 		UserID: usr,
 	}

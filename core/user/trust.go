@@ -5,7 +5,7 @@ import (
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/tryanzu/core/core/config"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type userToken struct {
@@ -19,10 +19,10 @@ func CanBeTrusted(user User) bool {
 	return user.Warnings < 6
 }
 
-func IsBanned(d deps, id bson.ObjectId) bool {
+func IsBanned(d deps, id primitive.ObjectID) bool {
 	ledis := d.LedisDB()
 	k := []byte("ban:")
-	k = append(k, []byte(id)...)
+	k = append(k, []byte(id.Hex())...)
 	n, err := ledis.Exists(k)
 	if err != nil {
 		panic(err)
@@ -30,7 +30,7 @@ func IsBanned(d deps, id bson.ObjectId) bool {
 	return n == 1
 }
 
-func genToken(address string, id bson.ObjectId, roles []UserRole, expiration int) string {
+func genToken(address string, id primitive.ObjectID, roles []UserRole, expiration int) string {
 	scope := make([]string, len(roles))
 	for k, role := range roles {
 		scope[k] = role.Name

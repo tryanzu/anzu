@@ -12,7 +12,7 @@ import (
 	"github.com/tryanzu/core/core/events"
 	"github.com/tryanzu/core/core/user"
 	"github.com/tryanzu/core/deps"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Comments paginated fetch.
@@ -22,8 +22,8 @@ func Comments(c *gin.Context) {
 		limit  = 10
 		offset = 0
 		sort   = c.Query("sort")
-		before *bson.ObjectId
-		after  *bson.ObjectId
+		before *primitive.ObjectID
+		after  *primitive.ObjectID
 	)
 
 	if n, err := strconv.Atoi(c.Query("limit")); err == nil && n <= 50 {
@@ -34,19 +34,26 @@ func Comments(c *gin.Context) {
 		offset = n
 	}
 
-	if bid := c.Query("before"); len(bid) > 0 && bson.IsObjectIdHex(bid) {
-		id := bson.ObjectIdHex(bid)
-		before = &id
+	if bid := c.Query("before"); len(bid) > 0 {
+		if id, err := primitive.ObjectIDFromHex(bid); err == nil {
+			before = &id
+		}
 	}
 
-	if bid := c.Query("after"); len(bid) > 0 && bson.IsObjectIdHex(bid) {
-		id := bson.ObjectIdHex(bid)
-		after = &id
+	if bid := c.Query("after"); len(bid) > 0 {
+		if id, err := primitive.ObjectIDFromHex(bid); err == nil {
+			after = &id
+		}
 	}
 
+	postID, err := primitive.ObjectIDFromHex(pid)
+	if err != nil {
+		c.AbortWithError(500, err)
+		return
+	}
 	set, err := comments.FetchBy(
 		deps.Container,
-		comments.Post(bson.ObjectIdHex(pid), limit, offset, sort == "reverse", before, after),
+		comments.Post(postID, limit, offset, sort == "reverse", before, after),
 	)
 	if err != nil {
 		c.AbortWithError(500, err)
@@ -72,7 +79,7 @@ func Comments(c *gin.Context) {
 	}
 
 	if userID, exists := c.Get("userID"); exists {
-		votes, err := list.VotesOf(deps.Container, userID.(bson.ObjectId))
+		votes, err := list.VotesOf(deps.Container, userID.(primitive.ObjectID))
 		if err != nil {
 			c.AbortWithError(500, err)
 			return
@@ -88,12 +95,12 @@ func Comments(c *gin.Context) {
 func NewComment(c *gin.Context) {
 	var (
 		kind = c.DefaultQuery("type", "post")
-		cid  = bson.ObjectIdHex(c.Param("id"))
 		form struct {
 			Content string `json:"content" binding:"required"`
 		}
 	)
-	if cid.Valid() == false {
+	cid, err := primitive.ObjectIDFromHex(c.Param("id"))
+	if err != nil {
 		c.AbortWithError(http.StatusBadRequest, errors.New("Invalid id for reply"))
 		return
 	}
@@ -132,13 +139,13 @@ func NewComment(c *gin.Context) {
 // UpdateComment pushes a new reply.
 func UpdateComment(c *gin.Context) {
 	var (
-		cid  = bson.ObjectIdHex(c.Param("id"))
 		form struct {
 			Content string `json:"content" binding:"required" validate:"min=2,max=25000"`
 		}
 	)
 
-	if cid.Valid() == false {
+	cid, err := primitive.ObjectIDFromHex(c.Param("id"))
+	if err != nil {
 		c.AbortWithError(500, errors.New("Invalid id for reply"))
 		return
 	}
@@ -174,11 +181,8 @@ func UpdateComment(c *gin.Context) {
 
 // DeleteComment endpoint handler.
 func DeleteComment(c *gin.Context) {
-	var (
-		cid = bson.ObjectIdHex(c.Param("id"))
-	)
-
-	if cid.Valid() == false {
+	cid, err := primitive.ObjectIDFromHex(c.Param("id"))
+	if err != nil {
 		c.JSON(500, "Invalid id for reply")
 		return
 	}
@@ -211,7 +215,7 @@ func DeleteComment(c *gin.Context) {
 }
 
 func signs(c *gin.Context) events.UserSign {
-	usr := c.MustGet("userID").(bson.ObjectId)
+	usr := c.MustGet("userID").(primitive.ObjectID)
 	sign := events.UserSign{
 		UserID: usr,
 	}

@@ -1,29 +1,34 @@
 package flags
 
 import (
+	"context"
 	"errors"
 	"time"
 
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 var FlagNotFound = errors.New("Flag has not been found by given criteria.")
 
-func FindId(d deps, id bson.ObjectId) (f Flag, err error) {
-	err = d.Mgo().C("flags").FindId(id).One(&f)
-	if err != nil {
+func FindId(d deps, id primitive.ObjectID) (f Flag, err error) {
+	ctx := context.TODO()
+	err = d.Mgo().Collection("flags").FindOne(ctx, bson.M{"_id": id}).Decode(&f)
+	if err == mongo.ErrNoDocuments {
 		err = FlagNotFound
 	}
 	return
 }
 
-func FindOne(d deps, related string, relatedID, userID bson.ObjectId) (f Flag, err error) {
-	err = d.Mgo().C("flags").Find(bson.M{
+func FindOne(d deps, related string, relatedID, userID primitive.ObjectID) (f Flag, err error) {
+	ctx := context.TODO()
+	err = d.Mgo().Collection("flags").FindOne(ctx, bson.M{
 		"related_to": related,
 		"related_id": relatedID,
 		"user_id":    userID,
-	}).One(&f)
-	if err != nil {
+	}).Decode(&f)
+	if err == mongo.ErrNoDocuments {
 		return f, FlagNotFound
 	}
 
@@ -31,15 +36,16 @@ func FindOne(d deps, related string, relatedID, userID bson.ObjectId) (f Flag, e
 }
 
 func Count(d deps, q bson.M) int {
-	n, err := d.Mgo().C("flags").Find(q).Count()
+	ctx := context.TODO()
+	n, err := d.Mgo().Collection("flags").CountDocuments(ctx, q)
 	if err != nil {
 		panic(err)
 	}
-	return n
+	return int(n)
 }
 
 // TodaysCountByUser flags.
-func TodaysCountByUser(d deps, id bson.ObjectId) int {
+func TodaysCountByUser(d deps, id primitive.ObjectID) int {
 	today := time.Now()
 	startOfDay := time.Date(today.Year(), today.Month(), today.Day(), 0, 0, 0, 0, today.Location())
 	endOfDay := time.Date(today.Year(), today.Month(), today.Day(), 23, 59, 59, 0, today.Location())

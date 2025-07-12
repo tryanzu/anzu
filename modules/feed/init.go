@@ -1,6 +1,8 @@
 package feed
 
 import (
+	"context"
+
 	"github.com/tryanzu/core/modules/content"
 	"github.com/tryanzu/core/modules/exceptions"
 
@@ -8,7 +10,10 @@ import (
 	"github.com/tryanzu/core/deps"
 	"github.com/tryanzu/core/modules/user"
 	"github.com/xuyu/goredis"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 var lightPostFields bson.M = bson.M{"_id": 1, "title": 1, "slug": 1, "solved": 1, "lock": 1, "category": 1, "is_question": 1, "user_id": 1, "pinned": 1, "created_at": 1, "updated_at": 1, "type": 1, "content": 1}
@@ -21,13 +26,14 @@ type FeedModule struct {
 }
 
 func (feed *FeedModule) Post(where interface{}) (post *Post, err error) {
+	ctx := context.Background()
 	switch where.(type) {
-	case bson.ObjectId, bson.M:
+	case primitive.ObjectID, bson.M:
 		var criteria = bson.M{"deleted_at": bson.M{"$exists": false}}
 
 		switch where.(type) {
-		case bson.ObjectId:
-			criteria["_id"] = where.(bson.ObjectId)
+		case primitive.ObjectID:
+			criteria["_id"] = where.(primitive.ObjectID)
 		case bson.M:
 			for k, v := range where.(bson.M) {
 				criteria[k] = v
@@ -35,15 +41,19 @@ func (feed *FeedModule) Post(where interface{}) (post *Post, err error) {
 		}
 
 		// Use user feed reference to get the user and then create the user gaming instance
-		err = deps.Container.Mgo().C("posts").Find(criteria).One(&post)
+		database := deps.Container.Mgo()
+		collection := database.Collection("posts")
+		err = collection.FindOne(ctx, criteria).Decode(&post)
 		if err != nil {
-			err = exceptions.NotFound{Msg: "Invalid post id. Not found."}
+			if err == mongo.ErrNoDocuments {
+				err = exceptions.NotFound{Msg: "Invalid post id. Not found."}
+			}
 			return
 		}
 	case *Post:
 		post = where.(*Post)
 	default:
-		panic("Unkown argument")
+		panic("Unknown argument")
 	}
 
 	post.SetDI(feed)
@@ -51,69 +61,87 @@ func (feed *FeedModule) Post(where interface{}) (post *Post, err error) {
 }
 
 func (feed *FeedModule) LightPost(post interface{}) (*LightPost, error) {
-
+	ctx := context.Background()
 	switch post.(type) {
-	case bson.ObjectId:
-
+	case primitive.ObjectID:
 		scope := LightPostModel{}
 		database := deps.Container.Mgo()
+		collection := database.Collection("posts")
 
 		// Use light post model
-		err := database.C("posts").FindId(post.(bson.ObjectId)).Select(lightPostFields).One(&scope)
-
+		opts := options.FindOne().SetProjection(lightPostFields)
+		err := collection.FindOne(ctx, bson.M{"_id": post.(primitive.ObjectID)}, opts).Decode(&scope)
 		if err != nil {
-
-			return nil, exceptions.NotFound{"Invalid post id. Not found."}
+			if err == mongo.ErrNoDocuments {
+				return nil, exceptions.NotFound{"Invalid post id. Not found."}
+			}
+			return nil, err
 		}
 
 		post_object := &LightPost{data: scope, di: feed}
-
 		return post_object, nil
 
 	default:
-		panic("Unkown argument")
+		panic("Unknown argument")
 	}
 }
 
 func (feed *FeedModule) LightPosts(posts interface{}) ([]LightPostModel, error) {
-
+	ctx := context.Background()
 	switch posts.(type) {
-	case []bson.ObjectId:
-
+	case []primitive.ObjectID:
 		var list []LightPostModel
-
 		database := deps.Container.Mgo()
+		collection := database.Collection("posts")
 
 		// Use light post model
-		err := database.C("posts").Find(bson.M{"_id": bson.M{"$in": posts.([]bson.ObjectId)}}).Select(lightPostFields).All(&list)
+		filter := bson.M{"_id": bson.M{"$in": posts.([]primitive.ObjectID)}}
+		opts := options.Find().SetProjection(lightPostFields)
+		cursor, err := collection.Find(ctx, filter, opts)
 		if err != nil {
 			return nil, exceptions.NotFound{"Invalid posts id. Not found."}
 		}
+		defer cursor.Close(ctx)
 
+		err = cursor.All(ctx, &list)
+		if err != nil {
+			return nil, err
+		}
 		return list, nil
 
 	case bson.M:
-
 		var list []LightPostModel
-
 		database := deps.Container.Mgo()
+		collection := database.Collection("posts")
 
 		// Use light post model
-		err := database.C("posts").Find(posts.(bson.M)).Select(lightPostFields).All(&list)
+		opts := options.Find().SetProjection(lightPostFields)
+		cursor, err := collection.Find(ctx, posts.(bson.M), opts)
 		if err != nil {
 			return nil, exceptions.NotFound{"Invalid posts criteria. Not found."}
 		}
+		defer cursor.Close(ctx)
 
+		err = cursor.All(ctx, &list)
+		if err != nil {
+			return nil, err
+		}
 		return list, nil
 
 	default:
-		panic("Unkown argument")
+		panic("Unknown argument")
 	}
 }
 
-func (feed *FeedModule) GetComment(id bson.ObjectId) (comment *Comment, err error) {
-	err = deps.Container.Mgo().C("comments").FindId(id).One(&comment)
+func (feed *FeedModule) GetComment(id primitive.ObjectID) (comment *Comment, err error) {
+	ctx := context.Background()
+	database := deps.Container.Mgo()
+	collection := database.Collection("comments")
+	err = collection.FindOne(ctx, bson.M{"_id": id}).Decode(&comment)
 	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, exceptions.NotFound{"Comment not found"}
+		}
 		return
 	}
 
@@ -127,17 +155,17 @@ func (feed *FeedModule) GetComment(id bson.ObjectId) (comment *Comment, err erro
 }
 
 func (feed *FeedModule) FulfillBestAnswer(list []LightPostModel) []LightPostModel {
-
-	var ids []bson.ObjectId
+	ctx := context.Background()
+	var ids []primitive.ObjectID
 	var comments []PostCommentModel
 
 	for _, post := range list {
-
 		// Generate the list of post id's
 		ids = append(ids, post.Id)
 	}
 
 	database := deps.Container.Mgo()
+	collection := database.Collection("posts")
 	pipeline_line := []bson.M{
 		{
 			"$match": bson.M{"_id": bson.M{"$in": ids}, "solved": true},
@@ -153,23 +181,25 @@ func (feed *FeedModule) FulfillBestAnswer(list []LightPostModel) []LightPostMode
 		},
 	}
 
-	pipeline := database.C("posts").Pipe(pipeline_line)
-	err := pipeline.All(&comments)
+	cursor, err := collection.Aggregate(ctx, pipeline_line)
+	if err != nil {
+		panic(err)
+	}
+	defer cursor.Close(ctx)
 
+	err = cursor.All(ctx, &comments)
 	if err != nil {
 		panic(err)
 	}
 
-	assoc := map[bson.ObjectId]PostCommentModel{}
+	assoc := map[primitive.ObjectID]PostCommentModel{}
 
 	for _, comment := range comments {
 		assoc[comment.Id] = comment
 	}
 
 	for index, post := range list {
-
 		if comment, exists := assoc[post.Id]; exists {
-
 			list[index].BestAnswer = &comment.Comment
 		}
 	}
@@ -177,15 +207,14 @@ func (feed *FeedModule) FulfillBestAnswer(list []LightPostModel) []LightPostMode
 	return list
 }
 
-func (feed *FeedModule) TrueCommentCount(id bson.ObjectId) int {
-	var count int
-
+func (feed *FeedModule) TrueCommentCount(id primitive.ObjectID) int {
+	ctx := context.Background()
 	database := deps.Container.Mgo()
-	count, err := database.C("comments").Find(bson.M{"post_id": id}).Count()
-
+	collection := database.Collection("comments")
+	count, err := collection.CountDocuments(ctx, bson.M{"post_id": id})
 	if err != nil {
 		panic(err)
 	}
 
-	return count
+	return int(count)
 }

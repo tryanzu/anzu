@@ -9,14 +9,14 @@ import (
 	"github.com/tryanzu/core/core/events"
 	"github.com/tryanzu/core/core/user"
 	"github.com/tryanzu/core/deps"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type upsertFlagForm struct {
-	RelatedTo string        `json:"related_to" binding:"required,eq=post|eq=comment"`
-	RelatedID bson.ObjectId `json:"related_id" binding:"required"`
-	Reason    string        `json:"category" binding:"required"`
-	Content   string        `json:"content" binding:"max=255"`
+	RelatedTo string             `json:"related_to" binding:"required,eq=post|eq=comment"`
+	RelatedID primitive.ObjectID `json:"related_id" binding:"required"`
+	Reason    string             `json:"category" binding:"required"`
+	Content   string             `json:"content" binding:"max=255"`
 }
 
 // NewFlag endpoint.
@@ -58,10 +58,11 @@ func NewFlag(c *gin.Context) {
 // Flag status request.
 func Flag(c *gin.Context) {
 	var (
-		id      bson.ObjectId
+		id      primitive.ObjectID
 		related = c.Params.ByName("related")
+		err     error
 	)
-	if id = bson.ObjectIdHex(c.Params.ByName("id")); !id.Valid() {
+	if id, err = primitive.ObjectIDFromHex(c.Params.ByName("id")); err != nil {
 		jsonErr(c, http.StatusBadRequest, "malformed request, invalid id")
 		return
 	}

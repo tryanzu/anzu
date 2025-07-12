@@ -1,6 +1,7 @@
 package handle
 
 import (
+	"context"
 	"crypto/tls"
 	"errors"
 	"fmt"
@@ -25,7 +26,9 @@ import (
 	"github.com/tryanzu/core/modules/feed"
 	"github.com/tryanzu/core/modules/gaming"
 	"github.com/xuyu/goredis"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type PostAPI struct {
@@ -59,16 +62,17 @@ func (di PostAPI) FeedGet(c *gin.Context) {
 		search["$text"] = bson.M{"$search": s}
 	}
 
-	if id := c.Query("category"); bson.IsObjectIdHex(id) {
-		search["category"] = bson.ObjectIdHex(id)
+	if id := c.Query("category"); primitive.IsValidObjectID(id) {
+		categoryID, _ := primitive.ObjectIDFromHex(id)
+		search["category"] = categoryID
 	}
 
-	if slug := c.Query("category"); len(slug) > 0 && bson.IsObjectIdHex(slug) == false {
+	if slug := c.Query("category"); len(slug) > 0 && !primitive.IsValidObjectID(slug) {
 		var category struct {
-			ID bson.ObjectId `bson:"_id,omitempty"`
+			ID primitive.ObjectID `bson:"_id,omitempty"`
 		}
 
-		if err := database.C("categories").Find(bson.M{"slug": slug}).Select(bson.M{"_id": 1}).One(&category); err == nil {
+		if err := database.Collection("categories").FindOne(context.Background(), bson.M{"slug": slug}, nil).Decode(&category); err == nil {
 			search["category"] = category.ID
 		}
 	}
@@ -85,17 +89,19 @@ func (di PostAPI) FeedGet(c *gin.Context) {
 	user_order := false
 	count := 0
 
-	if author := c.Query("user_id"); len(author) > 0 && bson.IsObjectIdHex(author) {
-		search["user_id"] = bson.ObjectIdHex(author)
+	if author := c.Query("user_id"); len(author) > 0 && primitive.IsValidObjectID(author) {
+		authorID, _ := primitive.ObjectIDFromHex(author)
+		search["user_id"] = authorID
 		user_order = true
 	}
 
 	if categories := c.Query("categories"); len(categories) > 0 {
-		var within []bson.ObjectId
+		var within []primitive.ObjectID
 		list := strings.Split(categories, ",")
 		for _, cid := range list {
-			if bson.IsObjectIdHex(cid) {
-				within = append(within, bson.ObjectIdHex(cid))
+			if primitive.IsValidObjectID(cid) {
+				categoryID, _ := primitive.ObjectIDFromHex(cid)
+				within = append(within, categoryID)
 			}
 		}
 
@@ -111,11 +117,16 @@ func (di PostAPI) FeedGet(c *gin.Context) {
 		}
 		if err == nil && len(list) > 0 {
 			var temp []model.FeedPost
-			err := database.C("posts").Find(bson.M{
+			cursor, err := database.Collection("posts").Find(context.Background(), bson.M{
 				"_id":        bson.M{"$in": list},
 				"deleted_at": bson.M{"$exists": false},
 				"created_at": bson.M{"$gte": time.Now().Add(time.Hour * 24 * 30 * -1)},
-			}).Select(bson.M{"comments.set": 0, "content": 0, "components": 0}).All(&temp)
+			}, nil)
+			if err != nil {
+				panic(err)
+			}
+			defer cursor.Close(context.Background())
+			err = cursor.All(context.Background(), &temp)
 
 			if err != nil {
 				panic(err)
@@ -146,28 +157,32 @@ func (di PostAPI) FeedGet(c *gin.Context) {
 		search["deleted_at"] = bson.M{"$exists": false}
 
 		// Prepare the database to fetch the feed
-		query := database.C("posts").Find(search).Select(bson.M{"comments.set": 0, "content": 0, "components": 0})
+		var cursor *mongo.Cursor
+		var err error
 
 		// Add the sort depending on the context
 		if user_order {
-			count, _ = query.Count()
-			query = query.Sort("-created_at")
+			countResult, _ := database.Collection("posts").CountDocuments(context.Background(), search)
+			count = int(countResult)
+			cursor, err = database.Collection("posts").Find(context.Background(), search, nil)
 		} else {
-			query = query.Sort("-pinned", "-created_at")
+			cursor, err = database.Collection("posts").Find(context.Background(), search, nil)
 		}
 
-		// Add the limits of the resultset
-		query = query.Limit(limit).Skip(offset)
+		if err != nil {
+			panic(err)
+		}
+		defer cursor.Close(context.Background())
 
 		// Get the results from the feed algo
-		err := query.All(&feed)
+		err = cursor.All(context.Background(), &feed)
 		if err != nil {
 			panic(err)
 		}
 	}
 
-	var authors []bson.ObjectId
-	var list []bson.ObjectId
+	var authors []primitive.ObjectID
+	var list []primitive.ObjectID
 	var users []model.User
 
 	for _, post := range feed {
@@ -180,14 +195,19 @@ func (di PostAPI) FeedGet(c *gin.Context) {
 	}
 
 	// Get the users needed by the feed
-	err := database.C("users").Find(bson.M{"_id": bson.M{"$in": authors}}).All(&users)
+	cursor, err := database.Collection("users").Find(context.Background(), bson.M{"_id": bson.M{"$in": authors}}, nil)
+	if err != nil {
+		panic(err)
+	}
+	defer cursor.Close(context.Background())
+	err = cursor.All(context.Background(), &users)
 	if err != nil {
 		panic(err)
 	}
 
 	if len(feed) > 0 {
 
-		usersMap := make(map[bson.ObjectId]model.User)
+		usersMap := make(map[primitive.ObjectID]model.User)
 
 		for _, user := range users {
 
@@ -232,7 +252,7 @@ func (di PostAPI) FeedGet(c *gin.Context) {
 }
 
 func signs(c *gin.Context) events.UserSign {
-	usr := c.MustGet("userID").(bson.ObjectId)
+	usr := c.MustGet("userID").(primitive.ObjectID)
 	sign := events.UserSign{
 		UserID: usr,
 	}
@@ -269,7 +289,7 @@ func (di PostAPI) PostUploadAttachment(c *gin.Context) {
 		var extension, name string
 
 		extension = filepath.Ext(header.Filename)
-		name = bson.NewObjectId().Hex()
+		name = primitive.NewObjectID().Hex()
 
 		if extension == "" {
 
@@ -297,7 +317,7 @@ func (di PostAPI) PostUploadAttachment(c *gin.Context) {
 func (di PostAPI) PostDelete(c *gin.Context) {
 	// Get the post using the id
 	id := c.Params.ByName("id")
-	if bson.IsObjectIdHex(id) == false {
+	if !primitive.IsValidObjectID(id) {
 		c.JSON(400, gin.H{
 			"message": "Invalid request, no valid params.",
 			"status":  "error",
@@ -307,8 +327,8 @@ func (di PostAPI) PostDelete(c *gin.Context) {
 
 	// Get the post using the slug
 	user_id := c.MustGet("user_id")
-	uid := bson.ObjectIdHex(user_id.(string))
-	bson_id := bson.ObjectIdHex(id)
+	uid, _ := primitive.ObjectIDFromHex(user_id.(string))
+	bson_id, _ := primitive.ObjectIDFromHex(id)
 	post, err := di.Feed.Post(bson_id)
 
 	if err != nil {
@@ -325,7 +345,7 @@ func (di PostAPI) PostDelete(c *gin.Context) {
 		return
 	}
 
-	err = deps.Container.Mgo().C("posts").Update(bson.M{"_id": post.Id}, bson.M{
+	_, err = deps.Container.Mgo().Collection("posts").UpdateOne(context.Background(), bson.M{"_id": post.Id}, bson.M{
 		"$set":   bson.M{"deleted": true, "deleted_at": time.Now()},
 		"$unset": bson.M{"pinned": ""},
 	})
@@ -352,7 +372,7 @@ func (di PostAPI) syncUsersFeed(post *model.Post) {
 	events.In <- events.RawEmit("feed", "action", params)
 }
 
-func (di PostAPI) downloadAssetFromUrl(from string, post_id bson.ObjectId) error {
+func (di PostAPI) downloadAssetFromUrl(from string, post_id primitive.ObjectID) error {
 
 	// Recover from any panic even inside this goroutine
 	defer di.Errors.Recover()
@@ -397,7 +417,7 @@ func (di PostAPI) downloadAssetFromUrl(from string, post_id bson.ObjectId) error
 		}
 
 		extension = filepath.Ext(u.Path)
-		name = bson.NewObjectId().Hex()
+		name = primitive.NewObjectID().Hex()
 
 		if extension != "" {
 
@@ -418,7 +438,7 @@ func (di PostAPI) downloadAssetFromUrl(from string, post_id bson.ObjectId) error
 
 		var post model.Post
 
-		err = database.C("posts").Find(bson.M{"_id": post_id}).One(&post)
+		err = database.Collection("posts").FindOne(context.Background(), bson.M{"_id": post_id}).Decode(&post)
 
 		if err == nil {
 
@@ -430,7 +450,7 @@ func (di PostAPI) downloadAssetFromUrl(from string, post_id bson.ObjectId) error
 				content := strings.Replace(post_content, from, amazon_url+path, -1)
 
 				// Update the comment
-				deps.Container.Mgo().C("posts").Update(bson.M{"_id": post_id}, bson.M{"$set": bson.M{"content": content}})
+				deps.Container.Mgo().Collection("posts").UpdateOne(context.Background(), bson.M{"_id": post_id}, bson.M{"$set": bson.M{"content": content}})
 			}
 
 		}
@@ -441,7 +461,7 @@ func (di PostAPI) downloadAssetFromUrl(from string, post_id bson.ObjectId) error
 	return nil
 }
 
-func (di PostAPI) resetUserCategoryCounter(category string, user_id bson.ObjectId) {
+func (di PostAPI) resetUserCategoryCounter(category string, user_id primitive.ObjectID) {
 
 	// Recover from any panic even inside this goroutine
 	defer di.Errors.Recover()
@@ -452,7 +472,7 @@ func (di PostAPI) resetUserCategoryCounter(category string, user_id bson.ObjectI
 	updated_at := "counters." + counter + ".updated_at"
 
 	// Update the collection of counters
-	err := deps.Container.Mgo().C("counters").Update(bson.M{"user_id": user_id}, bson.M{"$set": bson.M{find: 0, updated_at: time.Now()}})
+	_, err := deps.Container.Mgo().Collection("counters").UpdateOne(context.Background(), bson.M{"user_id": user_id}, bson.M{"$set": bson.M{find: 0, updated_at: time.Now()}})
 
 	if err != nil {
 		panic(err)
@@ -471,7 +491,7 @@ func (di PostAPI) addUserCategoryCounter(category string) {
 	find := "counters." + counter + ".counter"
 
 	// Update the collection of counters
-	deps.Container.Mgo().C("counters").UpdateAll(nil, bson.M{"$inc": bson.M{find: 1}})
+	deps.Container.Mgo().Collection("counters").UpdateMany(context.Background(), bson.M{}, bson.M{"$inc": bson.M{find: 1}})
 
 	return
 }

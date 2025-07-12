@@ -2,16 +2,16 @@ package votes
 
 import (
 	"github.com/siddontang/ledisdb/ledis"
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Deps interface {
 	LedisDB() *ledis.DB
-	Mgo() *mgo.Database
+	Mgo() *mongo.Database
 }
 
 type Votable interface {
 	VotableType() string
-	VotableID() bson.ObjectId
+	VotableID() primitive.ObjectID
 }

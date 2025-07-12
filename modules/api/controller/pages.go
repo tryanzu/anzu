@@ -7,7 +7,7 @@ import (
 	"github.com/tryanzu/core/core/user"
 	"github.com/tryanzu/core/deps"
 	"github.com/tryanzu/core/modules/helpers"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // HomePage is the site's entry point.
@@ -27,7 +27,7 @@ func HomePage(c *gin.Context) {
 }
 
 func UserPage(c *gin.Context) {
-	id := bson.ObjectIdHex(c.Param("id"))
+	id, _ := primitive.ObjectIDFromHex(c.Param("id"))
 	usr, err := user.FindId(deps.Container, id)
 
 	if err != nil {
@@ -45,7 +45,7 @@ func UserPage(c *gin.Context) {
 }
 
 func PostPage(c *gin.Context) {
-	id := bson.ObjectIdHex(c.Param("id"))
+	id, _ := primitive.ObjectIDFromHex(c.Param("id"))
 	post, err := posts.FindId(deps.Container, id)
 
 	if err != nil {

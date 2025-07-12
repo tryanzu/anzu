@@ -1,18 +1,18 @@
 package categories
 
 import (
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Category model.
 type Category struct {
-	ID          bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
+	ID          primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
 	Name        string        `bson:"name" json:"name"`
 	Description string        `bson:"description" json:"description"`
 	Slug        string        `bson:"slug" json:"slug"`
 	Color       string        `bson:"color" json:"color"`
 	Permissions ACL           `bson:"permissions" json:"-"`
-	Parent      bson.ObjectId `bson:"parent,omitempty" json:"parent,omitempty"`
+	Parent      primitive.ObjectID `bson:"parent,omitempty" json:"parent,omitempty"`
 	ReactSet    []string      `bson:"reactSet" json:"-"`
 	Order       int           `bson:"order,omitempty" json:"order,omitempty"`
 

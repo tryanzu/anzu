@@ -1,22 +1,25 @@
 package gaming
 
 import (
+	"context"
 	"github.com/tryanzu/core/deps"
 	"github.com/tryanzu/core/modules/exceptions"
 	"github.com/tryanzu/core/modules/user"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"time"
 )
 
-func (self *User) AcquireBadge(id bson.ObjectId, validation bool) error {
+func (self *User) AcquireBadge(id primitive.ObjectID, validation bool) error {
 
 	var badge BadgeModel
 
+	ctx := context.Background()
 	database := deps.Container.Mgo()
 	usr := self.user.Data()
 
 	// Find the badge using it's id
-	err := database.C("badges").Find(bson.M{"_id": id}).One(&badge)
+	err := database.Collection("badges").FindOne(ctx, bson.M{"_id": id}).Decode(&badge)
 
 	if err != nil {
 		return exceptions.NotFound{"Invalid badge id, not found."}
@@ -39,7 +42,7 @@ func (self *User) AcquireBadge(id bson.ObjectId, validation bool) error {
 			return exceptions.OutOfBounds{"Not enough level."}
 		}
 
-		if badge.RequiredBadge.Valid() {
+		if !badge.RequiredBadge.IsZero() {
 
 			var user_valid bool = false
 
@@ -65,7 +68,7 @@ func (self *User) AcquireBadge(id bson.ObjectId, validation bool) error {
 		Date: time.Now(),
 	}
 
-	err = database.C("users").Update(bson.M{"_id": usr.Id}, bson.M{"$push": bson.M{"gaming.badges": badge_push}})
+	_, err = database.Collection("users").UpdateOne(ctx, bson.M{"_id": usr.Id}, bson.M{"$push": bson.M{"gaming.badges": badge_push}})
 
 	if err != nil {
 		panic(err)

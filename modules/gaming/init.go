@@ -1,6 +1,7 @@
 package gaming
 
 import (
+	"context"
 	"encoding/json"
 	"io/ioutil"
 	"log"
@@ -10,7 +11,8 @@ import (
 	"github.com/tryanzu/core/modules/exceptions"
 	"github.com/tryanzu/core/modules/feed"
 	"github.com/tryanzu/core/modules/user"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func Boot(file string) *Module {
@@ -46,10 +48,10 @@ func (self *Module) Get(usr interface{}) *User {
 	module := self
 
 	switch usr.(type) {
-	case bson.ObjectId:
+	case primitive.ObjectID:
 
 		// Use user module reference to get the user and then create the user gaming instance
-		user_obj, err := self.User.Get(usr.(bson.ObjectId))
+		user_obj, err := self.User.Get(usr.(primitive.ObjectID))
 
 		if err != nil {
 			panic(err)
@@ -76,10 +78,10 @@ func (self *Module) Post(post interface{}) *Post {
 	module := self
 
 	switch post.(type) {
-	case bson.ObjectId:
+	case primitive.ObjectID:
 
 		// Use user module reference to get the user and then create the user gaming instance
-		post_object, err := self.Feed.Post(post.(bson.ObjectId))
+		post_object, err := self.Feed.Post(post.(primitive.ObjectID))
 
 		if err != nil {
 			panic(err)
@@ -103,11 +105,17 @@ func (self *Module) Post(post interface{}) *Post {
 // Get gamification model with badges
 func (self *Module) GetRules() Rules {
 
+	ctx := context.Background()
 	database := deps.Container.Mgo()
 	rules := self.Rules
 
-	err := database.C("badges").Find(nil).All(&rules.Badges)
+	cursor, err := database.Collection("badges").Find(ctx, bson.M{})
+	if err != nil {
+		panic(err)
+	}
+	defer cursor.Close(ctx)
 
+	err = cursor.All(ctx, &rules.Badges)
 	if err != nil {
 		panic(err)
 	}

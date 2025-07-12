@@ -1,13 +1,16 @@
 package content
 
 import (
+	"context"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/tryanzu/core/core/common"
 	"github.com/tryanzu/core/core/events"
 	"github.com/tryanzu/core/core/user"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 var (
@@ -55,20 +58,29 @@ func preReplaceMentionTags(d deps, c Parseable) (processed Parseable, err error)
 	}
 
 	var targets []struct {
-		ID       bson.ObjectId `bson:"_id"`
+		ID       primitive.ObjectID `bson:"_id"`
 		Username string        `bson:"username"`
 	}
 
-	err = d.Mgo().C("users").Find(bson.M{"username": bson.M{"$in": users}}).Select(bson.M{"username": 1}).All(&targets)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	
+	cursor, err := d.Mgo().Collection("users").Find(ctx, bson.M{"username": bson.M{"$in": users}})
+	if err != nil {
+		return
+	}
+	defer cursor.Close(ctx)
+	
+	err = cursor.All(ctx, &targets)
 	if err != nil || len(targets) == 0 {
 		return
 	}
 
 	meta := processed.GetParseableMeta()
-	relatedID := meta["id"].(bson.ObjectId)
+	relatedID := meta["id"].(primitive.ObjectID)
 	related := meta["related"].(string)
-	userID := meta["user_id"].(bson.ObjectId)
-	usersID := []bson.ObjectId{userID}
+	userID := meta["user_id"].(primitive.ObjectID)
+	usersID := []primitive.ObjectID{userID}
 
 	var refs []Mention
 	for _, usr := range targets {
@@ -109,8 +121,9 @@ func postReplaceMentionTags(d deps, c Parseable, list tags) (processed Parseable
 
 	content := processed.GetContent()
 	for _, tag := range mentions {
-		if id := tag.Params[0]; bson.IsObjectIdHex(id) {
-			name, exists := users[bson.ObjectIdHex(id)]
+		if id := tag.Params[0]; primitive.IsValidObjectID(id) {
+			oidHex, _ := primitive.ObjectIDFromHex(id)
+			name, exists := users[oidHex]
 			if exists == false {
 				continue
 			}
@@ -126,7 +139,7 @@ func postReplaceMentionTags(d deps, c Parseable, list tags) (processed Parseable
 
 // Mention ref.
 type Mention struct {
-	UserID   bson.ObjectId
+	UserID   primitive.ObjectID
 	Username string
 	Comment  string
 	Original string

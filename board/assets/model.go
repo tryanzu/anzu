@@ -1,6 +1,7 @@
 package assets
 
 import (
+	"context"
 	"crypto/md5"
 	"crypto/tls"
 	"encoding/hex"
@@ -13,11 +14,12 @@ import (
 
 	"github.com/getsentry/raven-go"
 	"github.com/mitchellh/goamz/s3"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Asset struct {
-	ID       bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
+	ID       primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
 	Original string        `bson:"original" json:"original"`
 	Hosted   string        `bson:"hosted" json:"hosted"`
 	DataType string        `bson:"dataType,omitempty" json:"dataType,omitempty"`
@@ -42,7 +44,9 @@ func (asset Asset) URL() string {
 }
 
 func (asset Asset) useRemote(deps Deps, reason string) (err error) {
-	err = deps.Mgo().C("remote_assets").UpdateId(asset.ID, bson.M{
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	_, err = deps.Mgo().Collection("remote_assets").UpdateOne(ctx, bson.M{"_id": asset.ID}, bson.M{
 		"$set": bson.M{
 			"status":     "remote",
 			"updated_at": time.Now(),
@@ -58,7 +62,9 @@ func (asset Asset) useRemote(deps Deps, reason string) (err error) {
 }
 
 func (asset Asset) useHosted(deps Deps, url string) (err error) {
-	err = deps.Mgo().C("remote_assets").UpdateId(asset.ID, bson.M{
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	_, err = deps.Mgo().Collection("remote_assets").UpdateOne(ctx, bson.M{"_id": asset.ID}, bson.M{
 		"$set": bson.M{
 			"status":     "hosted",
 			"updated_at": time.Now(),
@@ -71,7 +77,9 @@ func (asset Asset) useHosted(deps Deps, url string) (err error) {
 }
 
 func (asset Asset) useRepeated(deps Deps, ref Asset) (err error) {
-	err = deps.Mgo().C("remote_assets").UpdateId(asset.ID, bson.M{
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	_, err = deps.Mgo().Collection("remote_assets").UpdateOne(ctx, bson.M{"_id": asset.ID}, bson.M{
 		"$set": bson.M{
 			"status":     "repeated",
 			"updated_at": time.Now(),

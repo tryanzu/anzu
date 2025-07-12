@@ -16,7 +16,9 @@ import (
 	coreUser "github.com/tryanzu/core/core/user"
 	"github.com/tryanzu/core/deps"
 	"github.com/tryanzu/core/modules/user"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 var (
@@ -35,7 +37,8 @@ func CleanupDuplicatedEmails(c *ishell.Context) {
 	defer c.ShowPrompt(true)
 
 	db := deps.Container.Mgo()
-	pipe := db.C("users").Pipe([]bson.M{
+	ctx := context.Background()
+	cursor, err := db.Collection("users").Aggregate(ctx, []bson.M{
 		{
 			"$match": bson.M{
 				"email":      bson.M{"$exists": true, "$ne": ""},
@@ -54,18 +57,36 @@ func CleanupDuplicatedEmails(c *ishell.Context) {
 				"count": bson.M{"$gte": 2},
 			},
 		},
-	}).Iter()
+	})
+	if err != nil {
+		c.Println("Could not get aggregation cursor", err)
+		return
+	}
+	defer cursor.Close(ctx)
 
 	var duplicate struct {
 		Email string          `bson:"_id"`
-		List  []bson.ObjectId `bson:"uniqueIds"`
+		List  []primitive.ObjectID `bson:"uniqueIds"`
 		Count int             `bson:"count"`
 	}
 
-	for pipe.Next(&duplicate) {
+	for cursor.Next(ctx) {
+		err := cursor.Decode(&duplicate)
+		if err != nil {
+			c.Println("Could not decode duplicate", err)
+			continue
+		}
+		
 		var users []user.UserPrivate
 
-		err := db.C("users").Find(bson.M{"_id": bson.M{"$in": duplicate.List}}).Sort("-created_at").All(&users)
+		userCursor, err := db.Collection("users").Find(ctx, bson.M{"_id": bson.M{"$in": duplicate.List}})
+		if err != nil {
+			c.Println("Could not get list", err)
+			continue
+		}
+		
+		err = userCursor.All(ctx, &users)
+		userCursor.Close(ctx)
 		if err != nil {
 			c.Println("Could not get list", err)
 			continue
@@ -134,19 +155,20 @@ func CleanupDuplicatedEmails(c *ishell.Context) {
 				continue
 			}
 
-			_, err := db.C("users_deleted_list").UpsertId(usr.Id, usr)
+			upsert := true
+			_, err := db.Collection("users_deleted_list").ReplaceOne(ctx, bson.M{"_id": usr.Id}, usr, &options.ReplaceOptions{Upsert: &upsert})
 			if err != nil {
 				c.Println("Could not backup user", err)
 				continue
 			}
 
-			err = db.C("users_deleted_list").UpdateId(usr.Id, bson.M{"$set": bson.M{"kept_user_id": id}})
+			_, err = db.Collection("users_deleted_list").UpdateOne(ctx, bson.M{"_id": usr.Id}, bson.M{"$set": bson.M{"kept_user_id": id}})
 			if err != nil {
 				c.Println("Could not backup user", err)
 				continue
 			}
 
-			err = db.C("users").RemoveId(usr.Id)
+			_, err = db.Collection("users").DeleteOne(ctx, bson.M{"_id": usr.Id})
 			if err != nil {
 				c.Println("Could not remove user", err)
 				continue
@@ -161,46 +183,69 @@ func RunAnzuGarbageCollector(c *ishell.Context) {
 	defer c.ShowPrompt(true)
 
 	db := deps.Container.Mgo()
-	query := db.C("users").Find(bson.M{"validated": false, "scheduled_delete": bson.M{"$exists": false}})
-	iter := query.Iter()
+	ctx := context.Background()
+	cursor, err := db.Collection("users").Find(ctx, bson.M{"validated": false, "scheduled_delete": bson.M{"$exists": false}})
+	if err != nil {
+		c.Println("Could not find users", err)
+		return
+	}
+	defer cursor.Close(ctx)
 	var usr coreUser.User
-	for iter.Next(&usr) {
-		err := usr.EnforceAccountValidationEmail()
+	for cursor.Next(ctx) {
+		err := cursor.Decode(&usr)
+		if err != nil {
+			c.Println("Could not decode user", err)
+			continue
+		}
+		err = usr.EnforceAccountValidationEmail()
 		if err != nil {
 			c.Println("enforce account validation email failed", err)
 			continue
 		}
-		err = db.C("users").UpdateId(usr.Id, bson.M{"$set": bson.M{"scheduled_delete": time.Now().Add(time.Hour * 24)}})
+		_, err = db.Collection("users").UpdateOne(ctx, bson.M{"_id": usr.Id}, bson.M{"$set": bson.M{"scheduled_delete": time.Now().Add(time.Hour * 24)}})
 		if err != nil {
 			c.Println("scheduled delete failed", err)
 			continue
 		}
 	}
-	query = db.C("users").Find(bson.M{"scheduled_delete": bson.M{"$lte": time.Now()}})
-	count, _ := query.Count()
-	iter = query.Iter()
+	count, err := db.Collection("users").CountDocuments(ctx, bson.M{"scheduled_delete": bson.M{"$lte": time.Now()}})
+	if err != nil {
+		c.Println("Could not count documents", err)
+		return
+	}
+	cursor, err = db.Collection("users").Find(ctx, bson.M{"scheduled_delete": bson.M{"$lte": time.Now()}})
+	if err != nil {
+		c.Println("Could not find users", err)
+		return
+	}
+	defer cursor.Close(ctx)
 	c.Printf("about to delete %v users", count)
-	for iter.Next(&usr) {
+	for cursor.Next(ctx) {
+		err := cursor.Decode(&usr)
+		if err != nil {
+			c.Println("Could not decode user", err)
+			continue
+		}
 		// lets move the user to another collection of deleted users.
-		err := db.C("deleted_users").Insert(&usr)
+		_, err = db.Collection("deleted_users").InsertOne(ctx, &usr)
 		if err != nil {
 			c.Printf("something went wrong deleting user %v: %v", usr.Id, err)
 			continue
 		}
-		err = db.C("users").RemoveId(usr.Id)
+		_, err = db.Collection("users").DeleteOne(ctx, bson.M{"_id": usr.Id})
 		if err != nil {
 			c.Printf("something went wrong deleting user %v: %v", usr.Id, err)
 		}
-		info, err := db.C("comments").UpdateAll(bson.M{"user_id": usr.Id}, bson.M{"deleted_at": time.Now()})
+		result, err := db.Collection("comments").UpdateMany(ctx, bson.M{"user_id": usr.Id}, bson.M{"$set": bson.M{"deleted_at": time.Now()}})
 		if err != nil {
 			c.Printf("something went wrong deleting comments %v: %v", usr.Id, err)
 		}
-		c.Printf("removed %v comments from %v", info.Updated, usr.Id)
-		info, err = db.C("posts").UpdateAll(bson.M{"user_id": usr.Id}, bson.M{"deleted_at": time.Now()})
+		c.Printf("removed %v comments from %v", result.ModifiedCount, usr.Id)
+		result, err = db.Collection("posts").UpdateMany(ctx, bson.M{"user_id": usr.Id}, bson.M{"$set": bson.M{"deleted_at": time.Now()}})
 		if err != nil {
 			c.Printf("something went wrong deleting comments %v: %v", usr.Id, err)
 		}
-		c.Printf("removed %v posts from %v", info.Updated, usr.Id)
+		c.Printf("removed %v posts from %v", result.ModifiedCount, usr.Id)
 		err = emailx.Validate(usr.Email)
 		if err == nil {
 			usr.UnvalidatedAccountDeletion()
@@ -215,16 +260,36 @@ func RebuildTrustNet(c *ishell.Context) {
 	db := deps.Container.Mgo()
 	cache := deps.Container.CacheProvider
 	now := time.Now()
-	query := db.C("users").Find(bson.M{"validated": true, "last_seen_at": bson.M{"$gte": time.Date(2020, 1, 1, 12, 0, 0, 0, now.Location())}}).Iter()
+	ctx := context.Background()
+	cursor, err := db.Collection("users").Find(ctx, bson.M{"validated": true, "last_seen_at": bson.M{"$gte": time.Date(2020, 1, 1, 12, 0, 0, 0, now.Location())}})
+	if err != nil {
+		log.Error("Could not find users:", err)
+		return
+	}
+	defer cursor.Close(ctx)
 	var usr coreUser.User
-	for query.Next(&usr) {
-		usrVotes := db.C("votes").Find(bson.M{"user_id": usr.Id}).Iter()
+	for cursor.Next(ctx) {
+		err := cursor.Decode(&usr)
+		if err != nil {
+			log.Error("Could not decode user:", err)
+			continue
+		}
+		votesCursor, err := db.Collection("votes").Find(ctx, bson.M{"user_id": usr.Id})
+		if err != nil {
+			log.Error("Could not find votes:", err)
+			continue
+		}
 		var vote votes.Vote
-		for usrVotes.Next(&vote) {
+		for votesCursor.Next(ctx) {
+			err := votesCursor.Decode(&vote)
+			if err != nil {
+				log.Error("Could not decode vote:", err)
+				continue
+			}
 			var c comments.Comment
 			if vote.Type == "comment" {
 				if vote.Value == "useful" || vote.Value == "goodExplanation" || vote.Value == "upvote" {
-					err := db.C("comments").FindId(vote.RelatedID).One(&c)
+					err := db.Collection("comments").FindOne(ctx, bson.M{"_id": vote.RelatedID}).Decode(&c)
 					if err == nil {
 						cmd := cache.XAdd(context.Background(), &redis.XAddArgs{
 							Stream: "trustnet.assignment",
@@ -239,5 +304,6 @@ func RebuildTrustNet(c *ishell.Context) {
 				}
 			}
 		}
+		votesCursor.Close(ctx)
 	}
 }

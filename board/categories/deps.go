@@ -1,9 +1,9 @@
 package categories
 
 import (
-	"gopkg.in/mgo.v2"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type deps interface {
-	Mgo() *mgo.Database
+	Mgo() *mongo.Database
 }

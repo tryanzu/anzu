@@ -6,16 +6,21 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/tryanzu/core/core/user"
 	"github.com/tryanzu/core/deps"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func (this API) ResendConfirmation(c *gin.Context) {
-	id := c.MustGet("userID").(bson.ObjectId)
+	id := c.MustGet("userID").(primitive.ObjectID)
 
 	// Get the user using its id
 	usr, err := user.FindId(deps.Container, id)
 	if err != nil {
-		panic(err)
+		if err == user.UserNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "User not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to retrieve user"})
+		return
 	}
 
 	if usr.Validated {

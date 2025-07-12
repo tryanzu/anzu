@@ -1,11 +1,14 @@
 package common
 
 import (
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
+	"context"
+	
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type Query func(col *mgo.Collection) *mgo.Query
+type Query func(col *mongo.Collection, ctx context.Context) (*mongo.Cursor, error)
 type Scope func(bson.M) bson.M
 
 func SoftDelete(query bson.M) bson.M {
@@ -27,7 +30,7 @@ func FieldExists(field string, exists bool) Scope {
 	}
 }
 
-func WithinID(list []bson.ObjectId) Scope {
+func WithinID(list []primitive.ObjectID) Scope {
 	return func(query bson.M) bson.M {
 		query["_id"] = bson.M{"$in": list}
 		return query

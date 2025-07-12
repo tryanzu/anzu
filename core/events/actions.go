@@ -3,10 +3,10 @@ package events
 import (
 	"github.com/tryanzu/core/board/legacy/model"
 	"github.com/tryanzu/core/board/votes"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func PostNew(id bson.ObjectId) Event {
+func PostNew(id primitive.ObjectID) Event {
 	return Event{
 		Name: POSTS_NEW,
 		Params: map[string]interface{}{
@@ -15,7 +15,7 @@ func PostNew(id bson.ObjectId) Event {
 	}
 }
 
-func PostView(sign UserSign, id bson.ObjectId) Event {
+func PostView(sign UserSign, id primitive.ObjectID) Event {
 	return Event{
 		Name: POST_VIEW,
 		Sign: &sign,
@@ -25,7 +25,7 @@ func PostView(sign UserSign, id bson.ObjectId) Event {
 	}
 }
 
-func PostsReached(sign UserSign, list []bson.ObjectId) Event {
+func PostsReached(sign UserSign, list []primitive.ObjectID) Event {
 	return Event{
 		Name: POSTS_REACHED,
 		Sign: &sign,
@@ -35,7 +35,7 @@ func PostsReached(sign UserSign, list []bson.ObjectId) Event {
 	}
 }
 
-func PostComment(id bson.ObjectId) Event {
+func PostComment(id primitive.ObjectID) Event {
 	return Event{
 		Name: POSTS_COMMENT,
 		Params: map[string]interface{}{
@@ -44,7 +44,7 @@ func PostComment(id bson.ObjectId) Event {
 	}
 }
 
-func NewFlag(id bson.ObjectId) Event {
+func NewFlag(id primitive.ObjectID) Event {
 	return Event{
 		Name: NEW_FLAG,
 		Params: map[string]interface{}{
@@ -53,7 +53,7 @@ func NewFlag(id bson.ObjectId) Event {
 	}
 }
 
-func NewBanFlag(userID bson.ObjectId) Event {
+func NewBanFlag(userID primitive.ObjectID) Event {
 	return Event{
 		Name: NEW_BAN,
 		Params: map[string]interface{}{
@@ -62,7 +62,7 @@ func NewBanFlag(userID bson.ObjectId) Event {
 	}
 }
 
-func DeletePost(sign UserSign, id bson.ObjectId) Event {
+func DeletePost(sign UserSign, id primitive.ObjectID) Event {
 	return Event{
 		Name: POST_DELETED,
 		Sign: &sign,
@@ -72,7 +72,7 @@ func DeletePost(sign UserSign, id bson.ObjectId) Event {
 	}
 }
 
-func DeleteComment(sign UserSign, postId, id bson.ObjectId) Event {
+func DeleteComment(sign UserSign, postId, id primitive.ObjectID) Event {
 	return Event{
 		Name: COMMENT_DELETE,
 		Sign: &sign,
@@ -83,7 +83,7 @@ func DeleteComment(sign UserSign, postId, id bson.ObjectId) Event {
 	}
 }
 
-func UpdateComment(sign UserSign, postId, id bson.ObjectId) Event {
+func UpdateComment(sign UserSign, postId, id primitive.ObjectID) Event {
 	return Event{
 		Name: COMMENT_UPDATE,
 		Sign: &sign,
@@ -114,7 +114,7 @@ func RawEmit(channel, event string, params map[string]interface{}) Event {
 	}
 }
 
-func TrackMention(userID, relatedID bson.ObjectId, related string, usersID []bson.ObjectId) Event {
+func TrackMention(userID, relatedID primitive.ObjectID, related string, usersID []primitive.ObjectID) Event {
 	return Event{
 		Name: NEW_MENTION,
 		Params: map[string]interface{}{

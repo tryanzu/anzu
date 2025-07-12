@@ -9,10 +9,9 @@ import (
 	"github.com/op/go-logging"
 	uuid "github.com/satori/go.uuid"
 	cnf "github.com/tryanzu/core/core/config"
-	"github.com/tryanzu/core/deps"
 	"github.com/tryanzu/core/modules/acl"
 	"github.com/tryanzu/core/modules/security"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"errors"
 	"fmt"
@@ -65,7 +64,7 @@ func (di *MiddlewareAPI) TrustIP() gin.HandlerFunc {
 func (di *MiddlewareAPI) ValidateBsonID(name string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param(name)
-		if bson.IsObjectIdHex(id) == false {
+		if !primitive.IsValidObjectID(id) {
 			c.JSON(400, gin.H{"message": "Invalid request, present ID is not valid.", "status": "error"})
 			return
 		}
@@ -76,11 +75,10 @@ func (di *MiddlewareAPI) ValidateBsonID(name string) gin.HandlerFunc {
 func (di *MiddlewareAPI) MongoRefresher() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		// Run everything before refreshing mgo
+		// Run everything
 		c.Next()
 
-		// Refresh the session after the request is done (mongo gets tooooo hot after a while)
-		deps.Container.MgoSession().Refresh()
+		// No need to refresh session with the new MongoDB driver
 	}
 }
 
@@ -172,7 +170,8 @@ func (di *MiddlewareAPI) Authorization() gin.HandlerFunc {
 				// Set the token for further usage
 				c.Set("token", token[7:])
 				c.Set("user_id", claims["user_id"].(string))
-				c.Set("userID", bson.ObjectIdHex(claims["user_id"].(string)))
+				userID, _ := primitive.ObjectIDFromHex(claims["user_id"].(string))
+				c.Set("userID", userID)
 				c.Set("scope", scope)
 			}
 		}

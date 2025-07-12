@@ -1,9 +1,11 @@
 package feed
 
 import (
+	"context"
 	"github.com/tryanzu/core/board/legacy/model"
 	"github.com/tryanzu/core/deps"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"strconv"
 )
 
@@ -92,11 +94,12 @@ func (di *FeedModule) UpdatePostRate(post model.Post) {
 	}
 }
 
-func (di *FeedModule) getPostReachViews(id bson.ObjectId) (int, int) {
+func (di *FeedModule) getPostReachViews(id primitive.ObjectID) (int, int) {
 
 	var reached, viewed int
 
 	// Services we will need along the runtime
+	ctx := context.Background()
 	database := deps.Container.Mgo()
 	redis := di.CacheService
 
@@ -104,7 +107,8 @@ func (di *FeedModule) getPostReachViews(id bson.ObjectId) (int, int) {
 
 	if list_count == nil {
 
-		reached, _ = database.C("activity").Find(bson.M{"list": id, "event": "feed"}).Count()
+		reached64, _ := database.Collection("activity").CountDocuments(ctx, bson.M{"list": id, "event": "feed"})
+		reached = int(reached64)
 		err := redis.Set("feed:count:list:"+id.Hex(), strconv.Itoa(reached), 1800, 0, false, false)
 
 		if err != nil {
@@ -119,7 +123,8 @@ func (di *FeedModule) getPostReachViews(id bson.ObjectId) (int, int) {
 
 	if viewed_count == nil {
 
-		viewed, _ = database.C("activity").Find(bson.M{"related_id": id, "event": "post"}).Count()
+		viewed64, _ := database.Collection("activity").CountDocuments(ctx, bson.M{"related_id": id, "event": "post"})
+		viewed = int(viewed64)
 		err := redis.Set("feed:count:post:"+id.Hex(), strconv.Itoa(viewed), 1800, 0, false, false)
 
 		if err != nil {

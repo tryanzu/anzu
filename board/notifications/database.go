@@ -1,24 +1,32 @@
 package notifications
 
 import (
-	"github.com/tryanzu/core/deps"
-	"gopkg.in/mgo.v2/bson"
+	"context"
 	"time"
+
+	"github.com/tryanzu/core/deps"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func databaseWorker(n int) {
 	for n := range Database {
-		n.Id = bson.NewObjectId()
+		n.Id = primitive.NewObjectID()
 		n.Seen = false
 		n.Created = time.Now()
 		n.Updated = time.Now()
 
-		err := deps.Container.Mgo().C("notifications").Insert(n)
+		_, err := deps.Container.Mgo().Collection("notifications").InsertOne(context.Background(), n)
 		if err != nil {
 			panic(err)
 		}
 
-		err = deps.Container.Mgo().C("users").Update(bson.M{"_id": n.UserId}, bson.M{"$inc": bson.M{"notifications": 1}})
+		_, err = deps.Container.Mgo().Collection("users").UpdateOne(
+			context.Background(),
+			bson.M{"_id": n.UserId},
+			bson.M{"$inc": bson.M{"notifications": 1}},
+		)
 		if err != nil {
 			panic(err)
 		}
@@ -27,7 +35,8 @@ func databaseWorker(n int) {
 			Count int `bson:"notifications"`
 		}
 
-		err = deps.Container.Mgo().C("users").FindId(n.UserId).Select(bson.M{"notifications": 1}).One(&u)
+		opts := options.FindOne().SetProjection(bson.M{"notifications": 1})
+		err = deps.Container.Mgo().Collection("users").FindOne(context.Background(), bson.M{"_id": n.UserId}, opts).Decode(&u)
 		if err != nil {
 			panic(err)
 		}

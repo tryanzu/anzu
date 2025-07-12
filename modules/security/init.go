@@ -1,12 +1,15 @@
 package security
 
 import (
+	"context"
+	"time"
+
 	"github.com/tryanzu/core/deps"
 	"github.com/tryanzu/core/modules/user"
 	"github.com/xuyu/goredis"
-	"gopkg.in/mgo.v2/bson"
-
-	"time"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type Module struct {
@@ -14,49 +17,53 @@ type Module struct {
 }
 
 func (module Module) TrustUserIP(address string, usr *user.One) bool {
+	ctx := context.Background()
 	var (
 		ip  IpAddress
 		err error
 	)
-	mgo := deps.Container.Mgo()
+	database := deps.Container.Mgo()
 	user := usr.Data()
 
 	// The address haven't been trusted before so we need to lookup
-	err = mgo.C("trusted_addresses").Find(bson.M{"address": address}).One(&ip)
+	trustedAddressesCollection := database.Collection("trusted_addresses")
+	err = trustedAddressesCollection.FindOne(ctx, bson.M{"address": address}).Decode(&ip)
 	if err != nil {
-		trusted := &IpAddress{
-			Address: address,
-			Users:   []bson.ObjectId{user.Id},
-			Banned:  user.Banned,
+		if err == mongo.ErrNoDocuments {
+			trusted := &IpAddress{
+				Address: address,
+				Users:   []primitive.ObjectID{user.Id},
+				Banned:  user.Banned,
+			}
+			_, err = trustedAddressesCollection.InsertOne(ctx, trusted)
+			return err != nil && !user.Banned
 		}
-		err = mgo.C("trusted_addresses").Insert(trusted)
-		return err != nil && !user.Banned
+		return false
 	}
 
 	if ip.Banned && user.Banned {
 		return false
 	} else if !ip.Banned && user.Banned {
-
 		// In case the ip is not banned but the user is then update it
-		err = mgo.C("trusted_addresses").Update(
-			bson.M{"_id": ip.Id},
-			bson.M{"$set": bson.M{
-				"banned":    true,
-				"banned_at": time.Now(),
-			}, "$push": bson.M{"banned_reason": user.UserName + " has propagated the ban to the IP address."}},
-		)
+		filter := bson.M{"_id": ip.Id}
+		update := bson.M{"$set": bson.M{
+			"banned":    true,
+			"banned_at": time.Now(),
+		}, "$push": bson.M{"banned_reason": user.UserName + " has propagated the ban to the IP address."}}
+		_, err = trustedAddressesCollection.UpdateOne(ctx, filter, update)
 		if err != nil {
 			panic(err)
 		}
 		return false
 	} else if ip.Banned && !user.Banned {
-
 		// In case the ip is banned but the user is not then update it
-		err = mgo.C("users").Update(bson.M{"_id": user.Id}, bson.M{"$set": bson.M{"banned": true, "banned_at": time.Now()}, "$push": bson.M{"banned_reason": user.UserName + " has accessed from a flagged IP. " + ip.Address}})
+		usersCollection := database.Collection("users")
+		filter := bson.M{"_id": user.Id}
+		update := bson.M{"$set": bson.M{"banned": true, "banned_at": time.Now()}, "$push": bson.M{"banned_reason": user.UserName + " has accessed from a flagged IP. " + ip.Address}}
+		_, err = usersCollection.UpdateOne(ctx, filter, update)
 		if err != nil {
 			panic(err)
 		}
-
 		return false
 	}
 
@@ -64,11 +71,17 @@ func (module Module) TrustUserIP(address string, usr *user.One) bool {
 }
 
 func (module Module) TrustIP(address string) bool {
+	ctx := context.Background()
 	var ip IpAddress
-	err := deps.Container.Mgo().C("trusted_addresses").Find(bson.M{"address": address}).One(&ip)
+	database := deps.Container.Mgo()
+	collection := database.Collection("trusted_addresses")
+	err := collection.FindOne(ctx, bson.M{"address": address}).Decode(&ip)
 
 	if err != nil {
-		return true
+		if err == mongo.ErrNoDocuments {
+			return true
+		}
+		return false
 	}
 
 	if ip.Banned {

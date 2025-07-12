@@ -1,6 +1,12 @@
 package posts
 
 import (
+	"context"
+	"html"
+	"net/http"
+	"regexp"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/tryanzu/core/board/legacy/model"
@@ -8,12 +14,9 @@ import (
 	"github.com/tryanzu/core/core/user"
 	"github.com/tryanzu/core/deps"
 	"github.com/tryanzu/core/modules/helpers"
-	"gopkg.in/mgo.v2/bson"
-
-	"html"
-	"net/http"
-	"regexp"
-	"time"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 var (
@@ -24,7 +27,11 @@ func (this API) Create(c *gin.Context) {
 	var form model.PostForm
 
 	// Check for user token
-	uid := bson.ObjectIdHex(c.MustGet("user_id").(string))
+	uid, err := primitive.ObjectIDFromHex(c.MustGet("user_id").(string))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Invalid user ID"})
+		return
+	}
 
 	// Get the form otherwise tell it has been an error
 	if c.BindWith(&form, binding.JSON) != nil {
@@ -32,7 +39,7 @@ func (this API) Create(c *gin.Context) {
 		return
 	}
 
-	if bson.IsObjectIdHex(form.Category) == false {
+	if _, err := primitive.ObjectIDFromHex(form.Category); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Invalid category id"})
 		return
 	}
@@ -42,11 +49,16 @@ func (this API) Create(c *gin.Context) {
 		return
 	}
 
+	ctx := context.Background()
 	var category model.Category
-	err := deps.Container.Mgo().C("categories").Find(bson.M{
+	categoryID, _ := primitive.ObjectIDFromHex(form.Category)
+	database := deps.Container.Mgo()
+	categoriesCollection := database.Collection("categories")
+	filter := bson.M{
 		"parent": bson.M{"$exists": true},
-		"_id":    bson.ObjectIdHex(form.Category),
-	}).One(&category)
+		"_id":    categoryID,
+	}
+	err = categoriesCollection.FindOne(ctx, filter).Decode(&category)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Invalid category"})
 		return
@@ -85,19 +97,20 @@ func (this API) Create(c *gin.Context) {
 	assets = assetURL.FindAllString(content, -1)
 
 	// Empty participants list - only author included
-	users := []bson.ObjectId{uid}
+	users := []primitive.ObjectID{uid}
 	title := form.Title
 	if len([]rune(title)) > 72 {
 		title = helpers.Truncate(title, 72) + "..."
 	}
 
 	slug := helpers.StrSlug(title)
-	if c, _ := deps.Container.Mgo().C("posts").Find(bson.M{"slug": slug}).Count(); c > 0 {
+	postsCollection := database.Collection("posts")
+	if c, _ := postsCollection.CountDocuments(ctx, bson.M{"slug": slug}); c > 0 {
 		slug = helpers.StrSlugRandom(title)
 	}
 
 	publish := model.Post{
-		Id:         bson.NewObjectId(),
+		Id:         primitive.NewObjectID(),
 		Title:      title,
 		Content:    content,
 		Type:       "category-post",
@@ -105,7 +118,7 @@ func (this API) Create(c *gin.Context) {
 		Comments:   comments,
 		UserId:     uid,
 		Users:      users,
-		Category:   bson.ObjectIdHex(form.Category),
+		Category:   categoryID,
 		Votes:      votes,
 		IsQuestion: form.IsQuestion,
 		Pinned:     form.Pinned,
@@ -124,9 +137,15 @@ func (this API) Create(c *gin.Context) {
 		publish.Deleted = time.Now()
 	}
 
-	err = deps.Container.Mgo().C("posts").Insert(&publish)
+	_, err = postsCollection.InsertOne(ctx, &publish)
 	if err != nil {
-		panic(err)
+		// Check for MongoDB write errors
+		if mongo.IsDuplicateKeyError(err) {
+			c.JSON(http.StatusConflict, gin.H{"status": "error", "message": "Post already exists", "code": 409})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to create post", "code": 500})
+		return
 	}
 
 	// Notify events pool immediately after performing save.

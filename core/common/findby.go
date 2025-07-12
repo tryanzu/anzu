@@ -1,9 +1,10 @@
 package common
 
 import (
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func ById(id bson.ObjectId) bson.M {
+func ById(id primitive.ObjectID) bson.M {
 	return bson.M{"_id": id}
 }

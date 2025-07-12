@@ -3,7 +3,7 @@ package model
 import (
 	"time"
 
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Votes struct {
@@ -13,11 +13,11 @@ type Votes struct {
 }
 
 type Author struct {
-	Id      bson.ObjectId `bson:"id,omitempty" json:"id,omitempty"`
-	Title   string        `bson:"name" json:"name"`
-	Email   string        `bson:"email" json:"email"`
-	Avatar  string        `bson:"avatar" json:"avatar"`
-	Profile interface{}   `bson:"profile,omitempty" json:"profile,omitempty"`
+	Id      primitive.ObjectID `bson:"id,omitempty" json:"id,omitempty"`
+	Title   string             `bson:"name" json:"name"`
+	Email   string             `bson:"email" json:"email"`
+	Avatar  string             `bson:"avatar" json:"avatar"`
+	Profile interface{}        `bson:"profile,omitempty" json:"profile,omitempty"`
 }
 
 type Comments struct {
@@ -32,15 +32,15 @@ type FeedComments struct {
 }
 
 type Comment struct {
-	UserId   bson.ObjectId `bson:"user_id" json:"user_id"`
-	Votes    Votes         `bson:"votes" json:"votes"`
-	User     interface{}   `bson:"-" json:"author,omitempty"`
-	Position int           `bson:"position" json:"position"`
-	Liked    int           `bson:"-" json:"liked,omitempty"`
-	Content  string        `bson:"content" json:"content"`
-	Chosen   bool          `bson:"chosen,omitempty" json:"chosen,omitempty"`
-	Created  time.Time     `bson:"created_at" json:"created_at"`
-	Deleted  time.Time     `bson:"deleted_at" json:"deleted_at"`
+	UserId   primitive.ObjectID `bson:"user_id" json:"user_id"`
+	Votes    Votes              `bson:"votes" json:"votes"`
+	User     interface{}        `bson:"-" json:"author,omitempty"`
+	Position int                `bson:"position" json:"position"`
+	Liked    int                `bson:"-" json:"liked,omitempty"`
+	Content  string             `bson:"content" json:"content"`
+	Chosen   bool               `bson:"chosen,omitempty" json:"chosen,omitempty"`
+	Created  time.Time          `bson:"created_at" json:"created_at"`
+	Deleted  time.Time          `bson:"deleted_at" json:"deleted_at"`
 }
 
 type Components struct {
@@ -70,71 +70,71 @@ type Component struct {
 }
 
 type Post struct {
-	Id                bson.ObjectId   `bson:"_id,omitempty" json:"id,omitempty"`
-	Title             string          `bson:"title" json:"title"`
-	Slug              string          `bson:"slug" json:"slug"`
-	Type              string          `bson:"type" json:"type"`
-	Content           string          `bson:"content" json:"content"`
-	Categories        []string        `bson:"categories" json:"categories"`
-	Category          bson.ObjectId   `bson:"category" json:"category"`
-	Comments          Comments        `bson:"comments" json:"comments"`
-	Author            User            `bson:"-" json:"author,omitempty"`
-	UserId            bson.ObjectId   `bson:"user_id,omitempty" json:"user_id,omitempty"`
-	Users             []bson.ObjectId `bson:"users,omitempty" json:"users,omitempty"`
-	Votes             Votes           `bson:"votes" json:"votes"`
-	Components        Components      `bson:"components,omitempty" json:"components,omitempty"`
-	RelatedComponents []bson.ObjectId `bson:"related_components,omitempty" json:"related_components,omitempty"`
-	Following         bool            `bson:"following,omitempty" json:"following,omitempty"`
-	Pinned            bool            `bson:"pinned,omitempty" json:"pinned,omitempty"`
-	Lock              bool            `bson:"lock" json:"lock"`
-	IsQuestion        bool            `bson:"is_question" json:"is_question"`
-	Solved            bool            `bson:"solved,omitempty" json:"solved,omitempty"`
-	Liked             int             `bson:"liked,omitempty" json:"liked,omitempty"`
-	Created           time.Time       `bson:"created_at" json:"created_at"`
-	Updated           time.Time       `bson:"updated_at" json:"updated_at"`
-	Deleted           time.Time       `bson:"deleted_at,omitempty" json:"deleted_at,omitempty"`
+	Id                primitive.ObjectID   `bson:"_id,omitempty" json:"id,omitempty"`
+	Title             string               `bson:"title" json:"title"`
+	Slug              string               `bson:"slug" json:"slug"`
+	Type              string               `bson:"type" json:"type"`
+	Content           string               `bson:"content" json:"content"`
+	Categories        []string             `bson:"categories" json:"categories"`
+	Category          primitive.ObjectID   `bson:"category" json:"category"`
+	Comments          Comments             `bson:"comments" json:"comments"`
+	Author            User                 `bson:"-" json:"author,omitempty"`
+	UserId            primitive.ObjectID   `bson:"user_id,omitempty" json:"user_id,omitempty"`
+	Users             []primitive.ObjectID `bson:"users,omitempty" json:"users,omitempty"`
+	Votes             Votes                `bson:"votes" json:"votes"`
+	Components        Components           `bson:"components,omitempty" json:"components,omitempty"`
+	RelatedComponents []primitive.ObjectID `bson:"related_components,omitempty" json:"related_components,omitempty"`
+	Following         bool                 `bson:"following,omitempty" json:"following,omitempty"`
+	Pinned            bool                 `bson:"pinned,omitempty" json:"pinned,omitempty"`
+	Lock              bool                 `bson:"lock" json:"lock"`
+	IsQuestion        bool                 `bson:"is_question" json:"is_question"`
+	Solved            bool                 `bson:"solved,omitempty" json:"solved,omitempty"`
+	Liked             int                  `bson:"liked,omitempty" json:"liked,omitempty"`
+	Created           time.Time            `bson:"created_at" json:"created_at"`
+	Updated           time.Time            `bson:"updated_at" json:"updated_at"`
+	Deleted           time.Time            `bson:"deleted_at,omitempty" json:"deleted_at,omitempty"`
 }
 
 type PostCommentModel struct {
-	Id      bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
-	Title   string        `bson:"title" json:"title"`
-	Slug    string        `bson:"slug" json:"slug"`
-	Comment Comment       `bson:"comment" json:"comment"`
+	Id      primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
+	Title   string             `bson:"title" json:"title"`
+	Slug    string             `bson:"slug" json:"slug"`
+	Comment Comment            `bson:"comment" json:"comment"`
 }
 
 type PostCommentCountModel struct {
-	Id    bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
-	Count int           `bson:"count" json:"count"`
+	Id    primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
+	Count int                `bson:"count" json:"count"`
 }
 
 type CommentAggregated struct {
-	Id      bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
-	Comment Comment       `bson:"comment" json:"comment"`
+	Id      primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
+	Comment Comment            `bson:"comment" json:"comment"`
 }
 
 type CommentsPost struct {
-	Id       bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
-	Comments Comments      `bson:"comments" json:"comments"`
+	Id       primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
+	Comments Comments           `bson:"comments" json:"comments"`
 }
 
 type FeedPost struct {
-	Id         bson.ObjectId   `bson:"_id,omitempty" json:"id,omitempty"`
-	Title      string          `bson:"title" json:"title"`
-	Slug       string          `bson:"slug" json:"slug"`
-	Type       string          `bson:"type" json:"type"`
-	Categories []string        `bson:"categories" json:"categories"`
-	Users      []bson.ObjectId `bson:"users,omitempty" json:"users,omitempty"`
-	Category   bson.ObjectId   `bson:"category" json:"category"`
-	Comments   FeedComments    `bson:"comments" json:"comments"`
-	Author     User            `bson:"author,omitempty" json:"author,omitempty"`
-	UserId     bson.ObjectId   `bson:"user_id,omitempty" json:"user_id,omitempty"`
-	Votes      Votes           `bson:"votes" json:"votes"`
-	Pinned     bool            `bson:"pinned,omitempty" json:"pinned,omitempty"`
-	Solved     bool            `bson:"solved,omitempty" json:"solved,omitempty"`
-	IsQuestion bool            `bson:"is_question" json:"is_question"`
-	Stats      FeedPostStat    `bson:"stats,omitempty" json:"stats"`
-	Created    time.Time       `bson:"created_at" json:"created_at"`
-	Updated    time.Time       `bson:"updated_at" json:"updated_at"`
+	Id         primitive.ObjectID   `bson:"_id,omitempty" json:"id,omitempty"`
+	Title      string               `bson:"title" json:"title"`
+	Slug       string               `bson:"slug" json:"slug"`
+	Type       string               `bson:"type" json:"type"`
+	Categories []string             `bson:"categories" json:"categories"`
+	Users      []primitive.ObjectID `bson:"users,omitempty" json:"users,omitempty"`
+	Category   primitive.ObjectID   `bson:"category" json:"category"`
+	Comments   FeedComments         `bson:"comments" json:"comments"`
+	Author     User                 `bson:"author,omitempty" json:"author,omitempty"`
+	UserId     primitive.ObjectID   `bson:"user_id,omitempty" json:"user_id,omitempty"`
+	Votes      Votes                `bson:"votes" json:"votes"`
+	Pinned     bool                 `bson:"pinned,omitempty" json:"pinned,omitempty"`
+	Solved     bool                 `bson:"solved,omitempty" json:"solved,omitempty"`
+	IsQuestion bool                 `bson:"is_question" json:"is_question"`
+	Stats      FeedPostStat         `bson:"stats,omitempty" json:"stats"`
+	Created    time.Time            `bson:"created_at" json:"created_at"`
+	Updated    time.Time            `bson:"updated_at" json:"updated_at"`
 }
 
 type FeedPostStat struct {

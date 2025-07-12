@@ -2,10 +2,10 @@ package user
 
 import (
 	"github.com/siddontang/ledisdb/ledis"
-	"gopkg.in/mgo.v2"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type deps interface {
-	Mgo() *mgo.Database
+	Mgo() *mongo.Database
 	LedisDB() *ledis.DB
 }

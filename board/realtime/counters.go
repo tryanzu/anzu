@@ -3,7 +3,7 @@ package realtime
 import (
 	"time"
 
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func countClientsWorker() {
@@ -37,7 +37,7 @@ func countClientsWorker() {
 				continue
 			}
 			counters := make(map[string]interface{}, len(channels))
-			unique := map[bson.ObjectId]struct{}{}
+			unique := map[primitive.ObjectID]struct{}{}
 			peers := [][2]string{}
 			for name, listeners := range channels {
 				counters[name] = len(listeners)

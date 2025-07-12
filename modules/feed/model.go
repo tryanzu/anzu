@@ -1,18 +1,19 @@
 package feed
 
 import (
-	"gopkg.in/mgo.v2/bson"
 	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type LightPostModel struct {
-	Id         bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
-	Title      string        `bson:"title" json:"title"`
-	Slug       string        `bson:"slug" json:"slug"`
-	Content    string        `bson:"content" json:"content"`
-	Type       string        `bson:"type" json:"type"`
-	Category   bson.ObjectId `bson:"category" json:"category"`
-	UserId     bson.ObjectId `bson:"user_id,omitempty" json:"user_id,omitempty"`
+	Id         primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
+	Title      string             `bson:"title" json:"title"`
+	Slug       string             `bson:"slug" json:"slug"`
+	Content    string             `bson:"content" json:"content"`
+	Type       string             `bson:"type" json:"type"`
+	Category   primitive.ObjectID `bson:"category" json:"category"`
+	UserId     primitive.ObjectID `bson:"user_id,omitempty" json:"user_id,omitempty"`
 	Pinned     bool          `bson:"pinned,omitempty" json:"pinned,omitempty"`
 	IsQuestion bool          `bson:"is_question,omitempty" json:"is_question"`
 	Solved     bool          `bson:"solved,omitempty" json:"solved,omitempty"`
@@ -23,12 +24,12 @@ type LightPostModel struct {
 }
 
 type PostCommentModel struct {
-	Id      bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
+	Id      primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
 	Comment Comment       `bson:"comment" json:"comment,omitempty"`
 }
 
 type PostCommentCountModel struct {
-	Id    bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
+	Id    primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
 	Count int           `bson:"count" json:"count"`
 }
 

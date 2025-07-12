@@ -7,24 +7,24 @@ import (
 	posts "github.com/tryanzu/core/board/posts"
 	"github.com/tryanzu/core/core/common"
 	"github.com/tryanzu/core/core/user"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Notification struct {
-	Id        bson.ObjectId   `bson:"_id,omitempty" json:"id,omitempty"`
-	UserId    bson.ObjectId   `bson:"user_id" json:"user_id"`
-	Type      string          `bson:"type" json:"type"`
-	RelatedId bson.ObjectId   `bson:"related_id" json:"related_id"`
-	Users     []bson.ObjectId `bson:"users" json:"users"`
-	Seen      bool            `bson:"seen" json:"seen"`
-	Created   time.Time       `bson:"created_at" json:"created_at"`
-	Updated   time.Time       `bson:"updated_at" json:"updated_at"`
+	Id        primitive.ObjectID   `bson:"_id,omitempty" json:"id,omitempty"`
+	UserId    primitive.ObjectID   `bson:"user_id" json:"user_id"`
+	Type      string               `bson:"type" json:"type"`
+	RelatedId primitive.ObjectID   `bson:"related_id" json:"related_id"`
+	Users     []primitive.ObjectID `bson:"users" json:"users"`
+	Seen      bool                 `bson:"seen" json:"seen"`
+	Created   time.Time            `bson:"created_at" json:"created_at"`
+	Updated   time.Time            `bson:"updated_at" json:"updated_at"`
 }
 
 type Notifications []Notification
 
 func (all Notifications) UsersScope() common.Scope {
-	users := map[bson.ObjectId]bool{}
+	users := map[primitive.ObjectID]bool{}
 	for _, n := range all {
 		users[n.UserId] = true
 		for _, id := range n.Users {
@@ -32,7 +32,7 @@ func (all Notifications) UsersScope() common.Scope {
 		}
 	}
 
-	list := make([]bson.ObjectId, len(users))
+	list := make([]primitive.ObjectID, len(users))
 	index := 0
 	for k, _ := range users {
 		list[index] = k
@@ -43,7 +43,7 @@ func (all Notifications) UsersScope() common.Scope {
 }
 
 func (all Notifications) CommentsScope() common.Scope {
-	comments := map[bson.ObjectId]struct{}{}
+	comments := map[primitive.ObjectID]struct{}{}
 	for _, n := range all {
 		if n.Type != "comment" && n.Type != "mention" {
 			continue
@@ -52,7 +52,7 @@ func (all Notifications) CommentsScope() common.Scope {
 		comments[n.RelatedId] = struct{}{}
 	}
 
-	list := make([]bson.ObjectId, len(comments))
+	list := make([]primitive.ObjectID, len(comments))
 	index := 0
 	for k := range comments {
 		list[index] = k

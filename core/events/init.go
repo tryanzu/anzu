@@ -1,12 +1,14 @@
 package events
 
 import (
+	"context"
 	"time"
 
 	"github.com/op/go-logging"
 	"github.com/tryanzu/core/core/config"
 	"github.com/tryanzu/core/deps"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 var (
@@ -36,7 +38,7 @@ type Event struct {
 }
 
 type eventLog struct {
-	ID       bson.ObjectId          `bson:"_id,omitempty"`
+	ID       primitive.ObjectID          `bson:"_id,omitempty"`
 	Name     string                 `bson:"name"`
 	Sign     *UserSign              `bson:"sign,omitempty"`
 	Params   map[string]interface{} `bson:"params,omitempty"`
@@ -46,19 +48,21 @@ type eventLog struct {
 
 type UserSign struct {
 	Reason string
-	UserID bson.ObjectId
+	UserID primitive.ObjectID
 }
 
 func execHandlers(list []Handler, event Event) {
 	starts := time.Now()
 	ref := eventLog{
-		ID:      bson.NewObjectId(),
+		ID:      primitive.NewObjectID(),
 		Name:    event.Name,
 		Sign:    event.Sign,
 		Params:  event.Params,
 		Created: time.Now(),
 	}
-	err := deps.Container.Mgo().C("events").Insert(&ref)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	_, err := deps.Container.Mgo().Collection("events").InsertOne(ctx, &ref)
 	if err != nil {
 		log.Errorf("events insert failed	err=%v", err)
 		return
@@ -73,7 +77,9 @@ func execHandlers(list []Handler, event Event) {
 	}
 	finished := time.Now()
 	elapsed := finished.Sub(starts)
-	err = deps.Container.Mgo().C("events").UpdateId(ref.ID, bson.M{"$set": bson.M{
+	updateCtx, updateCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer updateCancel()
+	_, err = deps.Container.Mgo().Collection("events").UpdateOne(updateCtx, bson.M{"_id": ref.ID}, bson.M{"$set": bson.M{
 		"finished_at": finished,
 		"elapsed":     elapsed,
 		"handlers":    len(list),

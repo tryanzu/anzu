@@ -1,8 +1,10 @@
 package feed
 
 import (
+	"context"
 	"github.com/tryanzu/core/deps"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"html"
 	"time"
@@ -10,9 +12,9 @@ import (
 )
 
 type Comment struct {
-	Id       bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
-	PostId   bson.ObjectId `bson:"post_id" json:"post_id"`
-	UserId   bson.ObjectId `bson:"user_id" json:"user_id"`
+	Id       primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
+	PostId   primitive.ObjectID `bson:"post_id" json:"post_id"`
+	UserId   primitive.ObjectID `bson:"user_id" json:"user_id"`
 	Votes    Votes         `bson:"votes" json:"votes"`
 	User     interface{}   `bson:"-" json:"author,omitempty"`
 	Position int           `bson:"position" json:"position"`
@@ -77,18 +79,19 @@ func (self *Comment) GetPost() *Post {
 }
 
 func (self *Comment) MarkAsAnswer() {
+	ctx := context.Background()
 
 	// Get database instance
 	database := deps.Container.Mgo()
 
 	// Update straight forward
-	err := database.C("comments").Update(bson.M{"_id": self.Id}, bson.M{"$set": bson.M{"chosen": true}})
+	_, err := database.Collection("comments").UpdateOne(ctx, bson.M{"_id": self.Id}, bson.M{"$set": bson.M{"chosen": true}})
 
 	if err != nil {
 		panic(err)
 	}
 
-	err = database.C("posts").Update(bson.M{"_id": self.PostId}, bson.M{"$set": bson.M{"solved": true}})
+	_, err = database.Collection("posts").UpdateOne(ctx, bson.M{"_id": self.PostId}, bson.M{"$set": bson.M{"solved": true}})
 
 	if err != nil {
 		panic(err)
@@ -96,19 +99,20 @@ func (self *Comment) MarkAsAnswer() {
 }
 
 func (self *Comment) Delete() {
+	ctx := context.Background()
 
 	// Get database instance
 	database := deps.Container.Mgo()
 
 	// Update straight forward
-	err := database.C("comments").Update(bson.M{"_id": self.Id}, bson.M{"$set": bson.M{"deleted_at": time.Now()}})
+	_, err := database.Collection("comments").UpdateOne(ctx, bson.M{"_id": self.Id}, bson.M{"$set": bson.M{"deleted_at": time.Now()}})
 
 	if err != nil {
 		panic(err)
 	}
 
 	// Decrement count of comments
-	err = database.C("posts").Update(bson.M{"_id": self.PostId}, bson.M{"$inc": bson.M{"comments.count": -1}})
+	_, err = database.Collection("posts").UpdateOne(ctx, bson.M{"_id": self.PostId}, bson.M{"$inc": bson.M{"comments.count": -1}})
 
 	if err != nil {
 		panic(err)
@@ -126,12 +130,13 @@ func (self *Comment) Update(c string) {
 		self.Content = html.EscapeString(c)
 
 		// Use content module to run processors chain
+		ctx := context.Background()
 		database := deps.Container.Mgo()
 		content := self.post.DI().Content
 		content.Parse(self)
 
 		// Update database with new content
-		err := database.C("comments").Update(bson.M{"_id": self.Id}, bson.M{"$set": bson.M{"content": self.Content, "updated_at": time.Now()}})
+		_, err := database.Collection("comments").UpdateOne(ctx, bson.M{"_id": self.Id}, bson.M{"$set": bson.M{"content": self.Content, "updated_at": time.Now()}})
 
 		if err != nil {
 			panic(err)

@@ -2,10 +2,10 @@ package gaming
 
 import (
 	"github.com/tryanzu/core/board/legacy/model"
-	"gopkg.in/mgo.v2"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type Deps interface {
-	Mgo() *mgo.Database
+	Mgo() *mongo.Database
 	GamingConfig() *model.GamingRules
 }

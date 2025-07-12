@@ -1,30 +1,32 @@
 package flags
 
 import (
+	"context"
 	"html"
 	"time"
 
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // UpsertComment performs validations before upserting data struct
 func UpsertFlag(d deps, f Flag) (flag Flag, err error) {
-	if f.ID.Valid() == false {
-		f.ID = bson.NewObjectId()
+	ctx := context.TODO()
+	if f.ID.IsZero() {
+		f.ID = primitive.NewObjectID()
 		f.Created = time.Now()
 		f.Status = PENDING
 	}
 
 	f.Content = html.EscapeString(f.Content)
 	f.Updated = time.Now()
-	changes, err := d.Mgo().C("flags").UpsertId(f.ID, bson.M{"$set": f})
+	upsertTrue := true
+	_, err = d.Mgo().Collection("flags").ReplaceOne(ctx, bson.M{"_id": f.ID}, f, &options.ReplaceOptions{Upsert: &upsertTrue})
 	if err != nil {
 		return
 	}
 
-	if changes.Matched == 0 {
-		// When inserted
-	}
 	flag = f
 	return
 }

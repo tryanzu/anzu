@@ -1,10 +1,7 @@
 package content
 
 import (
-	"github.com/mitchellh/goamz/s3"
-	"github.com/tryanzu/core/deps"
-	"gopkg.in/mgo.v2/bson"
-
+	"context"
 	"crypto/md5"
 	"crypto/tls"
 	"encoding/hex"
@@ -17,18 +14,24 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/mitchellh/goamz/s3"
+	"github.com/tryanzu/core/deps"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 var urlsRegexp, _ = regexp.Compile(`http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+`)
 
 type Asset struct {
-	Id       bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
-	Original string        `bson:"original" json:"original"`
-	Hosted   string        `bson:"hosted" json:"hosted"`
-	MD5      string        `bson:"hash" json:"hash"`
-	Status   string        `bson:"status" json:"status"`
-	Created  time.Time     `bson:"created_at" json:"created_at"`
-	Updated  time.Time     `bson:"updated_at" json:"updated_at"`
+	Id       primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
+	Original string             `bson:"original" json:"original"`
+	Hosted   string             `bson:"hosted" json:"hosted"`
+	MD5      string             `bson:"hash" json:"hash"`
+	Status   string             `bson:"status" json:"status"`
+	Created  time.Time          `bson:"created_at" json:"created_at"`
+	Updated  time.Time          `bson:"updated_at" json:"updated_at"`
 }
 
 func (self Module) AsyncAssetDownload(o Parseable) bool {
@@ -51,9 +54,9 @@ func (self Module) AsyncAssetDownload(o Parseable) bool {
 }
 
 func (self Module) RegisterOwnAsset(remoteUrl string, o Parseable) *Asset {
-
+	ctx := context.Background()
 	asset := &Asset{
-		Id:       bson.NewObjectId(),
+		Id:       primitive.NewObjectID(),
 		Original: remoteUrl,
 		Status:   "awaiting",
 		Hosted:   "",
@@ -63,8 +66,8 @@ func (self Module) RegisterOwnAsset(remoteUrl string, o Parseable) *Asset {
 	}
 
 	database := deps.Container.Mgo()
-	err := database.C("remote_assets").Insert(asset)
-
+	collection := database.Collection("remote_assets")
+	_, err := collection.InsertOne(ctx, asset)
 	if err != nil {
 		panic(err)
 	}
@@ -75,6 +78,7 @@ func (self Module) RegisterOwnAsset(remoteUrl string, o Parseable) *Asset {
 		defer module.Errors.Recover()
 
 		// Get the database interface from the DI
+		ctx := context.Background()
 		database := deps.Container.Mgo()
 		amazon_url, err := module.Config.String("amazon.url")
 
@@ -83,11 +87,11 @@ func (self Module) RegisterOwnAsset(remoteUrl string, o Parseable) *Asset {
 		}
 
 		fail := func(msg error) {
-
 			fmt.Println(msg)
-
-			err := database.C("remote_assets").Update(bson.M{"_id": asset.Id}, bson.M{"$set": bson.M{"status": "remote", "hosted": "", "hash": "", "message": msg.Error()}})
-
+			collection := database.Collection("remote_assets")
+			filter := bson.M{"_id": asset.Id}
+			update := bson.M{"$set": bson.M{"status": "remote", "hosted": "", "hash": "", "message": msg.Error()}}
+			_, err := collection.UpdateOne(ctx, filter, update)
 			if err != nil {
 				panic(err)
 			}
@@ -158,22 +162,22 @@ func (self Module) RegisterOwnAsset(remoteUrl string, o Parseable) *Asset {
 			hash := hex.EncodeToString(hasher.Sum(nil))
 
 			var ra Asset
-			err = database.C("remote_assets").Find(bson.M{"hash": hash}).One(&ra)
+			collection := database.Collection("remote_assets")
+			err = collection.FindOne(ctx, bson.M{"hash": hash}).Decode(&ra)
 
 			fmt.Printf("%v hash is %v and err is %v \n", asset.Id.Hex(), hash, err)
 
 			if err == nil {
-
-				err := database.C("remote_assets").Update(bson.M{"_id": asset.Id}, bson.M{"$set": bson.M{"status": "repeated", "hosted": ra.Hosted, "hash": hash}})
-
+				filter := bson.M{"_id": asset.Id}
+				update := bson.M{"$set": bson.M{"status": "repeated", "hosted": ra.Hosted, "hash": hash}}
+				_, err := collection.UpdateOne(ctx, filter, update)
 				if err != nil {
 					panic(err)
 				}
-
-			} else {
-
-				err := database.C("remote_assets").Update(bson.M{"_id": asset.Id}, bson.M{"$set": bson.M{"status": "hosted", "hosted": amazon_url + path, "hash": hash}})
-
+			} else if err == mongo.ErrNoDocuments {
+				filter := bson.M{"_id": asset.Id}
+				update := bson.M{"$set": bson.M{"status": "hosted", "hosted": amazon_url + path, "hash": hash}}
+				_, err := collection.UpdateOne(ctx, filter, update)
 				if err != nil {
 					panic(err)
 				}

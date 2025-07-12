@@ -6,7 +6,7 @@ import (
 
 	"github.com/tryanzu/core/board/assets"
 	"github.com/tryanzu/core/core/common"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 var (
@@ -56,8 +56,9 @@ func postReplaceAssetTags(d deps, c Parseable, list tags) (processed Parseable, 
 
 	content := processed.GetContent()
 	for _, tag := range assetList {
-		if id := tag.Params[0]; bson.IsObjectIdHex(id) {
-			ref, exists := urls[bson.ObjectIdHex(id)]
+		if id := tag.Params[0]; primitive.IsValidObjectID(id) {
+			objID, _ := primitive.ObjectIDFromHex(id)
+			ref, exists := urls[objID]
 			if exists == false {
 				continue
 			}
@@ -73,7 +74,7 @@ func postReplaceAssetTags(d deps, c Parseable, list tags) (processed Parseable, 
 
 // Mention ref.
 type Mention struct {
-	UserID   bson.ObjectId
+	UserID   primitive.ObjectID
 	Username string
 	Comment  string
 	Original string

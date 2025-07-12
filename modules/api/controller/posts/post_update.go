@@ -1,6 +1,7 @@
 package posts
 
 import (
+	"context"
 	"github.com/gin-gonic/gin"
 	"github.com/tryanzu/core/board/legacy/model"
 	"github.com/tryanzu/core/core/content"
@@ -8,7 +9,8 @@ import (
 	"github.com/tryanzu/core/deps"
 	"github.com/tryanzu/core/modules/feed"
 	"github.com/tryanzu/core/modules/helpers"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"html"
 	"net/http"
@@ -20,7 +22,7 @@ func (this API) Update(c *gin.Context) {
 
 	// Get the post using the id
 	id := c.Params.ByName("id")
-	if bson.IsObjectIdHex(id) == false {
+	if !primitive.IsValidObjectID(id) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid request, no valid params.", "status": "error"})
 		return
 	}
@@ -36,21 +38,22 @@ func (this API) Update(c *gin.Context) {
 	}
 
 	// Get the post using the slug
-	uid := c.MustGet("userID").(bson.ObjectId)
-	bid := bson.ObjectIdHex(id)
+	uid := c.MustGet("userID").(primitive.ObjectID)
+	bid, _ := primitive.ObjectIDFromHex(id)
 	post, err := this.Feed.Post(bid)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"message": "Couldnt find the post", "status": "error"})
 		return
 	}
 
-	if bson.IsObjectIdHex(form.Category) == false {
+	if !primitive.IsValidObjectID(form.Category) {
 		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Invalid category id"})
 		return
 	}
 
 	var category model.Category
-	err = deps.Container.Mgo().C("categories").Find(bson.M{"parent": bson.M{"$exists": true}, "_id": bson.ObjectIdHex(form.Category)}).One(&category)
+	categoryID, _ := primitive.ObjectIDFromHex(form.Category)
+	err = deps.Container.Mgo().Collection("categories").FindOne(context.Background(), bson.M{"parent": bson.M{"$exists": true}, "_id": categoryID}).Decode(&category)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Invalid category"})
 		return
@@ -80,7 +83,7 @@ func (this API) Update(c *gin.Context) {
 	slug := post.Slug
 	if form.Title != post.Title {
 		slug := helpers.StrSlug(form.Title)
-		if duplicated, _ := deps.Container.Mgo().C("posts").Find(bson.M{"slug": slug}).Count(); duplicated > 0 {
+		if duplicated, _ := deps.Container.Mgo().Collection("posts").CountDocuments(context.Background(), bson.M{"slug": slug}); duplicated > 0 {
 			slug = helpers.StrSlugRandom(form.Title)
 		}
 
@@ -105,7 +108,7 @@ func (this API) Update(c *gin.Context) {
 			"content":    post.Content,
 			"slug":       slug,
 			"title":      form.Title,
-			"category":   bson.ObjectIdHex(form.Category),
+			"category":   categoryID,
 			"updated_at": time.Now(),
 		},
 	}
@@ -159,7 +162,7 @@ func (this API) Update(c *gin.Context) {
 		query["$set"] = set_directive
 	}
 
-	err = deps.Container.Mgo().C("posts").Update(bson.M{"_id": post.Id}, query)
+	_, err = deps.Container.Mgo().Collection("posts").UpdateOne(context.Background(), bson.M{"_id": post.Id}, query)
 	if err != nil {
 		panic(err)
 	}

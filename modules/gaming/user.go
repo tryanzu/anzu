@@ -1,55 +1,63 @@
 package gaming
 
 import (
+	"context"
 	"time"
 
 	notify "github.com/tryanzu/core/board/notifications"
 	"github.com/tryanzu/core/deps"
 	"github.com/tryanzu/core/modules/user"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // IncreaseUserSwords for given id.
-func IncreaseUserSwords(d Deps, id bson.ObjectId, swords int) error {
+func IncreaseUserSwords(d Deps, id primitive.ObjectID, swords int) error {
 	return increaseUserAttr(d, id, "gaming.swords", swords)
 }
 
 // IncreaseUserCoins for given id.
-func IncreaseUserCoins(d Deps, id bson.ObjectId, coins int) error {
+func IncreaseUserCoins(d Deps, id primitive.ObjectID, coins int) error {
 	return increaseUserAttr(d, id, "gaming.coins", coins)
 }
 
 // IncreaseUserTribute for given id.
-func IncreaseUserTribute(d Deps, id bson.ObjectId, tribute int) error {
+func IncreaseUserTribute(d Deps, id primitive.ObjectID, tribute int) error {
 	return increaseUserAttr(d, id, "gaming.tribute", tribute)
 }
 
-func increaseUserAttr(d Deps, id bson.ObjectId, field string, n int) (err error) {
+func increaseUserAttr(d Deps, id primitive.ObjectID, field string, n int) (err error) {
 	if n == 0 {
 		// ignore.
 		return nil
 	}
+	ctx := context.Background()
 	// Perform update using $inc operator.
-	err = d.Mgo().C("users").Update(bson.M{"_id": id}, bson.M{"$inc": bson.M{field: n}})
+	_, err = d.Mgo().Collection("users").UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$inc": bson.M{field: n}})
 	if err != nil {
 		return
 	}
 
 	// Fix reputation attr when is less than ($lt) 0
-	d.Mgo().C("users").Update(bson.M{"_id": id, field: bson.M{"$lt": 0}}, bson.M{"$set": bson.M{field: 0}})
+	_, err = d.Mgo().Collection("users").UpdateOne(ctx, bson.M{"_id": id, field: bson.M{"$lt": 0}}, bson.M{"$set": bson.M{field: 0}})
+	if err != nil {
+		return
+	}
 	err = syncLevelStats(d, id, false)
 	return
 }
 
 // Reset gamification temporal stuff based on user level.
-func syncLevelStats(d Deps, id bson.ObjectId, forceSync bool) (err error) {
+func syncLevelStats(d Deps, id primitive.ObjectID, forceSync bool) (err error) {
 	var usr struct {
 		G user.UserGaming `bson:"gaming"`
 	}
 
-	users := d.Mgo().C("users")
+	ctx := context.Background()
+	users := d.Mgo().Collection("users")
 	fields := bson.M{"gaming.swords": 1, "gaming.level": 1, "gaming.tribute": 1}
-	err = users.FindId(id).Select(fields).One(&usr)
+	err = users.FindOne(ctx, bson.M{"_id": id}, options.FindOne().SetProjection(fields)).Decode(&usr)
 	if err != nil {
 		return
 	}
@@ -72,7 +80,7 @@ func syncLevelStats(d Deps, id bson.ObjectId, forceSync bool) (err error) {
 			}
 
 			// Update the user gamification facts
-			err = users.Update(bson.M{"_id": id}, bson.M{"$set": update})
+			_, err = users.UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$set": update})
 			if err != nil {
 				return
 			}
@@ -108,6 +116,7 @@ type User struct {
 // Sync user gamification relevant facts
 func (self *User) SyncToLevel(reset bool) {
 
+	ctx := context.Background()
 	database := deps.Container.Mgo()
 	rules := self.di.Rules.Rules
 	user := self.user.Data()
@@ -143,7 +152,7 @@ func (self *User) SyncToLevel(reset bool) {
 				}
 
 				// Update the user gamification facts
-				err := database.C("users").Update(bson.M{"_id": user.Id}, bson.M{"$set": fact_set})
+				_, err := database.Collection("users").UpdateOne(ctx, bson.M{"_id": user.Id}, bson.M{"$set": fact_set})
 
 				if err != nil {
 					panic(err)
@@ -161,6 +170,7 @@ func (self *User) SyncToLevel(reset bool) {
 // Does the daily login logic for the user
 func (self *User) DailyLogin() {
 
+	ctx := context.Background()
 	database := deps.Container.Mgo()
 	rules := self.di.Rules.Rules
 	usr := self.user.Data()
@@ -181,7 +191,7 @@ func (self *User) DailyLogin() {
 		}
 
 		// Update gamificated at
-		err := database.C("users").Update(bson.M{"_id": usr.Id}, bson.M{"$set": bson.M{"gamificated_at": time.Now()}})
+		_, err := database.Collection("users").UpdateOne(ctx, bson.M{"_id": usr.Id}, bson.M{"$set": bson.M{"gamificated_at": time.Now()}})
 
 		if err != nil {
 			panic(err)
@@ -196,8 +206,9 @@ func (self *User) Swords(how_many int) {
 	defer self.di.Errors.Recover()
 
 	// Get the database interface from the DI
+	ctx := context.Background()
 	database := deps.Container.Mgo()
-	err := database.C("users").Update(bson.M{"_id": self.user.Data().Id}, bson.M{"$inc": bson.M{"gaming.swords": how_many}})
+	_, err := database.Collection("users").UpdateOne(ctx, bson.M{"_id": self.user.Data().Id}, bson.M{"$inc": bson.M{"gaming.swords": how_many}})
 
 	if err != nil {
 		panic(err)
@@ -220,9 +231,10 @@ func (self *User) Coins(how_many int) {
 	defer self.di.Errors.Recover()
 
 	// Get the database interface from the DI
+	ctx := context.Background()
 	database := deps.Container.Mgo()
 
-	err := database.C("users").Update(bson.M{"_id": self.user.Data().Id}, bson.M{"$inc": bson.M{"gaming.coins": how_many}})
+	_, err := database.Collection("users").UpdateOne(ctx, bson.M{"_id": self.user.Data().Id}, bson.M{"$inc": bson.M{"gaming.coins": how_many}})
 
 	if err != nil {
 		panic(err)
@@ -245,8 +257,9 @@ func (self *User) Tribute(how_many int) {
 	defer self.di.Errors.Recover()
 
 	// Get the database interface from the DI
+	ctx := context.Background()
 	database := deps.Container.Mgo()
-	err := database.C("users").Update(bson.M{"_id": self.user.Data().Id}, bson.M{"$inc": bson.M{"gaming.tribute": how_many}})
+	_, err := database.Collection("users").UpdateOne(ctx, bson.M{"_id": self.user.Data().Id}, bson.M{"$inc": bson.M{"gaming.tribute": how_many}})
 
 	if err != nil {
 		panic(err)
@@ -268,8 +281,9 @@ func (self *User) Shit(how_many int) {
 	defer self.di.Errors.Recover()
 
 	// Get the database interface from the DI
+	ctx := context.Background()
 	database := deps.Container.Mgo()
-	err := database.C("users").Update(bson.M{"_id": self.user.Data().Id}, bson.M{"$inc": bson.M{"gaming.shit": how_many}})
+	_, err := database.Collection("users").UpdateOne(ctx, bson.M{"_id": self.user.Data().Id}, bson.M{"$inc": bson.M{"gaming.shit": how_many}})
 
 	if err != nil {
 		panic(err)

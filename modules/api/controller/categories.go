@@ -5,14 +5,14 @@ import (
 	"github.com/tryanzu/core/board/categories"
 	"github.com/tryanzu/core/deps"
 	"github.com/tryanzu/core/modules/acl"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Categories paginated fetch.
 func Categories(c *gin.Context) {
 	tree := categories.MakeTree(deps.Container)
 	if sid, exists := c.Get("userID"); exists {
-		uid := sid.(bson.ObjectId)
+		uid := sid.(primitive.ObjectID)
 		auth := acl.LoadedACL.User(uid)
 		tree = tree.CheckWrite(auth.CanWrite)
 	}

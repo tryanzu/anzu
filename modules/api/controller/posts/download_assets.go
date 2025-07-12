@@ -1,10 +1,12 @@
 package posts
 
 import (
+	"context"
 	"github.com/mitchellh/goamz/s3"
 	"github.com/tryanzu/core/board/legacy/model"
 	"github.com/tryanzu/core/deps"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"crypto/tls"
 	"errors"
@@ -16,11 +18,12 @@ import (
 	"strings"
 )
 
-func (this API) savePostImages(from string, post_id bson.ObjectId) error {
+func (this API) savePostImages(from string, post_id primitive.ObjectID) error {
 
 	defer this.Errors.Recover()
 
 	// Get the database interface from the DI
+	ctx := context.Background()
 	database := deps.Container.Mgo()
 	amazon_url, err := this.Config.String("amazon.url")
 
@@ -60,7 +63,7 @@ func (this API) savePostImages(from string, post_id bson.ObjectId) error {
 		}
 
 		extension = filepath.Ext(u.Path)
-		name = bson.NewObjectId().Hex()
+		name = primitive.NewObjectID().Hex()
 
 		if extension != "" {
 
@@ -81,7 +84,7 @@ func (this API) savePostImages(from string, post_id bson.ObjectId) error {
 
 		var post model.Post
 
-		err = database.C("posts").Find(bson.M{"_id": post_id}).One(&post)
+		err = database.Collection("posts").FindOne(ctx, bson.M{"_id": post_id}).Decode(&post)
 
 		if err == nil {
 
@@ -93,7 +96,10 @@ func (this API) savePostImages(from string, post_id bson.ObjectId) error {
 				content := strings.Replace(post_content, from, amazon_url+path, -1)
 
 				// Update the comment
-				database.C("posts").Update(bson.M{"_id": post_id}, bson.M{"$set": bson.M{"content": content}})
+				_, err = database.Collection("posts").UpdateOne(ctx, bson.M{"_id": post_id}, bson.M{"$set": bson.M{"content": content}})
+				if err != nil {
+					panic(err)
+				}
 			}
 
 		}

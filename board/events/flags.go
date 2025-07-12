@@ -9,7 +9,7 @@ import (
 	ev "github.com/tryanzu/core/core/events"
 	"github.com/tryanzu/core/core/user"
 	"github.com/tryanzu/core/deps"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // ErrInvalidIDRef for events with an id.
@@ -20,7 +20,7 @@ func flagHandlers() {
 	ev.On <- ev.EventHandler{
 		On: ev.NEW_FLAG,
 		Handler: func(e ev.Event) error {
-			fid := e.Params["id"].(bson.ObjectId)
+			fid := e.Params["id"].(primitive.ObjectID)
 			f, err := flags.FindId(deps.Container, fid)
 			if err != nil {
 				return ErrInvalidIDRef
@@ -49,7 +49,7 @@ func flagHandlers() {
 	ev.On <- ev.EventHandler{
 		On: ev.NEW_BAN,
 		Handler: func(e ev.Event) error {
-			uid := e.Params["userId"].(bson.ObjectId)
+			uid := e.Params["userId"].(primitive.ObjectID)
 			usr, err := user.FindId(deps.Container, uid)
 			if err != nil {
 				return err
@@ -86,7 +86,7 @@ func banLog(ban user.Ban, user user.User) realtime.M {
 					"reason": ban.Reason,
 				},
 				"at": ban.Created,
-				"id": bson.NewObjectId(),
+				"id": primitive.NewObjectID(),
 			},
 		}.Encode(),
 	}

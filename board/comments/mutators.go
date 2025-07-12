@@ -1,11 +1,14 @@
 package comments
 
 import (
+	"context"
 	"html"
 	"time"
 
 	"github.com/tryanzu/core/core/content"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // Delete comment.
@@ -13,21 +16,23 @@ func Delete(deps Deps, c Comment) error {
 	if c.Deleted != nil {
 		return nil
 	}
-	err := deps.Mgo().C("comments").UpdateId(c.Id, bson.M{
+	ctx := context.TODO()
+	_, err := deps.Mgo().Collection("comments").UpdateOne(ctx, bson.M{"_id": c.Id}, bson.M{
 		"$set": bson.M{"deleted_at": time.Now()},
 	})
 	if err != nil {
 		return err
 	}
 	if c.ReplyType == "post" {
-		err = deps.Mgo().C("posts").UpdateId(c.ReplyTo, bson.M{"$inc": bson.M{"comments.count": -1}})
+		_, err = deps.Mgo().Collection("posts").UpdateOne(ctx, bson.M{"_id": c.ReplyTo}, bson.M{"$inc": bson.M{"comments.count": -1}})
 		return err
 	}
 	return nil
 }
 
-func DeletePostComments(deps Deps, postID bson.ObjectId) error {
-	_, err := deps.Mgo().C("comments").UpdateAll(
+func DeletePostComments(deps Deps, postID primitive.ObjectID) error {
+	ctx := context.TODO()
+	_, err := deps.Mgo().Collection("comments").UpdateMany(ctx,
 		bson.M{"$or": []bson.M{
 			{"post_id": postID},
 			{"reply_to": postID},
@@ -39,12 +44,15 @@ func DeletePostComments(deps Deps, postID bson.ObjectId) error {
 
 // UpsertComment performs validations before upserting data struct
 func UpsertComment(deps Deps, c Comment) (comment Comment, err error) {
-	if c.Id.Valid() == false {
-		c.Id = bson.NewObjectId()
+	ctx := context.TODO()
+	isNew := false
+	if c.Id.IsZero() {
+		c.Id = primitive.NewObjectID()
 		c.Created = time.Now()
+		isNew = true
 	}
 
-	if c.ReplyType == "comment" && c.PostId.Valid() == false {
+	if c.ReplyType == "comment" && c.PostId.IsZero() {
 		id := c.ReplyTo
 		for {
 			var ref Comment
@@ -71,20 +79,21 @@ func UpsertComment(deps Deps, c Comment) (comment Comment, err error) {
 	}
 
 	c = processed.(Comment)
-	changes, err := deps.Mgo().C("comments").UpsertId(c.Id, bson.M{"$set": c})
+	upsertTrue := true
+	_, err = deps.Mgo().Collection("comments").ReplaceOne(ctx, bson.M{"_id": c.Id}, c, &options.ReplaceOptions{Upsert: &upsertTrue})
 	if err != nil {
 		return
 	}
 
-	if changes.Matched == 0 {
+	if isNew {
 		if c.ReplyType == "post" {
-			err = deps.Mgo().C("posts").UpdateId(c.ReplyTo, bson.M{
+			_, err = deps.Mgo().Collection("posts").UpdateOne(ctx, bson.M{"_id": c.ReplyTo}, bson.M{
 				"$inc":      bson.M{"comments.count": 1},
 				"$set":      bson.M{"updated_at": time.Now()},
 				"$addToSet": bson.M{"users": c.UserId},
 			})
 		} else {
-			err = deps.Mgo().C("posts").UpdateId(c.PostId, bson.M{
+			_, err = deps.Mgo().Collection("posts").UpdateOne(ctx, bson.M{"_id": c.PostId}, bson.M{
 				"$addToSet": bson.M{"users": c.UserId},
 				"$set":      bson.M{"updated_at": time.Now()},
 			})

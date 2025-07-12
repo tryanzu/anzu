@@ -1,21 +1,21 @@
 package model
 
 import (
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Category struct {
-	Id          bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
-	Name        string        `bson:"name" json:"name"`
-	Description string        `bson:"description" json:"description"`
-	Slug        string        `bson:"slug" json:"slug"`
-	Color       string        `bson:"color" json:"color"`
-	Permissions CategoryAcl   `bson:"permissions" json:"permissions"`
-	Parent      bson.ObjectId `bson:"parent,omitempty" json:"parent,omitempty"`
-	Order       int           `bson:"order,omitempty" json:"order,omitempty"`
-	Count       int           `bson:"count,omitempty" json:"count,omitempty"`
-	Recent      int           `bson:"recent,omitempty" json:"recent,omitempty"`
-	Child       []Category    `bson:"subcategories,omitempty" json:"subcategories,omitempty"`
+	Id          primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
+	Name        string             `bson:"name" json:"name"`
+	Description string             `bson:"description" json:"description"`
+	Slug        string             `bson:"slug" json:"slug"`
+	Color       string             `bson:"color" json:"color"`
+	Permissions CategoryAcl        `bson:"permissions" json:"permissions"`
+	Parent      primitive.ObjectID `bson:"parent,omitempty" json:"parent,omitempty"`
+	Order       int                `bson:"order,omitempty" json:"order,omitempty"`
+	Count       int                `bson:"count,omitempty" json:"count,omitempty"`
+	Recent      int                `bson:"recent,omitempty" json:"recent,omitempty"`
+	Child       []Category         `bson:"subcategories,omitempty" json:"subcategories,omitempty"`
 }
 
 type CategoryAcl struct {
