@@ -7,14 +7,14 @@ import (
 // Category model.
 type Category struct {
 	ID          primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
-	Name        string        `bson:"name" json:"name"`
-	Description string        `bson:"description" json:"description"`
-	Slug        string        `bson:"slug" json:"slug"`
-	Color       string        `bson:"color" json:"color"`
-	Permissions ACL           `bson:"permissions" json:"-"`
+	Name        string             `bson:"name" json:"name"`
+	Description string             `bson:"description" json:"description"`
+	Slug        string             `bson:"slug" json:"slug"`
+	Color       string             `bson:"color" json:"color"`
+	Permissions ACL                `bson:"permissions" json:"-"`
 	Parent      primitive.ObjectID `bson:"parent,omitempty" json:"parent,omitempty"`
-	ReactSet    []string      `bson:"reactSet" json:"-"`
-	Order       int           `bson:"order,omitempty" json:"order,omitempty"`
+	ReactSet    []string           `bson:"reactSet" json:"-"`
+	Order       int                `bson:"order,omitempty" json:"order,omitempty"`
 
 	// Runtime computed properties.
 	Child     Categories `bson:"-" json:"subcategories,omitempty"`

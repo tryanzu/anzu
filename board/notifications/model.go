@@ -34,7 +34,7 @@ func (all Notifications) UsersScope() common.Scope {
 
 	list := make([]primitive.ObjectID, len(users))
 	index := 0
-	for k, _ := range users {
+	for k := range users {
 		list[index] = k
 		index++
 	}

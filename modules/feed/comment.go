@@ -15,13 +15,13 @@ type Comment struct {
 	Id       primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
 	PostId   primitive.ObjectID `bson:"post_id" json:"post_id"`
 	UserId   primitive.ObjectID `bson:"user_id" json:"user_id"`
-	Votes    Votes         `bson:"votes" json:"votes"`
-	User     interface{}   `bson:"-" json:"author,omitempty"`
-	Position int           `bson:"position" json:"position"`
-	Liked    int           `bson:"-" json:"liked,omitempty"`
-	Content  string        `bson:"content" json:"content"`
-	Chosen   bool          `bson:"chosen,omitempty" json:"chosen,omitempty"`
-	Created  time.Time     `bson:"created_at" json:"created_at"`
+	Votes    Votes              `bson:"votes" json:"votes"`
+	User     interface{}        `bson:"-" json:"author,omitempty"`
+	Position int                `bson:"position" json:"position"`
+	Liked    int                `bson:"-" json:"liked,omitempty"`
+	Content  string             `bson:"content" json:"content"`
+	Chosen   bool               `bson:"chosen,omitempty" json:"chosen,omitempty"`
+	Created  time.Time          `bson:"created_at" json:"created_at"`
 
 	// Runtime generated pointers
 	post *Post

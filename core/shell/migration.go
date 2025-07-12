@@ -19,7 +19,7 @@ func MigrateComments(c *ishell.Context) {
 
 	db := deps.Container.Mgo()
 	collection := db.Collection("comments")
-	
+
 	filter := bson.M{"reply_type": bson.M{"$exists": false}}
 	cursor, err := collection.Find(ctx, filter)
 	if err != nil {
@@ -27,25 +27,25 @@ func MigrateComments(c *ishell.Context) {
 		return
 	}
 	defer cursor.Close(ctx)
-	
+
 	var comment comments.Comment
 	c.ProgressBar().Indeterminate(true)
 	c.ProgressBar().Start()
-	
+
 	for cursor.Next(ctx) {
 		err := cursor.Decode(&comment)
 		if err != nil {
 			c.Printf("Error decoding comment: %v\n", err)
 			continue
 		}
-		
+
 		updateCtx, updateCancel := context.WithTimeout(context.Background(), 5*time.Second)
 		_, err = collection.UpdateOne(updateCtx, bson.M{"_id": comment.Id}, bson.M{"$set": bson.M{
 			"reply_type": "post",
 			"reply_to":   comment.PostId,
 		}})
 		updateCancel()
-		
+
 		if err != nil {
 			c.Println("Could not migrate comment", err)
 		}

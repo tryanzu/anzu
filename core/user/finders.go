@@ -17,7 +17,7 @@ var UserNotFound = errors.New("User has not been found by given criteria.")
 func FindId(d deps, id primitive.ObjectID) (user User, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	
+
 	err = d.Mgo().Collection("users").FindOne(ctx, bson.M{"_id": id}).Decode(&user)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -32,7 +32,7 @@ func FindId(d deps, id primitive.ObjectID) (user User, err error) {
 func FindEmail(d deps, email string) (user User, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	
+
 	err = d.Mgo().Collection("users").FindOne(ctx, bson.M{"email": email}).Decode(&user)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -47,13 +47,13 @@ func FindEmail(d deps, email string) (user User, err error) {
 func FindList(d deps, scopes ...common.Scope) (users Users, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	
+
 	cursor, err := d.Mgo().Collection("users").Find(ctx, common.ByScope(scopes...))
 	if err != nil {
 		return users, err
 	}
 	defer cursor.Close(ctx)
-	
+
 	err = cursor.All(ctx, &users)
 	return
 }
@@ -61,7 +61,7 @@ func FindList(d deps, scopes ...common.Scope) (users Users, err error) {
 func FetchBy(d deps, query common.Query) (UsersSet, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	
+
 	// Count documents
 	c, err := d.Mgo().Collection("users").CountDocuments(ctx, bson.M{})
 	if err != nil {
@@ -74,7 +74,7 @@ func FetchBy(d deps, query common.Query) (UsersSet, error) {
 		return UsersSet{}, err
 	}
 	defer cursor.Close(ctx)
-	
+
 	list := Users{}
 	err = cursor.All(ctx, &list)
 	if err != nil {
@@ -101,7 +101,7 @@ func Page(limit int, reverse bool, before *primitive.ObjectID, after *primitive.
 		}
 
 		findOptions := options.Find().SetLimit(int64(limit)).SetSkip(0)
-		
+
 		if reverse {
 			findOptions.SetSort(bson.M{"created_at": -1})
 		} else {

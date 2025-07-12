@@ -13,13 +13,13 @@ import (
 func FindList(d Deps, scopes ...common.Scope) (list Assets, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	
+
 	cursor, err := d.Mgo().Collection("remote_assets").Find(ctx, common.ByScope(scopes...))
 	if err != nil {
 		return
 	}
 	defer cursor.Close(ctx)
-	
+
 	err = cursor.All(ctx, &list)
 	return
 }
@@ -27,7 +27,7 @@ func FindList(d Deps, scopes ...common.Scope) (list Assets, err error) {
 func FindHash(d Deps, hash string) (asset Asset, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	
+
 	err = d.Mgo().Collection("remote_assets").FindOne(ctx, bson.M{
 		"hash": hash,
 	}).Decode(&asset)

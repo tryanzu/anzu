@@ -1,12 +1,12 @@
 package deps
 
 import (
+	"github.com/go-redis/redis/v8"
 	"github.com/mitchellh/goamz/s3"
 	"github.com/op/go-logging"
 	"github.com/siddontang/ledisdb/ledis"
 	"github.com/tryanzu/core/board/legacy/model"
 	"go.mongodb.org/mongo-driver/mongo"
-	"github.com/go-redis/redis/v8"
 )
 
 type Deps struct {

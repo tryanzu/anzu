@@ -21,20 +21,20 @@ var (
 func IgniteMongoDB(container Deps) (Deps, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	
+
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(MongoURL))
 	if err != nil {
 		log.Error(err)
 		log.Info(MongoURL)
 		return container, err
 	}
-	
+
 	// Test connection
 	if err := client.Ping(ctx, nil); err != nil {
 		log.Error(err)
 		return container, err
 	}
-	
+
 	db := client.Database(MongoName)
 	collections, err := db.ListCollectionNames(ctx, map[string]interface{}{})
 	if err != nil {
@@ -50,10 +50,10 @@ func IgniteMongoDB(container Deps) (Deps, error) {
 	if seed {
 		ShouldSeed = &seed
 	}
-	
+
 	// Ensure indexes
 	usersCol := db.Collection("users")
-	
+
 	// Email index
 	emailIndexModel := mongo.IndexModel{
 		Keys:    map[string]interface{}{"email": 1},
@@ -63,7 +63,7 @@ func IgniteMongoDB(container Deps) (Deps, error) {
 	if err != nil {
 		log.Error("Failed to create email index:", err)
 	}
-	
+
 	// Username index
 	usernameIndexModel := mongo.IndexModel{
 		Keys:    map[string]interface{}{"username": 1},
@@ -73,7 +73,7 @@ func IgniteMongoDB(container Deps) (Deps, error) {
 	if err != nil {
 		log.Error("Failed to create username index:", err)
 	}
-	
+
 	// Text search index for posts
 	postsCol := db.Collection("posts")
 	searchIndexModel := mongo.IndexModel{

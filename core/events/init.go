@@ -38,7 +38,7 @@ type Event struct {
 }
 
 type eventLog struct {
-	ID       primitive.ObjectID          `bson:"_id,omitempty"`
+	ID       primitive.ObjectID     `bson:"_id,omitempty"`
 	Name     string                 `bson:"name"`
 	Sign     *UserSign              `bson:"sign,omitempty"`
 	Params   map[string]interface{} `bson:"params,omitempty"`

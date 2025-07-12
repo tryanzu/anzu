@@ -97,7 +97,7 @@ func (c *Collection) Find(query interface{}) *FindResult {
 func (c *Collection) Insert(docs ...interface{}) error {
 	ctx, cancel := DefaultContext()
 	defer cancel()
-	
+
 	if len(docs) == 1 {
 		_, err := c.coll.InsertOne(ctx, docs[0])
 		return err
@@ -109,7 +109,7 @@ func (c *Collection) Insert(docs ...interface{}) error {
 func (c *Collection) UpdateId(id interface{}, update interface{}) error {
 	ctx, cancel := DefaultContext()
 	defer cancel()
-	
+
 	filter := bson.M{"_id": id}
 	_, err := c.coll.UpdateOne(ctx, filter, update)
 	return err
@@ -118,7 +118,7 @@ func (c *Collection) UpdateId(id interface{}, update interface{}) error {
 func (c *Collection) Update(selector interface{}, update interface{}) error {
 	ctx, cancel := DefaultContext()
 	defer cancel()
-	
+
 	_, err := c.coll.UpdateOne(ctx, selector, update)
 	return err
 }
@@ -126,14 +126,14 @@ func (c *Collection) Update(selector interface{}, update interface{}) error {
 func (c *Collection) UpdateAll(selector interface{}, update interface{}) (*mongo.UpdateResult, error) {
 	ctx, cancel := DefaultContext()
 	defer cancel()
-	
+
 	return c.coll.UpdateMany(ctx, selector, update)
 }
 
 func (c *Collection) UpsertId(id interface{}, update interface{}) (*mongo.UpdateResult, error) {
 	ctx, cancel := DefaultContext()
 	defer cancel()
-	
+
 	filter := bson.M{"_id": id}
 	opts := options.Update().SetUpsert(true)
 	return c.coll.UpdateOne(ctx, filter, update, opts)
@@ -142,7 +142,7 @@ func (c *Collection) UpsertId(id interface{}, update interface{}) (*mongo.Update
 func (c *Collection) Upsert(selector interface{}, update interface{}) (*mongo.UpdateResult, error) {
 	ctx, cancel := DefaultContext()
 	defer cancel()
-	
+
 	opts := options.Update().SetUpsert(true)
 	return c.coll.UpdateOne(ctx, selector, update, opts)
 }
@@ -150,7 +150,7 @@ func (c *Collection) Upsert(selector interface{}, update interface{}) (*mongo.Up
 func (c *Collection) Remove(selector interface{}) error {
 	ctx, cancel := DefaultContext()
 	defer cancel()
-	
+
 	_, err := c.coll.DeleteOne(ctx, selector)
 	return err
 }
@@ -158,14 +158,14 @@ func (c *Collection) Remove(selector interface{}) error {
 func (c *Collection) RemoveAll(selector interface{}) (*mongo.DeleteResult, error) {
 	ctx, cancel := DefaultContext()
 	defer cancel()
-	
+
 	return c.coll.DeleteMany(ctx, selector)
 }
 
 func (c *Collection) RemoveId(id interface{}) error {
 	ctx, cancel := DefaultContext()
 	defer cancel()
-	
+
 	filter := bson.M{"_id": id}
 	_, err := c.coll.DeleteOne(ctx, filter)
 	return err
@@ -174,7 +174,7 @@ func (c *Collection) RemoveId(id interface{}) error {
 func (c *Collection) Count(query interface{}) (int64, error) {
 	ctx, cancel := DefaultContext()
 	defer cancel()
-	
+
 	return c.coll.CountDocuments(ctx, query)
 }
 

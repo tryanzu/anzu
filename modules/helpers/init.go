@@ -41,7 +41,7 @@ func InArray(val interface{}, array interface{}) (exists bool, index int) {
 
 func Truncate(s string, length int) string {
 	var numRunes = 0
-	for index, _ := range s {
+	for index := range s {
 		numRunes++
 		if numRunes > length {
 			return s[:index]

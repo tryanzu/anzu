@@ -13,7 +13,7 @@ import (
 func Seed(db *mongo.Database) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	
+
 	parent := categories.Category{
 		ID:          primitive.NewObjectID(),
 		Name:        "General",

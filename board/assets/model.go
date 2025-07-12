@@ -20,13 +20,13 @@ import (
 
 type Asset struct {
 	ID       primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
-	Original string        `bson:"original" json:"original"`
-	Hosted   string        `bson:"hosted" json:"hosted"`
-	DataType string        `bson:"dataType,omitempty" json:"dataType,omitempty"`
-	MD5      string        `bson:"hash" json:"hash"`
-	Status   string        `bson:"status" json:"status"`
-	Created  time.Time     `bson:"created_at" json:"created_at"`
-	Updated  time.Time     `bson:"updated_at" json:"updated_at"`
+	Original string             `bson:"original" json:"original"`
+	Hosted   string             `bson:"hosted" json:"hosted"`
+	DataType string             `bson:"dataType,omitempty" json:"dataType,omitempty"`
+	MD5      string             `bson:"hash" json:"hash"`
+	Status   string             `bson:"status" json:"status"`
+	Created  time.Time          `bson:"created_at" json:"created_at"`
+	Updated  time.Time          `bson:"updated_at" json:"updated_at"`
 }
 
 // Replace original URL with asset tag.

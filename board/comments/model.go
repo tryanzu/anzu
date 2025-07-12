@@ -14,17 +14,17 @@ type Comment struct {
 	Id        primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
 	UserId    primitive.ObjectID `bson:"user_id" json:"user_id"`
 	PostId    primitive.ObjectID `bson:"post_id,omitempty" json:"post_id,omitempty"`
-	Votes     votes.Votes   `bson:"votes" json:"votes"`
-	User      interface{}   `bson:"-" json:"author,omitempty"`
-	Position  int           `bson:"position" json:"-"`
-	Liked     int           `bson:"-" json:"liked,omitempty"`
-	Content   string        `bson:"content" json:"content"`
+	Votes     votes.Votes        `bson:"votes" json:"votes"`
+	User      interface{}        `bson:"-" json:"author,omitempty"`
+	Position  int                `bson:"position" json:"-"`
+	Liked     int                `bson:"-" json:"liked,omitempty"`
+	Content   string             `bson:"content" json:"content"`
 	ReplyTo   primitive.ObjectID `bson:"reply_to,omitempty" json:"reply_to,omitempty"`
-	ReplyType string        `bson:"reply_type,omitempty" json:"reply_type,omitempty"`
-	Chosen    bool          `bson:"chosen,omitempty" json:"chosen,omitempty"`
-	Created   time.Time     `bson:"created_at" json:"created_at"`
-	Updated   time.Time     `bson:"updated_at" json:"updated_at"`
-	Deleted   *time.Time    `bson:"deleted_at,omitempty" json:"-"`
+	ReplyType string             `bson:"reply_type,omitempty" json:"reply_type,omitempty"`
+	Chosen    bool               `bson:"chosen,omitempty" json:"chosen,omitempty"`
+	Created   time.Time          `bson:"created_at" json:"created_at"`
+	Updated   time.Time          `bson:"updated_at" json:"updated_at"`
+	Deleted   *time.Time         `bson:"deleted_at,omitempty" json:"-"`
 
 	// Runtime generated fields.
 	Replies interface{} `bson:"-" json:"replies,omitempty"`
@@ -68,8 +68,8 @@ func (c Comment) VotableID() primitive.ObjectID {
 
 type Replies struct {
 	Id    primitive.ObjectID `bson:"_id,omitempty" json:"-"`
-	Count int           `bson:"count" json:"count"`
-	List  Comments      `bson:"list" json:"list"`
+	Count int                `bson:"count" json:"count"`
+	List  Comments           `bson:"list" json:"list"`
 }
 
 type RepliesList []Replies

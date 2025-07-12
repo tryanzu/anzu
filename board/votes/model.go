@@ -18,12 +18,12 @@ const (
 type Vote struct {
 	ID         primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
 	UserID     primitive.ObjectID `bson:"user_id" json:"user_id"`
-	Type       string        `bson:"type" json:"type"`
-	NestedType string        `bson:"nested_type,omitempty" json:"nested_type,omitempty"`
+	Type       string             `bson:"type" json:"type"`
+	NestedType string             `bson:"nested_type,omitempty" json:"nested_type,omitempty"`
 	RelatedID  primitive.ObjectID `bson:"related_id" json:"related_id"`
-	Value      string        `bson:"value" json:"value"`
-	Created    time.Time     `bson:"created_at" json:"created_at"`
-	Deleted    *time.Time    `bson:"deleted_at,omitempty" json:"-"`
+	Value      string             `bson:"value" json:"value"`
+	Created    time.Time          `bson:"created_at" json:"created_at"`
+	Deleted    *time.Time         `bson:"deleted_at,omitempty" json:"-"`
 }
 
 func (v Vote) Remove(deps Deps) error {

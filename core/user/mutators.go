@@ -21,7 +21,7 @@ var ErrInvalidUser = errors.New("invalid user to ban")
 func ResetNotifications(d deps, id primitive.ObjectID) (err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	
+
 	_, err = d.Mgo().Collection("users").UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$set": bson.M{"notifications": 0}})
 	return
 }
@@ -30,7 +30,7 @@ func ResetNotifications(d deps, id primitive.ObjectID) (err error) {
 func LastSeenAt(d deps, id primitive.ObjectID, t time.Time) (err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	
+
 	_, err = d.Mgo().Collection("users").UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$set": bson.M{"last_seen_at": t}})
 	return
 }
@@ -61,7 +61,7 @@ func UpsertBan(d deps, ban Ban) (Ban, error) {
 	ban.Updated = time.Now()
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	
+
 	opts := options.Update().SetUpsert(true)
 	result, err := d.Mgo().Collection("bans").UpdateOne(ctx, bson.M{"_id": ban.ID}, bson.M{"$set": ban}, opts)
 	if err != nil {
@@ -100,7 +100,7 @@ func UpsertBan(d deps, ban Ban) (Ban, error) {
 func UseRecoveryToken(d deps, clientIP, token string) (user User, jwtAuthToken string, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	
+
 	_, err = d.Mgo().Collection("user_recovery_tokens").UpdateOne(ctx,
 		bson.M{
 			"token":      token,

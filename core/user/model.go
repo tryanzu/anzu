@@ -7,7 +7,7 @@ import (
 )
 
 type User struct {
-	Id            primitive.ObjectID          `bson:"_id,omitempty" json:"id"`
+	Id            primitive.ObjectID     `bson:"_id,omitempty" json:"id"`
 	FirstName     string                 `bson:"first_name" json:"first_name"`
 	LastName      string                 `bson:"last_name" json:"last_name"`
 	UserName      string                 `bson:"username" json:"username"`
@@ -16,7 +16,7 @@ type User struct {
 	Password      string                 `bson:"password" json:"-"`
 	Step          int                    `bson:"step,omitempty" json:"step"`
 	Email         string                 `bson:"email" json:"email,omitempty"`
-	Categories    []primitive.ObjectID        `bson:"categories,omitempty" json:"categories,omitempty"`
+	Categories    []primitive.ObjectID   `bson:"categories,omitempty" json:"categories,omitempty"`
 	Roles         []UserRole             `bson:"roles" json:"roles,omitempty"`
 	Permissions   []string               `bson:"permissions" json:"permissions,omitempty"`
 	Description   string                 `bson:"description" json:"description,omitempty"`
@@ -97,10 +97,10 @@ func (list Users) UpdateCache(d deps) (err error) {
 type recoveryToken struct {
 	ID      primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 	UserID  primitive.ObjectID `bson:"user_id" json:"user_id"`
-	Token   string        `bson:"token" json:"token"`
-	Used    bool          `bson:"used" json:"used"`
-	Created time.Time     `bson:"created_at" json:"created_at"`
-	Updated time.Time     `bson:"updated_at" json:"updated_at"`
+	Token   string             `bson:"token" json:"token"`
+	Used    bool               `bson:"used" json:"used"`
+	Created time.Time          `bson:"created_at" json:"created_at"`
+	Updated time.Time          `bson:"updated_at" json:"updated_at"`
 }
 
 type status string
@@ -117,13 +117,13 @@ const (
 type Ban struct {
 	ID        primitive.ObjectID  `bson:"_id,omitempty" json:"id,omitempty"`
 	UserID    primitive.ObjectID  `bson:"user_id" json:"user_id"`
-	RelatedTo string         `bson:"related_to" json:"related_to"`
+	RelatedTo string              `bson:"related_to" json:"related_to"`
 	RelatedID *primitive.ObjectID `bson:"related_id,omitempty" json:"related_id,omitempty"`
-	Content   string         `bson:"content" json:"content"`
-	Status    status         `bson:"status" json:"status"`
-	Reason    string         `bson:"reason" json:"reason"`
-	Created   time.Time      `bson:"created_at" json:"created_at"`
-	Updated   time.Time      `bson:"updated_at" json:"updated_at"`
-	Until     time.Time      `bson:"until" json:"until"`
-	Deleted   *time.Time     `bson:"deleted_at,omitempty" json:"-"`
+	Content   string              `bson:"content" json:"content"`
+	Status    status              `bson:"status" json:"status"`
+	Reason    string              `bson:"reason" json:"reason"`
+	Created   time.Time           `bson:"created_at" json:"created_at"`
+	Updated   time.Time           `bson:"updated_at" json:"updated_at"`
+	Until     time.Time           `bson:"until" json:"until"`
+	Deleted   *time.Time          `bson:"deleted_at,omitempty" json:"-"`
 }

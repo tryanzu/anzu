@@ -2,8 +2,8 @@ package votes
 
 import (
 	"github.com/siddontang/ledisdb/ledis"
-	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type Deps interface {

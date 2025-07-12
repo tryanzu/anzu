@@ -40,5 +40,3 @@ func RunShell() {
 
 	select {}
 }
-
-

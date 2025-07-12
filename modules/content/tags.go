@@ -140,7 +140,7 @@ func (self Module) FetchUsersHelper(ls []string) map[string]string {
 	if len(missing) > 0 {
 		var targets []struct {
 			Id       primitive.ObjectID `bson:"_id"`
-			Username string            `bson:"username"`
+			Username string             `bson:"username"`
 		}
 
 		ctx := context.Background()

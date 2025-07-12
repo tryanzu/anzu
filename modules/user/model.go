@@ -9,12 +9,12 @@ import (
 
 type User struct {
 	Id          primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-	UserName    string        `bson:"username" json:"username"`
-	NameChanges int           `bson:"name_changes" json:"name_changes"`
-	Description string        `bson:"description" json:"description,omitempty"`
-	Image       string        `bson:"image" json:"image,omitempty"`
-	Roles       []UserRole    `bson:"roles" json:"roles,omitempty"`
-	Permissions []string      `bson:"permissions" json:"permissions,omitempty"`
+	UserName    string             `bson:"username" json:"username"`
+	NameChanges int                `bson:"name_changes" json:"name_changes"`
+	Description string             `bson:"description" json:"description,omitempty"`
+	Image       string             `bson:"image" json:"image,omitempty"`
+	Roles       []UserRole         `bson:"roles" json:"roles,omitempty"`
+	Permissions []string           `bson:"permissions" json:"permissions,omitempty"`
 
 	Profile map[string]interface{} `bson:"profile,omitempty" json:"profile,omitempty"`
 	Gaming  UserGaming             `bson:"gaming,omitempty" json:"gaming,omitempty"`
@@ -27,32 +27,32 @@ type User struct {
 
 type UserPrivate struct {
 	User               `bson:",inline"`
-	Password           string          `bson:"password,omitempty" json:"-"`
-	Step               int             `bson:"step,omitempty" json:"step"`
-	Notifications      int             `bson:"notifications,omitempty" json:"notifications"`
-	Email              string          `bson:"email,omitempty" json:"email,omitempty"`
+	Password           string               `bson:"password,omitempty" json:"-"`
+	Step               int                  `bson:"step,omitempty" json:"step"`
+	Notifications      int                  `bson:"notifications,omitempty" json:"notifications"`
+	Email              string               `bson:"email,omitempty" json:"email,omitempty"`
 	Categories         []primitive.ObjectID `bson:"categories,omitempty" json:"categories,omitempty"`
-	Facebook           interface{}     `bson:"facebook,omitempty" json:"facebook,omitempty"`
-	Stats              UserStats       `bson:"stats,omitempty" json:"stats,omitempty"`
-	ReferralCode       string          `bson:"ref_code,omitempty" json:"ref_code"`
-	VerificationCode   string          `bson:"ver_code,omitempty" json:"ver_code"`
-	SessionId          string          `bson:"-" json:"session_id"`
+	Facebook           interface{}          `bson:"facebook,omitempty" json:"facebook,omitempty"`
+	Stats              UserStats            `bson:"stats,omitempty" json:"stats,omitempty"`
+	ReferralCode       string               `bson:"ref_code,omitempty" json:"ref_code"`
+	VerificationCode   string               `bson:"ver_code,omitempty" json:"ver_code"`
+	SessionId          string               `bson:"-" json:"session_id"`
 	Duplicates         []primitive.ObjectID `bson:"duplicates" json:"-"`
-	ConfirmationSent   *time.Time      `bson:"confirm_sent_at" json:"-"`
-	Updated            time.Time       `bson:"updated_at" json:"updated_at"`
-	Seen               *time.Time      `bson:"last_seen_at" json:"last_seen_at,omitempty"`
-	Gamificated        time.Time       `bson:"gamificated_at" json:"gamificated_at"`
-	EmailNotifications bool            `bson:"emailNotifications" json:"emailNotifications"`
+	ConfirmationSent   *time.Time           `bson:"confirm_sent_at" json:"-"`
+	Updated            time.Time            `bson:"updated_at" json:"updated_at"`
+	Seen               *time.Time           `bson:"last_seen_at" json:"last_seen_at,omitempty"`
+	Gamificated        time.Time            `bson:"gamificated_at" json:"gamificated_at"`
+	EmailNotifications bool                 `bson:"emailNotifications" json:"emailNotifications"`
 }
 
 type UserSimple struct {
 	Id           primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-	Roles        []UserRole    `bson:"roles" json:"roles,omitempty"`
-	UserName     string        `bson:"username" json:"username"`
-	UserNameSlug string        `bson:"username_slug" json:"username_slug"`
-	Gaming       UserGaming    `bson:"gaming,omitempty" json:"gaming,omitempty"`
-	Image        string        `bson:"image" json:"image,omitempty"`
-	Description  string        `bson:"description" json:"description"`
+	Roles        []UserRole         `bson:"roles" json:"roles,omitempty"`
+	UserName     string             `bson:"username" json:"username"`
+	UserNameSlug string             `bson:"username_slug" json:"username_slug"`
+	Gaming       UserGaming         `bson:"gaming,omitempty" json:"gaming,omitempty"`
+	Image        string             `bson:"image" json:"image,omitempty"`
+	Description  string             `bson:"description" json:"description"`
 
 	Country     string `bson:"country,omitempty" json:"country"`
 	OriginId    string `bson:"origin_id,omitempty" json:"origin_id"`
@@ -68,9 +68,9 @@ type UserRecoveryToken struct {
 	Id      primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 	Token   string             `bson:"token" json:"token"`
 	UserId  primitive.ObjectID `bson:"user_id" json:"user_id"`
-	Used    bool          `bson:"used" json:"used"`
-	Created time.Time     `bson:"created_at" json:"created_at"`
-	Updated time.Time     `bson:"updated_at" json:"updated_at"`
+	Used    bool               `bson:"used" json:"used"`
+	Created time.Time          `bson:"created_at" json:"created_at"`
+	Updated time.Time          `bson:"updated_at" json:"updated_at"`
 }
 
 var UserSimpleFields bson.M = bson.M{"id": 1, "username": 1, "description": 1, "username_slug": 1, "country": 1, "origin_id": 1, "battlenet_id": 1, "steam_id": 1, "image": 1, "gaming.level": 1, "gaming.swords": 1, "roles": 1, "validated": 1, "created_at": 1, "last_seen_at": 1}
@@ -78,14 +78,14 @@ var UserBasicFields bson.M = bson.M{"id": 1, "username": 1, "description": 1, "f
 
 type UserBasic struct {
 	Id           primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-	UserName     string        `bson:"username" json:"username"`
-	UserNameSlug string        `bson:"username_slug" json:"username_slug"`
-	Roles        []UserRole    `bson:"roles" json:"roles,omitempty"`
-	Image        string        `bson:"image" json:"image,omitempty"`
-	Description  string        `bson:"description" json:"description"`
-	Email        string        `bson:"email" json:"email,omitempty"`
-	Facebook     interface{}   `bson:"facebook,omitempty" json:"facebook,omitempty"`
-	Gaming       UserGaming    `bson:"gaming,omitempty" json:"gaming,omitempty"`
+	UserName     string             `bson:"username" json:"username"`
+	UserNameSlug string             `bson:"username_slug" json:"username_slug"`
+	Roles        []UserRole         `bson:"roles" json:"roles,omitempty"`
+	Image        string             `bson:"image" json:"image,omitempty"`
+	Description  string             `bson:"description" json:"description"`
+	Email        string             `bson:"email" json:"email,omitempty"`
+	Facebook     interface{}        `bson:"facebook,omitempty" json:"facebook,omitempty"`
+	Gaming       UserGaming         `bson:"gaming,omitempty" json:"gaming,omitempty"`
 
 	Country     string `bson:"country,omitempty" json:"country"`
 	OriginId    string `bson:"origin_id,omitempty" json:"origin_id"`
@@ -104,7 +104,7 @@ func (u UserBasic) ToSimple() UserSimple {
 }
 
 type UserRole struct {
-	Name       string          `bson:"name" json:"name"`
+	Name       string               `bson:"name" json:"name"`
 	Categories []primitive.ObjectID `bson:"categories,omitempty" json:"categories,omitempty"`
 }
 
@@ -123,16 +123,16 @@ type UserGaming struct {
 
 type UserBadge struct {
 	Id   primitive.ObjectID `bson:"id" json:"id"`
-	Date time.Time     `bson:"date" json:"date"`
+	Date time.Time          `bson:"date" json:"date"`
 }
 
 type UserToken struct {
 	Id      primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
 	UserId  primitive.ObjectID `bson:"user_id" json:"user_id"`
-	Token   string        `bson:"token" json:"token"`
-	Closed  bool          `bson:"closed,omitempty" json"closed,omitempty"`
-	Created time.Time     `bson:"created_at" json:"created_at"`
-	Updated time.Time     `bson:"updated_at" json:"updated_at"`
+	Token   string             `bson:"token" json:"token"`
+	Closed  bool               `bson:"closed,omitempty" json"closed,omitempty"`
+	Created time.Time          `bson:"created_at" json:"created_at"`
+	Updated time.Time          `bson:"updated_at" json:"updated_at"`
 }
 
 type UserPc struct {
@@ -143,8 +143,8 @@ type UserFollowing struct {
 	Id            primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 	Follower      primitive.ObjectID `bson:"follower,omitempty" json:"follower"`
 	Following     primitive.ObjectID `bson:"following,omitempty" json:"following"`
-	Notifications bool          `bson:"notifications,omitempty" json:"notifications"`
-	Created       time.Time     `bson:"created_at" json:"created_at"`
+	Notifications bool               `bson:"notifications,omitempty" json:"notifications"`
+	Created       time.Time          `bson:"created_at" json:"created_at"`
 }
 
 type UserActivity struct {
@@ -157,9 +157,9 @@ type UserActivity struct {
 
 type UserLightModel struct {
 	Id       primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-	Username string        `bson:"username" json:"username"`
-	Email    string        `bson:"email" json:"email"`
-	Image    string        `bson:"image" json:"image"`
+	Username string             `bson:"username" json:"username"`
+	Email    string             `bson:"email" json:"email"`
+	Image    string             `bson:"image" json:"image"`
 }
 
 type UserProfileForm struct {
@@ -174,8 +174,8 @@ type UserRegisterForm struct {
 
 type UserSubscribe struct {
 	Id       primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-	Category string        `bson:"category" json:"category"`
-	Email    string        `bson:"email" json:"email"`
+	Category string             `bson:"category" json:"category"`
+	Email    string             `bson:"email" json:"email"`
 }
 
 type UserSubscribeForm struct {
@@ -192,14 +192,14 @@ type ViewModel struct {
 	UserId    primitive.ObjectID `bson:"user_id" json:"user_id"`
 	Related   string             `bson:"related" json:"related"`
 	RelatedId primitive.ObjectID `bson:"related_id" json:"related_id"`
-	Created   time.Time     `bson:"created_at" json:"created_at"`
+	Created   time.Time          `bson:"created_at" json:"created_at"`
 }
 
 type CheckinModel struct {
 	Id      primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 	UserId  primitive.ObjectID `bson:"user_id" json:"user_id"`
-	Address string        `bson:"client_ip" json:"client_ip"`
-	Date    time.Time     `bson:"date" json:"date"`
+	Address string             `bson:"client_ip" json:"client_ip"`
+	Date    time.Time          `bson:"date" json:"date"`
 }
 
 type ByCreatedAt []UserActivity
