@@ -195,14 +195,17 @@ func (di PostAPI) FeedGet(c *gin.Context) {
 	}
 
 	// Get the users needed by the feed
-	cursor, err := database.Collection("users").Find(context.Background(), bson.M{"_id": bson.M{"$in": authors}}, nil)
-	if err != nil {
-		panic(err)
-	}
-	defer cursor.Close(context.Background())
-	err = cursor.All(context.Background(), &users)
-	if err != nil {
-		panic(err)
+	if len(authors) > 0 {
+		cursor, err := database.Collection("users").Find(context.Background(), bson.M{"_id": bson.M{"$in": authors}}, nil)
+		if err != nil {
+			panic(err)
+		}
+		defer cursor.Close(context.Background())
+
+		err = cursor.All(context.Background(), &users)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	if len(feed) > 0 {

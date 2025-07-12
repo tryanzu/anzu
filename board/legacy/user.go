@@ -538,18 +538,20 @@ func (di *UserAPI) UserGetActivity(c *gin.Context) {
 			}
 		}
 
-		cursor, err := database.Collection("posts").Find(context.Background(), bson.M{"_id": bson.M{"$in": postIds}}, nil)
-		if err == nil {
+		if len(postIds) > 0 {
+			cursor, err := database.Collection("posts").Find(context.Background(), bson.M{"_id": bson.M{"$in": postIds}}, nil)
+			if err != nil {
+				panic(err)
+			}
 			defer cursor.Close(context.Background())
 			err = cursor.All(context.Background(), &posts)
-		}
-		if err != nil {
-			panic(err)
-		}
-
-		pmap = make(map[primitive.ObjectID]Post, len(posts))
-		for _, p := range posts {
-			pmap[p.ID] = p
+			if err != nil {
+				panic(err)
+			}
+			pmap = make(map[primitive.ObjectID]Post, len(posts))
+			for _, p := range posts {
+				pmap[p.ID] = p
+			}
 		}
 
 		count, err := database.Collection("comments").CountDocuments(context.Background(), bson.M{"user_id": usr.Data().Id, "deleted_at": bson.M{"$exists": false}})

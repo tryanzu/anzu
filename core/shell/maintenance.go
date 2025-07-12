@@ -65,9 +65,9 @@ func CleanupDuplicatedEmails(c *ishell.Context) {
 	defer cursor.Close(ctx)
 
 	var duplicate struct {
-		Email string          `bson:"_id"`
+		Email string               `bson:"_id"`
 		List  []primitive.ObjectID `bson:"uniqueIds"`
-		Count int             `bson:"count"`
+		Count int                  `bson:"count"`
 	}
 
 	for cursor.Next(ctx) {
@@ -76,15 +76,20 @@ func CleanupDuplicatedEmails(c *ishell.Context) {
 			c.Println("Could not decode duplicate", err)
 			continue
 		}
-		
+
 		var users []user.UserPrivate
+
+		if len(duplicate.List) == 0 {
+			c.Println("Empty duplicate list, skipping")
+			continue
+		}
 
 		userCursor, err := db.Collection("users").Find(ctx, bson.M{"_id": bson.M{"$in": duplicate.List}})
 		if err != nil {
 			c.Println("Could not get list", err)
 			continue
 		}
-		
+
 		err = userCursor.All(ctx, &users)
 		userCursor.Close(ctx)
 		if err != nil {

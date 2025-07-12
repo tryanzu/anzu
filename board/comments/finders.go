@@ -130,6 +130,10 @@ func FindList(deps Deps, scopes ...common.Scope) (list Comments, err error) {
 }
 
 func FindReplies(deps Deps, list Comments, max int) (lists []Replies, err error) {
+	if len(list) == 0 {
+		return []Replies{}, nil
+	}
+
 	ctx := context.TODO()
 	pipeline := []bson.M{
 		{"$match": bson.M{

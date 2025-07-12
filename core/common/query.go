@@ -2,7 +2,7 @@ package common
 
 import (
 	"context"
-	
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -32,7 +32,9 @@ func FieldExists(field string, exists bool) Scope {
 
 func WithinID(list []primitive.ObjectID) Scope {
 	return func(query bson.M) bson.M {
-		query["_id"] = bson.M{"$in": list}
+		if len(list) > 0 {
+			query["_id"] = bson.M{"$in": list}
+		}
 		return query
 	}
 }

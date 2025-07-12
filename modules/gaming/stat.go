@@ -2,14 +2,15 @@ package gaming
 
 import (
 	"context"
+	"log"
+	"sort"
+	"time"
+
 	"github.com/tryanzu/core/deps"
 	"github.com/tryanzu/core/modules/user"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"log"
-	"sort"
-	"time"
 )
 
 func (self *Module) GetRankingBy(sort string) []RankingModel {
@@ -35,6 +36,10 @@ func (self *Module) GetRankingBy(sort string) []RankingModel {
 
 	for _, ranking := range rankings {
 		users_id = append(users_id, ranking.UserId)
+	}
+
+	if len(users_id) == 0 {
+		return []RankingModel{}
 	}
 
 	cursor, err = database.Collection("users").Find(ctx, bson.M{"_id": bson.M{"$in": users_id}}, options.Find().SetProjection(bson.M{"_id": 1, "username": 1, "image": 1, "gaming.level": 1}))

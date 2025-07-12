@@ -90,12 +90,17 @@ func (feed *FeedModule) LightPosts(posts interface{}) ([]LightPostModel, error) 
 	ctx := context.Background()
 	switch posts.(type) {
 	case []primitive.ObjectID:
+		postIDs := posts.([]primitive.ObjectID)
+		if len(postIDs) == 0 {
+			return []LightPostModel{}, nil
+		}
+
 		var list []LightPostModel
 		database := deps.Container.Mgo()
 		collection := database.Collection("posts")
 
 		// Use light post model
-		filter := bson.M{"_id": bson.M{"$in": posts.([]primitive.ObjectID)}}
+		filter := bson.M{"_id": bson.M{"$in": postIDs}}
 		opts := options.Find().SetProjection(lightPostFields)
 		cursor, err := collection.Find(ctx, filter, opts)
 		if err != nil {

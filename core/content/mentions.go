@@ -59,18 +59,22 @@ func preReplaceMentionTags(d deps, c Parseable) (processed Parseable, err error)
 
 	var targets []struct {
 		ID       primitive.ObjectID `bson:"_id"`
-		Username string        `bson:"username"`
+		Username string             `bson:"username"`
+	}
+
+	if len(users) == 0 {
+		return
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	
+
 	cursor, err := d.Mgo().Collection("users").Find(ctx, bson.M{"username": bson.M{"$in": users}})
 	if err != nil {
 		return
 	}
 	defer cursor.Close(ctx)
-	
+
 	err = cursor.All(ctx, &targets)
 	if err != nil || len(targets) == 0 {
 		return

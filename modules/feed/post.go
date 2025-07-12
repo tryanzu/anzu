@@ -2,6 +2,7 @@ package feed
 
 import (
 	"context"
+
 	"github.com/tryanzu/core/board/votes"
 	"github.com/tryanzu/core/core/content"
 	"github.com/tryanzu/core/deps"
@@ -17,30 +18,30 @@ import (
 
 // Post model refers to board posts
 type Post struct {
-	Id                primitive.ObjectID    `bson:"_id,omitempty" json:"id,omitempty"`
-	Title             string           `bson:"title" json:"title"`
-	Slug              string           `bson:"slug" json:"slug"`
-	Type              string           `bson:"type" json:"type"`
-	Content           string           `bson:"content" json:"content"`
-	Categories        []string         `bson:"categories" json:"categories"`
-	Category          primitive.ObjectID    `bson:"category" json:"category"`
-	Comments          Comments         `bson:"comments" json:"comments"`
-	Author            *user.UserSimple `bson:"-" json:"author,omitempty"`
-	UserId            primitive.ObjectID    `bson:"user_id,omitempty" json:"user_id,omitempty"`
-	Users             []primitive.ObjectID  `bson:"users,omitempty" json:"users,omitempty"`
-	Votes             votes.Votes      `bson:"votes" json:"votes"`
-	RelatedComponents []primitive.ObjectID  `bson:"related_components,omitempty" json:"related_components,omitempty"`
-	Following         bool             `bson:"following,omitempty" json:"following,omitempty"`
-	Pinned            bool             `bson:"pinned,omitempty" json:"pinned,omitempty"`
-	Lock              bool             `bson:"lock" json:"lock"`
-	IsQuestion        bool             `bson:"is_question" json:"is_question"`
-	Solved            bool             `bson:"solved,omitempty" json:"solved,omitempty"`
-	Views             int              `bson:"views,omitempty" json:"views"`
-	Reached           int              `bson:"reached,omitempty" json:"-"`
-	Voted             []string         `bson:"-" json:"voted"`
-	Created           time.Time        `bson:"created_at" json:"created_at"`
-	Updated           time.Time        `bson:"updated_at" json:"updated_at"`
-	Deleted           time.Time        `bson:"deleted_at,omitempty" json:"deleted_at,omitempty"`
+	Id                primitive.ObjectID   `bson:"_id,omitempty" json:"id,omitempty"`
+	Title             string               `bson:"title" json:"title"`
+	Slug              string               `bson:"slug" json:"slug"`
+	Type              string               `bson:"type" json:"type"`
+	Content           string               `bson:"content" json:"content"`
+	Categories        []string             `bson:"categories" json:"categories"`
+	Category          primitive.ObjectID   `bson:"category" json:"category"`
+	Comments          Comments             `bson:"comments" json:"comments"`
+	Author            *user.UserSimple     `bson:"-" json:"author,omitempty"`
+	UserId            primitive.ObjectID   `bson:"user_id,omitempty" json:"user_id,omitempty"`
+	Users             []primitive.ObjectID `bson:"users,omitempty" json:"users,omitempty"`
+	Votes             votes.Votes          `bson:"votes" json:"votes"`
+	RelatedComponents []primitive.ObjectID `bson:"related_components,omitempty" json:"related_components,omitempty"`
+	Following         bool                 `bson:"following,omitempty" json:"following,omitempty"`
+	Pinned            bool                 `bson:"pinned,omitempty" json:"pinned,omitempty"`
+	Lock              bool                 `bson:"lock" json:"lock"`
+	IsQuestion        bool                 `bson:"is_question" json:"is_question"`
+	Solved            bool                 `bson:"solved,omitempty" json:"solved,omitempty"`
+	Views             int                  `bson:"views,omitempty" json:"views"`
+	Reached           int                  `bson:"reached,omitempty" json:"-"`
+	Voted             []string             `bson:"-" json:"voted"`
+	Created           time.Time            `bson:"created_at" json:"created_at"`
+	Updated           time.Time            `bson:"updated_at" json:"updated_at"`
+	Deleted           time.Time            `bson:"deleted_at,omitempty" json:"deleted_at,omitempty"`
 
 	// Runtime generated pointers
 	UsersHashtable map[string]interface{} `bson:"-" json:"usersHashtable"`
@@ -56,6 +57,12 @@ func (self *Post) LoadUsersHashtables() {
 	var users []user.UserSimple
 	ids := self.Users
 	ids = append(ids, self.UserId)
+
+	if len(ids) == 0 {
+		self.UsersHashtable = make(map[string]interface{})
+		return
+	}
+
 	ctx := context.Background()
 	collection := deps.Container.Mgo().Collection("users")
 	cursor, err := collection.Find(ctx, bson.M{"_id": bson.M{"$in": ids}})

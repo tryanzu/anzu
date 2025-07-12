@@ -59,10 +59,14 @@ func (self Module) ParseContentMentions(o Parseable) bool {
 
 		var targets []struct {
 			Id       primitive.ObjectID `bson:"_id"`
-			Username string            `bson:"username"`
+			Username string             `bson:"username"`
 		}
 
 		var mentions []Mention
+
+		if len(users) == 0 {
+			return false
+		}
 
 		ctx := context.Background()
 		collection := database.Collection("users")
