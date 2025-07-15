@@ -16,7 +16,7 @@ require (
 	github.com/gin-gonic/contrib v0.0.0-20190526021735-7fb7810ed2a0
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-redis/redis/v8 v8.4.4
-	github.com/golang-jwt/jwt/v4 v4.5.1
+	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/goware/emailx v0.2.0
 	github.com/hashicorp/hcl v1.0.0
 	github.com/henrylee2cn/goutil v0.0.0-20190530092832-5b5425bff75c
