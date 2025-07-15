@@ -8,7 +8,6 @@ require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/abiosoft/ishell v2.0.0+incompatible
 	github.com/desertbit/glue v0.0.0-20171018142742-09c14070c2b1
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/divideandconquer/go-merge v0.0.0-20160829212531-bc6b3a394b4e
 	github.com/dop251/goja v0.0.0-20190603191204-1b2d25ba9a8d
 	github.com/facebookgo/inject v0.0.0-20180706035515-f23751cae28b
@@ -17,6 +16,7 @@ require (
 	github.com/gin-gonic/contrib v0.0.0-20190526021735-7fb7810ed2a0
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-redis/redis/v8 v8.4.4
+	github.com/golang-jwt/jwt/v4 v4.5.1
 	github.com/goware/emailx v0.2.0
 	github.com/hashicorp/hcl v1.0.0
 	github.com/henrylee2cn/goutil v0.0.0-20190530092832-5b5425bff75c

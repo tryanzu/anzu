@@ -1,7 +1,7 @@
 package handle
 
 import (
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/getsentry/raven-go"
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"

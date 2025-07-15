@@ -3,7 +3,7 @@ package user
 import (
 	"time"
 
-	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/tryanzu/core/core/config"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )

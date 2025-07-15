@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/desertbit/glue"
-	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/tryanzu/core/board/flags"
 	"github.com/tryanzu/core/core/content"
 	"github.com/tryanzu/core/core/events"
