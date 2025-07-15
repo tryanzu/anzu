@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/tryanzu/core/board/votes"
 	"github.com/tryanzu/core/core/common"
 	"github.com/tryanzu/core/core/content"
 	"go.mongodb.org/mongo-driver/bson"
@@ -50,6 +51,9 @@ func FetchBy(deps Deps, query common.Query) (CommentsSet, error) {
 		}
 
 		list[n] = processed.(Comment)
+		if list[n].Votes == nil {
+			list[n].Votes = votes.Votes{}
+		}
 	}
 
 	return CommentsSet{
