@@ -3,6 +3,7 @@ package config
 import (
 	"io/ioutil"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/BurntSushi/toml"
@@ -95,6 +96,10 @@ func (c *Config) Boot() {
 	c.current = nil
 	c.Merge("./static/resources/config.toml", false)
 	c.Merge("./config.toml", true)
+	
+	// Apply environment variables with highest precedence
+	c.ApplyEnvVars()
+	
 	if level, err := logging.LogLevel(strings.ToUpper(c.current.Runtime.LoggingLevel)); err == nil {
 		LoggingBackend.SetLevel(level, "")
 		log.Noticef("logging level reloaded	level=%s", c.current.Runtime.LoggingLevel)
@@ -169,4 +174,106 @@ func (c *Config) WatchFile(file string) {
 	if err != nil {
 		log.Info("error:", err)
 	}
+}
+
+// ApplyEnvVars applies environment variable overrides to all config fields
+func (c *Config) ApplyEnvVars() {
+	if c.current == nil {
+		return
+	}
+
+	// Site configuration
+	if v := os.Getenv("ANZU_SITE_NAME"); v != "" {
+		c.current.Site.Name = v
+	}
+	if v := os.Getenv("ANZU_SITE_TITLE_MOTTO"); v != "" {
+		c.current.Site.TitleMotto = v
+	}
+	if v := os.Getenv("ANZU_SITE_DESCRIPTION"); v != "" {
+		c.current.Site.Description = v
+	}
+	if v := os.Getenv("ANZU_SITE_URL"); v != "" {
+		c.current.Site.Url = v
+	}
+	if v := os.Getenv("ANZU_SITE_LOGO_URL"); v != "" {
+		c.current.Site.LogoUrl = v
+	}
+	if v := os.Getenv("ANZU_SITE_THEME"); v != "" {
+		c.current.Site.Theme = v
+	}
+	if v := os.Getenv("ANZU_SITE_ANALYTICS"); v != "" {
+		c.current.Site.Services.Analytics = v
+	}
+	if v := os.Getenv("ANZU_SITE_QUICKSTART_HEADLINE"); v != "" {
+		c.current.Site.Quickstart.Headline = v
+	}
+	if v := os.Getenv("ANZU_SITE_QUICKSTART_DESCRIPTION"); v != "" {
+		c.current.Site.Quickstart.Description = v
+	}
+
+	// Home directory
+	if v := os.Getenv("ANZU_HOMEDIR"); v != "" {
+		c.current.Homedir = v
+	}
+
+	// Security configuration
+	if v := os.Getenv("ANZU_SECURITY_SECRET"); v != "" {
+		c.current.Security.Secret = v
+	}
+	if v := os.Getenv("ANZU_SECURITY_STRICT_IP_CHECK"); v != "" {
+		if strictIP, err := strconv.ParseBool(v); err == nil {
+			c.current.Security.StrictIPCheck = strictIP
+		}
+	}
+
+	// Mail configuration
+	if v := os.Getenv("ANZU_MAIL_SERVER"); v != "" {
+		c.current.Mail.Server = v
+	}
+	if v := os.Getenv("ANZU_MAIL_USER"); v != "" {
+		c.current.Mail.User = v
+	}
+	if v := os.Getenv("ANZU_MAIL_PASSWORD"); v != "" {
+		c.current.Mail.Password = v
+	}
+	if v := os.Getenv("ANZU_MAIL_PORT"); v != "" {
+		if port, err := strconv.Atoi(v); err == nil {
+			c.current.Mail.Port = port
+		}
+	}
+	if v := os.Getenv("ANZU_MAIL_FROM"); v != "" {
+		c.current.Mail.From = v
+	}
+	if v := os.Getenv("ANZU_MAIL_REPLY_TO"); v != "" {
+		c.current.Mail.ReplyTo = v
+	}
+
+	// OAuth configuration - Facebook
+	if v := os.Getenv("ANZU_OAUTH_FACEBOOK_KEY"); v != "" {
+		c.current.Oauth.Facebook.Key = v
+	}
+	if v := os.Getenv("ANZU_OAUTH_FACEBOOK_SECRET"); v != "" {
+		c.current.Oauth.Facebook.Secret = v
+	}
+	if v := os.Getenv("ANZU_OAUTH_FACEBOOK_CALLBACK"); v != "" {
+		c.current.Oauth.Facebook.Callback = v
+	}
+
+	// OAuth configuration - Google
+	if v := os.Getenv("ANZU_OAUTH_GOOGLE_KEY"); v != "" {
+		c.current.Oauth.Google.Key = v
+	}
+	if v := os.Getenv("ANZU_OAUTH_GOOGLE_SECRET"); v != "" {
+		c.current.Oauth.Google.Secret = v
+	}
+	if v := os.Getenv("ANZU_OAUTH_GOOGLE_CALLBACK"); v != "" {
+		c.current.Oauth.Google.Callback = v
+	}
+
+	// Runtime configuration
+	if v := os.Getenv("ANZU_RUNTIME_LOGGING_LEVEL"); v != "" {
+		c.current.Runtime.LoggingLevel = v
+	}
+
+	log.Notice("environment variables applied to configuration")
 }
