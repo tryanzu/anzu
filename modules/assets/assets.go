@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/mitchellh/goamz/s3"
 	"github.com/tryanzu/core/deps"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -20,7 +19,7 @@ func Boot() *Module {
 }
 
 type Module struct {
-	S3 *s3.Bucket `inject:""`
+	S3 *deps.S3Service `inject:""`
 }
 
 func (module *Module) UploadBase64(content, filename, related string, related_id primitive.ObjectID, meta interface{}) error {
@@ -40,7 +39,7 @@ func (module *Module) UploadBase64(content, filename, related string, related_id
 	path := related + "/" + random + extension
 
 	// Upload binary to s3
-	err = module.S3.Put(path, data, dataType, s3.ACL("public-read"))
+	err = module.S3.PutObject(path, data, dataType)
 	if err != nil {
 		return err
 	}

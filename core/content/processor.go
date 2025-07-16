@@ -9,11 +9,11 @@ import (
 var log = logging.MustGetLogger("content")
 
 // Content processor definition.
-type Processor func(deps, Parseable, tags) (Parseable, error)
-type Preprocessor func(deps, Parseable) (Parseable, error)
+type Processor func(DepsInterface, Parseable, tags) (Parseable, error)
+type Preprocessor func(DepsInterface, Parseable) (Parseable, error)
 
 // Postprocess a parseable type.
-func Postprocess(d deps, c Parseable) (processed Parseable, err error) {
+func Postprocess(d DepsInterface, c Parseable) (processed Parseable, err error) {
 	starts := time.Now()
 	list := parseTags(c)
 	pipeline := []Processor{
@@ -37,7 +37,7 @@ func Postprocess(d deps, c Parseable) (processed Parseable, err error) {
 }
 
 // Preprocess a parseable type.
-func Preprocess(d deps, c Parseable) (processed Parseable, err error) {
+func Preprocess(d DepsInterface, c Parseable) (processed Parseable, err error) {
 	starts := time.Now()
 	pipeline := []Preprocessor{
 		preReplaceMentionTags,

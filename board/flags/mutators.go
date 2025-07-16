@@ -11,7 +11,7 @@ import (
 )
 
 // UpsertComment performs validations before upserting data struct
-func UpsertFlag(d deps, f Flag) (flag Flag, err error) {
+func UpsertFlag(d DepsInterface, f Flag) (flag Flag, err error) {
 	ctx := context.TODO()
 	if f.ID.IsZero() {
 		f.ID = primitive.NewObjectID()

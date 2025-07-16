@@ -18,7 +18,7 @@ var (
 	commentMention, _ = regexp.Compile(`(?i)\B\@([\w\-]+)#[0-9]+`)
 )
 
-func preReplaceMentionTags(d deps, c Parseable) (processed Parseable, err error) {
+func preReplaceMentionTags(d DepsInterface, c Parseable) (processed Parseable, err error) {
 	processed = c
 	content := processed.GetContent()
 	list := mentions.FindAllString(content, -1)
@@ -105,7 +105,7 @@ func preReplaceMentionTags(d deps, c Parseable) (processed Parseable, err error)
 }
 
 // Replace mention related tags with links to mentioned user.
-func postReplaceMentionTags(d deps, c Parseable, list tags) (processed Parseable, err error) {
+func postReplaceMentionTags(d DepsInterface, c Parseable, list tags) (processed Parseable, err error) {
 	processed = c
 	if len(list) == 0 {
 		return

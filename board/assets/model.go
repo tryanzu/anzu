@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/getsentry/raven-go"
-	"github.com/mitchellh/goamz/s3"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -144,7 +143,7 @@ func (list Assets) HostRemotes(deps Deps, related string) {
 		}
 
 		path := related + "/" + ref.ID.Hex() + ref.Extension()
-		err = deps.S3().Put(path, data, ref.DataType, s3.ACL("public-read"))
+		err = deps.S3().PutObject(path, data, ref.DataType)
 		if err != nil {
 			raven.CaptureErrorAndWait(err, map[string]string{
 				"assetID": ref.ID.Hex(),

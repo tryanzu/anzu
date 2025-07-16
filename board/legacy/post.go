@@ -15,7 +15,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/mitchellh/goamz/s3"
 	"github.com/olebedev/config"
 	"github.com/tryanzu/core/board/legacy/model"
 	posts "github.com/tryanzu/core/board/posts"
@@ -35,7 +34,7 @@ type PostAPI struct {
 	CacheService  *goredis.Redis               `inject:""`
 	Feed          *feed.FeedModule             `inject:""`
 	Errors        *exceptions.ExceptionsModule `inject:""`
-	S3Bucket      *s3.Bucket                   `inject:""`
+	S3Bucket      *deps.S3Service              `inject:""`
 	Gaming        *gaming.Module               `inject:""`
 	ConfigService *config.Config               `inject:""`
 	Acl           *acl.Module                  `inject:""`
@@ -300,7 +299,7 @@ func (di PostAPI) PostUploadAttachment(c *gin.Context) {
 		}
 
 		path := "posts/" + name + extension
-		err = di.S3Bucket.Put(path, data, dataType, s3.ACL("public-read"))
+		err = di.S3Bucket.PutObject(path, data, dataType)
 
 		if err != nil {
 			panic(err)
@@ -432,7 +431,7 @@ func (di PostAPI) downloadAssetFromUrl(from string, post_id primitive.ObjectID) 
 		}
 
 		path := "posts/" + name
-		err = di.S3Bucket.Put(path, data, dataType, s3.ACL("public-read"))
+		err = di.S3Bucket.PutObject(path, data, dataType)
 
 		if err != nil {
 

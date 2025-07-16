@@ -1,8 +1,8 @@
 package posts
 
 import (
-	"github.com/mitchellh/goamz/s3"
 	"github.com/olebedev/config"
+	"github.com/tryanzu/core/deps"
 	"github.com/tryanzu/core/modules/acl"
 	"github.com/tryanzu/core/modules/exceptions"
 	"github.com/tryanzu/core/modules/feed"
@@ -19,5 +19,5 @@ type API struct {
 	Gaming *gaming.Module               `inject:""`
 	Errors *exceptions.ExceptionsModule `inject:""`
 	Config *config.Config               `inject:""`
-	S3     *s3.Bucket                   `inject:""`
+	S3     *deps.S3Service              `inject:""`
 }

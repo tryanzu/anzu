@@ -10,7 +10,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/kennygrant/sanitize"
-	"github.com/mitchellh/goamz/s3"
 	"github.com/nfnt/resize"
 	"github.com/tryanzu/core/board/comments"
 	"github.com/tryanzu/core/board/legacy/model"
@@ -287,7 +286,7 @@ func (di *UserAPI) UserUpdateProfileAvatar(c *gin.Context) {
 	// convert buffer to reader
 	reader := bytes.NewReader(buff.Bytes())
 	path := "users/" + name + extension
-	err = deps.Container.S3().PutReader(path, reader, reader.Size(), "image/png", s3.ACL("public-read"))
+	err = deps.Container.S3().PutReader(path, reader, reader.Size(), "image/png")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": err})
 		return

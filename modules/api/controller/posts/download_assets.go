@@ -2,7 +2,6 @@ package posts
 
 import (
 	"context"
-	"github.com/mitchellh/goamz/s3"
 	"github.com/tryanzu/core/board/legacy/model"
 	"github.com/tryanzu/core/deps"
 	"go.mongodb.org/mongo-driver/bson"
@@ -75,7 +74,7 @@ func (this API) savePostImages(from string, post_id primitive.ObjectID) error {
 		}
 
 		path := "posts/" + name
-		err = this.S3.Put(path, data, dataType, s3.ACL("public-read"))
+		err = this.S3.PutObject(path, data, dataType)
 
 		if err != nil {
 

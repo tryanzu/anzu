@@ -15,7 +15,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mitchellh/goamz/s3"
 	"github.com/tryanzu/core/deps"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -149,7 +148,7 @@ func (self Module) RegisterOwnAsset(remoteUrl string, o Parseable) *Asset {
 			}
 
 			path := "posts/" + name
-			err = module.S3.Put(path, data, dataType, s3.ACL("public-read"))
+			err = module.S3.PutObject(path, data, dataType)
 
 			if err != nil {
 				fail(err)

@@ -12,6 +12,8 @@ services:
             AWS_ACCESS_KEY_ID: minio
             AWS_SECRET_ACCESS_KEY: minio123
             AWS_S3_ENDPOINT: http://minio:9000
+            AWS_S3_BUCKET: spartan-board
+            AWS_S3_REGION: us-west-1
         depends_on:
             - mongo
             - minio

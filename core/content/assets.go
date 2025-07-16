@@ -13,7 +13,7 @@ var (
 	assetURL, _ = regexp.Compile(`(?m)^http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+`)
 )
 
-func preReplaceAssetTags(d deps, c Parseable) (processed Parseable, err error) {
+func preReplaceAssetTags(d DepsInterface, c Parseable) (processed Parseable, err error) {
 	processed = c
 	content := processed.GetContent()
 	list := assetURL.FindAllString(content, -1)
@@ -37,7 +37,7 @@ func preReplaceAssetTags(d deps, c Parseable) (processed Parseable, err error) {
 	return
 }
 
-func postReplaceAssetTags(d deps, c Parseable, list tags) (processed Parseable, err error) {
+func postReplaceAssetTags(d DepsInterface, c Parseable, list tags) (processed Parseable, err error) {
 	processed = c
 	if len(list) == 0 {
 		return
