@@ -1,3 +1,13 @@
+# Frontend build stage
+FROM node:20-alpine AS frontend_build
+WORKDIR /tmp/anzu/static/frontend
+COPY static/frontend/package.json .
+COPY static/frontend/package-lock.json* .
+RUN npm ci --legacy-peer-deps
+COPY static/frontend/ .
+RUN npm run build
+
+# Backend build stage
 FROM golang:1.24-alpine AS build_base
 RUN apk add --no-cache git
 WORKDIR /tmp/anzu
@@ -8,6 +18,8 @@ COPY go.sum .
 RUN go mod download
 
 COPY . .
+# Copy the built frontend from the previous stage
+COPY --from=frontend_build /tmp/anzu/static/frontend/public /tmp/anzu/static/frontend/public
 
 RUN go build -o ./out/anzu .
 
