@@ -101,10 +101,10 @@ func main() {
 			if len(args) == 1 {
 				port = args[0]
 			}
-			if v, exists := os.LookupEnv("BIND_TO"); exists {
+			if v, exists := os.LookupEnv("PORT"); exists {
 				port = v
 			}
-			if v, exists := os.LookupEnv("PORT"); exists {
+			if v, exists := os.LookupEnv("BIND_TO"); exists {
 				port = v
 			}
 
