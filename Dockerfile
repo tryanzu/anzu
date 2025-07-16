@@ -12,7 +12,7 @@ COPY . .
 RUN go build -o ./out/anzu .
 
 # Start fresh from a smaller image
-FROM alpine:3.9
+FROM alpine:latest
 RUN apk add ca-certificates
 
 COPY --from=build_base /tmp/anzu/out/anzu /anzu
