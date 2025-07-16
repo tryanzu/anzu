@@ -3,6 +3,7 @@ package deps
 import (
 	"context"
 	"flag"
+	"slices"
 	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -36,17 +37,11 @@ func IgniteMongoDB(container Deps) (Deps, error) {
 	}
 
 	db := client.Database(MongoName)
-	collections, err := db.ListCollectionNames(ctx, map[string]interface{}{})
+	collections, err := db.ListCollectionNames(ctx, map[string]any{})
 	if err != nil {
 		return container, err
 	}
-	seed := true
-	for _, v := range collections {
-		if v == "users" {
-			seed = false
-			break
-		}
-	}
+	seed := !slices.Contains(collections, "users")
 	if seed {
 		ShouldSeed = &seed
 	}
@@ -56,8 +51,8 @@ func IgniteMongoDB(container Deps) (Deps, error) {
 
 	// Email index
 	emailIndexModel := mongo.IndexModel{
-		Keys:    map[string]interface{}{"email": 1},
-		Options: options.Index().SetUnique(true).SetBackground(true),
+		Keys:    map[string]any{"email": 1},
+		Options: options.Index().SetUnique(true),
 	}
 	_, err = usersCol.Indexes().CreateOne(ctx, emailIndexModel)
 	if err != nil {
@@ -66,8 +61,8 @@ func IgniteMongoDB(container Deps) (Deps, error) {
 
 	// Username index
 	usernameIndexModel := mongo.IndexModel{
-		Keys:    map[string]interface{}{"username": 1},
-		Options: options.Index().SetUnique(true).SetBackground(true),
+		Keys:    map[string]any{"username": 1},
+		Options: options.Index().SetUnique(true),
 	}
 	_, err = usersCol.Indexes().CreateOne(ctx, usernameIndexModel)
 	if err != nil {
@@ -77,17 +72,10 @@ func IgniteMongoDB(container Deps) (Deps, error) {
 	// Text search index for posts
 	postsCol := db.Collection("posts")
 	searchIndexModel := mongo.IndexModel{
-		Keys: map[string]interface{}{
+		Keys: map[string]any{
 			"title":   "text",
 			"content": "text",
 		},
-		Options: options.Index().
-			SetWeights(map[string]interface{}{
-				"title":   3,
-				"content": 1,
-			}).
-			SetDefaultLanguage("spanish").
-			SetBackground(true),
 	}
 	_, err = postsCol.Indexes().CreateOne(ctx, searchIndexModel)
 	if err != nil {
