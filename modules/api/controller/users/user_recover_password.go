@@ -10,7 +10,7 @@ import (
 )
 
 func (this API) RequestPasswordRecovery(c *gin.Context) {
-	if helpers.IsEmail(c.Query("email")) == false {
+	if !helpers.IsEmail(c.Query("email")) {
 		c.JSON(400, gin.H{"status": "error", "message": "Invalid request, need valid email."})
 		return
 	}
@@ -45,7 +45,7 @@ func (this API) UpdatePasswordFromToken(c *gin.Context) {
 		return
 	}
 
-	if valid == false {
+	if !valid {
 		c.JSON(400, gin.H{"status": "error", "message": "Invalid request, need valid token."})
 		return
 	}
@@ -63,7 +63,7 @@ func (this API) UpdatePasswordFromToken(c *gin.Context) {
 				return
 			}
 
-			usr.Update(map[string]interface{}{"password": form.Password})
+			_ = usr.Update(map[string]interface{}{"password": form.Password})
 
 			c.JSON(200, gin.H{"status": "okay"})
 			return

@@ -21,7 +21,7 @@ func SiteMiddleware() gin.HandlerFunc {
 		if token := bucket.Get("jwt"); token != nil {
 			c.Set("jwt", token.(string))
 			bucket.Delete("jwt")
-			bucket.Save()
+			_ = bucket.Save()
 		}
 		cnf := config.C.Copy()
 		c.Set("config", cnf)
@@ -72,7 +72,7 @@ func UserMiddleware() gin.HandlerFunc {
 		// Attempt to retrieve user data otherwise abort request.
 		usr, err := user.FindId(deps.Container, oid)
 		if err != nil {
-			c.AbortWithError(412, err)
+			_ = c.AbortWithError(412, err)
 			return
 		}
 		sign := events.UserSign{

@@ -10,7 +10,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"path/filepath"
@@ -42,7 +42,7 @@ func (this API) savePostImages(from string, post_id primitive.ObjectID) error {
 	}
 
 	// Read all the bytes to the image
-	data, err := ioutil.ReadAll(response.Body)
+	data, err := io.ReadAll(response.Body)
 	if err != nil {
 		return errors.New(fmt.Sprint("Error while downloading", from, "-", err))
 	}

@@ -25,14 +25,18 @@ func Users(c *gin.Context) {
 		limit = n
 	}
 
-	if bid := c.Query("before"); len(bid) > 0 && primitive.IsValidObjectID(bid) {
-		id, _ := primitive.ObjectIDFromHex(bid)
-		before = &id
+	if bid := c.Query("before"); len(bid) > 0 {
+		if _, err := primitive.ObjectIDFromHex(bid); err == nil {
+			id, _ := primitive.ObjectIDFromHex(bid)
+			before = &id
+		}
 	}
 
-	if bid := c.Query("after"); len(bid) > 0 && primitive.IsValidObjectID(bid) {
-		id, _ := primitive.ObjectIDFromHex(bid)
-		after = &id
+	if bid := c.Query("after"); len(bid) > 0 {
+		if _, err := primitive.ObjectIDFromHex(bid); err == nil {
+			id, _ := primitive.ObjectIDFromHex(bid)
+			after = &id
+		}
 	}
 
 	set, err := user.FetchBy(
@@ -71,7 +75,7 @@ func Ban(c *gin.Context) {
 		return
 	}
 	rules := config.C.Rules()
-	if _, exists := rules.BanReasons[form.Reason]; false == exists {
+	if _, exists := rules.BanReasons[form.Reason]; !exists {
 		jsonErr(c, http.StatusBadRequest, "Invalid ban category")
 		return
 	}
@@ -116,6 +120,6 @@ func RecoveryLink(c *gin.Context) {
 	}
 	bucket := sessions.Default(c)
 	bucket.Set("jwt", auth)
-	bucket.Save()
+	_ = bucket.Save()
 	c.Redirect(http.StatusTemporaryRedirect, "/u/"+usr.UserNameSlug+"/"+usr.Id.Hex())
 }

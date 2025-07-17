@@ -27,15 +27,15 @@ type FeedModule struct {
 
 func (feed *FeedModule) Post(where interface{}) (post *Post, err error) {
 	ctx := context.Background()
-	switch where.(type) {
+	switch where := where.(type) {
 	case primitive.ObjectID, bson.M:
 		var criteria = bson.M{"deleted_at": bson.M{"$exists": false}}
 
-		switch where.(type) {
+		switch where := where.(type) {
 		case primitive.ObjectID:
-			criteria["_id"] = where.(primitive.ObjectID)
+			criteria["_id"] = where
 		case bson.M:
-			for k, v := range where.(bson.M) {
+			for k, v := range where {
 				criteria[k] = v
 			}
 		}
@@ -51,7 +51,7 @@ func (feed *FeedModule) Post(where interface{}) (post *Post, err error) {
 			return
 		}
 	case *Post:
-		post = where.(*Post)
+		post = where
 	default:
 		panic("Unknown argument")
 	}
@@ -62,7 +62,7 @@ func (feed *FeedModule) Post(where interface{}) (post *Post, err error) {
 
 func (feed *FeedModule) LightPost(post interface{}) (*LightPost, error) {
 	ctx := context.Background()
-	switch post.(type) {
+	switch post := post.(type) {
 	case primitive.ObjectID:
 		scope := LightPostModel{}
 		database := deps.Container.Mgo()
@@ -70,10 +70,10 @@ func (feed *FeedModule) LightPost(post interface{}) (*LightPost, error) {
 
 		// Use light post model
 		opts := options.FindOne().SetProjection(lightPostFields)
-		err := collection.FindOne(ctx, bson.M{"_id": post.(primitive.ObjectID)}, opts).Decode(&scope)
+		err := collection.FindOne(ctx, bson.M{"_id": post}, opts).Decode(&scope)
 		if err != nil {
 			if err == mongo.ErrNoDocuments {
-				return nil, exceptions.NotFound{"Invalid post id. Not found."}
+				return nil, exceptions.NotFound{Msg: "Invalid post id. Not found."}
 			}
 			return nil, err
 		}
@@ -88,9 +88,9 @@ func (feed *FeedModule) LightPost(post interface{}) (*LightPost, error) {
 
 func (feed *FeedModule) LightPosts(posts interface{}) ([]LightPostModel, error) {
 	ctx := context.Background()
-	switch posts.(type) {
+	switch posts := posts.(type) {
 	case []primitive.ObjectID:
-		postIDs := posts.([]primitive.ObjectID)
+		postIDs := posts
 		if len(postIDs) == 0 {
 			return []LightPostModel{}, nil
 		}
@@ -104,7 +104,7 @@ func (feed *FeedModule) LightPosts(posts interface{}) ([]LightPostModel, error) 
 		opts := options.Find().SetProjection(lightPostFields)
 		cursor, err := collection.Find(ctx, filter, opts)
 		if err != nil {
-			return nil, exceptions.NotFound{"Invalid posts id. Not found."}
+			return nil, exceptions.NotFound{Msg: "Invalid posts id. Not found."}
 		}
 		defer cursor.Close(ctx)
 
@@ -121,9 +121,9 @@ func (feed *FeedModule) LightPosts(posts interface{}) ([]LightPostModel, error) 
 
 		// Use light post model
 		opts := options.Find().SetProjection(lightPostFields)
-		cursor, err := collection.Find(ctx, posts.(bson.M), opts)
+		cursor, err := collection.Find(ctx, posts, opts)
 		if err != nil {
-			return nil, exceptions.NotFound{"Invalid posts criteria. Not found."}
+			return nil, exceptions.NotFound{Msg: "Invalid posts criteria. Not found."}
 		}
 		defer cursor.Close(ctx)
 
@@ -145,7 +145,7 @@ func (feed *FeedModule) GetComment(id primitive.ObjectID) (comment *Comment, err
 	err = collection.FindOne(ctx, bson.M{"_id": id}).Decode(&comment)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, exceptions.NotFound{"Comment not found"}
+			return nil, exceptions.NotFound{Msg: "Comment not found"}
 		}
 		return
 	}

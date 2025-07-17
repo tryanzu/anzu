@@ -81,7 +81,6 @@ func (self *Post) LoadUsersHashtables() {
 	}
 
 	self.UsersHashtable = ht
-	return
 }
 
 // Comment loading by ID for post
@@ -104,7 +103,7 @@ func (self *Post) LoadCommentById(id primitive.ObjectID) error {
 	self.Comments.Set = []*Comment{c}
 
 	for _, comment := range self.Comments.Set {
-		content.ParseTags(comment)
+		_ = content.ParseTags(comment)
 	}
 
 	return nil
@@ -133,7 +132,7 @@ func (self *Post) PushComment(c string, user_id primitive.ObjectID) *Comment {
 
 	// Use content module to run processors chain
 	content := self.di.Content
-	content.Parse(comment)
+	_ = content.Parse(comment)
 
 	// Publish comment
 	ctx := context.Background()
@@ -152,7 +151,7 @@ func (self *Post) PushComment(c string, user_id primitive.ObjectID) *Comment {
 	self.PushUser(user_id)
 
 	// Finally parse tags in content for runtime usage
-	content.ParseTags(comment)
+	_ = content.ParseTags(comment)
 
 	return comment
 }

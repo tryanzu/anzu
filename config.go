@@ -17,7 +17,7 @@ import (
 )
 
 func init() {
-	gotenv.Load()
+	_ = gotenv.Load()
 	if v, exists := os.LookupEnv("ENV"); exists {
 		api.ENV = v
 		deps.ENV = v

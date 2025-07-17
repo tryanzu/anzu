@@ -89,11 +89,11 @@ func preReplaceMentionTags(d DepsInterface, c Parseable) (processed Parseable, e
 	var refs []Mention
 	for _, usr := range targets {
 		mention, exists := possible[usr.Username]
-		if exists == false {
+		if !exists {
 			continue
 		}
 		mention.UserID = usr.ID
-		refs = append(refs, mention)
+		_ = append(refs, mention) // refs not used in return
 		content = mention.Replace(content)
 
 		// Track mention
@@ -125,10 +125,10 @@ func postReplaceMentionTags(d DepsInterface, c Parseable, list tags) (processed 
 
 	content := processed.GetContent()
 	for _, tag := range mentions {
-		if id := tag.Params[0]; primitive.IsValidObjectID(id) {
+		if id := tag.Params[0]; func() bool { _, err := primitive.ObjectIDFromHex(id); return err == nil }() {
 			oidHex, _ := primitive.ObjectIDFromHex(id)
 			name, exists := users[oidHex]
-			if exists == false {
+			if !exists {
 				continue
 			}
 

@@ -185,7 +185,7 @@ func requestAccountValidation(u User) hermes.Email {
 			Name: u.UserName,
 			Intros: []string{
 				fmt.Sprintf("Tu cuenta en %s (%s) aún no ha sido validada, si recuerdas tu registro en %s ayudanos a validarla a la brevedad.", c.Site.Name, u.UserName, c.Site.Name),
-				fmt.Sprintf("Si tu cuenta no es validada en las proximas 24 horas, borraremos esta cuenta y sus datos de nuestra plataforma."),
+				"Si tu cuenta no es validada en las proximas 24 horas, borraremos esta cuenta y sus datos de nuestra plataforma.",
 			},
 			Actions: []hermes.Action{
 				{

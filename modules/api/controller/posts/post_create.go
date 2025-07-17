@@ -65,17 +65,17 @@ func (this API) Create(c *gin.Context) {
 	}
 
 	usr := this.Acl.User(uid)
-	if usr.CanWrite(category.Permissions.Write) == false || usr.HasValidated() == false {
+	if !usr.CanWrite(category.Permissions.Write) || !usr.HasValidated() {
 		c.JSON(403, gin.H{"status": "error", "message": "Not enough permissions to post in this category."})
 		return
 	}
 
-	if form.Pinned == true && usr.Can("pin-board-posts") == false {
+	if form.Pinned && !usr.Can("pin-board-posts") {
 		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Not enough permissions to pin."})
 		return
 	}
 
-	if form.Lock == true && usr.Can("block-own-post-comments") == false {
+	if form.Lock && !usr.Can("block-own-post-comments") {
 		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Not enough permissions to lock."})
 		return
 	}
@@ -93,8 +93,7 @@ func (this API) Create(c *gin.Context) {
 
 	content := html.EscapeString(form.Content)
 
-	var assets []string
-	assets = assetURL.FindAllString(content, -1)
+	var assets []string = assetURL.FindAllString(content, -1)
 
 	// Empty participants list - only author included
 	users := []primitive.ObjectID{uid}
@@ -129,11 +128,11 @@ func (this API) Create(c *gin.Context) {
 
 	u, err := user.FindId(deps.Container, uid)
 	if err != nil {
-		c.AbortWithError(500, err)
+		_ = c.AbortWithError(500, err)
 		return
 	}
 
-	if user.CanBeTrusted(u) == false {
+	if !user.CanBeTrusted(u) {
 		publish.Deleted = time.Now()
 	}
 
@@ -154,7 +153,7 @@ func (this API) Create(c *gin.Context) {
 	for _, asset := range assets {
 
 		// Non blocking image download
-		go this.savePostImages(asset, publish.Id)
+		go func(a string, id primitive.ObjectID) { _ = this.savePostImages(a, id) }(asset, publish.Id)
 	}
 
 	// Finished creating the post

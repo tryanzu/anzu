@@ -1,10 +1,10 @@
 package handle
 
 import (
-	"github.com/golang-jwt/jwt/v4"
 	"github.com/getsentry/raven-go"
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/olebedev/config"
 	"github.com/op/go-logging"
 	uuid "github.com/satori/go.uuid"
@@ -64,7 +64,7 @@ func (di *MiddlewareAPI) TrustIP() gin.HandlerFunc {
 func (di *MiddlewareAPI) ValidateBsonID(name string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param(name)
-		if !primitive.IsValidObjectID(id) {
+		if _, err := primitive.ObjectIDFromHex(id); err != nil {
 			c.JSON(400, gin.H{"message": "Invalid request, present ID is not valid.", "status": "error"})
 			return
 		}
@@ -93,7 +93,7 @@ func (di *MiddlewareAPI) Authorization() gin.HandlerFunc {
 			uuid := uuid.NewV4()
 			sid = uuid.String()
 			bucket.Set("session_id", sid)
-			bucket.Save()
+			_ = bucket.Save()
 		} else {
 			sid = session.(string)
 		}
@@ -113,7 +113,7 @@ func (di *MiddlewareAPI) Authorization() gin.HandlerFunc {
 				})
 
 				// Branch out into the possible error from signing
-				switch err.(type) {
+				switch err := err.(type) {
 				case nil:
 
 					if !signed.Valid { // but may still be invalid
@@ -127,7 +127,7 @@ func (di *MiddlewareAPI) Authorization() gin.HandlerFunc {
 
 				case *jwt.ValidationError: // Something went wrong during validation
 
-					signingError := err.(*jwt.ValidationError)
+					signingError := err
 
 					switch signingError.Errors {
 					case jwt.ValidationErrorExpired:
@@ -155,7 +155,7 @@ func (di *MiddlewareAPI) Authorization() gin.HandlerFunc {
 
 				scope := []string{}
 				claims := signed.Claims.(jwt.MapClaims)
-				if address, exists := claims["address"].(string); exists && conf.Security.StrictIPCheck == true {
+				if address, exists := claims["address"].(string); exists && conf.Security.StrictIPCheck {
 					if address != c.ClientIP() {
 						c.AbortWithStatusJSON(401, gin.H{"status": "error", "message": "Token compromised, will be notified"})
 						return
@@ -186,7 +186,7 @@ func (di *MiddlewareAPI) NeedAuthorization() gin.HandlerFunc {
 		// Check whether the token is present
 		_, token_exists := c.Get("token")
 
-		if token_exists == false {
+		if !token_exists {
 
 			c.JSON(401, gin.H{"status": "error", "message": "Auth method required"})
 
@@ -222,7 +222,7 @@ func (di *MiddlewareAPI) NeedAclAuthorization(permission string) gin.HandlerFunc
 
 func (di *MiddlewareAPI) ErrorTracking(debug bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if debug == false {
+		if !debug {
 			defer func() {
 				var packet *raven.Packet
 

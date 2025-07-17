@@ -28,7 +28,7 @@ func NewFlag(c *gin.Context) {
 	}
 
 	rules := config.C.Rules()
-	if _, exists := rules.Flags[form.Reason]; false == exists {
+	if _, exists := rules.Flags[form.Reason]; !exists {
 		jsonErr(c, http.StatusBadRequest, "Invalid flag reason")
 		return
 	}

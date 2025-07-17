@@ -48,7 +48,7 @@ func UpsertBan(d deps, ban Ban) (Ban, error) {
 	}
 	rules := config.C.Rules()
 	rule, exists := rules.BanReasons[ban.Reason]
-	if false == exists {
+	if !exists {
 		return ban, ErrInvalidBanReason
 	}
 	effects, err := rule.Effects(ban.RelatedTo, usr.BannedTimes)

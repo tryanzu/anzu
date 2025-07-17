@@ -12,7 +12,7 @@ type userToken struct {
 	Address string   `json:"address"`
 	UserID  string   `json:"user_id"`
 	Scopes  []string `json:"scope"`
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 }
 
 func CanBeTrusted(user User) bool {
@@ -42,8 +42,8 @@ func genToken(address string, id primitive.ObjectID, roles []UserRole, expiratio
 		address,
 		id.Hex(),
 		scope,
-		jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Hour * time.Duration(expiration)).Unix(),
+		jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * time.Duration(expiration))),
 			Issuer:    "anzu",
 		},
 	}

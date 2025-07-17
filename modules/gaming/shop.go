@@ -22,24 +22,24 @@ func (self *User) AcquireBadge(id primitive.ObjectID, validation bool) error {
 	err := database.Collection("badges").FindOne(ctx, bson.M{"_id": id}).Decode(&badge)
 
 	if err != nil {
-		return exceptions.NotFound{"Invalid badge id, not found."}
+		return exceptions.NotFound{Msg: "Invalid badge id, not found."}
 	}
 
 	if validation {
 
 		if badge.Type != "clothes" && badge.Type != "weapon" && badge.Type != "power" && badge.Type != "armour" {
 
-			return exceptions.UnexpectedValue{"Not a valid type of badge to get acquired."}
+			return exceptions.UnexpectedValue{Msg: "Not a valid type of badge to get acquired."}
 		}
 
 		if badge.Coins > 0 && usr.Gaming.Coins < badge.Coins {
 
-			return exceptions.OutOfBounds{"Not enough coins to buy item."}
+			return exceptions.OutOfBounds{Msg: "Not enough coins to buy item."}
 		}
 
 		if badge.RequiredLevel > 0 && usr.Gaming.Level < badge.RequiredLevel {
 
-			return exceptions.OutOfBounds{"Not enough level."}
+			return exceptions.OutOfBounds{Msg: "Not enough level."}
 		}
 
 		if !badge.RequiredBadge.IsZero() {
@@ -58,7 +58,7 @@ func (self *User) AcquireBadge(id primitive.ObjectID, validation bool) error {
 
 			if !user_valid {
 
-				return exceptions.OutOfBounds{"Don't have required badge."}
+				return exceptions.OutOfBounds{Msg: "Don't have required badge."}
 			}
 		}
 	}

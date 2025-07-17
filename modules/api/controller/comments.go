@@ -48,7 +48,7 @@ func Comments(c *gin.Context) {
 
 	postID, err := primitive.ObjectIDFromHex(pid)
 	if err != nil {
-		c.AbortWithError(500, err)
+		_ = c.AbortWithError(500, err)
 		return
 	}
 	set, err := comments.FetchBy(
@@ -56,20 +56,20 @@ func Comments(c *gin.Context) {
 		comments.Post(postID, limit, offset, sort == "reverse", before, after),
 	)
 	if err != nil {
-		c.AbortWithError(500, err)
+		_ = c.AbortWithError(500, err)
 		return
 	}
 
 	list := set.List
 	list, err = list.WithReplies(deps.Container, 5)
 	if err != nil {
-		c.AbortWithError(500, err)
+		_ = c.AbortWithError(500, err)
 		return
 	}
 
 	list, err = list.WithUsers(deps.Container)
 	if err != nil {
-		c.AbortWithError(500, err)
+		_ = c.AbortWithError(500, err)
 		return
 	}
 
@@ -81,7 +81,7 @@ func Comments(c *gin.Context) {
 	if userID, exists := c.Get("userID"); exists {
 		votes, err := list.VotesOf(deps.Container, userID.(primitive.ObjectID))
 		if err != nil {
-			c.AbortWithError(500, err)
+			_ = c.AbortWithError(500, err)
 			return
 		}
 
@@ -101,16 +101,16 @@ func NewComment(c *gin.Context) {
 	)
 	cid, err := primitive.ObjectIDFromHex(c.Param("id"))
 	if err != nil {
-		c.AbortWithError(http.StatusBadRequest, errors.New("Invalid id for reply"))
+		_ = c.AbortWithError(http.StatusBadRequest, errors.New("Invalid id for reply"))
 		return
 	}
 	if err := c.BindJSON(&form); err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
+		_ = c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 
 	if kind != "post" && kind != "comment" {
-		c.AbortWithError(500, errors.New("invalid kind of reply"))
+		_ = c.AbortWithError(500, errors.New("invalid kind of reply"))
 		return
 	}
 
@@ -129,7 +129,7 @@ func NewComment(c *gin.Context) {
 
 	if err != nil {
 		log.Errorf("upsert comment failed	err=%v", err)
-		c.AbortWithError(http.StatusInternalServerError, errors.New("invalid kind of reply"))
+		_ = c.AbortWithError(http.StatusInternalServerError, errors.New("invalid kind of reply"))
 		return
 	}
 	events.In <- events.PostComment(comment.Id)
@@ -146,31 +146,31 @@ func UpdateComment(c *gin.Context) {
 
 	cid, err := primitive.ObjectIDFromHex(c.Param("id"))
 	if err != nil {
-		c.AbortWithError(500, errors.New("Invalid id for reply"))
+		_ = c.AbortWithError(500, errors.New("Invalid id for reply"))
 		return
 	}
 	if err := c.BindJSON(&form); err != nil {
-		c.AbortWithError(500, errors.New("invalid reply body"))
+		_ = c.AbortWithError(500, errors.New("invalid reply body"))
 		return
 	}
 	comment, err := comments.FindId(deps.Container, cid)
 	if err != nil {
-		c.AbortWithError(404, errors.New("unknown comment to update"))
+		_ = c.AbortWithError(404, errors.New("unknown comment to update"))
 		return
 	}
 	post, err := posts.FindId(deps.Container, comment.PostId)
 	if err != nil {
-		c.AbortWithError(404, errors.New("unknown comment's post to update"))
+		_ = c.AbortWithError(404, errors.New("unknown comment's post to update"))
 		return
 	}
-	if perms(c).CanUpdateComment(comment.UserId, post.Category) == false {
+	if !perms(c).CanUpdateComment(comment.UserId, post.Category) {
 		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"status": "error", "message": "Not allowed to perform this operation"})
 		return
 	}
 	comment.Content = form.Content
 	updated, err := comments.UpsertComment(deps.Container, comment)
 	if err != nil {
-		c.AbortWithError(500, err)
+		_ = c.AbortWithError(500, err)
 		return
 	}
 
@@ -199,7 +199,7 @@ func DeleteComment(c *gin.Context) {
 		return
 	}
 
-	if perms(c).CanDeleteComment(comment.UserId, post.Category) == false {
+	if !perms(c).CanDeleteComment(comment.UserId, post.Category) {
 		c.JSON(http.StatusForbidden, gin.H{"status": "error", "message": "Not allowed to perform this operation"})
 		return
 	}

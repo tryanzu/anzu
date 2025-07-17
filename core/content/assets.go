@@ -56,10 +56,10 @@ func postReplaceAssetTags(d DepsInterface, c Parseable, list tags) (processed Pa
 
 	content := processed.GetContent()
 	for _, tag := range assetList {
-		if id := tag.Params[0]; primitive.IsValidObjectID(id) {
+		if id := tag.Params[0]; func() bool { _, err := primitive.ObjectIDFromHex(id); return err == nil }() {
 			objID, _ := primitive.ObjectIDFromHex(id)
 			ref, exists := urls[objID]
-			if exists == false {
+			if !exists {
 				continue
 			}
 			content = strings.Replace(content, tag.Original, ref.URL, -1)

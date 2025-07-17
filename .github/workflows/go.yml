@@ -7,18 +7,35 @@ on:
         branches: [master, develop]
 
 jobs:
+    lint:
+        name: Lint
+        runs-on: ubuntu-latest
+        steps:
+            - name: Check out code
+              uses: actions/checkout@v4
+
+            - name: Set up Go
+              uses: actions/setup-go@v5
+              with:
+                  go-version: ^1.24
+
+            - name: golangci-lint
+              uses: golangci/golangci-lint-action@v6
+              with:
+                  version: latest
+
     build:
         name: Build
         runs-on: ubuntu-latest
         steps:
             - name: Set up Go 1.x
-              uses: actions/setup-go@v2
+              uses: actions/setup-go@v5
               with:
                   go-version: ^1.24
               id: go
 
             - name: Check out code into the Go module directory
-              uses: actions/checkout@v2
+              uses: actions/checkout@v4
 
             - name: Get dependencies
               run: |

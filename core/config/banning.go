@@ -21,7 +21,7 @@ func (re BanReason) Effects(related string, times int) (BanEffects, error) {
 		return BanEffects{60, false}, nil
 	}
 	vm := goja.New()
-	vm.RunString(`
+	_, _ = vm.RunString(`
 		var exports = {};
 	`)
 	vm.Set("banN", times)

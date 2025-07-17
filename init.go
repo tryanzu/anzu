@@ -137,5 +137,5 @@ func main() {
 	rootCmd.AddCommand(cmdAPI)
 	rootCmd.AddCommand(cmdSyncRanking)
 	rootCmd.AddCommand(shellCmd)
-	rootCmd.Execute()
+	_ = rootCmd.Execute()
 }

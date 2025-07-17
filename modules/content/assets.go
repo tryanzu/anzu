@@ -7,7 +7,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"path/filepath"
@@ -110,7 +110,7 @@ func (self Module) RegisterOwnAsset(remoteUrl string, o Parseable) *Asset {
 		}
 
 		// Read all the bytes to the image
-		data, err := ioutil.ReadAll(response.Body)
+		data, err := io.ReadAll(response.Body)
 
 		if err != nil {
 			fail(err)

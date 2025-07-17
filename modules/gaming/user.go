@@ -86,7 +86,7 @@ func syncLevelStats(d Deps, id primitive.ObjectID, forceSync bool) (err error) {
 			}
 
 			// Send updated data over the wire
-			notify.Transmit <- notify.Socket{"user " + id.Hex(), "gaming", map[string]interface{}{
+			notify.Transmit <- notify.Socket{Chan: "user " + id.Hex(), Action: "gaming", Params: map[string]interface{}{
 				"level":   r.Level,
 				"tribute": r.Tribute,
 				"shit":    r.Shit,
@@ -95,7 +95,7 @@ func syncLevelStats(d Deps, id primitive.ObjectID, forceSync bool) (err error) {
 			break
 		}
 
-		notify.Transmit <- notify.Socket{"user " + id.Hex(), "gaming", map[string]interface{}{
+		notify.Transmit <- notify.Socket{Chan: "user " + id.Hex(), Action: "gaming", Params: map[string]interface{}{
 			"level":   usr.G.Level,
 			"tribute": usr.G.Tribute,
 			"shit":    usr.G.Shit,

@@ -22,7 +22,7 @@ func (this API) Update(c *gin.Context) {
 
 	// Get the post using the id
 	id := c.Params.ByName("id")
-	if !primitive.IsValidObjectID(id) {
+	if _, err := primitive.ObjectIDFromHex(id); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid request, no valid params.", "status": "error"})
 		return
 	}
@@ -46,7 +46,7 @@ func (this API) Update(c *gin.Context) {
 		return
 	}
 
-	if !primitive.IsValidObjectID(form.Category) {
+	if _, err := primitive.ObjectIDFromHex(form.Category); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Invalid category id"})
 		return
 	}
@@ -60,22 +60,22 @@ func (this API) Update(c *gin.Context) {
 	}
 
 	user := this.Acl.User(uid)
-	if user.CanUpdatePost(post) == false {
+	if !user.CanUpdatePost(post) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Can't update post. Insufficient permissions", "status": "error"})
 		return
 	}
 
-	if post.Category != category.Id && user.CanWrite(category.Permissions.Write) == false {
+	if post.Category != category.Id && !user.CanWrite(category.Permissions.Write) {
 		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Not enough permissions to write this category."})
 		return
 	}
 
-	if form.Lock == true && form.Lock != post.Lock && user.CanLockPost(post) == false {
+	if form.Lock && form.Lock != post.Lock && !user.CanLockPost(post) {
 		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Not enough permissions to block comments in this post"})
 		return
 	}
 
-	if form.Pinned == true && form.Pinned != post.Pinned && user.Can("pin-board-posts") == false {
+	if form.Pinned && form.Pinned != post.Pinned && !user.Can("pin-board-posts") {
 		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Not enough permissions to pin."})
 		return
 	}
@@ -113,12 +113,12 @@ func (this API) Update(c *gin.Context) {
 		},
 	}
 	unset := bson.M{}
-	if form.Pinned == true {
+	if form.Pinned {
 		// Update the set directive by creating a copy of it and using type assertion
 		set := query["$set"].(bson.M)
 		set["pinned"] = form.Pinned
 		query["$set"] = set
-		if post.Pinned == false {
+		if !post.Pinned {
 			events.In <- events.RawEmit("feed", "action", map[string]interface{}{
 				"fire": "pinned",
 				"id":   post.Id.Hex(),
@@ -126,7 +126,7 @@ func (this API) Update(c *gin.Context) {
 		}
 	} else {
 		unset["pinned"] = ""
-		if post.Pinned == true {
+		if post.Pinned {
 			events.In <- events.RawEmit("feed", "action", map[string]interface{}{
 				"fire": "unpinned",
 				"id":   post.Id.Hex(),
@@ -134,18 +134,18 @@ func (this API) Update(c *gin.Context) {
 		}
 	}
 
-	if form.Lock == true {
+	if form.Lock {
 		set := query["$set"].(bson.M)
 		set["lock"] = form.Lock
 		query["$set"] = set
-		if post.Lock == false {
+		if !post.Lock {
 			events.In <- events.RawEmit("post", post.Id.Hex(), map[string]interface{}{
 				"fire": "locked",
 			})
 		}
 	} else {
 		unset["lock"] = ""
-		if post.Lock == true {
+		if post.Lock {
 			events.In <- events.RawEmit("post", post.Id.Hex(), map[string]interface{}{
 				"fire": "unlocked",
 			})

@@ -100,11 +100,11 @@ func onVote(e pool.Event) error {
 			return err
 		}
 		if rewards.Provider > 0 {
-			err = gaming.IncreaseUserSwords(deps.Container, vote.UserID, int(rewards.Provider))
+			_ = gaming.IncreaseUserSwords(deps.Container, vote.UserID, int(rewards.Provider))
 		}
 
 		if rewards.Receiver > 0 {
-			err = gaming.IncreaseUserSwords(deps.Container, userID, int(rewards.Receiver))
+			_ = gaming.IncreaseUserSwords(deps.Container, userID, int(rewards.Receiver))
 		}
 	}
 

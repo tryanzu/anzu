@@ -148,7 +148,7 @@ func FindNames(d deps, list ...primitive.ObjectID) (common.UsersStringMap, error
 	// Unknown users should be cached like so...
 	if len(missing) != len(users) {
 		for _, id := range missing {
-			if _, exists := hash[id]; exists == false {
+			if _, exists := hash[id]; !exists {
 				hash[id] = "Unknown"
 				err = d.LedisDB().Set([]byte("user:"+id.Hex()+":names"), []byte("Unknown"))
 				if err != nil {

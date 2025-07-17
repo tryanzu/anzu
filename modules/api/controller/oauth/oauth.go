@@ -48,7 +48,7 @@ func (a API) GetAuthRedirect(c *gin.Context) {
 	bucket := sessions.Default(c)
 	bucket.Set("oauth", sess.Marshal())
 	bucket.Set("redir", c.Query("redir"))
-	bucket.Save()
+	_ = bucket.Save()
 
 	c.Redirect(303, url)
 }
@@ -123,14 +123,14 @@ func (a API) CompleteAuth(c *gin.Context) {
 	bucket.Delete("oauth")
 	bucket.Delete("redir")
 	bucket.Set("jwt", token)
-	bucket.Save()
+	_ = bucket.Save()
 	c.Redirect(303, forward)
 }
 
 type UserToken struct {
 	UserID string   `json:"user_id"`
 	Scopes []string `json:"scope"`
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 }
 
 func (a API) generateUserToken(id primitive.ObjectID, roles []user.UserRole, expiration int) string {
@@ -142,8 +142,8 @@ func (a API) generateUserToken(id primitive.ObjectID, roles []user.UserRole, exp
 	claims := UserToken{
 		id.Hex(),
 		scope,
-		jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Hour * time.Duration(expiration)).Unix(),
+		jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * time.Duration(expiration))),
 			Issuer:    "spartangeek",
 		},
 	}

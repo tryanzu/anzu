@@ -39,29 +39,29 @@ func (module *Module) Get(usr interface{}) (*One, error) {
 	database := deps.Container.Mgo()
 	collection := database.Collection("users")
 
-	switch usr.(type) {
+	switch usr := usr.(type) {
 	case primitive.ObjectID:
 		// Get the user using its id
-		err := collection.FindOne(ctx, bson.M{"_id": usr.(primitive.ObjectID)}).Decode(&model)
+		err := collection.FindOne(ctx, bson.M{"_id": usr}).Decode(&model)
 		if err != nil {
 			if err == mongo.ErrNoDocuments {
-				return nil, exceptions.NotFound{"Invalid user id. Not found."}
+				return nil, exceptions.NotFound{Msg: "Invalid user id. Not found."}
 			}
 			return nil, err
 		}
 
 	case bson.M:
 		// Get the user using the filter
-		err := collection.FindOne(ctx, usr.(bson.M)).Decode(&model)
+		err := collection.FindOne(ctx, usr).Decode(&model)
 		if err != nil {
 			if err == mongo.ErrNoDocuments {
-				return nil, exceptions.NotFound{"Invalid user id. Not found."}
+				return nil, exceptions.NotFound{Msg: "Invalid user id. Not found."}
 			}
 			return nil, err
 		}
 
 	case *UserPrivate:
-		model = usr.(*UserPrivate)
+		model = usr
 
 	default:
 		panic("Unknown argument")

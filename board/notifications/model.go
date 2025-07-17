@@ -66,19 +66,19 @@ func (all Notifications) Humanize(deps Deps) (list []map[string]interface{}, err
 	ulist, err := user.FindList(deps, all.UsersScope())
 	if err != nil {
 		panic(err)
-		return
+
 	}
 
 	clist, err := comments.FindList(deps, all.CommentsScope())
 	if err != nil {
 		panic(err)
-		return
+
 	}
 
 	plist, err := posts.FindList(deps, clist.PostsScope())
 	if err != nil {
 		panic(err)
-		return
+
 	}
 
 	umap := ulist.Map()

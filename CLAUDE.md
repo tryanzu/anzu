@@ -19,6 +19,10 @@ npm start            # Development build with watch
 npm run eslint       # Lint JavaScript code
 ```
 
+### Code Quality
+- **Lint Go code**: `golangci-lint run` (install with `go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest`)
+- **Quick lint**: `golangci-lint run --fast` (faster checks only)
+
 ### Database and Services
 - **Start MongoDB**: `docker compose up` (includes MongoDB 8, mongo-express, and MinIO)
 - **Sync ranking**: `./anzu sync-ranking` (recalculates gaming rankings)

@@ -1,7 +1,7 @@
 package feed
 
 type List struct {
-	module *FeedModule
-	limit  int
-	offset int
+	_ *FeedModule // Reserved for future use
+	_ int         // Reserved for future use
+	_ int         // Reserved for future use
 }

@@ -52,7 +52,7 @@ func (this API) Get(c *gin.Context) {
 		events.In <- events.PostView(signs(c), post.Id)
 	}
 
-	content.Postprocess(deps.Container, post)
+	_, _ = content.Postprocess(deps.Container, post)
 	post.LoadUsersHashtables()
 	data := post.Data()
 	data.Comments.Total = this.Feed.TrueCommentCount(data.Id)

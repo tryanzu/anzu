@@ -28,7 +28,7 @@ func InArray(val interface{}, array interface{}) (exists bool, index int) {
 		s := reflect.ValueOf(array)
 
 		for i := 0; i < s.Len(); i++ {
-			if reflect.DeepEqual(val, s.Index(i).Interface()) == true {
+			if reflect.DeepEqual(val, s.Index(i).Interface()) {
 				index = i
 				exists = true
 				return
@@ -80,9 +80,6 @@ func StrSlugRandom(s string) string {
 
 	var letters = []rune("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
-	now := time.Now()
-	rand.Seed(now.UnixNano())
-
 	b := make([]rune, 6)
 	for i := range b {
 		b[i] = letters[rand.Intn(len(letters))]
@@ -106,9 +103,6 @@ func StrCapRandom(length int) string {
 
 	var letters = []rune("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
-	now := time.Now()
-	rand.Seed(now.UnixNano())
-
 	b := make([]rune, length)
 	for i := range b {
 		b[i] = letters[rand.Intn(len(letters))]
@@ -122,9 +116,6 @@ func StrCapRandom(length int) string {
 func StrNumRandom(length int) string {
 
 	var letters = []rune("0123456789")
-
-	now := time.Now()
-	rand.Seed(now.UnixNano())
 
 	b := make([]rune, length)
 	for i := range b {

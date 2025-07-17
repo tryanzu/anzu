@@ -5,7 +5,7 @@ import (
 	"crypto/md5"
 	"crypto/tls"
 	"encoding/hex"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"path/filepath"
@@ -114,14 +114,14 @@ func (list Assets) HostRemotes(deps Deps, related string) {
 	for _, ref := range list {
 		res, err := client.Get(ref.Original)
 		if err != nil {
-			ref.useRemote(deps, err.Error())
+			_ = ref.useRemote(deps, err.Error())
 			continue
 		}
 
 		// Read data from remote stream.
-		data, err := ioutil.ReadAll(res.Body)
+		data, err := io.ReadAll(res.Body)
 		if err != nil {
-			ref.useRemote(deps, err.Error())
+			_ = ref.useRemote(deps, err.Error())
 			continue
 		}
 
@@ -130,14 +130,14 @@ func (list Assets) HostRemotes(deps Deps, related string) {
 		ref.MD5 = hex.EncodeToString(hasher.Sum(nil))
 		duplicated, err := FindHash(deps, ref.MD5)
 		if err == nil && len(duplicated.Hosted) > 0 {
-			ref.useRepeated(deps, duplicated)
+			_ = ref.useRepeated(deps, duplicated)
 			continue
 		}
 
 		// Detect the downloaded file type
 		ref.DataType = http.DetectContentType(data)
 		if ref.DataType[0:5] != "image" {
-			ref.useRemote(deps, "Not an image, using original asset ref")
+			_ = ref.useRemote(deps, "Not an image, using original asset ref")
 			res.Body.Close()
 			continue
 		}
@@ -150,7 +150,7 @@ func (list Assets) HostRemotes(deps Deps, related string) {
 			})
 		}
 
-		ref.useHosted(deps, baseURL+path)
+		_ = ref.useHosted(deps, baseURL+path)
 		res.Body.Close()
 	}
 }

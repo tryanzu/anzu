@@ -22,17 +22,17 @@ func UpdatePost(c *gin.Context) {
 
 	cid, err := primitive.ObjectIDFromHex(c.Param("id"))
 	if err != nil {
-		c.AbortWithError(500, errors.New("Invalid id for reply"))
+		_ = c.AbortWithError(500, errors.New("Invalid id for reply"))
 		return
 	}
 
 	if err := c.BindJSON(&form); err != nil {
-		c.AbortWithError(500, errors.New("Invalid kind of reply"))
+		_ = c.AbortWithError(500, errors.New("Invalid kind of reply"))
 		return
 	}
 
 	if kind != "post" && kind != "comment" {
-		c.AbortWithError(500, errors.New("Invalid kind of reply"))
+		_ = c.AbortWithError(500, errors.New("Invalid kind of reply"))
 		return
 	}
 
@@ -45,7 +45,7 @@ func UpdatePost(c *gin.Context) {
 	})
 
 	if err != nil {
-		c.AbortWithError(500, errors.New("Invalid kind of reply"))
+		_ = c.AbortWithError(500, errors.New("Invalid kind of reply"))
 		return
 	}
 

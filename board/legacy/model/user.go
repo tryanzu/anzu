@@ -54,7 +54,7 @@ type UserToken struct {
 	Id      primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
 	UserId  primitive.ObjectID `bson:"user_id" json:"user_id"`
 	Token   string             `bson:"token" json:"token"`
-	Closed  bool               `bson:"closed,omitempty" json"closed,omitempty"`
+	Closed  bool               `bson:"closed,omitempty" json:"closed,omitempty"`
 	Created time.Time          `bson:"created_at" json:"created_at"`
 	Updated time.Time          `bson:"updated_at" json:"updated_at"`
 }

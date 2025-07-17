@@ -133,7 +133,7 @@ func (self *Comment) Update(c string) {
 		ctx := context.Background()
 		database := deps.Container.Mgo()
 		content := self.post.DI().Content
-		content.Parse(self)
+		_ = content.Parse(self)
 
 		// Update database with new content
 		_, err := database.Collection("comments").UpdateOne(ctx, bson.M{"_id": self.Id}, bson.M{"$set": bson.M{"content": self.Content, "updated_at": time.Now()}})
@@ -143,6 +143,6 @@ func (self *Comment) Update(c string) {
 		}
 
 		// Finally parse the tags
-		content.ParseTags(self)
+		_ = content.ParseTags(self)
 	}
 }

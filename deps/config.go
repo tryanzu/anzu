@@ -2,7 +2,7 @@ package deps
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"os"
 )
 
 var (
@@ -14,7 +14,7 @@ var (
 )
 
 func IgniteConfig(d Deps) (container Deps, err error) {
-	gamingRules, err := ioutil.ReadFile("gaming.json")
+	gamingRules, err := os.ReadFile("gaming.json")
 	if err != nil {
 		log.Error(err)
 		return

@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/golang-jwt/jwt/v4"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/kennygrant/sanitize"
 	"github.com/nfnt/resize"
 	"github.com/tryanzu/core/board/comments"
@@ -62,7 +62,7 @@ func (di *UserAPI) UserCategorySubscribe(c *gin.Context) {
 	category_id := c.Param("id")
 	user_bson_id, _ := primitive.ObjectIDFromHex(user_id.(string))
 
-	if !primitive.IsValidObjectID(category_id) {
+	if !func() bool { _, err := primitive.ObjectIDFromHex(category_id) ; return err == nil }() {
 
 		c.JSON(400, gin.H{"status": "error", "message": "Invalid category id."})
 		return
@@ -98,7 +98,7 @@ func (di *UserAPI) UserCategorySubscribe(c *gin.Context) {
 	}
 
 	// Create the set inside redis and move on
-	redis.SAdd("user:categories:"+user_id.(string), category_id)
+	_, _ = redis.SAdd("user:categories:"+user_id.(string), category_id)
 
 	c.JSON(200, gin.H{"status": "okay"})
 }
@@ -112,7 +112,7 @@ func (di *UserAPI) UserCategoryUnsubscribe(c *gin.Context) {
 	category_id := c.Param("id")
 	user_bson_id, _ := primitive.ObjectIDFromHex(user_id.(string))
 
-	if !primitive.IsValidObjectID(category_id) {
+	if !func() bool { _, err := primitive.ObjectIDFromHex(category_id) ; return err == nil }() {
 
 		c.JSON(400, gin.H{"status": "error", "message": "Invalid category id."})
 		return
@@ -133,14 +133,14 @@ func (di *UserAPI) UserCategoryUnsubscribe(c *gin.Context) {
 	}
 
 	// Create the set inside redis and move on
-	redis.SRem("user:categories:"+user_id.(string), category_id)
+	_, _ = redis.SRem("user:categories:"+user_id.(string), category_id)
 
 	c.JSON(200, gin.H{"status": "okay"})
 }
 
 func (di *UserAPI) UserGetOne(c *gin.Context) {
 	user_id := c.Param("id")
-	if !primitive.IsValidObjectID(user_id) {
+	if !func() bool { _, err := primitive.ObjectIDFromHex(user_id) ; return err == nil }() {
 		c.JSON(400, gin.H{"status": "error", "message": "Invalid user id."})
 		return
 	}
@@ -168,7 +168,7 @@ func (di *UserAPI) UserGetOne(c *gin.Context) {
 
 func (di *UserAPI) UserGetByToken(c *gin.Context) {
 	id := c.MustGet("user_id")
-	if !primitive.IsValidObjectID(id.(string)) {
+	if !func() bool { _, err := primitive.ObjectIDFromHex(id.(string)) ; return err == nil }() {
 		c.JSON(400, gin.H{"status": "error", "message": "Invalid request, need valid token."})
 		return
 	}
@@ -221,7 +221,7 @@ func (di UserAPI) UserGetJwtToken(c *gin.Context) {
 	// Development mode
 	if env := deps.ENV; env != "dev" {
 		hash := helpers.Sha256(password)
-		if usr.Data().Password != hash && helpers.CheckPasswordHash(password, usr.Data().Password) == false {
+		if usr.Data().Password != hash && !helpers.CheckPasswordHash(password, usr.Data().Password) {
 			c.JSON(400, gin.H{"status": "error", "message": "Account credentials are not correct.", "code": 400})
 			return
 		}
@@ -240,7 +240,7 @@ func (di UserAPI) UserGetJwtToken(c *gin.Context) {
 	if permission != "" {
 		perms := di.Acl.User(usr.Data().Id)
 
-		if perms.Can(permission) == false {
+		if !perms.Can(permission) {
 			c.AbortWithStatus(401)
 			return
 		}
@@ -295,7 +295,7 @@ func (di *UserAPI) UserUpdateProfileAvatar(c *gin.Context) {
 	url := "https://s3-us-west-1.amazonaws.com/spartan-board/" + path
 
 	// Update the user image as well
-	deps.Container.Mgo().Collection("users").UpdateOne(context.Background(), bson.M{"_id": uid}, bson.M{"$set": bson.M{"image": url}})
+	_, _ = deps.Container.Mgo().Collection("users").UpdateOne(context.Background(), bson.M{"_id": uid}, bson.M{"$set": bson.M{"image": url}})
 
 	c.JSON(200, gin.H{"status": "okay", "url": url})
 }
@@ -324,7 +324,7 @@ func (di *UserAPI) UserUpdateProfile(c *gin.Context) {
 		}
 		validator := regexp.MustCompile(`^[a-zA-Z]+([_.-]?[a-zA-Z0-9])*$`)
 
-		if validator.MatchString(username) == false || strings.Count(username, "") < 3 || strings.Count(username, "") > 21 {
+		if !validator.MatchString(username) || strings.Count(username, "") < 3 || strings.Count(username, "") > 21 {
 			c.JSON(400, gin.H{"status": "error", "message": "Invalid username. Must have only alphanumeric characters."})
 			return
 		}
@@ -420,7 +420,7 @@ func (di *UserAPI) UserUpdateProfile(c *gin.Context) {
 		panic(err)
 	}
 	if _, emailChanged := set["email"]; emailChanged {
-		usr.ConfirmationEmail(deps.Container)
+		_ = usr.ConfirmationEmail(deps.Container)
 	}
 
 	c.JSON(200, gin.H{"status": "okay", "user": usr})
@@ -488,7 +488,7 @@ func (di *UserAPI) UserGetActivity(c *gin.Context) {
 	)
 
 	// Get the database interface from the DI
-	if !primitive.IsValidObjectID(user_id) {
+	if !func() bool { _, err := primitive.ObjectIDFromHex(user_id) ; return err == nil }() {
 		c.JSON(400, gin.H{"status": "error", "message": "Invalid user id."})
 		return
 	}
@@ -615,7 +615,7 @@ type userToken struct {
 	Address string   `json:"address"`
 	UserID  string   `json:"user_id"`
 	Scopes  []string `json:"scope"`
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 }
 
 func (di *UserAPI) generateUserToken(c *gin.Context, id primitive.ObjectID, roles []user.UserRole, expiration int) string {
@@ -630,8 +630,8 @@ func (di *UserAPI) generateUserToken(c *gin.Context, id primitive.ObjectID, role
 		c.ClientIP(),
 		id.Hex(),
 		scope,
-		jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Hour * time.Duration(expiration)).Unix(),
+		jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * time.Duration(expiration))),
 			Issuer:    "anzu",
 		},
 	}

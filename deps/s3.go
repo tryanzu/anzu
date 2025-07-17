@@ -2,7 +2,6 @@ package deps
 
 import (
 	"io"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -97,7 +96,7 @@ func (s *S3Service) GetObject(key string) ([]byte, error) {
 	}
 	defer result.Body.Close()
 	
-	return ioutil.ReadAll(result.Body)
+	return io.ReadAll(result.Body)
 }
 
 // DeleteObject deletes an object from S3

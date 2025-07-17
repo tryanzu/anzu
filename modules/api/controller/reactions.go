@@ -3,7 +3,7 @@ package controller
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/tryanzu/core/board/comments"
-	"github.com/tryanzu/core/board/posts"
+	post "github.com/tryanzu/core/board/posts"
 	"github.com/tryanzu/core/board/votes"
 	"github.com/tryanzu/core/core/events"
 	"github.com/tryanzu/core/core/user"

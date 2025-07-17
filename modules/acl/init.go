@@ -3,7 +3,7 @@ package acl
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"time"
 
 	"github.com/mikespook/gorbac"
@@ -59,7 +59,7 @@ func (refs *Module) CheckPermissions(roles []string, permission string) bool {
 
 func Boot(file string) *Module {
 	module := &Module{}
-	rules, err := ioutil.ReadFile(file)
+	rules, err := os.ReadFile(file)
 	if err != nil {
 		panic(err)
 	}
@@ -78,16 +78,16 @@ func Boot(file string) *Module {
 
 		for _, p := range rules.Permissions {
 			module.Permissions[p] = gorbac.NewStdPermission(p)
-			role.Assign(module.Permissions[p])
+			_ = role.Assign(module.Permissions[p])
 		}
 
 		// Populate map with permissions
-		module.Map.Add(role)
+		_ = module.Map.Add(role)
 	}
 
 	for name, rules := range module.Rules {
 		if len(rules.Inherits) > 0 {
-			module.Map.SetParents(name, rules.Inherits)
+			_ = module.Map.SetParents(name, rules.Inherits)
 		}
 	}
 

@@ -78,10 +78,7 @@ func (module Module) TrustIP(address string) bool {
 	err := collection.FindOne(ctx, bson.M{"address": address}).Decode(&ip)
 
 	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			return true
-		}
-		return false
+		return err == mongo.ErrNoDocuments
 	}
 
 	if ip.Banned {

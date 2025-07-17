@@ -27,19 +27,19 @@ func Notifications(c *gin.Context) {
 	usr := c.MustGet("user").(user.User)
 	list, err := notify.FetchBy(deps.Container, notify.UserID(usr.Id, take, skip))
 	if err != nil {
-		c.AbortWithError(500, err)
+		_ = c.AbortWithError(500, err)
 		return
 	}
 
 	batch, err := list.Humanize(deps.Container)
 	if err != nil {
-		c.AbortWithError(500, err)
+		_ = c.AbortWithError(500, err)
 		return
 	}
 
 	err = user.ResetNotifications(deps.Container, usr.Id)
 	if err != nil {
-		c.AbortWithError(500, err)
+		_ = c.AbortWithError(500, err)
 		return
 	}
 

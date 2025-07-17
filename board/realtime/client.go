@@ -69,7 +69,7 @@ func (c *Client) readWorker() {
 				continue
 			}
 			mid, exists := e.Params["id"].(string)
-			if !exists || !primitive.IsValidObjectID(mid) {
+			if _, err := primitive.ObjectIDFromHex(mid); !exists || err != nil {
 				log.Warning("chat:delete requires a valid message id.")
 				continue
 			}
@@ -88,18 +88,18 @@ func (c *Client) readWorker() {
 				}.encode(),
 			}
 			id, _ := primitive.ObjectIDFromHex(mid)
-			ledis.SAdd([]byte(m.Channel+":deleted"), []byte(id.Hex()))
+			_, _ = ledis.SAdd([]byte(m.Channel+":deleted"), []byte(id.Hex()))
 			ToChan <- m
 		case "chat:ban":
 			if c.User == nil {
 				continue
 			}
-			if c.User.HasRole("admin", "developer") == false {
+			if !c.User.HasRole("admin", "developer") {
 				log.Debugf("chat:ban requires a higher privileges.")
 				continue
 			}
 			uid, exists := e.Params["userId"].(string)
-			if !exists || !primitive.IsValidObjectID(uid) {
+			if _, err := primitive.ObjectIDFromHex(uid); !exists || err != nil {
 				log.Debugf("chat:ban requires a valid user id.")
 				continue
 			}
@@ -318,7 +318,7 @@ func (c *Client) readChatMessage(e SocketEvent) {
 		log.Debug("[err] Cannot encode for cache", err)
 	}
 	if n >= 50 {
-		ledisdb.LPop([]byte(m.Channel))
+		_, _ = ledisdb.LPop([]byte(m.Channel))
 	}
 	timetrace()
 }

@@ -16,7 +16,7 @@ var (
 
 // MakeTree returns categories tree.
 func MakeTree(d deps) Categories {
-	if cachedAt == nil || cachedAt.Sub(time.Now()) > time.Minute {
+	if cachedAt == nil || time.Until(*cachedAt) > time.Minute {
 		t := time.Now()
 		cachedTree = makeTree(d)
 		cachedAt = &t

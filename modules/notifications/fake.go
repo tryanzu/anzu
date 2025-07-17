@@ -13,5 +13,4 @@ func (broadcaster FakeBroadcaster) Send(message *model.UserFirebaseNotification)
 	fmt.Printf("\n\n%v\n\n", message)
 
 	// Used on tests (dont do anything just yet)
-	return
 }

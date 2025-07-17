@@ -104,7 +104,6 @@ type recoveryToken struct {
 }
 
 type status string
-type category string
 
 const (
 	ACTIVE   status = "active"

@@ -2,13 +2,9 @@ package handle
 
 import (
 	"context"
-	"crypto/tls"
-	"errors"
-	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
-	"net/url"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -61,12 +57,12 @@ func (di PostAPI) FeedGet(c *gin.Context) {
 		search["$text"] = bson.M{"$search": s}
 	}
 
-	if id := c.Query("category"); primitive.IsValidObjectID(id) {
+	if id := c.Query("category"); func() bool { _, err := primitive.ObjectIDFromHex(id); return err == nil }() {
 		categoryID, _ := primitive.ObjectIDFromHex(id)
 		search["category"] = categoryID
 	}
 
-	if slug := c.Query("category"); len(slug) > 0 && !primitive.IsValidObjectID(slug) {
+	if slug := c.Query("category"); len(slug) > 0 && func() bool { _, err := primitive.ObjectIDFromHex(slug); return err != nil }() {
 		var category struct {
 			ID primitive.ObjectID `bson:"_id,omitempty"`
 		}
@@ -88,7 +84,7 @@ func (di PostAPI) FeedGet(c *gin.Context) {
 	user_order := false
 	count := 0
 
-	if author := c.Query("user_id"); len(author) > 0 && primitive.IsValidObjectID(author) {
+	if author := c.Query("user_id"); len(author) > 0 && func() bool { _, err := primitive.ObjectIDFromHex(author); return err == nil }() {
 		authorID, _ := primitive.ObjectIDFromHex(author)
 		search["user_id"] = authorID
 		user_order = true
@@ -98,7 +94,7 @@ func (di PostAPI) FeedGet(c *gin.Context) {
 		var within []primitive.ObjectID
 		list := strings.Split(categories, ",")
 		for _, cid := range list {
-			if primitive.IsValidObjectID(cid) {
+			if func() bool { _, err := primitive.ObjectIDFromHex(cid); return err == nil }() {
 				categoryID, _ := primitive.ObjectIDFromHex(cid)
 				within = append(within, categoryID)
 			}
@@ -277,7 +273,7 @@ func (di PostAPI) PostUploadAttachment(c *gin.Context) {
 	defer file.Close()
 
 	// Read all the bytes from the image
-	data, err := ioutil.ReadAll(file)
+	data, err := io.ReadAll(file)
 	if err != nil {
 		c.JSON(400, gin.H{"status": "error", "message": "Could not read the file contents..."})
 		return
@@ -319,7 +315,7 @@ func (di PostAPI) PostUploadAttachment(c *gin.Context) {
 func (di PostAPI) PostDelete(c *gin.Context) {
 	// Get the post using the id
 	id := c.Params.ByName("id")
-	if !primitive.IsValidObjectID(id) {
+	if _, err := primitive.ObjectIDFromHex(id); err != nil {
 		c.JSON(400, gin.H{
 			"message": "Invalid request, no valid params.",
 			"status":  "error",
@@ -342,7 +338,7 @@ func (di PostAPI) PostDelete(c *gin.Context) {
 	}
 
 	user := di.Acl.User(uid)
-	if user.CanDeletePost(post) == false {
+	if !user.CanDeletePost(post) {
 		c.JSON(400, gin.H{"message": "Can't delete others posts.", "status": "error"})
 		return
 	}
@@ -360,140 +356,4 @@ func (di PostAPI) PostDelete(c *gin.Context) {
 	c.JSON(200, gin.H{"status": "okay"})
 }
 
-func (di PostAPI) syncUsersFeed(post *model.Post) {
-	defer di.Errors.Recover()
 
-	params := map[string]interface{}{
-		"fire":     "new-post",
-		"category": post.Category.Hex(),
-		"user_id":  post.UserId.Hex(),
-		"id":       post.Id.Hex(),
-		"slug":     post.Slug,
-	}
-
-	events.In <- events.RawEmit("feed", "action", params)
-}
-
-func (di PostAPI) downloadAssetFromUrl(from string, post_id primitive.ObjectID) error {
-
-	// Recover from any panic even inside this goroutine
-	defer di.Errors.Recover()
-
-	// Get the database interface from the DI
-	database := deps.Container.Mgo()
-	amazon_url, err := di.ConfigService.String("amazon.url")
-
-	if err != nil {
-		panic(err)
-	}
-
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}
-	client := &http.Client{Transport: tr}
-
-	// Download the file
-	response, err := client.Get(from)
-	if err != nil {
-		return errors.New(fmt.Sprint("Error while downloading", from, "-", err))
-	}
-
-	// Read all the bytes to the image
-	data, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		return errors.New(fmt.Sprint("Error while downloading", from, "-", err))
-	}
-
-	// Detect the downloaded file type
-	dataType := http.DetectContentType(data)
-
-	if dataType[0:5] == "image" {
-
-		var extension, name string
-
-		// Parse the filename
-		u, err := url.Parse(from)
-
-		if err != nil {
-			return errors.New(fmt.Sprint("Error while parsing url", from, "-", err))
-		}
-
-		extension = filepath.Ext(u.Path)
-		name = primitive.NewObjectID().Hex()
-
-		if extension != "" {
-
-			name = name + extension
-		} else {
-
-			// If no extension is provided on the url then add a dummy one
-			name = name + ".jpg"
-		}
-
-		path := "posts/" + name
-		err = di.S3Bucket.PutObject(path, data, dataType)
-
-		if err != nil {
-
-			panic(err)
-		}
-
-		var post model.Post
-
-		err = database.Collection("posts").FindOne(context.Background(), bson.M{"_id": post_id}).Decode(&post)
-
-		if err == nil {
-
-			post_content := post.Content
-
-			// Replace the url on the comment
-			if strings.Contains(post_content, from) {
-
-				content := strings.Replace(post_content, from, amazon_url+path, -1)
-
-				// Update the comment
-				deps.Container.Mgo().Collection("posts").UpdateOne(context.Background(), bson.M{"_id": post_id}, bson.M{"$set": bson.M{"content": content}})
-			}
-
-		}
-	}
-
-	response.Body.Close()
-
-	return nil
-}
-
-func (di PostAPI) resetUserCategoryCounter(category string, user_id primitive.ObjectID) {
-
-	// Recover from any panic even inside this goroutine
-	defer di.Errors.Recover()
-
-	// Replace the slug dash with underscore
-	counter := strings.Replace(category, "-", "_", -1)
-	find := "counters." + counter + ".counter"
-	updated_at := "counters." + counter + ".updated_at"
-
-	// Update the collection of counters
-	_, err := deps.Container.Mgo().Collection("counters").UpdateOne(context.Background(), bson.M{"user_id": user_id}, bson.M{"$set": bson.M{find: 0, updated_at: time.Now()}})
-
-	if err != nil {
-		panic(err)
-	}
-
-	return
-}
-
-func (di PostAPI) addUserCategoryCounter(category string) {
-
-	// Recover from any panic even inside this goroutine
-	defer di.Errors.Recover()
-
-	// Replace the slug dash with underscore
-	counter := strings.Replace(category, "-", "_", -1)
-	find := "counters." + counter + ".counter"
-
-	// Update the collection of counters
-	deps.Container.Mgo().Collection("counters").UpdateMany(context.Background(), bson.M{}, bson.M{"$inc": bson.M{find: 1}})
-
-	return
-}

@@ -20,7 +20,7 @@ var (
 	server     *glue.Server
 	sockets    *sync.Map
 	addresses  *sync.Map
-	clients    goutil.Map
+	_ goutil.Map // clients - was unused but kept for backward compatibility
 	dispatcher chan []M
 	counters   chan *Client
 
@@ -67,7 +67,7 @@ func (ev SocketEvent) Encode() string {
 func prepare() {
 	sockets = new(sync.Map)
 	addresses = new(sync.Map)
-	clients = goutil.RwMap(1000)
+	// clients = goutil.RwMap(1000) // Commented out as unused
 
 	// Prepare multicast channels before starting server
 	Broadcast = make(chan string, BufferSize)

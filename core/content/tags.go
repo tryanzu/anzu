@@ -34,7 +34,7 @@ func (list tags) getIdParams(index int) (id []primitive.ObjectID) {
 			continue
 		}
 
-		if cid := tag.Params[index]; primitive.IsValidObjectID(cid) {
+		if cid := tag.Params[index]; func() bool { _, err := primitive.ObjectIDFromHex(cid); return err == nil }() {
 			objID, _ := primitive.ObjectIDFromHex(cid)
 			id = append(id, objID)
 		}

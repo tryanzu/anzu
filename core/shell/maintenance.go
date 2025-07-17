@@ -253,7 +253,7 @@ func RunAnzuGarbageCollector(c *ishell.Context) {
 		c.Printf("removed %v posts from %v", result.ModifiedCount, usr.Id)
 		err = emailx.Validate(usr.Email)
 		if err == nil {
-			usr.UnvalidatedAccountDeletion()
+			_ = usr.UnvalidatedAccountDeletion()
 		}
 	}
 }

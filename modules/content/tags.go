@@ -159,7 +159,7 @@ func (self Module) FetchUsersHelper(ls []string) map[string]string {
 			for _, usr := range targets {
 				usrMap[usr.Id.Hex()] = usr.Username
 
-				go redis.HSet("usernamesHash", usr.Id.Hex(), usr.Username)
+				go func() { _, _ = redis.HSet("usernamesHash", usr.Id.Hex(), usr.Username) }()
 			}
 		}
 	}
@@ -224,7 +224,7 @@ func (self Module) FetchAssetsHelper(ls []string) map[string]string {
 				assetMap[asset.Id.Hex()] = url
 
 				if asset.Status != "awaiting" {
-					go redis.HSet("assetsHash", asset.Id.Hex(), url)
+					go func() { _, _ = redis.HSet("assetsHash", asset.Id.Hex(), url) }()
 				}
 			}
 		}

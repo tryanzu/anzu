@@ -15,7 +15,7 @@ import (
 
 // TrackView for a post/user.
 func TrackView(d deps, id, user primitive.ObjectID) (err error) {
-	err = activity.Track(d, activity.M{
+	_ = activity.Track(d, activity.M{
 		RelatedID: id,
 		Event:     "post",
 		UserID:    user,
@@ -216,7 +216,7 @@ func firstDayOfISOWeek(year int, week int, timezone *time.Location) time.Time {
 	}
 	for isoWeek < week { // iterate forward to the first day of the given week
 		date = date.AddDate(0, 0, 1)
-		isoYear, isoWeek = date.ISOWeek()
+		_, isoWeek = date.ISOWeek()
 	}
 	return date
 }

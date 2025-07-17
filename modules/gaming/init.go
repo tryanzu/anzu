@@ -3,8 +3,7 @@ package gaming
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
-	"log"
+	"os"
 
 	"github.com/olebedev/config"
 	"github.com/tryanzu/core/deps"
@@ -17,7 +16,7 @@ import (
 
 func Boot(file string) *Module {
 	module := &Module{}
-	data, err := ioutil.ReadFile(file)
+	data, err := os.ReadFile(file)
 	if err != nil {
 		panic(err)
 	}
@@ -30,9 +29,6 @@ func Boot(file string) *Module {
 	return module
 }
 
-func logFunc(message string) {
-	log.Println(message)
-}
 
 type Module struct {
 	User   *user.Module                 `inject:""`
@@ -47,11 +43,11 @@ func (self *Module) Get(usr interface{}) *User {
 
 	module := self
 
-	switch usr.(type) {
+	switch usr := usr.(type) {
 	case primitive.ObjectID:
 
 		// Use user module reference to get the user and then create the user gaming instance
-		user_obj, err := self.User.Get(usr.(primitive.ObjectID))
+		user_obj, err := self.User.Get(usr)
 
 		if err != nil {
 			panic(err)
@@ -63,7 +59,7 @@ func (self *Module) Get(usr interface{}) *User {
 
 	case *user.One:
 
-		user_gaming := &User{user: usr.(*user.One), di: module}
+		user_gaming := &User{user: usr, di: module}
 
 		return user_gaming
 
@@ -77,11 +73,11 @@ func (self *Module) Post(post interface{}) *Post {
 
 	module := self
 
-	switch post.(type) {
+	switch post := post.(type) {
 	case primitive.ObjectID:
 
 		// Use user module reference to get the user and then create the user gaming instance
-		post_object, err := self.Feed.Post(post.(primitive.ObjectID))
+		post_object, err := self.Feed.Post(post)
 
 		if err != nil {
 			panic(err)
@@ -93,7 +89,7 @@ func (self *Module) Post(post interface{}) *Post {
 
 	case *feed.Post:
 
-		post_gaming := &Post{post: post.(*feed.Post), di: module}
+		post_gaming := &Post{post: post, di: module}
 
 		return post_gaming
 

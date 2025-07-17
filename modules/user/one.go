@@ -145,5 +145,5 @@ func (self *One) followReferral() {
 	collection := database.Collection("referrals")
 	filter := bson.M{"user_id": self.data.Id}
 	update := bson.M{"$set": bson.M{"confirmed": true}}
-	collection.UpdateOne(ctx, filter, update)
+	_, _ = collection.UpdateOne(ctx, filter, update)
 }

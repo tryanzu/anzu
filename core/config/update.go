@@ -2,7 +2,7 @@ package config
 
 import (
 	"bytes"
-	"io/ioutil"
+	"os"
 
 	"github.com/BurntSushi/toml"
 	"github.com/divideandconquer/go-merge/merge"
@@ -20,7 +20,7 @@ func MergeUpdate(config map[string]interface{}) error {
 		return err
 	}
 
-	if err := ioutil.WriteFile("./config.toml", buf.Bytes(), 0644); err != nil {
+	if err := os.WriteFile("./config.toml", buf.Bytes(), 0644); err != nil {
 		return err
 	}
 

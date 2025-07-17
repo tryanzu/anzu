@@ -12,7 +12,7 @@ import (
 func UpdateConfig(c *gin.Context) {
 	var update ConfigUpdate
 	if err := c.Bind(&update); err != nil {
-		c.AbortWithError(http.StatusBadRequest, errors.New("invalid payload."))
+		_ = c.AbortWithError(http.StatusBadRequest, errors.New("invalid payload."))
 		return
 	}
 
@@ -21,7 +21,7 @@ func UpdateConfig(c *gin.Context) {
 		update.Section: update.Changes,
 	})
 	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
+		_ = c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 

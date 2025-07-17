@@ -26,7 +26,7 @@ type voteStatus struct {
 
 // UpsertVote creates or removes a vote for given votable item<->user
 func UpsertVote(deps Deps, item Votable, userID primitive.ObjectID, kind string) (vote Vote, status voteStatus, err error) {
-	if isValidVoteType(kind) == false {
+	if !isValidVoteType(kind) {
 		err = errors.New("invalid vote type")
 		return
 	}

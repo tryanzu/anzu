@@ -1,7 +1,6 @@
 package config
 
 import (
-	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
@@ -79,7 +78,7 @@ func (c *Config) Rules() Rules {
 func (c *Config) UserCopy() (conf map[string]interface{}) {
 
 	// Read the file first
-	dat, err := ioutil.ReadFile("./config.toml")
+	dat, err := os.ReadFile("./config.toml")
 	if err != nil {
 		log.Info("error:", err)
 		return
@@ -104,7 +103,7 @@ func (c *Config) Boot() {
 		LoggingBackend.SetLevel(level, "")
 		log.Noticef("logging level reloaded	level=%s", c.current.Runtime.LoggingLevel)
 	}
-	data, err := ioutil.ReadFile("./config.hcl")
+	data, err := os.ReadFile("./config.hcl")
 	if err != nil {
 		log.Error("Cannot load HCL configuration. Skipping")
 	}
@@ -123,7 +122,7 @@ func (c *Config) Merge(file string, reload bool) {
 	var config Anzu
 
 	// Read the file first
-	dat, err := ioutil.ReadFile(file)
+	dat, err := os.ReadFile(file)
 	if err != nil {
 		log.Info("error:", err)
 		return

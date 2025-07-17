@@ -77,7 +77,7 @@ func (module *Module) Run(bindTo string) {
 	router.Use(chttp.SiteMiddleware())
 
 	// Production only middlewares
-	if DEBUG == false {
+	if !DEBUG {
 		router.Use(chttp.MaxAllowed(5))
 	}
 
@@ -187,7 +187,7 @@ func (module *Module) Run(bindTo string) {
 	log.Infof("http server has started	addr=%v", bindTo)
 	// Wait for interrupt signal to gracefully shutdown the server with
 	// a timeout of 5 seconds.
-	quit := make(chan os.Signal)
+	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
 	<-quit
 	log.Info("server shutting down")

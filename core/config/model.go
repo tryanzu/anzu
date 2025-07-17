@@ -67,7 +67,7 @@ type anzuSite struct {
 
 func (site anzuSite) MakeURL(url string) string {
 	u := site.Url
-	if strings.HasSuffix(u, "/") == false {
+	if !strings.HasSuffix(u, "/") {
 		u = u + "/"
 	}
 	return u + url
