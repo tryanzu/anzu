@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Building and Running
 - **Build backend**: `go build -o anzu` (creates executable)
 - **Run API server**: `./anzu api` (starts HTTP server on port 3200)
-- **Development mode**: `./develop.sh` (auto-reloads on changes using reflex)
+- **Development mode**: `go build -o anzu && ./anzu api` (manual restart required)
 - **Interactive shell**: `./anzu shell` (maintenance and admin tools)
 
 ### Frontend Development

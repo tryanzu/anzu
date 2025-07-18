@@ -1,26 +1,42 @@
 ![Go](https://github.com/tryanzu/anzu/workflows/Go/badge.svg)
 [![Go Report Card](https://goreportcard.com/badge/github.com/tryanzu/core)](https://goreportcard.com/report/github.com/tryanzu/core)
 
-# What is Anzu?
+<div align="center">
+  <h1>🏛️ Anzu</h1>
+  <p><strong>Modern, reactive community platform built for the next generation</strong></p>
+  
+  ![Anzu alpha post page screenshot](https://imgur.com/pXDutG0.png)
+</div>
 
-Anzu is an open source software project designed to create communities. Simple, reactive, and performant forums software.
+## ✨ Features
 
-This repository contains the core backend code and the frontend as a git submodule inside static/frontend.
+- **Real-time Communication**: WebSocket-powered live discussions and notifications
+- **Gamification**: Built-in ranking system and user progression
+- **Trust Network**: Advanced user trust calculation for content moderation
+- **Modular Architecture**: Clean separation of concerns with dependency injection
+- **Modern Frontend**: React-based SPA with responsive design
+- **Rich Content**: Support for media uploads, markdown, and emoji reactions
+- **OAuth Integration**: Google and Facebook authentication
+- **Admin Tools**: Comprehensive administrative interface and CLI tools
 
-The system is a WIP and while usable things might change dramatically.
+## 🎯 What is Anzu?
 
-##
+Anzu is a modern, open-source community platform designed to foster engaging online communities. Built with Go and React, it combines the performance of modern backend architecture with a sleek, reactive frontend experience.
 
-![Anzu alpha post page screenshot](https://imgur.com/pXDutG0.png)
+Whether you're building a gaming community, developer forum, or general discussion platform, Anzu provides the tools you need with built-in gamification, real-time features, and advanced moderation capabilities.
 
-## Anzu's stack
+> ⚠️ **Early Development**: Anzu is in active development. While functional, the API and features may change significantly.
 
-- [Go](https://golang.org/) programming language
-- [Redis](https://redis.io/) (required) for cache
-- [MongoDB](https://www.mongodb.com/) (required)
-- [React](https://reactjs.org/) for the webapp
+## 🛠️ Tech Stack
 
-## Installation
+- **Backend**: [Go 1.23+](https://golang.org/) with dependency injection
+- **Frontend**: [React](https://reactjs.org/) SPA with Webpack
+- **Database**: [MongoDB 8](https://www.mongodb.com/) for primary storage
+- **Cache**: [Redis](https://redis.io/) for sessions and caching
+- **Storage**: [MinIO](https://min.io/) S3-compatible object storage
+- **Real-time**: WebSocket via custom Glue implementation
+
+## 🚀 Quick Start
 
 ### Download dependencies
 
@@ -59,18 +75,124 @@ username: admin@local.domain
 password: admin
 ```
 
-## Commits
+## 🔧 Development
+
+### Available Commands
+
+```bash
+# Backend Development
+go build -o anzu              # Build the backend
+./anzu api                    # Start API server (port 3200)
+./anzu shell                  # Interactive admin shell
+./anzu sync-ranking           # Sync gaming rankings
+
+# Frontend Development
+cd static/frontend
+npm install                   # Install dependencies
+npm start                     # Development build with watch
+npm run build                 # Production build
+npm run eslint                # Lint JavaScript
+
+# Code Quality
+golangci-lint run             # Lint Go code
+golangci-lint run --fast      # Quick lint checks
+
+# Services
+docker compose up             # Start MongoDB, MinIO, mongo-express
+```
+
+### Project Structure
+
+```
+anzu/
+├── board/                    # Board domain logic
+│   ├── events/              # Event handlers
+│   ├── posts/               # Post management
+│   ├── comments/            # Comment system
+│   └── votes/               # Voting system
+├── modules/                 # Core modules
+│   ├── api/                 # HTTP API endpoints
+│   ├── user/                # User management
+│   ├── gaming/              # Gamification
+│   └── acl/                 # Access control
+├── core/                    # Core services
+│   ├── config/              # Configuration
+│   ├── events/              # Event system
+│   └── content/             # Content processing
+└── static/frontend/         # React frontend
+```
+
+## 📋 Commits
 
 We follow the [Conventional Commits](https://www.conventionalcommits.org) specification, which help us with automatic semantic versioning and CHANGELOG generation.
 
-## Contributing
+## 🏗️ Architecture
 
-We welcome contributions from the community! Whether it's reporting bugs, suggesting new features, or submitting code changes, your input is valuable. To get started:
+Anzu follows a modular, event-driven architecture with clear separation of concerns:
 
-1. Fork the repository and create a new branch for your contribution.
-2. Make your changes and ensure they follow our coding style and guidelines.
-3. Write clear commit messages following the [Conventional Commits](https://www.conventionalcommits.org) specification.
-4. Test your changes thoroughly.
-5. Submit a pull request with a detailed description of your changes.
+### Core Principles
+- **Dependency Injection**: Uses Facebook's inject library for clean DI
+- **Event-Driven**: Centralized event handling for cross-module communication
+- **Modular Design**: Self-contained modules with clear interfaces
+- **Trust Network**: User trust calculation system for content moderation
 
-We appreciate your help in making Anzu better! If you have any questions or need assistance, feel free to reach out to the maintainers or join our community channels.
+### Key Modules
+- **Board Domain** (`board/`): Posts, comments, votes, and content management
+- **User Module** (`modules/user/`): Authentication, profiles, OAuth integration
+- **Gaming Module** (`modules/gaming/`): Ranking system and gamification
+- **ACL Module** (`modules/acl/`): Role-based access control and permissions
+- **API Module** (`modules/api/`): HTTP endpoints and REST API using Gin
+
+### Real-time Features
+- WebSocket communication via custom Glue implementation
+- Live notifications and real-time discussions
+- Event-driven updates across the platform
+
+## 🤝 Contributing
+
+We welcome contributions from the community! Whether it's reporting bugs, suggesting new features, or submitting code changes, your input is valuable.
+
+### Getting Started
+1. Fork the repository and create a new branch for your contribution
+2. Make your changes following our coding style and guidelines
+3. Write clear commit messages using [Conventional Commits](https://www.conventionalcommits.org)
+4. Test your changes thoroughly using the development commands above
+5. Submit a pull request with a detailed description
+
+### Development Workflow
+- Run `golangci-lint run` before submitting Go code
+- Run `npm run eslint` for frontend changes
+- Use `go build -o anzu && ./anzu api` for backend development
+- Test with the Docker Compose environment
+
+We appreciate your help in making Anzu better! If you have questions, feel free to open an issue or reach out to the maintainers.
+
+## 📚 Additional Resources
+
+### API & Documentation
+- **API Server**: Runs on `http://localhost:3200` by default
+- **Admin Panel**: Access via web interface with admin credentials
+- **MongoDB Admin**: Mongo Express available at `http://localhost:8081`
+- **MinIO Console**: S3 storage admin at `http://localhost:9000`
+
+### Configuration
+- **Environment**: Copy `.env.example` to `.env` and customize
+- **Database**: MongoDB connection configured via `MONGO_URL`
+- **Storage**: S3-compatible storage via MinIO or AWS S3
+- **Authentication**: JWT tokens with OAuth support (Google, Facebook)
+
+### Community
+- **Issues**: Report bugs and request features on GitHub
+- **Discussions**: Join community discussions and get help
+- **Wiki**: Additional documentation and guides (coming soon)
+
+---
+
+<div align="center">
+  <p>Built with ❤️ by the Anzu community</p>
+  <p>
+    <a href="https://github.com/tryanzu/anzu/issues">Report Bug</a> ·
+    <a href="https://github.com/tryanzu/anzu/issues">Request Feature</a> ·
+    <a href="https://github.com/tryanzu/anzu/discussions">Discussions</a>
+  </p>
+</div>
