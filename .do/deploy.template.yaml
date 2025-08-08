@@ -62,5 +62,9 @@ spec:
     databases:
         - name: db
           engine: MONGODB
+          production: true
+          cluster_name: "anzu-mongodb"
         - name: cache
-          engine: REDIS
+          engine: VALKEY
+          cluster_name: "anzu-valkey"
+          production: true
