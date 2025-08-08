@@ -30,11 +30,13 @@ Whether you're building a gaming community, developer forum, or general discussi
 
 ## 🚀 Deploy to DigitalOcean
 
-You can deploy Anzu to the DigitalOcean App Platform with a single click.
+Deploy Anzu to the DigitalOcean App Platform with one click using the button below.
 
 [![Deploy to DigitalOcean](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/apps/new?repo=https://github.com/tryanzu/anzu/tree/develop)
 
-After deployment, you will need to configure the environment variables in the DigitalOcean App Platform dashboard. See the [Environment Variables](#-environment-variables) section below for more details.
+After deployment, configure the required environment variables in the DigitalOcean App Platform dashboard. Refer to the [Environment Variables](#-environment-variables) section for detailed configuration instructions.
+
+**Required Services**: Your deployed app must be connected to both a Redis/Valkey database and a MongoDB instance to function properly.
 
 ## 🛠️ Tech Stack
 
