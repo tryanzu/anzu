@@ -1,0 +1,62 @@
+name: anzu
+services:
+  - name: anzu-web
+    dockerfile_path: Dockerfile
+    http_port: 3200
+    instance_count: 1
+    instance_size_slug: basic-xxs # Smallest size for testing, user can scale up.
+    routes:
+      - path: /
+    envs:
+      - key: ENV
+        value: production
+      - key: MONGO_URL
+        value: ${db.DATABASE_URL}
+      - key: MONGO_NAME
+        value: ${db.NAME}
+      - key: REDIS_URL
+        value: ${cache.INTERNAL_URL}
+      - key: JWT_SECRET
+        type: SECRET
+        value: "CHANGEME" # IMPORTANT: Replace with a long, random string
+      - key: S3_ENDPOINT
+        value: "CHANGEME" # e.g., nyc3.digitaloceanspaces.com
+      - key: S3_ACCESS_KEY_ID
+        type: SECRET
+        value: "CHANGEME"
+      - key: S3_SECRET_ACCESS_KEY
+        type: SECRET
+        value: "CHANGEME"
+      - key: S3_BUCKET_NAME
+        value: "anzu-assets"
+      - key: S3_REGION
+        value: "us-east-1" # Or your bucket's region
+      - key: OAUTH_GOOGLE_CLIENT_ID
+        type: SECRET
+        value: "CHANGEME"
+      - key: OAUTH_GOOGLE_CLIENT_SECRET
+        type: SECRET
+        value: "CHANGEME"
+      - key: OAUTH_FACEBOOK_CLIENT_ID
+        type: SECRET
+        value: "CHANGEME"
+      - key: OAUTH_FACEBOOK_CLIENT_SECRET
+        type: SECRET
+        value: "CHANGEME"
+      - key: SMTP_HOST
+        value: "CHANGEME" # e.g., smtp.sendgrid.net
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USERNAME
+        type: SECRET
+        value: "CHANGEME"
+      - key: SMTP_PASSWORD
+        type: SECRET
+        value: "CHANGEME"
+      - key: SMTP_FROM_EMAIL
+        value: "CHANGEME" # e.g., no-reply@yourdomain.com
+databases:
+  - name: db
+    engine: MONGO
+  - name: cache
+    engine: REDIS
