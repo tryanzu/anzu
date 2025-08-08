@@ -10,8 +10,6 @@ import (
 	"github.com/facebookgo/inject"
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
-	newrelic "github.com/newrelic/go-agent"
-	"github.com/newrelic/go-agent/_integrations/nrgin/v1"
 	"github.com/op/go-logging"
 	handle "github.com/tryanzu/core/board/legacy"
 	"github.com/tryanzu/core/board/realtime"
@@ -27,8 +25,6 @@ var (
 	DEBUG         bool   = true
 	ENV           string = "dev"
 	TemplatesGlob string = "./static/templates/**/*"
-	NewRelicKey   string
-	NewRelicName  string = "anzu"
 	log                  = logging.MustGetLogger("http-api")
 )
 
@@ -58,16 +54,6 @@ func (module *Module) Run(bindTo string) {
 	router.Use(gin.Recovery())
 	router.LoadHTMLGlob(TemplatesGlob)
 
-	if len(NewRelicKey) > 0 {
-		cfg := newrelic.NewConfig(NewRelicName, NewRelicKey)
-		cfg.Logger = newrelic.NewLogger(os.Stdout)
-		app, err := newrelic.NewApplication(cfg)
-		if err != nil {
-			log.Errorf("error while initializing new relic		err=%v", err)
-		} else {
-			router.Use(nrgin.Middleware(app))
-		}
-	}
 
 	// Middlewares setup
 	router.Use(sessions.Sessions("session", store))
