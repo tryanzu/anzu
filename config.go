@@ -22,12 +22,6 @@ func init() {
 		api.ENV = v
 		deps.ENV = v
 	}
-	if v, exists := os.LookupEnv("NEW_RELIC_KEY"); exists {
-		api.NewRelicKey = v
-	}
-	if v, exists := os.LookupEnv("NEW_RELIC_NAME"); exists {
-		api.NewRelicName = v
-	}
 	if v, exists := os.LookupEnv("MONGO_URL"); exists {
 		deps.MongoURL = v
 	}

@@ -224,8 +224,6 @@ When deploying to DigitalOcean, you will need to configure the following environ
 | `SMTP_USERNAME`                | `Secret` | No       | The username for your SMTP server.                                                 |
 | `SMTP_PASSWORD`                | `Secret` | No       | The password for your SMTP server.                                                 |
 | `SMTP_FROM_EMAIL`              | `String` | No       | The email address to send emails from.                                             |
-| `NEW_RELIC_KEY`                | `Secret` | No       | Your New Relic license key for application monitoring.                             |
-| `NEW_RELIC_NAME`               | `String` | No       | The name of your application in New Relic.                                         |
 | `SENTRY_URL`                   | `Secret` | No       | The DSN for Sentry error tracking.                                                 |
 
 ---
