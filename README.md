@@ -4,8 +4,9 @@
 <div align="center">
   <h1>🏛️ Anzu</h1>
   <p><strong>Modern, reactive community platform built for the next generation</strong></p>
-  
-  ![Anzu alpha post page screenshot](https://imgur.com/pXDutG0.png)
+
+![Anzu alpha post page screenshot](https://imgur.com/pXDutG0.png)
+
 </div>
 
 ## ✨ Features
@@ -31,7 +32,7 @@ Whether you're building a gaming community, developer forum, or general discussi
 
 You can deploy Anzu to the DigitalOcean App Platform with a single click.
 
-[![Deploy to DigitalOcean](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/apps/new?repo=https://github.com/tryanzu/anzu/tree/main)
+[![Deploy to DigitalOcean](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/apps/new?repo=https://github.com/tryanzu/anzu/tree/develop)
 
 After deployment, you will need to configure the environment variables in the DigitalOcean App Platform dashboard. See the [Environment Variables](#-environment-variables) section below for more details.
 
@@ -139,12 +140,14 @@ We follow the [Conventional Commits](https://www.conventionalcommits.org) specif
 Anzu follows a modular, event-driven architecture with clear separation of concerns:
 
 ### Core Principles
+
 - **Dependency Injection**: Uses Facebook's inject library for clean DI
 - **Event-Driven**: Centralized event handling for cross-module communication
 - **Modular Design**: Self-contained modules with clear interfaces
 - **Trust Network**: User trust calculation system for content moderation
 
 ### Key Modules
+
 - **Board Domain** (`board/`): Posts, comments, votes, and content management
 - **User Module** (`modules/user/`): Authentication, profiles, OAuth integration
 - **Gaming Module** (`modules/gaming/`): Ranking system and gamification
@@ -152,6 +155,7 @@ Anzu follows a modular, event-driven architecture with clear separation of conce
 - **API Module** (`modules/api/`): HTTP endpoints and REST API using Gin
 
 ### Real-time Features
+
 - WebSocket communication via custom Glue implementation
 - Live notifications and real-time discussions
 - Event-driven updates across the platform
@@ -161,6 +165,7 @@ Anzu follows a modular, event-driven architecture with clear separation of conce
 We welcome contributions from the community! Whether it's reporting bugs, suggesting new features, or submitting code changes, your input is valuable.
 
 ### Getting Started
+
 1. Fork the repository and create a new branch for your contribution
 2. Make your changes following our coding style and guidelines
 3. Write clear commit messages using [Conventional Commits](https://www.conventionalcommits.org)
@@ -168,6 +173,7 @@ We welcome contributions from the community! Whether it's reporting bugs, sugges
 5. Submit a pull request with a detailed description
 
 ### Development Workflow
+
 - Run `golangci-lint run` before submitting Go code
 - Run `npm run eslint` for frontend changes
 - Use `go build -o anzu && ./anzu api` for backend development
@@ -178,18 +184,21 @@ We appreciate your help in making Anzu better! If you have questions, feel free 
 ## 📚 Additional Resources
 
 ### API & Documentation
+
 - **API Server**: Runs on `http://localhost:3200` by default
 - **Admin Panel**: Access via web interface with admin credentials
 - **MongoDB Admin**: Mongo Express available at `http://localhost:8081`
 - **MinIO Console**: S3 storage admin at `http://localhost:9000`
 
 ### Configuration
+
 - **Environment**: Copy `.env.example` to `.env` and customize
 - **Database**: MongoDB connection configured via `MONGO_URL`
 - **Storage**: S3-compatible storage via MinIO or AWS S3
 - **Authentication**: JWT tokens with OAuth support (Google, Facebook)
 
 ### Community
+
 - **Issues**: Report bugs and request features on GitHub
 - **Discussions**: Join community discussions and get help
 - **Wiki**: Additional documentation and guides (coming soon)
@@ -198,26 +207,26 @@ We appreciate your help in making Anzu better! If you have questions, feel free 
 
 When deploying to DigitalOcean, you will need to configure the following environment variables in the App Platform dashboard.
 
-| Variable                      | Type     | Required | Description                                                                                             |
-| ----------------------------- | -------- | -------- | ------------------------------------------------------------------------------------------------------- |
-| `JWT_SECRET`                  | `Secret` | Yes      | A long, random string used to sign JWT tokens.                                                          |
-| `S3_ENDPOINT`                 | `String` | Yes      | The endpoint for your S3-compatible storage (e.g., `nyc3.digitaloceanspaces.com`).                       |
-| `S3_ACCESS_KEY_ID`            | `Secret` | Yes      | The access key for your S3-compatible storage.                                                          |
-| `S3_SECRET_ACCESS_KEY`        | `Secret` | Yes      | The secret key for your S3-compatible storage.                                                          |
-| `S3_BUCKET_NAME`              | `String` | Yes      | The name of the S3 bucket to use for asset storage.                                                     |
-| `S3_REGION`                   | `String` | Yes      | The region where your S3 bucket is located.                                                             |
-| `OAUTH_GOOGLE_CLIENT_ID`      | `Secret` | No       | The client ID for Google OAuth.                                                                         |
-| `OAUTH_GOOGLE_CLIENT_SECRET`  | `Secret` | No       | The client secret for Google OAuth.                                                                     |
-| `OAUTH_FACEBOOK_CLIENT_ID`    | `Secret` | No       | The client ID for Facebook OAuth.                                                                       |
-| `OAUTH_FACEBOOK_CLIENT_SECRET`| `Secret` | No       | The client secret for Facebook OAuth.                                                                   |
-| `SMTP_HOST`                   | `String` | No       | The hostname of your SMTP server.                                                                       |
-| `SMTP_PORT`                   | `String` | No       | The port of your SMTP server.                                                                           |
-| `SMTP_USERNAME`               | `Secret` | No       | The username for your SMTP server.                                                                      |
-| `SMTP_PASSWORD`               | `Secret` | No       | The password for your SMTP server.                                                                      |
-| `SMTP_FROM_EMAIL`             | `String` | No       | The email address to send emails from.                                                                  |
-| `NEW_RELIC_KEY`               | `Secret` | No       | Your New Relic license key for application monitoring.                                                  |
-| `NEW_RELIC_NAME`              | `String` | No       | The name of your application in New Relic.                                                              |
-| `SENTRY_URL`                  | `Secret` | No       | The DSN for Sentry error tracking.                                                                      |
+| Variable                       | Type     | Required | Description                                                                        |
+| ------------------------------ | -------- | -------- | ---------------------------------------------------------------------------------- |
+| `JWT_SECRET`                   | `Secret` | Yes      | A long, random string used to sign JWT tokens.                                     |
+| `S3_ENDPOINT`                  | `String` | Yes      | The endpoint for your S3-compatible storage (e.g., `nyc3.digitaloceanspaces.com`). |
+| `S3_ACCESS_KEY_ID`             | `Secret` | Yes      | The access key for your S3-compatible storage.                                     |
+| `S3_SECRET_ACCESS_KEY`         | `Secret` | Yes      | The secret key for your S3-compatible storage.                                     |
+| `S3_BUCKET_NAME`               | `String` | Yes      | The name of the S3 bucket to use for asset storage.                                |
+| `S3_REGION`                    | `String` | Yes      | The region where your S3 bucket is located.                                        |
+| `OAUTH_GOOGLE_CLIENT_ID`       | `Secret` | No       | The client ID for Google OAuth.                                                    |
+| `OAUTH_GOOGLE_CLIENT_SECRET`   | `Secret` | No       | The client secret for Google OAuth.                                                |
+| `OAUTH_FACEBOOK_CLIENT_ID`     | `Secret` | No       | The client ID for Facebook OAuth.                                                  |
+| `OAUTH_FACEBOOK_CLIENT_SECRET` | `Secret` | No       | The client secret for Facebook OAuth.                                              |
+| `SMTP_HOST`                    | `String` | No       | The hostname of your SMTP server.                                                  |
+| `SMTP_PORT`                    | `String` | No       | The port of your SMTP server.                                                      |
+| `SMTP_USERNAME`                | `Secret` | No       | The username for your SMTP server.                                                 |
+| `SMTP_PASSWORD`                | `Secret` | No       | The password for your SMTP server.                                                 |
+| `SMTP_FROM_EMAIL`              | `String` | No       | The email address to send emails from.                                             |
+| `NEW_RELIC_KEY`                | `Secret` | No       | Your New Relic license key for application monitoring.                             |
+| `NEW_RELIC_NAME`               | `String` | No       | The name of your application in New Relic.                                         |
+| `SENTRY_URL`                   | `Secret` | No       | The DSN for Sentry error tracking.                                                 |
 
 ---
 
