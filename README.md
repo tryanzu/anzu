@@ -27,6 +27,14 @@ Whether you're building a gaming community, developer forum, or general discussi
 
 > ⚠️ **Early Development**: Anzu is in active development. While functional, the API and features may change significantly.
 
+## 🚀 Deploy to DigitalOcean
+
+You can deploy Anzu to the DigitalOcean App Platform with a single click.
+
+[![Deploy to DigitalOcean](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/apps/new?repo=https://github.com/tryanzu/anzu/tree/main)
+
+After deployment, you will need to configure the environment variables in the DigitalOcean App Platform dashboard. See the [Environment Variables](#-environment-variables) section below for more details.
+
 ## 🛠️ Tech Stack
 
 - **Backend**: [Go 1.23+](https://golang.org/) with dependency injection
@@ -185,6 +193,31 @@ We appreciate your help in making Anzu better! If you have questions, feel free 
 - **Issues**: Report bugs and request features on GitHub
 - **Discussions**: Join community discussions and get help
 - **Wiki**: Additional documentation and guides (coming soon)
+
+### Environment Variables
+
+When deploying to DigitalOcean, you will need to configure the following environment variables in the App Platform dashboard.
+
+| Variable                      | Type     | Required | Description                                                                                             |
+| ----------------------------- | -------- | -------- | ------------------------------------------------------------------------------------------------------- |
+| `JWT_SECRET`                  | `Secret` | Yes      | A long, random string used to sign JWT tokens.                                                          |
+| `S3_ENDPOINT`                 | `String` | Yes      | The endpoint for your S3-compatible storage (e.g., `nyc3.digitaloceanspaces.com`).                       |
+| `S3_ACCESS_KEY_ID`            | `Secret` | Yes      | The access key for your S3-compatible storage.                                                          |
+| `S3_SECRET_ACCESS_KEY`        | `Secret` | Yes      | The secret key for your S3-compatible storage.                                                          |
+| `S3_BUCKET_NAME`              | `String` | Yes      | The name of the S3 bucket to use for asset storage.                                                     |
+| `S3_REGION`                   | `String` | Yes      | The region where your S3 bucket is located.                                                             |
+| `OAUTH_GOOGLE_CLIENT_ID`      | `Secret` | No       | The client ID for Google OAuth.                                                                         |
+| `OAUTH_GOOGLE_CLIENT_SECRET`  | `Secret` | No       | The client secret for Google OAuth.                                                                     |
+| `OAUTH_FACEBOOK_CLIENT_ID`    | `Secret` | No       | The client ID for Facebook OAuth.                                                                       |
+| `OAUTH_FACEBOOK_CLIENT_SECRET`| `Secret` | No       | The client secret for Facebook OAuth.                                                                   |
+| `SMTP_HOST`                   | `String` | No       | The hostname of your SMTP server.                                                                       |
+| `SMTP_PORT`                   | `String` | No       | The port of your SMTP server.                                                                           |
+| `SMTP_USERNAME`               | `Secret` | No       | The username for your SMTP server.                                                                      |
+| `SMTP_PASSWORD`               | `Secret` | No       | The password for your SMTP server.                                                                      |
+| `SMTP_FROM_EMAIL`             | `String` | No       | The email address to send emails from.                                                                  |
+| `NEW_RELIC_KEY`               | `Secret` | No       | Your New Relic license key for application monitoring.                                                  |
+| `NEW_RELIC_NAME`              | `String` | No       | The name of your application in New Relic.                                                              |
+| `SENTRY_URL`                  | `Secret` | No       | The DSN for Sentry error tracking.                                                                      |
 
 ---
 
