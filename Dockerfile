@@ -21,7 +21,7 @@ COPY . .
 # Copy the built frontend from the previous stage
 COPY --from=frontend_build /tmp/anzu/static/frontend/public /tmp/anzu/static/frontend/public
 
-RUN go build -o ./out/anzu .
+RUN go build -o ./out/anzu ./cmd/anzu
 
 # Start fresh from a smaller image
 FROM alpine:latest
