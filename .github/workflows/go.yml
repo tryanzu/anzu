@@ -46,7 +46,7 @@ jobs:
                   fi
 
             - name: Build
-              run: go build -o anzu -v .
+              run: go build -o anzu -v ./cmd/anzu
 
             - name: Test
               run: go test -v ./...
