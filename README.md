@@ -77,7 +77,7 @@ Start a local MongoDB 8 server with the help of docker and docker compose, ensur
 ### Last steps
 
 Building the frontend before getting started is required, to do so, execute `npm install && npm run build` inside `static/frontend` submodule.
-Once the frontend is built you can build the backend program with `go build -o anzu` and then execute `./anzu api` to run anzu's http web server.
+Once the frontend is built you can build the backend program with `go build -o anzu ./cmd/anzu` and then execute `./anzu api` to run anzu's http web server.
 
 If you are running anzu for the first time you should be able to log-in with the credentials:
 
@@ -92,7 +92,7 @@ password: admin
 
 ```bash
 # Backend Development
-go build -o anzu              # Build the backend
+go build -o anzu ./cmd/anzu   # Build the backend
 ./anzu api                    # Start API server (port 3200)
 ./anzu shell                  # Interactive admin shell
 ./anzu sync-ranking           # Sync gaming rankings
@@ -178,7 +178,7 @@ We welcome contributions from the community! Whether it's reporting bugs, sugges
 
 - Run `golangci-lint run` before submitting Go code
 - Run `npm run eslint` for frontend changes
-- Use `go build -o anzu && ./anzu api` for backend development
+- Use `go build -o anzu ./cmd/anzu && ./anzu api` for backend development
 - Test with the Docker Compose environment
 
 We appreciate your help in making Anzu better! If you have questions, feel free to open an issue or reach out to the maintainers.
