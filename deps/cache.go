@@ -14,9 +14,6 @@ func IgniteCache(container Deps) (Deps, error) {
 		return container, err
 	}
 	client := redis.NewClient(url)
-	if err != nil {
-		return container, err
-	}
 	container.CacheProvider = client
 	return container, nil
 }

@@ -72,16 +72,6 @@ func (di *MiddlewareAPI) ValidateBsonID(name string) gin.HandlerFunc {
 	}
 }
 
-func (di *MiddlewareAPI) MongoRefresher() gin.HandlerFunc {
-	return func(c *gin.Context) {
-
-		// Run everything
-		c.Next()
-
-		// No need to refresh session with the new MongoDB driver
-	}
-}
-
 func (di *MiddlewareAPI) Authorization() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var sid string

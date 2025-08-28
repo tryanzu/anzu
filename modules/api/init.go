@@ -53,19 +53,10 @@ func (module *Module) Run(bindTo string) {
 	router := gin.New()
 	router.Use(gin.Recovery())
 	router.LoadHTMLGlob(TemplatesGlob)
-
-
-	// Middlewares setup
 	router.Use(sessions.Sessions("session", store))
 	router.Use(module.Middlewares.ErrorTracking(DEBUG))
 	router.Use(module.Middlewares.CORS())
-	router.Use(module.Middlewares.MongoRefresher())
 	router.Use(chttp.SiteMiddleware())
-
-	// Production only middlewares
-	if !DEBUG {
-		router.Use(chttp.MaxAllowed(5))
-	}
 
 	/**
 	 * Routes section.
