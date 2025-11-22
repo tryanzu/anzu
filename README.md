@@ -28,6 +28,11 @@ Whether you're building a gaming community, developer forum, or general discussi
 
 > ⚠️ **Early Development**: Anzu is in active development. While functional, the API and features may change significantly.
 
+
+## 🚀 Deploy on Hostinger
+
+[![Deploy on Hostinger](https://assets.hostinger.com/vps/deploy.svg)](https://www.hostinger.com/vps/docker-hosting?compose_url=https://github.com/tryanzu/anzu/)
+
 ## 🚀 Deploy to DigitalOcean
 
 Deploy Anzu to the DigitalOcean App Platform with one click using the button below.
