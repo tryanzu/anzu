@@ -1,0 +1,13 @@
+run:
+  timeout: 5m
+
+issues:
+  exclude-rules:
+    - path: ^board/events/(comments|activities|mentions|posts)\.go$
+      linters:
+        - typecheck
+      text: typecheck false positives from generated event handlers
+    - path: ^modules/api/controller/categories\.go$
+      linters:
+        - typecheck
+      text: typecheck false positives from generated controller
